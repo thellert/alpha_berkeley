@@ -1,0 +1,72 @@
+# Requirements for Alpha Berkeley Framework CLI
+
+# Base packages from original requirements.txt
+certifi==2025.4.26
+charset-normalizer==3.4.2
+idna==3.10
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+podman==5.4.0.1
+podman-compose==1.4.0
+python-dotenv==1.1.0
+PyYAML==6.0.2
+requests==2.32.3
+urllib3==2.4.0
+websocket-client==1.7.0
+nbformat>=5.0.0
+nbclient
+ollama==0.5.1
+
+# LangGraph dependencies - CRITICAL VERSION REQUIREMENTS
+langgraph>=0.5.2
+langchain-core>=0.3.68
+langgraph-checkpoint-postgres>=2.0.22,<3.0.0
+langgraph-sdk>=0.1.70,<0.2.0
+psycopg[pool]>=3.1.0,<4.0.0
+psycopg-pool>=3.1.0,<4.0.0
+langchain-postgres>=0.0.12,<0.1.0
+
+# Runtime dependencies discovered during testing
+rich>=14.0.0
+opentelemetry-api>=1.36.0
+opentelemetry-sdk>=1.36.0
+logfire>=3.16.1
+pydantic-ai>=0.2.11
+pure_eval>=0.2.3
+sphinxcontrib-jsmath>=1.0.1
+future>=1.0.0
+nest-asyncio>=1.6.0
+
+# Core scientific computing
+pandas==2.2.3
+numpy==2.2.6
+scipy==1.15.3
+matplotlib==3.10.3
+seaborn
+ipywidgets
+scikit-learn
+
+
+# =======================
+# ALS Expert Requirements
+
+# Essential packages for Jupyter and EPICS connectivity
+als-archiver-client==1.0.3
+pyepics>=3.5.0
+
+# Database
+pymongo
+
+# Development and utility packages
+nltk>=3.8.1
+unique-namer>=0.1.0
+
+# Documentation dependencies
+sphinx>=8.0.0
+pydata-sphinx-theme
+myst-parser
+sphinx-copybutton
+sphinx-autobuild
+sphinx-design
+sphinxcontrib-mermaid
+graphviz
