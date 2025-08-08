@@ -1,0 +1,27 @@
+# Wind Turbine Monitoring Application Configuration
+
+# Wind Turbine Application-Specific Models
+models:
+  turbine_analysis:
+    provider: cborg
+    model_id: anthropic/claude-sonnet
+    max_tokens: 8192
+  knowledge_retrieval:
+    provider: cborg
+    model_id: anthropic/claude-sonnet
+    max_tokens: 2048
+
+
+# Wind Turbine Pipeline configuration
+pipeline:
+  name: "Wind Turbine Monitor"
+
+# Logging Configuration
+logging:
+  logging_colors:
+    # Wind turbine capabilities
+    time_range_parsing: "light_blue"
+    weather_data_retrieval: "cyan"
+    turbine_data_archiver: "green"
+    turbine_analysis: "yellow"
+   

@@ -1,0 +1,115 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment directories
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Data, models, and results
+!data/.gitkeep
+# models/ - Removed this to allow tracking model_config.py
+!models/.gitkeep
+results/
+!results/.gitkeep
+*.h5
+*.pkl
+*.pt
+*.pth
+*.onnx
+*.mlmodel
+
+# Logs
+logs/
+*.log
+tensorboard/
+
+# Temporary files
+tmp/
+temp/ 
+
+venv*
+
+*.jpg
+*.gif
+*.bmp
+*.tiff
+*.ico
+
+# Credentials
+.env
+
+
+delete_me*
+valves.json
+*.code-workspace
+
+
+# Agent data directories
+_agent_data/*
+RELEASE_NOTES_v*.md

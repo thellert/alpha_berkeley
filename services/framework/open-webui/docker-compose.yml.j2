@@ -1,0 +1,24 @@
+volumes:
+  open-webui:
+
+services:       
+  open-webui:
+    container_name: open-webui
+    build:
+      context: ./framework/open-webui
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "{{framework.services.open_webui.port_host}}:{{framework.services.open_webui.port_container}}"
+    environment:
+      - TZ=America/Los_Angeles
+      - OLLAMA_BASE_URL={{api.providers.ollama.host}}:{{api.providers.ollama.port}}
+      - NO_PROXY=${NO_PROXY}
+      - WEBUI_CUSTOM_CSS_URL=/static/custom.css
+      - USER_MEMORY_DIR=/app/{{file_paths.user_memory_dir}}
+    volumes:
+      - open-webui:/app/backend/data
+      - {{project_root}}/{{file_paths.agent_data_dir}}:/app/{{file_paths.agent_data_dir}}
+      - ./framework/open-webui/custom.css:/app/backend/static/custom.css
+    networks:
+      - als-agents-network

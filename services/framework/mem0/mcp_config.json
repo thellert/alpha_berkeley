@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+      "mem0": {
+        "command": "docker",
+        "args": ["run", "--rm", "-i", 
+                 "--env-file", ".env",
+                 "-p", "8050:8050",
+                 "mcp/mem0"],
+        "env": {
+          "TRANSPORT": "sse"
+        }
+      }
+    }
+  }

@@ -1,0 +1,21 @@
+{
+ "argv": [
+  "python",
+  "-m",
+  "ipykernel_launcher",
+  "-f",
+  "{connection_file}"
+ ],
+ "display_name": "🔒 Read-Only EPICS (Python 3.11)",
+ "language": "python",
+ "env": {
+   "EPICS_CA_AUTO_ADDR_LIST": "{{framework.execution.modes.read_only.environment.EPICS_CA_AUTO_ADDR_LIST}}",
+   "EPICS_CA_ADDR_LIST": "{{framework.execution.epics.gateways.read_only.address}}",
+   "EPICS_CA_SERVER_PORT": "{{framework.execution.epics.gateways.read_only.port}}",
+   "EPICS_EXECUTION_MODE": "{{framework.execution.modes.read_only.environment.EPICS_EXECUTION_MODE}}",
+   "PYTHONPATH": "/jupyter/repo_src"
+ },
+ "metadata": {
+  "debugger": true
+ }
+} 
