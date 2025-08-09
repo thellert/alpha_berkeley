@@ -15,14 +15,14 @@ What You'll Build
 
 A production-ready wind turbine monitoring agent that demonstrates enterprise patterns:
 
-* **📊 Smart Data Retrieval** - Professional API integration with error handling and retry logic
-* **🔍 Intelligent Analysis** - LLM-powered analysis planning with Python execution services
-* **🚨 Adaptive Insights** - Domain-specific knowledge extraction from technical documentation
-* **🧠 Advanced Planning** - Multi-phase analysis coordination with fallback strategies
-* **📚 Knowledge Integration** - RAG-style knowledge providers with structured LLM extraction
-* **🔐 Human Oversight** - Approval workflows for sensitive operations and code execution
-* **📈 Operational Excellence** - Comprehensive logging, monitoring, and error classification
-* **⚡ Performance Optimization** - Model-specific configurations and resource management
+* ** Smart Data Retrieval** - Professional API integration with error handling and retry logic
+* ** Intelligent Analysis** - LLM-powered analysis planning with Python execution services
+* ** Adaptive Insights** - Domain-specific knowledge extraction from technical documentation
+* ** Advanced Planning** - Multi-phase analysis coordination with fallback strategies
+* ** Knowledge Integration** - RAG-style knowledge providers with structured LLM extraction
+* ** Human Oversight** - Approval workflows for sensitive operations and code execution
+* ** Operational Excellence** - Comprehensive logging, monitoring, and error classification
+* ** Performance Optimization** - Model-specific configurations and resource management
 
 .. note::
    This example uses mock APIs for development. The patterns shown work with real services too.
@@ -30,37 +30,43 @@ A production-ready wind turbine monitoring agent that demonstrates enterprise pa
 **Example Query:**
 .. code-block:: text
 
-   "We've been getting too many false alarms from our turbine monitoring system, 
-   but we also missed some real performance issues over the past 3 days during 
-   high wind conditions. Can you analyze the recent performance patterns, 
-   establish proper baselines for each turbine, and set up intelligent alerts?"
+   "Our wind farm has been underperforming lately. Can you analyze the turbine 
+   performance over the past 2 weeks, identify which turbines are operating 
+   below industry standards, and rank them by efficiency? I need to know which 
+   ones require immediate maintenance attention."
 
 **What the agent does automatically:**
-1. Parse "past 3 days" into exact datetime range
-2. Retrieve historical turbine performance data
-3. Fetch corresponding weather data
-4. Analyze patterns and calculate turbine-specific baselines
-5. Configure smart alert thresholds based on the analysis
+1. Parse "past 2 weeks" into exact datetime range
+2. Retrieve historical turbine performance data (5 turbines: T-001 through T-005)
+3. Fetch corresponding weather data (wind speed conditions)
+4. Extract industry performance benchmarks from knowledge base
+5. **Create LLM-powered analysis plan** with structured phases:
+   - Data correlation (merge turbine + weather data by timestamp)
+   - Performance metrics calculation (efficiency vs theoretical maximum)
+   - Industry benchmark comparison (classify against standards)
+6. **Generate and execute Python code** for statistical analysis
+7. **Identify underperformers** and rank turbines by performance
+8. **Apply knowledge base thresholds** to classify performance levels
 
 The 5-Component Architecture
 ----------------------------
 
-Every agent built with the Alpha Berkeley Framework has these components:
+The wind turbine tutorial agent built with the Alpha Berkeley Framework has these components:
 
 .. code-block:: text
 
    📁 src/applications/wind_turbine/
-   ├── 📋 registry.py              # Component registration (110 lines)
-   ├── 📊 context_classes.py       # Type-safe data structures (175 lines)
-   ├── 🔌 mock_apis.py             # Realistic API simulation (111 lines)
-   ├── ⚙️ config.yml               # Production configuration (27 lines)
-   ├── 🎯 capabilities/            # Sophisticated agent skills
-   │   ├── turbine_data_archiver.py    # Basic patterns (235 lines)
-   │   ├── weather_data_retrieval.py   # API integration (231 lines)
-   │   ├── knowledge_retrieval.py      # RAG patterns (218 lines)
-   │   └── turbine_analysis.py         # Advanced planning (735 lines)
-   └── 📚 data_sources/            # LLM-enhanced knowledge providers
-       └── knowledge_provider.py       # Production RAG system (268 lines)
+   ├── registry.py              # Component registration
+   ├── context_classes.py       # Type-safe data structures
+   ├── mock_apis.py             # Realistic API simulation
+   ├── config.yml               # Production configuration
+   ├── capabilities/            # Sophisticated agent skills
+   │   ├── turbine_data_archiver.py    # Basic patterns
+   │   ├── weather_data_retrieval.py   # API integration
+   │   ├── knowledge_retrieval.py      # RAG patterns
+   │   └── turbine_analysis.py         # Advanced planning
+   └── data_sources/            # LLM-enhanced knowledge providers
+       └── knowledge_provider.py       # Production RAG system
 
 Let's build each component step by step.
 
@@ -1229,17 +1235,34 @@ Once you've built these components, your agent can handle complex requests autom
 .. code-block:: text
 
    "Analyze turbine performance over the past week and identify which turbines 
-   need maintenance based on efficiency drops during high wind periods."
+   need maintenance based on efficiency drops."
 
 **Automatic Execution Plan:**
 1. **Parse time range** → "past week" becomes specific dates
-2. **Retrieve knowledge** → Industry benchmarks and technical standards
-3. **Fetch turbine data** → Historical performance records
-4. **Fetch weather data** → Wind conditions for correlation
-5. **Analyze patterns** → Python-based statistical analysis against benchmarks
-6. **Generate insights** → Maintenance recommendations based on efficiency thresholds
+2. **Retrieve knowledge** → Industry benchmarks and technical standards (85% excellent, 75% good, <75% maintenance)
+3. **Fetch turbine data** → Historical performance records (T-001 through T-005)
+4. **Fetch weather data** → Wind conditions for correlation (12-15 m/s optimal range)
+5. **Create analysis plan** → LLM generates structured 3-phase analysis approach
+6. **Execute Python analysis** → Statistical calculations with approval workflow
+7. **Generate insights** → Performance classifications and maintenance rankings
 
-The framework coordinates all these steps automatically, handling dependencies, error recovery, and data flow between capabilities.
+**Example Results:**
+.. code-block:: text
+
+   📊 **Wind Farm Performance Analysis Results**
+   
+   **Turbine Rankings (by efficiency):**
+   1. T-001: 94.2% efficiency → Excellent performer ✅
+   2. T-004: 87.1% efficiency → Very good performer ✅  
+   3. T-002: 79.3% efficiency → Good performer ⚠️
+   4. T-005: 64.8% efficiency → Below average → **Maintenance recommended** 🔧
+   5. T-003: 59.1% efficiency → Poor performer → **Immediate maintenance required** 🚨
+   
+   **Farm Average:** 76.9% efficiency
+   **Industry Benchmark:** 75% maintenance threshold
+   **Maintenance Priority:** T-003, T-005
+
+The framework coordinates all these steps automatically, handling dependencies, error recovery, data flow between capabilities, and even human approval for Python code execution.
 
 Production Deployment Patterns
 ------------------------------

@@ -51,8 +51,8 @@ API Reference
          
          * :class:`framework.approval.ApprovalManager` - LangGraph-native approval workflows
          * :class:`framework.data_management.DataSourceManager` - Provider discovery and retrieval
-         * :class:`deployment.ContainerManager` - Service orchestration and deployment
-         * :class:`framework.models.ModelFactory` - Multi-provider LLM management
+         * :mod:`deployment.container_manager` - Service orchestration and deployment
+         * :func:`framework.models.get_chat_completion` - Multi-provider LLM management
          * :doc:`01_core_framework/04_configuration_system` - Environment and settings management
          * :doc:`05_framework_utilities/index` - Logging, streaming, and observability
 
@@ -61,25 +61,25 @@ API Reference
 
          **Implementation Shortcuts**
          
-         **Build a new capability** → :class:`framework.base.BaseCapability` + :func:`@capability_node <framework.base.capability_node>`
+         **Build a new capability** → :class:`~framework.base.BaseCapability` + :func:`~framework.base.decorators.capability_node`
          
-         **Add approval workflows** → :class:`framework.approval.ApprovalManager` + :doc:`03_production_systems/01_human-approval`
+         **Add approval workflows** → :class:`~framework.approval.ApprovalManager` + :doc:`03_production_systems/01_human-approval`
          
-         **Execute Python code safely** → :class:`framework.services.python_executor.PythonExecutorService`
+         **Execute Python code safely** → :class:`~framework.services.python_executor.PythonExecutorService`
          
-         **Store user context** → :class:`framework.context.ContextManager` + :doc:`01_core_framework/02_state_and_context`
+         **Store user context** → :class:`~framework.context.ContextManager` + :doc:`01_core_framework/02_state_and_context`
          
-         **Deploy with containers** → :class:`deployment.ContainerManager` + :doc:`03_production_systems/05_container-management`
+         **Deploy with containers** → :mod:`~deployment.container_manager` + :doc:`03_production_systems/05_container-management`
          
-         **Handle complex data flows** → :class:`framework.data_management.DataSourceManager`
+         **Handle complex data flows** → :class:`~framework.data_management.DataSourceManager`
          
-         **Integrate external data** → :class:`framework.data_management.DataProvider` + provider patterns
+         **Integrate external data** → :class:`~framework.data_management.DataSourceProvider` + provider patterns
          
-         **Manage LLM models** → :func:`framework.models.get_model` + :func:`framework.models.get_chat_completion`
+         **Manage LLM models** → :func:`~framework.models.get_model` + :func:`~framework.models.get_chat_completion`
          
-         **Configure logging** → :func:`configs.logger.get_logger` + :class:`configs.logger.ComponentLogger`
+         **Configure logging** → :func:`~configs.logger.get_logger` + :class:`~configs.logger.ComponentLogger`
          
-         **Stream responses** → :func:`configs.streaming.get_streamer` + :class:`configs.streaming.StreamWriter`
+         **Stream responses** → :func:`~configs.streaming.get_streamer` + :class:`~configs.streaming.StreamWriter`
 
       .. tab-item:: By System Component
          :class-content: component-tab
