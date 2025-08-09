@@ -51,8 +51,11 @@ class LLMCodeGenerator:
                     error_chain=error_chain
                 )
             
-            logger.success(f"Successfully generated {len(generated_code)} characters of code")
-            return generated_code.strip()
+            # Clean up common LLM formatting issues
+            cleaned_code = self._clean_generated_code(generated_code)
+            
+            logger.success(f"Successfully generated {len(cleaned_code)} characters of code")
+            return cleaned_code
             
         except Exception as e:
             if isinstance(e, CodeGenerationError):
@@ -100,6 +103,48 @@ class LLMCodeGenerator:
         prompt_parts.append("Generate ONLY the Python code, without markdown code blocks or additional explanation.")
         
         return "\n".join(prompt_parts)
+    
+    def _clean_generated_code(self, raw_code: str) -> str:
+        """
+        Clean up common LLM formatting issues in generated code.
+        
+        This handles cases where LLMs ignore instructions and wrap code in markdown
+        despite being explicitly told not to.
+        
+        Args:
+            raw_code: Raw code string from LLM
+            
+        Returns:
+            Cleaned Python code
+        """
+        import re
+        
+        cleaned = raw_code.strip()
+        
+        # Pattern 1: Standard markdown code blocks ```python ... ```
+        # This handles both ```python and ``` python (with space)
+        markdown_pattern = r'^```\s*python\s*\n(.*?)\n```$'
+        match = re.match(markdown_pattern, cleaned, re.DOTALL | re.IGNORECASE)
+        if match:
+            logger.info("Detected and removed markdown code block formatting")
+            cleaned = match.group(1).strip()
+        
+        # Pattern 2: Plain code blocks ``` ... ``` (without python specifier)
+        elif cleaned.startswith('```') and cleaned.endswith('```'):
+            logger.info("Detected and removed plain markdown code block")
+            lines = cleaned.split('\n')
+            # Remove first and last lines if they're just ```
+            if lines[0].strip() == '```' and lines[-1].strip() == '```':
+                cleaned = '\n'.join(lines[1:-1]).strip()
+        
+        # Pattern 3: Inline code blocks with backticks (less common but possible)
+        elif cleaned.count('`') >= 2:
+            # Only clean if the entire content is wrapped in backticks
+            if cleaned.startswith('`') and cleaned.endswith('`'):
+                logger.info("Detected and removed inline code formatting")
+                cleaned = cleaned.strip('`').strip()
+        
+        return cleaned
 
 
 def create_generator_node():

@@ -413,7 +413,7 @@ class PythonExecutorService:
                 return create_memory_checkpointer()
         else:
             # Default to memory saver for R&D mode
-            logger.info("Python executor service using in-memory checkpointer (same as main graph)")
+            logger.info("Python executor service using in-memory checkpointer")
             return create_memory_checkpointer()
     
     def _load_config(self) -> Dict[str, Any]:
