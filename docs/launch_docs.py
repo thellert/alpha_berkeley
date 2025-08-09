@@ -3,6 +3,7 @@
 Primary documentation launcher - build and serve documentation with cache management
 
 This script cleans build cache, builds documentation, and serves it in detached mode.
+With --with-act, it uses GitHub Actions (act) to build in the same environment as CI.
 """
 
 import os
@@ -223,6 +224,52 @@ class DetachedDocServer:
             print(f"   Error output: {e.stderr}")
             return False
     
+    def build_with_act(self):
+        """Build documentation using GitHub Actions (act) for environment matching."""
+        print("Building documentation with GitHub Actions (act)...")
+        print("This tests the same environment as the remote GitHub build.")
+        
+        # Check if act is available
+        try:
+            subprocess.run(['act', '--version'], 
+                         capture_output=True, 
+                         check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("❌ Error: 'act' is not installed or not found in PATH")
+            print("   Install act to use this feature:")
+            print("   - macOS/Linux: brew install act")
+            print("   - Windows: Download from https://github.com/nektos/act/releases")
+            return False
+        
+        # Change to project root (parent of docs directory)
+        project_root = self.docs_dir.parent
+        original_cwd = Path.cwd()
+        os.chdir(project_root)
+        
+        try:
+            print("Running: act -j build")
+            print("(This may take a while on first run as Docker images are downloaded)")
+            
+            # Run act to build the documentation
+            result = subprocess.run(['act', '-j', 'build'], 
+                                 text=True, 
+                                 check=True)
+            
+            print("✅ Documentation built successfully with act!")
+            print("   Build matches GitHub Actions environment")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Error building documentation with act: {e}")
+            print("   This indicates the build would also fail on GitHub")
+            return False
+        except KeyboardInterrupt:
+            print("\n⚠️  Build interrupted by user")
+            return False
+        finally:
+            # Always return to original directory
+            os.chdir(original_cwd)
+    
     def is_running(self):
         """Check if server is already running."""
         if not self.pid_file.exists():
@@ -393,6 +440,8 @@ def main():
                        help="Only clean the build cache, don't build or serve")
     parser.add_argument("--docs-dir", type=str,
                        help="Path to documentation directory (auto-detected if not specified)")
+    parser.add_argument("--with-act", action="store_true",
+                       help="Build with GitHub Actions (act) first, then serve locally")
 
     
     args = parser.parse_args()
@@ -463,9 +512,15 @@ def main():
             print("You may need to manually stop the process using this port")
     
     # Build documentation
-    clean_first = not args.no_clean
-    if not server.build_docs(clean_first=clean_first):
-        return 1
+    if args.with_act:
+        # Build with act (GitHub Actions environment)
+        if not server.build_with_act():
+            return 1
+    else:
+        # Regular build with make
+        clean_first = not args.no_clean
+        if not server.build_docs(clean_first=clean_first):
+            return 1
     
     # Start detached server
     server.start_detached()

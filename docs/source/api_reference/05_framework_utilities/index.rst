@@ -4,6 +4,27 @@ Framework Utilities
 
 Supporting systems for advanced usage and development tooling.
 
+.. currentmodule:: framework
+
+Core Components
+===============
+
+.. autosummary::
+   :toctree: _autosummary
+   
+   models.get_model
+   models.get_chat_completion
+
+.. currentmodule:: configs
+
+.. autosummary::
+   :toctree: _autosummary
+   
+   logger.get_logger
+   logger.ComponentLogger
+   streaming.get_streamer
+   streaming.StreamWriter
+
 Model Factory
 =============
 
@@ -12,10 +33,8 @@ Multi-provider LLM model management for structured generation and direct complet
 .. currentmodule:: framework.models
 
 .. autofunction:: get_model
-   :no-index:
 
 .. autofunction:: get_chat_completion
-   :no-index:
 
 Developer Tools
 ===============
@@ -28,12 +47,10 @@ Logging System
 .. currentmodule:: configs.logger
 
 .. autofunction:: get_logger
-   :no-index:
 
 .. autoclass:: ComponentLogger
    :members:
    :show-inheritance:
-   :no-index:
 
 Streaming System
 ----------------
@@ -41,12 +58,10 @@ Streaming System
 .. currentmodule:: configs.streaming
 
 .. autofunction:: get_streamer
-   :no-index:
 
 .. autoclass:: StreamWriter
    :members:
    :show-inheritance:
-   :no-index:
 
 .. seealso::
 
