@@ -5,6 +5,14 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-08-08
+
+### Fixed
+- Remove invalid retry_count parameter from ErrorClassification calls in infrastructure nodes
+- Fix runtime error: `ErrorClassification.__init__() got an unexpected keyword argument 'retry_count'`
+- Update documentation examples to reflect correct ErrorClassification API usage
+- Complete migration from dual retry tracking to state-only retry tracking
+
 ## [0.1.0] - 2024-12-XX
 
 ### Added

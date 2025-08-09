@@ -128,8 +128,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network timeout during task extraction, retrying...",
-                technical_details=str(exc),
-                retry_count=context.get('retry_count', 0)
+                technical_details=str(exc)
             )
         
         # Don't retry on validation or configuration errors  
@@ -153,8 +152,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown task extraction error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}",
-            retry_count=context.get('retry_count', 0)
+            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
         )
     
     @staticmethod
