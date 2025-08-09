@@ -161,8 +161,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="LLM timeout during execution planning, retrying...",
-                technical_details=str(exc),
-                retry_count=context.get('retry_count', 0)
+                technical_details=str(exc)
             )
         
         # Retry network/connection errors
@@ -170,8 +169,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network timeout during execution planning, retrying...",
-                technical_details=str(exc),
-                retry_count=context.get('retry_count', 0)
+                technical_details=str(exc)
             )
         
         # Don't retry planning/validation errors (logic issues)
@@ -195,8 +193,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown execution planning error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}",
-            retry_count=context.get('retry_count', 0)
+            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
         )
     
     @staticmethod

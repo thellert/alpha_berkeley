@@ -4,7 +4,7 @@ Alpha Berkeley Framework Documentation
 .. admonition:: 🚧 Early Access Documentation
    :class: warning
 
-   **Current Release**: v0.1.0 Early Access  
+   **Current Release**: v0.1.1 Early Access  
 
    This documentation is part of an early access release and is **under active development**.  
    Many sections are still being written, edited, or reorganized.  
@@ -38,7 +38,7 @@ The framework provides:
 * **Registry-Based Discovery**: :doc:`Convention-driven component loading <developer-guides/01_understanding-the-framework/02_convention-over-configuration>` enables seamless integration of capabilities, data sources, and services across applications
 * **LangGraph Integration**: Native StateGraph workflows with :doc:`checkpoints, interrupts <developer-guides/01_understanding-the-framework/03_langgraph-integration>`, and :doc:`persistent state management <developer-guides/03_core-framework-systems/01_state-management-architecture>`
 * **Human-in-the-Loop Integration**: :ref:`Transparent execution plans <planning-mode-example>` with :doc:`approval workflows <developer-guides/05_production-systems/01_human-approval-workflows>` for high-stakes operational environments
-* **Domain Abstraction**: Framework patterns applicable across diverse infrastructure, from :doc:`simple agents <getting-started/build-your-first-agent>` to complex multi-capability systems
+* **Domain Abstraction**: Framework patterns applicable across diverse infrastructure, from :doc:`simple agents <getting-started/hello-world-tutorial>` to complex :doc:`multi-capability systems <getting-started/build-your-first-agent>`
 
 
 Documentation Structure

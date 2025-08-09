@@ -289,7 +289,7 @@ Production Advantages
            return ErrorClassification(
                severity=ErrorSeverity.RETRIABLE,
                user_message="LLM timeout during execution planning, retrying...",
-               retry_count=context.get('retry_count', 0)
+               technical_details=str(exc)
            )
        
        # Don't retry planning/validation errors (logic issues)

@@ -62,16 +62,14 @@ class ClassificationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Classification service temporarily unavailable, retrying...",
-                technical_details=f"LLM timeout: {str(exc)}",
-                retry_count=context.get('retry_count', 0)
+                technical_details=f"LLM timeout: {str(exc)}"
             )
         
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network connectivity issues during classification, retrying...",
-                technical_details=f"Network error: {str(exc)}",
-                retry_count=context.get('retry_count', 0)
+                technical_details=f"Network error: {str(exc)}"
             )
         
         # Don't retry validation errors (data/logic issues)
@@ -104,8 +102,7 @@ class ClassificationNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown classification error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}",
-            retry_count=context.get('retry_count', 0)
+            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
         )
     
     @staticmethod
