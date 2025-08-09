@@ -54,11 +54,13 @@ RegistryManager
    
    .. automethod:: RegistryManager.initialize
    
-   .. automethod:: RegistryManager.get_stats
-   
    .. automethod:: RegistryManager.validate_configuration
    
    .. automethod:: RegistryManager.export_registry_to_json
+   
+   .. rubric:: Registry Statistics and Debugging
+   
+   .. automethod:: RegistryManager.get_stats
 
 Global Registry Functions
 =========================
@@ -282,6 +284,26 @@ Components are initialized in strict dependency order:
 **Lazy Loading:**
 
 All components use lazy loading to prevent circular import issues. Components are imported and instantiated only during the initialization phase, not at module load time.
+
+Registry Export System
+======================
+
+The registry provides comprehensive export functionality for external tool integration and debugging:
+
+**Automatic Export:**
+Registry metadata is automatically exported during :func:`initialize_registry` when ``auto_export=True`` (default).
+
+**Manual Export:**
+Use :meth:`RegistryManager.export_registry_to_json` for on-demand export of registry state.
+
+**Export Configuration:**
+Default export directory is configured via ``file_paths.registry_exports_dir`` in ``config.yml`` (defaults to ``_agent_data/registry_exports/``).
+
+**Export Structure:**
+Exports create standardized JSON files containing capability definitions, context types, and metadata suitable for consumption by external tools, execution plan editors, and debugging utilities.
+
+**Integration Pattern:**
+The export system enables air-gapped integration where external tools need component metadata but cannot execute live Python code.
 
 .. seealso::
 

@@ -179,6 +179,36 @@ Registry Initialization and Usage
    # Get data sources
    db_provider = registry.get_data_source("experiment_database")
 
+**Registry Export for External Tools:**
+
+The registry system automatically exports metadata during initialization for use by external tools and debugging:
+
+.. code-block:: python
+
+   # Export happens automatically during initialization
+   initialize_registry(auto_export=True)  # Default behavior
+   
+   # Manual export for debugging or integration
+   registry = get_registry()
+   export_data = registry.export_registry_to_json("/path/to/export")
+   
+   # Export creates standardized JSON files:
+   # - registry_export.json (complete metadata)
+   # - capabilities.json (capability definitions)
+   # - context_types.json (context type definitions)
+
+**Export Configuration:**
+
+The default export directory is configured in ``config.yml``:
+
+.. code-block:: yaml
+
+   file_paths:
+     agent_data_dir: _agent_data
+     registry_exports_dir: registry_exports
+
+This creates exports in ``_agent_data/registry_exports/`` relative to the project root. The path can be customized through the configuration system.
+
 Component Loading Order
 =======================
 
@@ -221,6 +251,11 @@ Common Issues
 1. Ensure ``@capability_node`` decorator is applied
 2. Verify ``name`` and ``description`` class attributes exist
 3. Check that ``execute()`` method is implemented as static method
+
+**Registry Export Issues:**
+1. Check that export directory is writable and accessible
+2. Verify ``auto_export=True`` during initialization for automatic exports
+3. Use manual ``export_registry_to_json()`` for debugging specific states
 
 .. seealso::
    :doc:`05_message-and-execution-flow`
