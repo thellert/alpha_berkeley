@@ -28,6 +28,7 @@ langchain-postgres>=0.0.12,<0.1.0
 
 # Runtime dependencies discovered during testing
 rich>=14.0.0
+prompt_toolkit>=3.0.0
 opentelemetry-api>=1.36.0
 opentelemetry-sdk>=1.36.0
 logfire>=3.16.1

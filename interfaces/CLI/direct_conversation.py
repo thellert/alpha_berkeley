@@ -34,6 +34,15 @@ from configs.unified_config import get_full_configuration
 from rich.console import Console
 from rich.text import Text
 
+# Modern CLI dependencies
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.shortcuts import clear
+from prompt_toolkit.styles import Style
+
 logger = get_logger("interface", "cli")
 
 
@@ -119,6 +128,80 @@ class CLI:
         self.thread_id = None
         self.base_config = None
         self.console = Console()
+        
+        # Modern CLI components
+        self.prompt_session = None
+        self.history_file = os.path.expanduser("~/.alpha_berkeley_cli_history")
+        
+        # Create custom key bindings
+        self.key_bindings = self._create_key_bindings()
+        
+        # Create custom style
+        self.prompt_style = Style.from_dict({
+            'prompt': '#00aa00 bold',
+            'suggestion': '#666666 italic',
+        })
+        
+    def _create_key_bindings(self):
+        """Create custom key bindings for advanced CLI functionality.
+        
+        Sets up key bindings that enhance the user experience with shortcuts
+        and special commands. This method creates bindings for common operations
+        like clearing the screen and handling multi-line input.
+        
+        :returns: KeyBindings instance with custom shortcuts
+        :rtype: KeyBindings
+        
+        .. note::
+           Key bindings are applied to the prompt session and work alongside
+           default prompt_toolkit bindings for arrow keys, history, etc.
+        
+        Examples:
+            - Ctrl+L: Clear screen
+            - Ctrl+C: Interrupt (default behavior)
+            - Tab: Auto-completion (when available)
+        """
+        bindings = KeyBindings()
+        
+        @bindings.add('c-l')  # Ctrl+L to clear screen
+        def _(event):
+            """Clear the screen."""
+            clear()
+            
+        return bindings
+        
+    def _create_prompt_session(self):
+        """Create a prompt_toolkit session with modern features.
+        
+        Initializes a PromptSession with advanced terminal features including
+        command history, auto-suggestions, key bindings, and styled prompts.
+        The session provides a modern CLI experience with arrow key navigation,
+        command completion, and persistent history.
+        
+        :returns: Configured PromptSession instance
+        :rtype: PromptSession
+        
+        .. note::
+           The history file is stored in the user's home directory for
+           persistence across sessions.
+        
+        Features enabled:
+            - File-based command history
+            - Auto-suggestions from history
+            - Custom key bindings
+            - Styled prompt with colors
+            - Multi-line editing support
+        """
+        return PromptSession(
+            history=FileHistory(self.history_file),
+            auto_suggest=AutoSuggestFromHistory(),
+            key_bindings=self.key_bindings,
+            style=self.prompt_style,
+            mouse_support=False,  # Disable to allow normal terminal scrolling
+            complete_style='multi-column',
+            enable_suspend=True,  # Allow Ctrl+Z
+            reserve_space_for_menu=0  # Don't reserve space that could interfere with scrolling
+        )
         
     async def initialize(self):
         """Initialize the CLI with framework components and display startup banner.
@@ -219,7 +302,14 @@ class CLI:
         self.graph = create_graph(registry, checkpointer=checkpointer)
         self.gateway = Gateway()
         
+        # Initialize modern prompt session
+        self.prompt_session = self._create_prompt_session()
+        
         self.console.print(f"✅ Framework initialized! Thread ID: {self.thread_id}", style="green")
+        self.console.print("  • Use ↑/↓ arrow keys to navigate command history", style="dim cyan")
+        self.console.print("  • Use ←/→ arrow keys to edit current line", style="dim cyan")
+        self.console.print("  • Press Ctrl+L to clear screen", style="dim cyan")
+        self.console.print("  • Type 'bye' or 'end' to exit, or press Ctrl+C", style="dim cyan")
         self.console.print()
         
     async def run(self):
@@ -274,11 +364,16 @@ class CLI:
         
         while True:
             try:
-                user_input = input("👤 You: ").strip()
+                # Use modern prompt with rich formatting and history
+                user_input = await self.prompt_session.prompt_async(
+                    HTML('<prompt>👤 You: </prompt>'),
+                    style=self.prompt_style
+                )
+                user_input = user_input.strip()
                 
                 # Exit conditions
                 if user_input.lower() in ["bye", "end"]:
-                    print("👋 Goodbye!")
+                    self.console.print("👋 Goodbye!", style="yellow")
                     break
                 
                 # Skip empty input
@@ -392,7 +487,11 @@ class CLI:
                     user_message = interrupt.value.get('user_message', 'Additional approval required')
                     self.console.print(f"\n{user_message}", style="yellow")
                     
-                    user_input = input("👤 You: ").strip()
+                    user_input = await self.prompt_session.prompt_async(
+                        HTML('<prompt>👤 You: </prompt>'),
+                        style=self.prompt_style
+                    )
+                    user_input = user_input.strip()
                     await self._process_user_input(user_input)
                 else:
                     # Execution completed successfully
@@ -490,7 +589,11 @@ class CLI:
                 self.console.print(f"\n{user_message}", style="yellow")
                 
                 # Get user input for approval
-                user_input = input("👤 You: ").strip()
+                user_input = await self.prompt_session.prompt_async(
+                    HTML('<prompt>👤 You: </prompt>'),
+                    style=self.prompt_style
+                )
+                user_input = user_input.strip()
                 
                 # Process the approval response through gateway
                 await self._process_user_input(user_input)
