@@ -104,12 +104,16 @@ venv*
 # Credentials
 .env
 
-
 delete_me*
 valves.json
 *.code-workspace
 
-
 # Agent data directories
 _agent_data/*
 RELEASE_NOTES_v*.md
+
+# Auto-generated documentation
+_autosummary/
+
+# PID files
+*.pid
