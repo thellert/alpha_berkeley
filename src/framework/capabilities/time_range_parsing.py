@@ -391,6 +391,7 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
     yesterday_start = (now - timedelta(days=1)).strftime('%Y-%m-%d') + ' 00:00:00'
     yesterday_end = (now - timedelta(days=1)).strftime('%Y-%m-%d') + ' 23:59:59'
     twenty_four_hours_ago = (now - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
+    two_weeks_ago = (now - timedelta(days=14)).strftime('%Y-%m-%d %H:%M:%S')
     
     # DEBUG: Log what we're calculating
     logger = get_logger("framework", "time_range_parsing")
@@ -450,6 +451,7 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
         - "yesterday" → start_date: "{yesterday_start}", end_date: "{yesterday_end}"
         - "last 24 hours" → start_date: "{twenty_four_hours_ago}", end_date: "{current_time_str}"
         - "past 24 hours" → start_date: "{twenty_four_hours_ago}", end_date: "{current_time_str}"
+        - "past 2 weeks" → start_date: "{two_weeks_ago}", end_date: "{current_time_str}"
 
         Respond with a JSON object containing start_date, end_date, and found.
         The start_date and end_date fields should be datetime values in YYYY-MM-DD HH:MM:SS format
