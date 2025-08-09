@@ -842,9 +842,19 @@ class RegistryManager:
             except Exception as e:
                 logger.warning(f"Failed to initialize framework prompt provider {reg.application_name}: {e}")
         
-        # Set the first registered provider as default
+        # Set default provider - prefer application-specific providers over framework defaults
         if self.config.framework_prompt_providers:
-            default_app = self.config.framework_prompt_providers[0].application_name
+            # Find the first non-framework provider for production-ready default selection
+            default_app = None
+            for provider in self.config.framework_prompt_providers:
+                if provider.application_name != "framework_defaults":
+                    default_app = provider.application_name
+                    break
+            
+            # Fallback to framework defaults if no application providers exist
+            if default_app is None:
+                default_app = self.config.framework_prompt_providers[0].application_name
+            
             from framework.prompts.loader import set_default_framework_prompt_provider
             set_default_framework_prompt_provider(default_app)
             logger.info(f"Set default framework prompt provider to: {default_app}")
