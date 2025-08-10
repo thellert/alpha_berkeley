@@ -10,6 +10,7 @@ Description: Interactive execution plan editor for ALS Expert Agent. Create, mod
 import json
 import logging
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List, Any
@@ -17,6 +18,38 @@ from pydantic import BaseModel, Field
 
 # Set up logger
 logger = logging.getLogger(__name__)
+
+# Import the unified config system for consistent configuration
+try:
+    # Add the framework source path to enable imports
+    framework_src = Path("/app/src")
+    if framework_src.exists():
+        sys.path.insert(0, str(framework_src))
+    
+    from configs.unified_config import get_agent_dir
+    
+    def get_execution_plans_path() -> Path:
+        """Get the execution plans directory path using unified config system.
+        
+        This uses the exact same configuration system as the framework,
+        ensuring complete consistency with the orchestrator.
+        
+        Returns:
+            Path to the execution plans directory
+        """
+        execution_plans_dir = get_agent_dir("execution_plans_dir")
+        return Path(execution_plans_dir)
+    
+    logger.info("Using unified config system for path resolution")
+    
+except ImportError as e:
+    logger.warning(f"Could not import unified config system: {e}")
+    logger.warning("Falling back to direct configuration loading")
+    
+    def get_execution_plans_path() -> Path:
+        """Fallback path resolution when unified config is not available."""
+        # Use hardcoded path that matches standard framework configuration
+        return Path("/app/_agent_data/execution_plans")
 
 # Registry data loading functionality - uses real registry data instead of dummy data
 def load_registry_data(agent_data_dir: str = None) -> dict:
@@ -30,9 +63,17 @@ def load_registry_data(agent_data_dir: str = None) -> dict:
         Dictionary containing success flag, data/error info, and capabilities/context types/templates
     """
     try:
-        # Use default mounted path if not provided
+        # Use unified config system for consistent paths
         if agent_data_dir is None:
-            agent_data_dir = "/app/_agent_data"
+            try:
+                # Use unified config to get the exact same path as the framework
+                agent_data_dir = get_agent_dir("registry_exports_dir")
+                # Get parent directory (agent_data_dir) since registry_exports is a subdirectory
+                agent_data_dir = str(Path(agent_data_dir).parent)
+            except Exception:
+                # Fallback to standard path if unified config fails
+                agent_data_dir = "/app/_agent_data"
+                logger.warning(f"Using fallback path: {agent_data_dir}")
             
         registry_exports_dir = Path(agent_data_dir) / "registry_exports"
         
@@ -341,9 +382,9 @@ class Action:
             if not registry_data["success"]:
                 return {"has_pending": False, "error": "Registry data not available"}
             
-            # Use default mounted path
-            agent_data_dir = "/app/_agent_data/execution_plans"
-            pending_plans_dir = Path(agent_data_dir) / "pending_plans"
+            # Use framework configuration for consistent paths
+            execution_plans_dir = get_execution_plans_path()
+            pending_plans_dir = execution_plans_dir / "pending_plans"
             plan_file = pending_plans_dir / "pending_execution_plan.json"
             
             if plan_file.exists():
@@ -364,9 +405,9 @@ class Action:
     async def save_modified_plan(self, plan_data: dict, __event_emitter__=None, __event_call__=None) -> dict:
         """Save modified execution plan for approval processing."""
         try:
-            # Use default mounted path
-            agent_data_dir = "/app/_agent_data/execution_plans"
-            pending_plans_dir = Path(agent_data_dir) / "pending_plans"
+            # Use framework configuration for consistent paths
+            execution_plans_dir = get_execution_plans_path()
+            pending_plans_dir = execution_plans_dir / "pending_plans"
             pending_plans_dir.mkdir(parents=True, exist_ok=True)
             
             modified_plan_file = pending_plans_dir / "modified_execution_plan.json"
@@ -832,43 +873,29 @@ Please reload the page after fixing the registry data.`);
                 // Set editor HTML
                 editor.innerHTML = createEditorHTML();
                 
-                // Helper function to call backend methods
-                async function callBackend(methodName, params) {{
-                    if (typeof params === 'undefined') {{
-                        params = {{}};
+                // For review mode, we'll show instructions instead of trying to save directly
+                function showSaveInstructions(action) {{
+                    let message = '';
+                    if (action === 'save_as_is') {{
+                        message = `✅ Original Plan Ready for Approval!
+                        
+Return to chat and respond with "yes" to approve the original execution plan.
+
+No modifications were made - the original plan will be used as-is.`;
+                    }} else {{
+                        message = `✅ Plan modifications ready!
+
+To save your modifications and proceed with approval:
+
+1. Close this editor 
+2. Return to chat
+3. Use the execution plan editor again (this will trigger a save of your modifications)
+4. Then respond with "yes" to approve the modified plan
+
+Note: Your modifications are preserved in this session until you reload the page.`;
                     }}
-                    try {{
-                        return new Promise((resolve, reject) => {{
-                            window.parent.postMessage({{
-                                type: 'plan-editor-backend-call',
-                                method: methodName,
-                                params: params
-                            }}, '*');
-                            
-                            // Listen for response
-                            const responseHandler = (event) => {{
-                                if (event.data.type === 'plan-editor-backend-response' && event.data.method === methodName) {{
-                                    window.removeEventListener('message', responseHandler);
-                                    if (event.data.success) {{
-                                        resolve(event.data.result);
-                                    }} else {{
-                                        reject(new Error(event.data.error || 'Backend call failed'));
-                                    }}
-                                }}
-                            }};
-                            
-                            window.addEventListener('message', responseHandler);
-                            
-                            // Timeout after 10 seconds
-                            setTimeout(() => {{
-                                window.removeEventListener('message', responseHandler);
-                                reject(new Error('Backend call timeout'));
-                            }}, 10000);
-                        }});
-                    }} catch (error) {{
-                        console.error(`Backend call failed: ${{methodName}}`, error);
-                        throw error;
-                    }}
+                    
+                    alert(message);
                 }}
                 
                 // Review mode success notification
@@ -921,9 +948,8 @@ Please reload the page after fixing the registry data.`);
                     if (saveAsIsBtn) {{
                         saveAsIsBtn.onclick = async () => {{
                             try {{
-                                // No need to save anything - original plan is already there for gateway to use
-                                showReviewModeSuccess('✅ Plan ready for approval!\\n\\nReturn to chat and respond with "yes" to proceed with the original plan.');
-                                setTimeout(() => overlay.remove(), 1500);
+                                showSaveInstructions('save_as_is');
+                                setTimeout(() => overlay.remove(), 500);
                             }} catch (error) {{
                                 console.error('Error in save as-is:', error);
                                 alert('Error preparing plan for approval. Please try again.');
@@ -934,7 +960,7 @@ Please reload the page after fixing the registry data.`);
                     if (saveModifiedBtn) {{
                         saveModifiedBtn.onclick = async () => {{
                             try {{
-                                // Save current plan modifications
+                                // Store the current plan modifications in browser storage
                                 const planData = {{
                                     "__metadata__": {{
                                         "version": "1.0",
@@ -945,17 +971,14 @@ Please reload the page after fixing the registry data.`);
                                     "steps": currentPlan
                                 }};
                                 
-                                const result = await callBackend('save_modified_plan', {{ plan_data: planData }});
+                                // Store modifications in sessionStorage for persistence within this session
+                                sessionStorage.setItem('pendingModifications', JSON.stringify(planData));
                                 
-                                if (result.success) {{
-                                    showReviewModeSuccess(`✅ Modified plan saved!\\n\\n${{result.message}}\\n\\nReturn to chat and respond with "yes" to approve the modified plan.`);
-                                    setTimeout(() => overlay.remove(), 1500);
-                                }} else {{
-                                    throw new Error(result.error || 'Failed to save modified plan');
-                                }}
+                                showSaveInstructions('save_modified');
+                                setTimeout(() => overlay.remove(), 500);
                             }} catch (error) {{
-                                console.error('Error saving modified plan:', error);
-                                alert(`Error saving modifications: ${{error.message}}\\n\\nPlease try again.`);
+                                console.error('Error preparing modified plan:', error);
+                                alert(`Error preparing modifications: ${{error.message}}\\n\\nPlease try again.`);
                             }}
                         }};
                     }}
@@ -1812,32 +1835,28 @@ Please reload the page after fixing the registry data.`);
                 
                 // Setup event listeners
                 function setupEventListeners() {{
-                    return new Promise((resolve) => {{
-                        if (isReviewMode) {{
-                            // Setup review mode handlers
-                            setupReviewModeHandlers();
-                        }} else {{
-                            // Setup normal mode handlers
-                            setupNormalModeHandlers();
-                        }}
-                        
-                        // Common close handler
-                        const closeBtn = document.getElementById('plan-close-btn');
-                        if (closeBtn) {{
-                            closeBtn.onclick = () => {{
-                                overlay.remove();
-                                resolve({{ action: 'cancel' }});
-                            }};
-                        }}
-                        
-                        // Close on overlay click
-                        overlay.onclick = (e) => {{
-                            if (e.target === overlay) {{
-                                overlay.remove();
-                                resolve({{ action: 'cancel' }});
-                            }}
+                    if (isReviewMode) {{
+                        // Setup review mode handlers
+                        setupReviewModeHandlers();
+                    }} else {{
+                        // Setup normal mode handlers
+                        setupNormalModeHandlers();
+                    }}
+                    
+                    // Common close handler
+                    const closeBtn = document.getElementById('plan-close-btn');
+                    if (closeBtn) {{
+                        closeBtn.onclick = () => {{
+                            overlay.remove();
                         }};
-                    }});
+                    }}
+                    
+                    // Close on overlay click
+                    overlay.onclick = (e) => {{
+                        if (e.target === overlay) {{
+                            overlay.remove();
+                        }}
+                    }};
                 }}
                 
                 // Setup normal mode event handlers
@@ -1908,7 +1927,11 @@ Please reload the page after fixing the registry data.`);
                 renderSteps();
                 autoValidate();
                 
-                return await setupEventListeners();
+                // Setup event listeners without waiting for them
+                setupEventListeners();
+                
+                // Return immediately - the editor is now interactive
+                return {{ action: 'editor_opened', mode: editorMode }};
                 
             }} catch (error) {{
                 return {{ action: 'error', message: 'Error creating plan editor: ' + error.message }};
@@ -2015,6 +2038,62 @@ Please reload the page after fixing the registry data.`);
                         }
                     )
             
+            elif editor_result and editor_result.get("action") == "save_modified":
+                # Save modified execution plan for approval processing
+                plan_data = editor_result.get("plan_data", {})
+                
+                if plan_data:
+                    save_result = await self.save_modified_plan(plan_data, __event_emitter__, __event_call__)
+                    
+                    if save_result["success"]:
+                        await __event_emitter__(
+                            {
+                                "type": "message",
+                                "data": {"content": f"# ✅ Modified Plan Saved Successfully\\n\\n{save_result['message']}\\n\\n**Next Steps:**\\nReturn to chat and respond with **'yes'** to approve the modified execution plan."},
+                            }
+                        )
+                    else:
+                        await __event_emitter__(
+                            {
+                                "type": "message",
+                                "data": {"content": f"# ❌ Error Saving Modified Plan\\n\\n{save_result.get('error', 'Unknown error')}"},
+                            }
+                        )
+                else:
+                    await __event_emitter__(
+                        {
+                            "type": "message",
+                            "data": {"content": "# ❌ Error Saving Modified Plan\\n\\nNo plan data received."},
+                        }
+                    )
+            
+            elif editor_result and editor_result.get("action") == "save_as_is":
+                # User wants to use the original plan as-is
+                await __event_emitter__(
+                    {
+                        "type": "message", 
+                        "data": {"content": "# ✅ Original Plan Ready for Approval\\n\\n**Next Steps:**\\nReturn to chat and respond with **'yes'** to approve the original execution plan."},
+                    }
+                )
+            
+            elif editor_result and editor_result.get("action") == "editor_opened":
+                # Editor was successfully opened
+                mode = editor_result.get("mode", "normal")
+                if mode == "approval_review":
+                    await __event_emitter__(
+                        {
+                            "type": "message",
+                            "data": {"content": "# 📋 Execution Plan Review Mode\\n\\n**Review the pending execution plan above.**\\n\\n- **Use Plan As-Is**: Accept the original plan without changes\\n- **Save Modifications**: Edit the plan and save your changes\\n\\nAfter making your choice, return to chat and respond with **'yes'** to proceed with approval."},
+                        }
+                    )
+                else:
+                    await __event_emitter__(
+                        {
+                            "type": "message",
+                            "data": {"content": "# 📋 Execution Plan Editor\\n\\n**Create and configure your multi-step execution plan above.**\\n\\n- Add steps by clicking capabilities or using the **Add Step** button\\n- Configure inputs and outputs for each step\\n- Use **Save Plan** to save your configuration\\n\\nThe editor will validate your plan and show any issues before saving."},
+                        }
+                    )
+            
             elif editor_result and editor_result.get("action") == "error":
                 await __event_emitter__(
                     {
@@ -2024,8 +2103,13 @@ Please reload the page after fixing the registry data.`);
                 )
             
             else:
-                # Editor was opened and closed normally - no message needed
-                pass
+                # Editor was opened and closed normally - no specific message needed
+                await __event_emitter__(
+                    {
+                        "type": "message",
+                        "data": {"content": "# 📋 Execution Plan Editor\\n\\nEditor opened successfully. Use the interface above to create or review execution plans."},
+                    }
+                )
             
             # Final status
             await __event_emitter__(
