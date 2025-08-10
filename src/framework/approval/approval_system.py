@@ -106,14 +106,18 @@ def create_approval_type(capability_name: str, operation_type: str = None) -> st
 
 def create_plan_approval_interrupt(
     execution_plan: "ExecutionPlan",
-    step_objective: str = "Execute planned operations"
+    plan_file_path: str = None,
+    pending_plans_dir: str = None
 ) -> Dict[str, Any]:
-    """Create structured interrupt data for execution plan approval.
+    """Create structured interrupt data for execution plan approval with file-based storage support.
     
     Generates LangGraph-compatible interrupt data that presents execution plans
     to users for approval. The interrupt includes formatted step details, clear
     approval instructions, and structured payload data for seamless resume
     operations after user approval.
+    
+    The function supports file-based execution plan storage for enhanced
+    human-in-the-loop workflows, particularly for Open WebUI integration.
     
     The generated user message provides a comprehensive view of planned operations
     with step-by-step breakdown, making it easy for users to understand and
@@ -121,8 +125,10 @@ def create_plan_approval_interrupt(
     
     :param execution_plan: Execution plan object containing steps and configuration
     :type execution_plan: ExecutionPlan
-    :param step_objective: Overall objective description for user context
-    :type step_objective: str
+    :param plan_file_path: Optional file path where the execution plan was saved
+    :type plan_file_path: str, optional
+    :param pending_plans_dir: Optional directory path for pending plan files
+    :type pending_plans_dir: str, optional
     :return: Dictionary containing user_message and resume_payload for LangGraph
     :rtype: Dict[str, Any]
     
@@ -134,7 +140,7 @@ def create_plan_approval_interrupt(
             ...     {'task_objective': 'Load data', 'capability': 'data_loader'},
             ...     {'task_objective': 'Analyze trends', 'capability': 'data_analysis'}
             ... ])
-            >>> interrupt_data = create_plan_approval_interrupt(plan, "Analyze user data")
+            >>> interrupt_data = create_plan_approval_interrupt(plan)
             >>> print(interrupt_data['user_message'])  # Contains formatted approval request
             
     .. note::
@@ -156,24 +162,40 @@ def create_plan_approval_interrupt(
     for i, step in enumerate(steps, 1):
         steps_text += f"**Step {i}:** {step.get('task_objective', 'unknown')} ({step.get('capability', 'unknown')})\n"
     
+    # Add file information if available
+    file_info = ""
+    if plan_file_path:
+        file_info = f"\n**Plan File:** `{plan_file_path}`"
+        if pending_plans_dir:
+            file_info += f"\n**Plans Directory:** `{pending_plans_dir}`"
+        file_info += "\n"
+    
     user_message = f"""
 ⚠️ **HUMAN APPROVAL REQUIRED** ⚠️
 
 **Planned Steps ({estimated_steps} total):**
-{steps_text}
+{steps_text}{file_info}
 
 **To proceed, respond with:**
 - **`yes`** to approve and execute the plan
 - **`no`** to cancel this operation
 """.strip()
     
+    # Create enhanced resume payload with file information
+    resume_payload = {
+        "approval_type": create_approval_type("orchestrator", "plan"),
+        "execution_plan": execution_plan  # Keep for backward compatibility
+    }
+    
+    # Add file-based parameters if provided
+    if plan_file_path:
+        resume_payload["plan_file_path"] = plan_file_path
+    if pending_plans_dir:
+        resume_payload["pending_plans_dir"] = pending_plans_dir
+    
     return {
         "user_message": user_message,
-        "resume_payload": {
-            "approval_type": create_approval_type("orchestrator", "plan"),
-            "step_objective": step_objective,
-            "execution_plan": execution_plan
-        }
+        "resume_payload": resume_payload
     }
 
 

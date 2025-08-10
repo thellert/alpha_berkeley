@@ -25,7 +25,7 @@ from framework.context.context_manager import ContextManager
 # Factory code consolidated inline as helper function
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_model_config
+from configs.unified_config import get_model_config, get_agent_dir
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
 
@@ -245,21 +245,42 @@ class OrchestrationNode(BaseInfrastructureNode):
         has_approval_resume, approved_payload = get_approval_resume_data(state, create_approval_type("orchestrator", "plan"))
         
         if has_approval_resume and approved_payload:
-            approved_plan = approved_payload.get("execution_plan")
-            if approved_plan:
-                logger.success("Using approved execution plan from agent state")
+            # Try to load execution plan from file first
+            file_load_result = _load_execution_plan_from_file(logger=logger)
+            
+            if file_load_result["success"]:
+                approved_plan = file_load_result["execution_plan"]
+                plan_source = file_load_result["source"]
+                logger.success(f"Using approved execution plan from file ({plan_source})")
                 
-                streamer.status("Using approved execution plan")
+                streamer.status(f"Using approved execution plan from file ({plan_source})")
+                
+                # Clean up processed plan files
+                _cleanup_processed_plan_files(logger=logger)
                 
                 # Create state updates with explicit cleanup of approval and error state
                 return {
-                    **_create_state_updates(state, approved_plan, "approved_from_state"),
+                    **_create_state_updates(state, approved_plan, f"approved_from_file_{plan_source}"),
                     **clear_approval_state()
                 }
             else:
-                logger.warning("Approved payload found but no execution_plan in payload")
+                # Fallback to old in-memory approach if file loading fails
+                approved_plan = approved_payload.get("execution_plan")
+                if approved_plan:
+                    logger.warning(f"File loading failed ({file_load_result.get('error')}), using in-memory plan")
+                    
+                    streamer.status("Using approved execution plan from memory")
+                    
+                    # Create state updates with explicit cleanup of approval and error state
+                    return {
+                        **_create_state_updates(state, approved_plan, "approved_from_memory_fallback"),
+                        **clear_approval_state()
+                    }
+                else:
+                    logger.warning("Both file loading and in-memory plan failed")
         elif has_approval_resume:
-            # Plan was rejected
+            # Plan was rejected - clean up any pending files
+            _cleanup_processed_plan_files(logger=logger)
             logger.info("Execution plan was rejected by user")
         
         # =====================================================================
@@ -413,7 +434,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         if _is_planning_mode_enabled(state):
             logger.info("PLANNING MODE DETECTED - entering approval workflow")
             # LangGraph handles caching automatically - no manual caching needed
-            await _handle_planning_mode(execution_plan, current_task, logger, streamer)
+            await _handle_planning_mode(execution_plan, current_task, state, logger, streamer)
         else:
             logger.info("Planning mode not enabled - proceeding with normal execution")
         
@@ -458,18 +479,204 @@ def _log_execution_plan(execution_plan: ExecutionPlan, logger):
     logger.key_info("="*50)
 
 
-async def _handle_planning_mode(execution_plan: ExecutionPlan, current_task: str, logger, streamer):
-    """Handle planning mode using structured approval system."""
+
+
+
+def _save_execution_plan_to_file(
+    execution_plan: ExecutionPlan, 
+    current_task: str, 
+    state: AgentState,
+    logger = None
+) -> Dict[str, Any]:
+    """Save execution plan to JSON file for human approval workflow.
+    
+    Args:
+        execution_plan: The execution plan to save
+        current_task: The extracted task from task extraction node
+        state: Agent state containing original user message
+        logger: Logger instance for logging
+        
+    Returns:
+        Dictionary with success status and file path
+    """
+    try:
+        # Get execution plans directory
+        execution_plans_dir = get_agent_dir("execution_plans")
+        pending_plans_dir = Path(execution_plans_dir) / "pending_plans"
+        pending_plans_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Extract original user query
+        original_query = StateManager.get_user_query(state)
+        if not original_query:
+            original_query = current_task  # Fallback if no messages available
+        
+        # Create plan data with metadata including both original query and extracted task
+        plan_data = {
+            "__metadata__": {
+                "current_task": current_task,  # Extracted task from task extraction
+                "original_query": original_query,  # Original user input
+                "created_at": datetime.datetime.now().isoformat(),
+                "serialization_type": "pending_execution_plan"
+            },
+            "steps": execution_plan.get("steps", [])
+        }
+        
+        # Save to pending plan file (used by editor)
+        pending_plan_file = pending_plans_dir / "pending_execution_plan.json"
+        with open(pending_plan_file, 'w', encoding='utf-8') as f:
+            json.dump(plan_data, f, indent=2, ensure_ascii=False)
+        
+        if logger:
+            logger.info(f"Execution plan saved to {pending_plan_file}")
+        
+        return {
+            "success": True,
+            "file_path": str(pending_plan_file),
+            "pending_plans_dir": str(pending_plans_dir)
+        }
+        
+    except Exception as e:
+        error_msg = f"Failed to save execution plan to file: {e}"
+        if logger:
+            logger.error(error_msg)
+        return {
+            "success": False,
+            "error": error_msg
+        }
+
+
+def _load_execution_plan_from_file(logger = None) -> Dict[str, Any]:
+    """Load execution plan from JSON file after human approval.
+    
+    Args:
+        logger: Logger instance for logging
+        
+    Returns:
+        Dictionary with success status and execution plan data
+    """
+    try:
+        # Get execution plans directory using unified config
+        execution_plans_dir = get_agent_dir("execution_plans")
+        pending_plans_dir = Path(execution_plans_dir) / "pending_plans"
+        
+        # Try to load modified plan first (if user modified the plan)
+        modified_plan_file = pending_plans_dir / "modified_execution_plan.json"
+        if modified_plan_file.exists():
+            with open(modified_plan_file, 'r', encoding='utf-8') as f:
+                plan_data = json.load(f)
+            
+            if logger:
+                logger.info(f"Loaded modified execution plan from {modified_plan_file}")
+            
+            return {
+                "success": True,
+                "execution_plan": {"steps": plan_data.get("steps", [])},
+                "metadata": plan_data.get("__metadata__", {}),
+                "source": "modified_plan"
+            }
+        
+        # Fall back to original pending plan
+        pending_plan_file = pending_plans_dir / "pending_execution_plan.json"
+        if pending_plan_file.exists():
+            with open(pending_plan_file, 'r', encoding='utf-8') as f:
+                plan_data = json.load(f)
+            
+            if logger:
+                logger.info(f"Loaded original execution plan from {pending_plan_file}")
+            
+            return {
+                "success": True,
+                "execution_plan": {"steps": plan_data.get("steps", [])},
+                "metadata": plan_data.get("__metadata__", {}),
+                "source": "original_plan"
+            }
+        
+        error_msg = "No execution plan file found for loading"
+        if logger:
+            logger.warning(error_msg)
+        
+        return {
+            "success": False,
+            "error": error_msg
+        }
+        
+    except Exception as e:
+        error_msg = f"Failed to load execution plan from file: {e}"
+        if logger:
+            logger.error(error_msg)
+        return {
+            "success": False,
+            "error": error_msg
+        }
+
+
+def _cleanup_processed_plan_files(logger = None):
+    """Clean up processed execution plan files after successful execution.
+    
+    Args:
+        logger: Logger instance for logging
+    """
+    try:
+        # Get execution plans directory using unified config
+        execution_plans_dir = get_agent_dir("execution_plans")
+        pending_plans_dir = Path(execution_plans_dir) / "pending_plans"
+        
+        files_to_remove = []
+        
+        # Remove pending plan file
+        pending_plan_file = pending_plans_dir / "pending_execution_plan.json"
+        if pending_plan_file.exists():
+            files_to_remove.append(pending_plan_file)
+        
+        # Remove modified plan file if it exists
+        modified_plan_file = pending_plans_dir / "modified_execution_plan.json"
+        if modified_plan_file.exists():
+            files_to_remove.append(modified_plan_file)
+        
+        # Remove the files
+        for file_path in files_to_remove:
+            file_path.unlink()
+            if logger:
+                logger.debug(f"Cleaned up plan file: {file_path}")
+        
+        if logger and files_to_remove:
+            logger.info(f"Cleaned up {len(files_to_remove)} processed plan files")
+        
+    except Exception as e:
+        if logger:
+            logger.warning(f"Failed to cleanup plan files: {e}")
+
+
+async def _handle_planning_mode(execution_plan: ExecutionPlan, current_task: str, state: AgentState, logger, streamer):
+    """Handle planning mode using structured approval system with file-based plan storage."""
     
     logger.approval("Planning mode enabled - requesting plan approval")
     
-    streamer.status("Requesting plan approval...")
+    streamer.status("Saving execution plan and requesting approval...")
     
-    # Create structured plan approval interrupt using new approval system
-    interrupt_data = create_plan_approval_interrupt(
+    # Save execution plan to file for human approval workflow
+    save_result = _save_execution_plan_to_file(
         execution_plan=execution_plan,
-        step_objective=current_task
+        current_task=current_task,
+        state=state,
+        logger=logger
     )
+    
+    if not save_result["success"]:
+        logger.warning(f"Failed to save execution plan: {save_result.get('error')}")
+        # Fallback to in-memory approach if file saving fails
+        interrupt_data = create_plan_approval_interrupt(
+            execution_plan=execution_plan
+        )
+    else:
+        logger.approval(f"Execution plan saved to {save_result['file_path']}")
+        
+        # Create enhanced interrupt data with file path references
+        interrupt_data = create_plan_approval_interrupt(
+            execution_plan=execution_plan,
+            plan_file_path=save_result["file_path"],
+            pending_plans_dir=save_result["pending_plans_dir"]
+        )
     
     logger.approval("Interrupting execution for plan approval")
     logger.debug(f"Interrupt data created with {len(execution_plan.get('steps', []))} steps")
