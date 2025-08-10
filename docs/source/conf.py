@@ -107,6 +107,9 @@ html_domain_indices = True
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_css_files = ["custom.css"]
 
+# Add JavaScript files for execution plan viewer
+html_js_files = ["js/execution_plan_viewer.js"]
+
 # -- Autodoc configuration --------------------------------------------------
 
 # EXPLICIT MOCK IMPORTS
