@@ -20,5 +20,7 @@ services:
       - open-webui:/app/backend/data
       - {{project_root}}/{{file_paths.agent_data_dir}}:/app/{{file_paths.agent_data_dir}}
       - ./framework/open-webui/custom.css:/app/backend/static/custom.css
+      - {{project_root}}/config.yml:/app/config.yml:ro
+      - {{project_root}}/src:/app/src:ro
     networks:
       - als-agents-network
