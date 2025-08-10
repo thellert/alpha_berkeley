@@ -8,6 +8,7 @@ from framework.registry import (
     CapabilityRegistration, 
     ContextClassRegistration, 
     DataSourceRegistration,
+    FrameworkPromptProviderRegistration,
     RegistryConfig,
     RegistryConfigProvider
 )
@@ -97,7 +98,14 @@ class WindTurbineRegistryProvider(RegistryConfigProvider):
         ],
         
         framework_prompt_providers=[
-            # If wind turbine needs custom framework prompts
+            FrameworkPromptProviderRegistration(
+                application_name="wind_turbine",
+                module_path="applications.wind_turbine.framework_prompts",
+                description="Wind turbine-specific framework prompt provider for enhanced analysis reporting",
+                prompt_builders={
+                    "response_generation": "WindTurbineResponseGenerationPromptBuilder"
+                }
+            )
         ],
         
         initialization_order=[

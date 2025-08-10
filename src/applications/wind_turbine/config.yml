@@ -16,6 +16,17 @@ models:
 pipeline:
   name: "Wind Turbine Monitor"
 
+# Override approval settings for tutorial demonstration
+# This showcases human-in-the-loop workflows by requiring approval for ALL Python code
+approval:
+  global_mode: "selective"
+  capabilities:
+    python_execution:
+      enabled: true
+      mode: "all_code"  # Require approval for ALL Python code execution (overrides main config)
+    memory: 
+      enabled: true
+
 # Logging Configuration
 logging:
   logging_colors:
