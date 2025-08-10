@@ -18,7 +18,7 @@ class TurbineDataContext(CapabilityContext):
     
     timestamps: List[datetime] = Field(description="List of timestamps for data points")
     turbine_ids: List[str] = Field(description="List of turbine IDs")
-    power_outputs: List[float] = Field(description="List of power outputs in MW (megawatts)")
+    power_outputs: List[float] = Field(description="List of power outputs in MW (megawatts) - DO NOT CONVERT TO kW")
     time_range: str = Field(description="Human-readable time range description")
     total_records: int = Field(description="Total number of data records")
     
@@ -33,7 +33,8 @@ class TurbineDataContext(CapabilityContext):
             "data_structure": "Three parallel lists: timestamps, turbine_ids, power_outputs",
             "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, context.{self.CONTEXT_TYPE}.{key_ref}.turbine_ids, context.{self.CONTEXT_TYPE}.{key_ref}.power_outputs",
             "example_usage": f"pd.DataFrame({{'timestamp': context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, 'turbine_id': context.{self.CONTEXT_TYPE}.{key_ref}.turbine_ids, 'power_output': context.{self.CONTEXT_TYPE}.{key_ref}.power_outputs}})",
-            "available_fields": ["timestamps", "turbine_ids", "power_outputs", "time_range", "total_records"]
+            "available_fields": ["timestamps", "turbine_ids", "power_outputs", "time_range", "total_records"],
+            "unit_consistency": "All power values in MW - use directly with rated_capacity_mw from knowledge base",
         }
     
     def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:

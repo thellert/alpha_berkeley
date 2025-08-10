@@ -1,33 +1,29 @@
-Build Your First Production-Ready Agent  
-========================================
+Build Your First Agent - Multi-Capability Integration Tutorial  
+==============================================================
 
-Learn to build sophisticated, enterprise-grade agentic systems with the Alpha Berkeley Framework through a comprehensive wind turbine monitoring example that demonstrates professional patterns from basic data retrieval to advanced LLM planning.
+This tutorial builds on the Hello World foundations to demonstrate **orchestration integration patterns** through a wind turbine monitoring agent. You'll learn multi-step workflows, simple RAG integration, Python service integration, and human-in-the-loop workflows. The wind turbine scenario shows how to connect multiple capabilities in coordinated workflows - the techniques are intentionally straightforward to focus on the integration patterns.
 
-Why This Guide?
----------------
+.. dropdown:: **Prerequisites** ⚡
+   :color: info
+   :icon: list-unordered
 
-Building an agentic system from scratch can seem overwhelming. This guide takes you step-by-step through creating a **real, working agent** that monitors wind turbines - from the basic data structures to intelligent multi-step execution planning.
+   **Required:** Complete the :doc:`Hello World Tutorial <hello-world-tutorial>` first.
 
-You'll learn by doing, not just reading about concepts.
+   That tutorial covers the fundamental patterns you need:
 
-What You'll Build
------------------
+   - **Context classes** - Data flow and type safety  
+   - **Basic capabilities** - Structure, execution, and error handling
+   - **Mock API integration** - External service patterns
+   - **Registry configuration** - Component registration
+   - **Application setup** - Framework integration
 
-A production-ready wind turbine monitoring agent that demonstrates enterprise patterns:
+   **What's New Here:** Multi-step orchestration with 6 coordinated capabilities, basic RAG integration patterns, dynamic Python execution with human approval workflows, complex data dependencies across multiple capabilities, and application-specific configuration overrides.
 
-* ** Smart Data Retrieval** - Professional API integration with error handling and retry logic
-* ** Intelligent Analysis** - LLM-powered analysis planning with Python execution services
-* ** Adaptive Insights** - Domain-specific knowledge extraction from technical documentation
-* ** Advanced Planning** - Multi-phase analysis coordination with fallback strategies
-* ** Knowledge Integration** - RAG-style knowledge providers with structured LLM extraction
-* ** Human Oversight** - Approval workflows for sensitive operations and code execution
-* ** Operational Excellence** - Comprehensive logging, monitoring, and error classification
-* ** Performance Optimization** - Model-specific configurations and resource management
+🎯 What You'll Learn
+--------------------
 
-.. note::
-   This example uses mock APIs for development. The patterns shown work with real services too.
+See how the framework coordinates this multi-step analysis request:
 
-**Example Query:**
 .. code-block:: text
 
    "Our wind farm has been underperforming lately. Can you analyze the turbine 
@@ -35,1351 +31,509 @@ A production-ready wind turbine monitoring agent that demonstrates enterprise pa
    below industry standards, and rank them by efficiency? I need to know which 
    ones require immediate maintenance attention."
 
-**What the agent does automatically:**
-1. Parse "past 2 weeks" into exact datetime range
-2. Retrieve historical turbine performance data (5 turbines: T-001 through T-005)
-3. Fetch corresponding weather data (wind speed conditions)
-4. Extract industry performance benchmarks from knowledge base
-5. **Create LLM-powered analysis plan** with structured phases:
-   - Data correlation (merge turbine + weather data by timestamp)
-   - Performance metrics calculation (efficiency vs theoretical maximum)
-   - Industry benchmark comparison (classify against standards)
-6. **Generate and execute Python code** for statistical analysis
-7. **Identify underperformers** and rank turbines by performance
-8. **Apply knowledge base thresholds** to classify performance levels
-
-The 5-Component Architecture
-----------------------------
-
-The wind turbine tutorial agent built with the Alpha Berkeley Framework has these components:
+Into a **6-step orchestrated execution plan** that looks like this:
 
 .. code-block:: text
 
-   📁 src/applications/wind_turbine/
-   ├── registry.py              # Component registration
-   ├── context_classes.py       # Type-safe data structures
-   ├── mock_apis.py             # Realistic API simulation
-   ├── config.yml               # Production configuration
-   ├── capabilities/            # Sophisticated agent skills
-   │   ├── turbine_data_archiver.py    # Basic patterns
-   │   ├── weather_data_retrieval.py   # API integration
-   │   ├── knowledge_retrieval.py      # RAG patterns
-   │   └── turbine_analysis.py         # Advanced planning
-   └── data_sources/            # LLM-enhanced knowledge providers
-       └── knowledge_provider.py       # Production RAG system
+   ┌─────────────────────────────────────────────────────────────────┐
+   │  🔄 Task Classification → 6 capabilities identified            │
+   │  📋 Execution Planning → 6-step plan generated                 │
+   └─────────────────────────────────────────────────────────────────┘
+   
+   Step 1/6: time_range_parsing
+   ├─ Input:  "past 2 weeks"
+   └─ Output: 2025-07-26 to 2025-08-09 datetime range
+   
+   Step 2/6: turbine_data_archiver  
+   ├─ Source: Mock Turbine API
+   └─ Output: 1,680 turbine readings retrieved
+   
+   Step 3/6: weather_data_retrieval
+   ├─ Source: Mock Weather API  
+   └─ Output: 336 wind speed measurements retrieved
+   
+   Step 4/6: knowledge_retrieval
+   ├─ Source: Knowledge Base (LLM processing)
+   └─ Output: Performance thresholds extracted
+            • >85% excellent • 75-85% good • <75% maintenance
+   
+   Step 5/6: turbine_analysis
+   ├─ Process: LLM creates analysis plan
+   ├─ Execute: Python code generation & execution  
+   └─ Output:  Results calculated & ranked
+   
+   Step 6/6: respond
+   ├─ Input:   Analysis results + knowledge thresholds
+   └─ Output:  📊 Maintenance report with turbine rankings
 
-Let's build each component step by step.
 
-Step 1: Define Your Data Types
--------------------------------
 
-First, create the data structures your agent will work with. These are type-safe containers that the framework uses to pass data between capabilities.
+**5 Key Integration Patterns:**
 
-**File:** ``src/applications/wind_turbine/context_classes.py``
+.. tab-set::
+   :class: natural-width
+
+   .. tab-item:: 📚 Simple Knowledge Provider
+
+      **Pattern:** Basic RAG integration that extracts structured parameters from simple text documents
+      
+      **What's New:** Unlike Hello World's simple data retrieval, this shows how to integrate a knowledge source into your workflow. The extraction is intentionally simple (LLM reads a small text document) to focus on the integration pattern, not RAG complexity.
+      
+      **How It Works:** The `WindFarmKnowledgeProvider` acts as a mock enterprise knowledge base. When capabilities need domain expertise (like performance thresholds), they request knowledge through the framework's data management system. The LLM reads static technical documents and extracts specific numerical parameters:
+      
+      - **Documents:** Wind turbine specifications, performance benchmarks, maintenance thresholds
+
+      - **Extraction:** LLM converts text like "Excellent performance: Above 85% capacity factor" into structured data like `excellent_performance_threshold_percent: 85.0`
+
+      - **Usage:** Other capabilities access this knowledge through the `TurbineKnowledgeContext` for decision-making
+
+   .. tab-item:: 🧮 Python Analysis Capability
+
+      **Pattern:** Multi-phase workflow with LLM planning + Dynamic code generation + Human approval
+      
+      **What's New:** Multi-step analysis that creates execution plans, generates Python code, and requires human oversight for sensitive operations.
+      
+      **How It Works:** The `TurbineAnalysisCapability` demonstrates sophisticated workflow orchestration:
+      
+      - **Phase 1 - Planning:** LLM creates structured analysis plan with phases like "Data Preparation," "Performance Metrics Calculation," and "Industry Benchmark Comparison"
+
+      - **Phase 2 - Code Generation:** Framework automatically converts the plan into executable Python code, handling data access patterns and calculations
+
+      - **Phase 3 - Human Approval:** Before execution, the system presents the generated code to humans for review and approval, ensuring safety for sensitive operations (the wind turbine tutorial specifically configures approval for ALL Python code to demonstrate this workflow)
+
+      - **Phase 4 - Execution:** Approved code runs in a sandboxed environment, producing structured results that feed back into the agent workflow
+
+   .. tab-item:: 🌐 Multi-Capability Data Flow
+
+      **Pattern:** Complex dependencies where 4 capabilities feed into 1 analysis capability
+      
+      **What's New:** Demonstrates how context classes enable seamless data flow between multiple specialized capabilities.
+      
+      **How It Works:** The wind turbine agent orchestrates a sophisticated data pipeline with automatic dependency resolution:
+      
+      - **Data Sources:** Four capabilities (`time_range_parsing`, `turbine_data_archiver`, `weather_data_retrieval`, `knowledge_retrieval`) each produce typed context objects
+  
+      - **Context Classes:** Pydantic-based classes like `TurbineDataContext` and `WeatherDataContext` ensure type safety and automatic serialization
+    
+      - **Dependency Management:** The `TurbineAnalysisCapability` declares its requirements (`TURBINE_DATA`, `WEATHER_DATA`, `TURBINE_KNOWLEDGE`) and the framework automatically routes the correct data
+      
+      - **Access Patterns:** Context classes provide rich metadata about data structure, enabling the LLM to generate correct code like `pd.DataFrame({'timestamp': context.TURBINE_DATA.key.timestamps, 'power': context.TURBINE_DATA.key.power_outputs})`
+
+   .. tab-item:: 🎨 Custom Framework Prompts
+
+      **Pattern:** Domain-specific prompt builders that override framework defaults for specialized behavior
+      
+      **What's New:** Replace generic framework prompts with wind turbine-specific instructions for structured analysis, industry terminology, and formatted reporting. Shows how to customize the AI's behavior for your domain.
+      
+      **How It Works:** The `WindTurbineResponseGenerationPromptBuilder` demonstrates domain-specific LLM behavior customization:
+      
+      - **Role Specialization:** Transforms generic AI assistant into "expert wind turbine performance analyst providing detailed technical analysis and maintenance recommendations"
+      
+      - **Industry Standards:** Enforces use of proper terminology (capacity factor, efficiency ratio) and referencing actual knowledge base thresholds rather than making assumptions
+      
+      - **Structured Output:** Mandates specific formatting with performance tables, clear headings ("Performance Overview," "Rankings," "Maintenance Recommendations"), and rounded numerical values for readability
+      
+      - **Context Awareness:** Provides different behavior for conversational vs. technical responses, ensuring appropriate depth and formatting based on available execution context
+
+   .. tab-item:: ⚙️ Advanced Application Setup
+
+      **Pattern:** Complete application customization through registry management and configuration overrides
+      
+      **What's New:** Shows how to override framework defaults, register domain-specific components, and customize system behavior through application-specific configuration.
+      
+      **How It Works:** The wind turbine application demonstrates comprehensive framework customization through two key mechanisms:
+      
+      **Registry Customization (`WindTurbineRegistryProvider`):**
+      
+      - **Framework Exclusions:** Explicitly excludes the generic `python` capability via `framework_exclusions={"capabilities": ["python"]}` to prevent conflicts with the specialized `turbine_analysis` capability
+      
+      - **Custom Registration:** Registers 4 domain-specific capabilities, 4 context classes, 1 data source, and 1 framework prompt provider, all tailored to wind turbine monitoring
+      
+      - **Dependency Declaration:** Each capability declares what it `provides` and `requires`, enabling automatic workflow orchestration
+      
+      - **Initialization Order:** Controls component loading sequence through `initialization_order` to ensure dependencies are available when needed
+      
+      **Configuration Overrides (`config.yml`):**
+      
+      - **Approval Settings:** Overrides the main config's `python_execution.mode: "epics_writes"` with `mode: "all_code"` to require approval for ALL Python code execution (perfect for demonstrating human-in-the-loop workflows)
+      
+      - **Application Models:** Defines wind turbine-specific LLM configurations for `turbine_analysis` and `knowledge_retrieval`
+      
+      - **Logging Colors:** Customizes capability colors for better development experience
+      
+      - **Hierarchical Merging:** Application config automatically merges over framework defaults, allowing selective customization without affecting other applications
+
+
+Let's explore the integration patterns step by step.
+
+Step 1: Multi-Capability Context Classes
+----------------------------------------
+
+The wind turbine application uses **4 specialized context classes** that demonstrate data flow patterns for multi-capability coordination.
+
+**Reference:** See :ref:`hello-world-tutorial-context-classes` for basic context class structure (``CapabilityContext``, required methods, field definitions).
+
+**What's New Here:** Complex data relationships and LLM-optimized access patterns:
 
 .. code-block:: python
 
-   """
-   Context classes define the data structures your agent works with.
-   They're automatically type-checked and provide rich descriptions for the LLM.
-   """
-   
-   from typing import Dict, Any, Optional, List, ClassVar
-   from datetime import datetime
-   from framework.context.base import CapabilityContext
-   from pydantic import Field
-
+   # Advanced pattern: Parallel lists optimized for Python DataFrame creation
    class TurbineDataContext(CapabilityContext):
-       """Historical turbine performance data."""
-       CONTEXT_TYPE: ClassVar[str] = "TURBINE_DATA"
-       CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
-       
        timestamps: List[datetime] = Field(description="List of timestamps for data points")
-       turbine_ids: List[str] = Field(description="List of turbine IDs")
+       turbine_ids: List[str] = Field(description="List of turbine IDs")  
        power_outputs: List[float] = Field(description="List of power outputs in MW")
-       time_range: str = Field(description="Human-readable time range description")
-       total_records: int = Field(description="Total number of data records")
        
        def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Rich description for LLM consumption."""
-           key_ref = key_name if key_name else "key_name"
-           
+           # Teaches LLM how to create DataFrames from parallel lists
            return {
-               "data_points": self.total_records,
-               "time_coverage": self.time_range,
-               "turbine_count": len(set(self.turbine_ids)) if self.turbine_ids else 0,
-               "data_structure": "Three parallel lists: timestamps, turbine_ids, power_outputs",
-               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, context.{self.CONTEXT_TYPE}.{key_ref}.turbine_ids, context.{self.CONTEXT_TYPE}.{key_ref}.power_outputs",
-               "example_usage": f"pd.DataFrame({{'timestamp': context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, 'turbine_id': context.{self.CONTEXT_TYPE}.{key_ref}.turbine_ids, 'power_output': context.{self.CONTEXT_TYPE}.{key_ref}.power_outputs}})",
-               "available_fields": ["timestamps", "turbine_ids", "power_outputs", "time_range", "total_records"]
-           }
-       
-       def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Human-readable summary for UI/debugging."""
-           unique_turbines = list(set(self.turbine_ids)) if self.turbine_ids else []
-           avg_power = sum(self.power_outputs) / len(self.power_outputs) if self.power_outputs else 0
-           
-           return {
-               "type": "Turbine Performance Data",
-               "total_records": self.total_records,
-               "time_range": self.time_range,
-               "turbine_count": len(unique_turbines),
-               "turbine_ids": unique_turbines[:5],  # Show first 5
-               "average_power_output": f"{avg_power:.2f} MW" if avg_power else "N/A",
-               "data_span": f"{self.timestamps[0]} to {self.timestamps[-1]}" if self.timestamps else "No data"
+               "example_usage": f"pd.DataFrame({{'timestamp': context.TURBINE_DATA.{key_ref}.timestamps, 'turbine_id': context.TURBINE_DATA.{key_ref}.turbine_ids, 'power_output': context.TURBINE_DATA.{key_ref}.power_outputs}})"
            }
 
-   class WeatherDataContext(CapabilityContext):
-       """Weather conditions data for turbine analysis."""
-       CONTEXT_TYPE: ClassVar[str] = "WEATHER_DATA"
-       CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
-       
-       timestamps: List[datetime] = Field(description="List of timestamps for weather data")
-       wind_speeds: List[float] = Field(description="List of wind speeds in m/s")
-       time_range: str = Field(description="Human-readable time range description")
-       
-       def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Rich description for LLM consumption."""
-           key_ref = key_name if key_name else "key_name"
-           
-           avg_wind_speed = sum(self.wind_speeds) / len(self.wind_speeds) if self.wind_speeds else 0
-           max_wind_speed = max(self.wind_speeds) if self.wind_speeds else 0
-           min_wind_speed = min(self.wind_speeds) if self.wind_speeds else 0
-           
-           return {
-               "data_points": len(self.timestamps),
-               "time_coverage": self.time_range,
-               "wind_speed_stats": {
-                   "average": f"{avg_wind_speed:.2f} m/s",
-                   "max": f"{max_wind_speed:.2f} m/s",
-                   "min": f"{min_wind_speed:.2f} m/s"
-               },
-               "data_structure": "Two parallel lists: timestamps and wind_speeds",
-               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, context.{self.CONTEXT_TYPE}.{key_ref}.wind_speeds",
-               "example_usage": f"pd.DataFrame({{'timestamp': context.{self.CONTEXT_TYPE}.{key_ref}.timestamps, 'wind_speed': context.{self.CONTEXT_TYPE}.{key_ref}.wind_speeds}})",
-               "available_fields": ["timestamps", "wind_speeds", "time_range"]
-           }
-       
-       def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Human-readable summary for UI/debugging."""
-           avg_wind_speed = sum(self.wind_speeds) / len(self.wind_speeds) if self.wind_speeds else 0
-           max_wind_speed = max(self.wind_speeds) if self.wind_speeds else 0
-           
-           return {
-               "type": "Weather Data",
-               "data_points": len(self.timestamps),
-               "time_range": self.time_range,
-               "average_wind_speed": f"{avg_wind_speed:.2f} m/s",
-               "max_wind_speed": f"{max_wind_speed:.2f} m/s",
-               "data_span": f"{self.timestamps[0]} to {self.timestamps[-1]}" if self.timestamps else "No data"
-           }
+**Key Design Choices:**
 
-   class AnalysisResultsContext(CapabilityContext):
-       """Performance analysis and baseline calculations."""
-       CONTEXT_TYPE: ClassVar[str] = "ANALYSIS_RESULTS"
-       CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
+- **Parallel Lists**: ``timestamps``, ``turbine_ids``, ``power_outputs`` align by index for easy DataFrame creation
+- **Knowledge Containers**: ``TurbineKnowledgeContext`` holds structured parameters extracted by LLM from unstructured docs
+- **Analysis Results**: ``AnalysisResultsContext`` stores Python execution outputs with flexible schema
 
-       results: Dict[str, Any] = Field(default_factory=dict, description="Analysis results container")
-       expected_schema: Optional[Dict[str, Any]] = Field(default=None, description="Expected results structure")
-       
-       def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Rich description for LLM consumption."""
-           key_ref = key_name if key_name else "key_name"
-           return {
-               "available_fields": list(self.results.keys()),
-               "schema": self.expected_schema,
-               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.results['field_name']",
-               "format": "All analysis results are in the .results dictionary - access them directly",
-               "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.results['baseline_power'] for baseline power values"
-           }
-       
-       def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Human-readable summary for UI/debugging."""
-           # Extract all dynamic fields for user display
-           user_data = {}
-           for field_name, value in self.results.items():
-               # Convert large data structures to summaries
-               if isinstance(value, list) and len(value) > 10:
-                   user_data[field_name] = f"List with {len(value)} items: {value[:3]}..."
-               elif isinstance(value, dict) and len(value) > 10:
-                   keys = list(value.keys())[:3]
-                   user_data[field_name] = f"Dict with {len(value)} keys: {keys}..."
-               else:
-                   user_data[field_name] = value
-           
-           return {
-               "type": "Turbine Analysis Results",
-               "results": user_data,
-               "field_count": len(user_data),
-               "available_fields": list(user_data.keys())
-           }
+**File Locations:**
+- Full implementations: ``src/applications/wind_turbine/context_classes.py``
+- Basic patterns explained in: :doc:`Hello World Tutorial <hello-world-tutorial>`
 
-   class TurbineKnowledgeContext(CapabilityContext):
-       """Knowledge base retrieval results for wind farm domain expertise."""
-       CONTEXT_TYPE: ClassVar[str] = "TURBINE_KNOWLEDGE"
-       CONTEXT_CATEGORY: ClassVar[str] = "KNOWLEDGE_DATA"
-       
-       knowledge_data: Dict[str, Any] = Field(default_factory=dict, description="Retrieved knowledge as flat dictionary")
-       knowledge_source: str = Field(default="Wind Farm Knowledge Base", description="Source of the retrieved knowledge")
-       query_processed: str = Field(default="", description="The query that was processed to extract this knowledge")
-       
-       def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Rich description for LLM consumption - guides Python code generation for data access."""
-           key_ref = key_name if key_name else "key_name"
-           
-           # Get the actual field names that can be accessed in Python code
-           available_data_fields = list(self.knowledge_data.keys()) if self.knowledge_data else []
-           
-           return {
-               "knowledge_source": self.knowledge_source,
-               "query_context": self.query_processed,
-               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.knowledge_data['field_name']",
-               "available_fields": available_data_fields,
-               "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.knowledge_data['{available_data_fields[0]}']" if available_data_fields else f"context.{self.CONTEXT_TYPE}.{key_ref}.knowledge_data['field_name']",
-           }
-       
-       def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Human-readable summary for UI/debugging."""
-           # Return the entire knowledge_data for response generation use
-           return {
-               "type": "Wind Farm Knowledge",
-               "source": self.knowledge_source,
-               "query_processed": self.query_processed,
-               "knowledge_data": self.knowledge_data,
-           }
+Step 2: Mock APIs
+-----------------
 
-.. tip::
-   **Why context classes matter:** They provide type safety, automatic validation, and help the LLM understand your data structure. The `get_access_details` method teaches the LLM exactly how to use your data in Python code generation. Separate lists make DataFrame creation easier.
+The wind turbine application includes basic mock APIs for tutorial purposes:
 
-Step 2: Create Mock Services
------------------------------
+- **`TurbineSensorAPI`** - Returns turbine power output data
+- **`WeatherAPI`** - Provides wind speed measurements  
 
-Mock APIs let you develop and test your agent without real external services. They simulate realistic behavior and data patterns.
+These follow the same patterns covered in :ref:`hello-world-tutorial-mock-apis` (type-safe models, async methods, realistic data structures). Nothing special here - just supporting infrastructure to demonstrate the framework's integration patterns.
 
-**File:** ``src/applications/wind_turbine/mock_apis.py``
+**File Location:** ``src/applications/wind_turbine/mock_apis.py``
 
-.. code-block:: python
-
-   """
-   Mock APIs simulate real external services for development.
-   They generate realistic data patterns for testing.
-   """
-   
-   import random
-   import math
-   from typing import List, Dict
-   from datetime import datetime
-   from pydantic import BaseModel
-
-   def get_wind_speed(timestamp: datetime) -> float:
-       """Generate predictable wind speed pattern for tutorial purposes."""
-       # Create a completely predictable pattern for tutorial clarity
-       # Use consistent good wind conditions (12-15 m/s) to focus on turbine differences
-       base_wind = 13.5  # Optimal wind speed for clear performance analysis
-       # Very gentle daily cycle (±1.5 m/s) to keep within optimal range
-       daily_variation = 1.5 * math.sin(timestamp.timestamp() / 86400 * 2 * math.pi)
-       return max(12.0, min(15.0, base_wind + daily_variation))  # Keep in 12-15 m/s range
-
-   class TurbineReading(BaseModel):
-       """Type-safe model for turbine sensor readings."""
-       turbine_id: str
-       timestamp: datetime
-       power_output: float  # MW
-
-   class WeatherReading(BaseModel):
-       """Type-safe model for weather data."""
-       timestamp: datetime
-       wind_speed: float  # m/s
-
-   class TurbineSensorAPI:
-       """Mock API for turbine sensor data with realistic patterns."""
-       
-       def __init__(self):
-           self.turbine_ids = ["T-001", "T-002", "T-003", "T-004", "T-005"]
-           # Each turbine has different efficiency characteristics for performance benchmarking
-           self.turbine_efficiency_factors = {
-               "T-001": 0.95,   # Excellent performer (95% of theoretical) 
-               "T-002": 0.80,   # Good performer (80% of theoretical)
-               "T-003": 0.60,   # Poor performer (60% of theoretical) - needs maintenance
-               "T-004": 0.88,   # Very good performer (88% of theoretical)
-               "T-005": 0.65    # Below average performer (65% of theoretical) - maintenance candidate
-           }
-           # Minimal noise factors for predictable tutorial results
-           self.turbine_noise_factors = {
-               "T-001": 0.02,   # Very stable
-               "T-002": 0.02,   # Stable
-               "T-003": 0.03,   # Slightly variable (compounds poor performance)
-               "T-004": 0.02,   # Very stable
-               "T-005": 0.03    # Slightly variable
-           }
-       
-       async def get_historical_data(self, start_time: datetime, end_time: datetime) -> List[Dict]:
-           """Get historical turbine data for time range."""
-           readings = []
-           time_delta = (end_time - start_time) / 100
-           
-           for i in range(100):
-               timestamp = start_time + (time_delta * i)
-               base_wind = get_wind_speed(timestamp)
-               
-               for turbine_id in self.turbine_ids:
-                   # Calculate theoretical power output based on wind speed
-                   # Simplified power curve: starts at 3 m/s, max at 2.5MW
-                   theoretical_power = min(2.5, max(0, (base_wind - 3) * 0.20))
-                   
-                   # Apply turbine-specific efficiency factor
-                   efficiency_factor = self.turbine_efficiency_factors[turbine_id]
-                   base_power = theoretical_power * efficiency_factor
-                   
-                   # Add realistic noise variation  
-                   noise_factor = self.turbine_noise_factors[turbine_id]
-                   power_noise = random.uniform(-noise_factor, noise_factor) * base_power
-                   final_power = max(0, base_power + power_noise)
-                   
-                   readings.append({
-                       "turbine_id": turbine_id,
-                       "timestamp": timestamp,
-                       "power_output": round(final_power, 2)
-                   })
-           
-           return readings
-
-   class WeatherAPI:
-       """Mock weather service for wind conditions."""
-       
-       async def get_weather_history(self, start_time: datetime, end_time: datetime) -> List[Dict]:
-           """Get historical weather data for time range."""
-           readings = []
-           time_delta = (end_time - start_time) / 100
-           
-           for i in range(100):
-               timestamp = start_time + (time_delta * i)
-               readings.append({
-                   "timestamp": timestamp,
-                   "wind_speed": round(get_wind_speed(timestamp), 1)
-               })
-           
-           return readings
-
-   # Global instances  
-   turbine_api = TurbineSensorAPI()
-   weather_api = WeatherAPI()
-
-.. tip::
-   **Mock APIs are powerful:** They let you test complex scenarios, simulate edge cases, and develop without external dependencies. The patterns shown here work with real APIs too.
-
-Step 3: Add a Professional Knowledge Source
---------------------------------------------
-
-Modern agentic systems need domain expertise. Let's build a production-ready knowledge provider that demonstrates LLM-enhanced RAG patterns used in enterprise systems.
-
-**File:** ``src/applications/wind_turbine/data_sources/knowledge_provider.py``
-
-.. code-block:: python
-
-   """
-   Wind Farm Knowledge Provider
-   
-   Production-ready RAG-style knowledge base that uses LLM to extract structured
-   technical parameters from domain documentation. Demonstrates enterprise
-   knowledge retrieval patterns with error handling and structured outputs.
-   """
-   
-   import logging
-   import textwrap
-   from typing import Dict, Any, Optional
-   from pydantic import BaseModel, Field
-   
-   from framework.data_management import DataSourceProvider, DataSourceContext
-   from framework.data_management.request import DataSourceRequest
-   from framework.models.completion import get_chat_completion
-   from configs.unified_config import get_model_config
-   from applications.wind_turbine.context_classes import TurbineKnowledgeContext
-
-   logger = logging.getLogger(__name__)
-
-   class KnowledgeRetrievalResult(BaseModel):
-       """Structured output model for LLM knowledge extraction."""
-       
-       knowledge_data: Dict[str, Any] = Field(
-           default_factory=dict,
-           description="Extracted numerical parameters and thresholds"
-       )
-       knowledge_source: str = Field(
-           default="Wind Farm Knowledge Base",
-           description="Source of the retrieved knowledge"
-       )
-       query_processed: str = Field(
-           default="",
-           description="The query that was processed"
-       )
-
-   class WindFarmKnowledgeProvider(DataSourceProvider):
-       """Production-ready knowledge provider with LLM-enhanced extraction."""
-       
-       # Enterprise knowledge base - realistic technical documentation
-       KNOWLEDGE_BASE = {
-           "turbine_technical_specifications": """
-           WindMax 2500 Turbine Technical Specifications
-           
-           Our wind farm operates WindMax 2500 turbines with a rated capacity of 2.5 MW each.
-           The turbines have an optimal operating range between 12-18 m/s wind speeds, with
-           cut-in at 3 m/s and cut-out at 25 m/s for safety. The theoretical maximum power
-           coefficient for this turbine design is 0.47, representing peak efficiency under
-           ideal conditions.
-           
-           Rotor diameter: 112 meters
-           Hub height: 95 meters
-           Design life: 20 years
-           """,
-           
-           "performance_standards_guide": """
-           Wind Turbine Performance Standards and Benchmarks
-           
-           Industry performance standards for 2.5MW turbines indicate that excellent 
-           performers achieve efficiency ratings above 85% of their theoretical maximum 
-           output under given wind conditions. Good performers typically maintain 
-           75-85% efficiency, while turbines operating below 75% efficiency require 
-           maintenance intervention.
-           
-           For capacity factor analysis, top-tier turbines achieve over 35% annual 
-           capacity factor, while industry average ranges from 25-35%. The economic 
-           viability threshold is generally considered to be 70% efficiency.
-           """
-       }
-       
-       @property
-       def name(self) -> str:
-           return "wind_farm_knowledge"
-       
-       @property 
-       def context_type(self) -> str:
-           return "TURBINE_KNOWLEDGE"
-       
-       def should_respond(self, request: DataSourceRequest) -> bool:
-           """Only respond to capability execution requests, not task extraction."""
-           return request.requester.component_type != "task_extraction"
-       
-       async def retrieve_data(self, request: DataSourceRequest) -> Optional[DataSourceContext]:
-           """Retrieve domain knowledge using LLM-enhanced query processing."""
-           
-           try:
-               query = request.query or f"Retrieve wind turbine knowledge for {request.requester.component_name}"
-               logger.info(f"Knowledge retrieval requested for: '{query}'")
-               
-               # Create structured LLM prompt with knowledge base
-               retrieval_prompt = self._create_knowledge_retrieval_prompt(query)
-               
-               # Use application-specific model configuration
-               model_config = get_model_config("wind_turbine", "knowledge_retrieval")
-               
-               # LLM-enhanced knowledge extraction
-               knowledge_result = get_chat_completion(
-                   message=retrieval_prompt,
-                   model_config=model_config,
-                   output_model=KnowledgeRetrievalResult
-               )
-               
-               # Create structured context
-               knowledge_context = TurbineKnowledgeContext(
-                   knowledge_data=knowledge_result.knowledge_data,
-                   knowledge_source=knowledge_result.knowledge_source,
-                   query_processed=knowledge_result.query_processed
-               )
-               
-               logger.info(f"Successfully extracted {len(knowledge_result.knowledge_data)} parameters")
-               
-               return DataSourceContext(
-                   source_name=self.name,
-                   context_type=self.context_type,
-                   data=knowledge_context,
-                   metadata={
-                       "query": query,
-                       "llm_processed": True,
-                       "extracted_fields": list(knowledge_result.knowledge_data.keys())
-                   },
-                   provider=self
-               )
-               
-           except Exception as e:
-               logger.error(f"Knowledge retrieval failed: {e}")
-               return None
-       
-       def _create_knowledge_retrieval_prompt(self, query: str) -> str:
-           """Create structured LLM prompt for numerical parameter extraction."""
-           
-           knowledge_sections = []
-           for section_name, section_data in self.KNOWLEDGE_BASE.items():
-               knowledge_sections.append(f"**{section_name.replace('_', ' ').title()}:**")
-               knowledge_sections.append(section_data.strip())
-               knowledge_sections.append("")
-           
-           knowledge_base_text = "\n".join(knowledge_sections)
-           
-           return textwrap.dedent(f"""
-               **TECHNICAL PARAMETER EXTRACTION**
-               
-               Extract relevant numerical parameters and thresholds for: {query}
-               
-               **AVAILABLE TECHNICAL DOCUMENTATION:**
-               {knowledge_base_text}
-               
-               **EXTRACTION REQUIREMENTS:**
-               1. Focus on numerical values, thresholds, and measurable specifications
-               2. Convert all values to clean numerical format for Python analysis
-               3. Use descriptive keys that include units for clarity
-               
-               **OUTPUT FORMAT:**
-               - knowledge_data: Flat dictionary with numerical parameters only
-               - knowledge_source: "Wind Farm Knowledge Base" 
-               - query_processed: "{query}"
-               
-               **NUMERICAL EXTRACTION GUIDELINES:**
-               - Extract percentages as numbers (e.g., "above 85%" → "excellent_efficiency_percent": 85.0)
-               - Extract thresholds (e.g., "below 75%" → "maintenance_threshold_percent": 75.0)  
-               - Extract capacities with units (e.g., "2.5 MW" → "rated_capacity_mw": 2.5)
-               - Extract ranges as min/max (e.g., "12-18 m/s" → "optimal_wind_min_ms": 12.0, "optimal_wind_max_ms": 18.0)
-               
-               **FOCUS:** Extract only actionable numerical parameters for quantitative analysis.
-               """).strip()
-
-.. tip::
-   **Production Knowledge Providers:** This demonstrates enterprise RAG patterns with LLM-enhanced extraction, structured outputs, proper error handling, and metadata tracking. The pattern works with any domain - replace the knowledge base with your technical documentation.
-
-Step 4: Build Your First Capability
+Step 3: Simple Knowledge Integration
 ------------------------------------
 
-Capabilities are your agent's skills. Each capability uses the LangGraph-native architecture with these key components:
+**Reference:** Basic data source provider patterns are covered in :ref:`hello-world-tutorial-data-sources`.
 
-1. **@capability_node decorator** - Integrates with LangGraph execution
-2. **execute() method** - The main business logic (static method)
-3. **Classifier guide** - Teaches the LLM when to use this capability  
-4. **Orchestrator guide** - Teaches the LLM how to plan with this capability
+**What's New Here:** **Basic RAG integration** that shows how to include knowledge sources in your workflow. The extraction itself is deliberately simple to focus on the integration pattern:
 
-Let's build a capability that retrieves historical turbine data:
-
-**File:** ``src/applications/wind_turbine/capabilities/turbine_data_archiver.py``
+**Core Implementation:**
 
 .. code-block:: python
 
-   """
-   Turbine Data Archiver Capability
-   
-   This capability retrieves historical turbine performance data.
-   It shows the complete pattern for building capabilities.
-   """
-   
-   import logging
-   import textwrap
-   from typing import Dict, Any, Optional
-   
-   from framework.base.decorators import capability_node
-   from framework.base.capability import BaseCapability
-   from framework.base.errors import ErrorClassification, ErrorSeverity
-   from framework.base.examples import OrchestratorGuide, OrchestratorExample, ClassifierActions, ClassifierExample, TaskClassifierGuide
-   from framework.base.planning import PlannedStep
-   from framework.state import AgentState, StateManager
-   from framework.registry import get_registry
-   from framework.context.context_manager import ContextManager
-   
-   from applications.wind_turbine.context_classes import TurbineDataContext
-   from applications.wind_turbine.mock_apis import turbine_api
-   from configs.streaming import get_streamer
-   from configs.logger import get_logger
-
-   logger = get_logger("wind_turbine", "turbine_data_archiver")
-   registry = get_registry()
-
-   # === PROFESSIONAL ERROR HANDLING ===
-   class TurbineDataError(Exception):
-       """Base class for turbine data related errors."""
-       pass
-
-   class TurbineDataRetrievalError(TurbineDataError):
-       """Raised when turbine data retrieval fails."""
-       pass
-
-   class MissingTimeRangeError(TurbineDataError):
-       """Raised when required time range context is missing."""
-       pass
-
-   # === THE CAPABILITY CLASS ===
-   @capability_node
-   class TurbineDataArchiverCapability(BaseCapability):
-       """LangGraph-native turbine data archiver capability."""
-       
-       # Required class attributes for registry configuration
-       name = "turbine_data_archiver"
-       description = "Retrieve historical turbine performance data from sensor archives"
-       provides = ["TURBINE_DATA"]
-       requires = ["TIME_RANGE"]
-       
-       @staticmethod
-       async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
-           """Retrieve historical turbine data for the specified time range."""
-           
-           # Extract current step from execution plan
-           step = StateManager.get_current_step(state)
-           
-           # Define streaming helper here for step awareness
-           streamer = get_streamer("wind_turbine", "turbine_data_archiver", state)
-           streamer.status("Retrieving historical turbine data...")
-           
-           # Extract required TIME_RANGE context using ContextManager
-           try:
-               context_manager = ContextManager(state)
-               contexts = context_manager.extract_from_step(
-                   step, state,
-                   constraints=["TIME_RANGE"],
-                   constraint_mode="hard"
-               )
-               time_range_input = contexts[registry.context_types.TIME_RANGE]
-           except ValueError as e:
-               raise MissingTimeRangeError(str(e))
-           
-           # Validate time range context
-           if not hasattr(time_range_input, 'start_date') or not hasattr(time_range_input, 'end_date'):
-               raise MissingTimeRangeError(f"{registry.context_types.TIME_RANGE} context missing required start_date/end_date attributes")
-           
-           logger.debug(f"Retrieving turbine data from {time_range_input.start_date} to {time_range_input.end_date}")
-           
-           try:
-               # Use the mock API to get historical data
-               turbine_readings = await turbine_api.get_historical_data(
-                   start_time=time_range_input.start_date,
-                   end_time=time_range_input.end_date
-               )
-               
-               # Convert to separate lists (makes subsequent pd-dataframe conversion easier)
-               timestamps = [reading["timestamp"] for reading in turbine_readings]
-               turbine_ids = [reading["turbine_id"] for reading in turbine_readings]
-               power_outputs = [reading["power_output"] for reading in turbine_readings]
-               
-               # Create turbine data context
-               turbine_data = TurbineDataContext(
-                   timestamps=timestamps,
-                   turbine_ids=turbine_ids,
-                   power_outputs=power_outputs,
-                   time_range=f"{time_range_input.start_date} to {time_range_input.end_date}",
-                   total_records=len(turbine_readings)
-               )
-               
-               logger.info(f"Retrieved {len(turbine_readings)} turbine readings for time range")
-               
-               # Streaming completion
-               streamer.status("Turbine data retrieved")
-               
-               # Store context using StateManager
-               return StateManager.store_context(
-                   state, 
-                   registry.context_types.TURBINE_DATA, 
-                   step.get("context_key"), 
-                   turbine_data
-               )
-               
-           except Exception as e:
-               logger.error(f"Failed to retrieve turbine data: {e}")
-               raise TurbineDataRetrievalError(f"Failed to retrieve turbine data: {str(e)}")
-       
-       @staticmethod
-       def classify_error(exc: Exception, context: dict) -> ErrorClassification:
-           """Professional error classification with domain-specific handling."""
-           
-           # Handle custom domain exceptions
-           if isinstance(exc, MissingTimeRangeError):
-               return ErrorClassification(
-                   severity=ErrorSeverity.CRITICAL,
-                   user_message="Time range not properly configured for turbine data retrieval",
-                   technical_details=str(exc)
-               )
-           
-           if isinstance(exc, TurbineDataRetrievalError):
-               return ErrorClassification(
-                   severity=ErrorSeverity.RETRIABLE,
-                   user_message="Turbine sensors temporarily unavailable, retrying...",
-                   technical_details=str(exc)
-               )
-           
-           # Handle network/infrastructure errors as retriable
-           if isinstance(exc, (ConnectionError, TimeoutError)):
-               return ErrorClassification(
-                   severity=ErrorSeverity.RETRIABLE,
-                   user_message="Turbine data service timeout, retrying...",
-                   technical_details=str(exc)
-               )
-           
-           # Default to CRITICAL for unknown errors
-           return ErrorClassification(
-               severity=ErrorSeverity.CRITICAL,
-               user_message=f"Turbine data retrieval error: {str(exc)}",
-               technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
-           )
-       
-       def _create_classifier_guide(self) -> Optional[TaskClassifierGuide]:
-           """Teaches the LLM when to use this capability."""
-           return TaskClassifierGuide(
-               instructions="Determine if the task requires historical turbine performance data retrieval.",
-               examples=[
-                   ClassifierExample(
-                       query="Show turbine performance for the past 3 days", 
-                       result=True, 
-                       reason="Request requires historical turbine performance data."
-                   ),
-                   ClassifierExample(
-                       query="What is the current wind speed?", 
-                       result=False, 
-                       reason="Request is for current weather data, not turbine performance history."
-                   ),
-                   ClassifierExample(
-                       query="Analyze recent turbine trends", 
-                       result=True, 
-                       reason="Analysis requires historical turbine data for trends."
-                   )
-               ],
-               actions_if_true=ClassifierActions()
-           )
-       
-       def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
-           """Teaches the LLM how to plan with this capability."""
-           registry = get_registry()
-           
-           example = OrchestratorExample(
-               step=PlannedStep(
-                   context_key="historical_turbine_data",
-                   capability="turbine_data_archiver",
-                   task_objective="Retrieve historical turbine performance data for analysis",
-                   expected_output=registry.context_types.TURBINE_DATA,
-                   success_criteria="Historical turbine performance data retrieved",
-                   inputs=[{registry.context_types.TIME_RANGE: "past_3_days_timerange"}]
-               ),
-               scenario_description="Retrieving historical turbine performance data for analysis"
+   class WindFarmKnowledgeProvider(DataSourceProvider):
+       async def retrieve_data(self, request: DataSourceRequest) -> Optional[DataSourceContext]:
+           # LLM processes knowledge base → structured output
+           knowledge_result = get_chat_completion(
+               message=retrieval_prompt,
+               output_model=KnowledgeRetrievalResult  # Structured extraction
            )
            
-           return OrchestratorGuide(
-               instructions=textwrap.dedent(f"""
-                   **When to plan "turbine_data_archiver" steps:**
-                   - Tasks requiring historical turbine performance data
-                   - Baseline calculations and trend analysis
-                   - Investigating performance issues over time
+           # Returns typed parameters, not raw text
+           return DataSourceContext(data=TurbineKnowledgeContext(
+               knowledge_data=knowledge_result.knowledge_data  # e.g., {"excellent_efficiency_percent": 85.0}
+           ))
 
-                   **Required Dependencies:**
-                   - {registry.context_types.TIME_RANGE}: Time range for data retrieval
+**Example Output:** Instead of text like "Excellent performance: Above 85% capacity factor", you get ``{"excellent_efficiency_percent": 85.0}`` ready for Python calculations.
 
-                   **Output: {registry.context_types.TURBINE_DATA}**
-                   - Contains turbine_readings with power_output, rpm, timestamps
-                   - Provides data for downstream analysis capabilities
-                   """),
-               examples=[example],
-               order=10
-           )
+**File Location:** ``src/applications/wind_turbine/data_sources/knowledge_provider.py``
 
-.. tip::
-   **LangGraph-Native Pattern:** Every capability uses the @capability_node decorator with BaseCapability. The execute() method contains your business logic, while classifier and orchestrator guides teach the LLM when and how to use your capabilities. Use ContextManager for input validation and get_streamer for status updates.
+Step 4: Multi-Capability Coordination
+-------------------------------------
 
-Step 4B: Advanced Analysis Capability (Production Patterns)
-------------------------------------------------------------
+**Reference:** Basic capability patterns (``@capability_node``, ``execute()``, error handling, guides) are covered in :ref:`hello-world-tutorial-capabilities`.
 
-The basic turbine data archiver shows fundamental patterns. Now let's examine a sophisticated capability that demonstrates enterprise-level features: **LLM-powered planning**, **Python execution services**, and **human approval workflows**.
+**What's New Here:** **Context storage and retrieval patterns** that enable data flow between capabilities:
 
-**File:** ``src/applications/wind_turbine/capabilities/turbine_analysis.py`` (Key Patterns)
+.. tab-set::
+
+   .. tab-item:: 📤 Context Storage Pattern
+
+      **Pattern:** How capabilities store their results for other capabilities to use
+      
+      **Implementation:** All capabilities follow the same storage pattern using `StateManager.store_context()`:
+      
+      .. code-block:: python
+      
+         # Create typed context object
+         turbine_data = TurbineDataContext(
+             timestamps=timestamps,
+             turbine_ids=turbine_ids,
+             power_outputs=power_outputs,
+             time_range=f"{start_date} to {end_date}",
+             total_records=len(readings)
+         )
+         
+         # Store using StateManager - makes data available to other capabilities
+         return StateManager.store_context(
+             state, 
+             registry.context_types.TURBINE_DATA,  # What type of data this is
+             step.get("context_key"),              # Unique key from execution plan
+             turbine_data                          # The actual data object
+         )
+
+   .. tab-item:: 📥 Context Retrieval Pattern
+
+      **Pattern:** How capabilities access data from previous steps
+      
+      **Implementation:** Use `ContextManager.extract_from_step()` to get required dependencies:
+      
+      .. code-block:: python
+      
+         # Get context manager
+         context_manager = ContextManager(state)
+         
+         # Extract required contexts based on execution plan dependencies
+         contexts = context_manager.extract_from_step(
+             step, state,
+             constraints=["TURBINE_DATA", "WEATHER_DATA"],  # What we need
+             constraint_mode="hard"                         # Fail if missing
+         )
+         
+         # Access the typed context objects
+         turbine_data = contexts[registry.context_types.TURBINE_DATA]
+         weather_data = contexts[registry.context_types.WEATHER_DATA]
+         
+         # Use the data (already typed and validated)
+         timestamps = turbine_data.timestamps
+         power_outputs = turbine_data.power_outputs
+
+   .. tab-item:: 🔗 Multi-Dependency Coordination
+
+      **Pattern:** How complex capabilities coordinate multiple data sources
+      
+      **Implementation:** The `turbine_analysis` capability demonstrates multi-source coordination:
+      
+      .. code-block:: python
+      
+         # Declared dependencies in registry
+         provides = [registry.context_types.ANALYSIS_RESULTS]
+         requires = [registry.context_types.TURBINE_DATA, 
+                    registry.context_types.WEATHER_DATA, 
+                    registry.context_types.TURBINE_KNOWLEDGE]
+         
+         # Framework automatically ensures all dependencies are available
+         # before this capability executes
+         contexts = context_manager.extract_from_step(
+             step, state,
+             constraints=["TURBINE_DATA", "WEATHER_DATA"],
+             constraint_mode="hard"
+         )
+         
+         # All three context types are available and type-safe
+         turbine_data = contexts[registry.context_types.TURBINE_DATA]    # From step 2
+         weather_data = contexts[registry.context_types.WEATHER_DATA]    # From step 3
+         # knowledge_data automatically accessible through execution plan  # From step 4
+
+**Key Insight:** The framework's dependency resolution ensures capabilities execute in the correct order and have access to exactly the data they need.
+
+**File Locations:** ``src/applications/wind_turbine/capabilities/``
+
+Step 5: Multi-Component Registry Configuration
+----------------------------------------------
+
+**Reference:** Basic registry patterns (``RegistryConfigProvider``, component registration) are covered in :ref:`hello-world-tutorial-registry`.
+
+**What's New Here:** **Specialized configurations** with framework exclusions:
 
 .. code-block:: python
-
-   """
-   Advanced Turbine Analysis Capability
-   
-   Demonstrates production-ready patterns: LLM planning, Python execution integration,
-   approval workflows, and multi-phase analysis coordination.
-   """
-   
-   import textwrap
-   from typing import Dict, Any, List
-   from pydantic import BaseModel, Field
-   
-   from framework.base.decorators import capability_node
-   from framework.base.capability import BaseCapability
-   from framework.services.python_executor.models import PythonExecutionRequest
-   from framework.approval import (
-       create_approval_type,
-       get_approval_resume_data,
-       handle_service_with_interrupts
-   )
-   from framework.models import get_chat_completion
-   from framework.state import AgentState, StateManager
-   from framework.context.context_manager import ContextManager
-   from framework.registry import get_registry
-   from applications.wind_turbine.context_classes import AnalysisResultsContext
-   from configs.unified_config import get_model_config
-   from configs.streaming import get_streamer
-   from configs.logger import get_logger
-   from langgraph.types import Command
-
-   logger = get_logger("wind_turbine", "turbine_analysis")
-   registry = get_registry()
-
-   # === ANALYSIS PLANNING MODELS ===
-   
-   class AnalysisPhase(BaseModel):
-       """Individual phase in the multi-step analysis plan."""
-       phase: str = Field(description="Name of the analytical phase")
-       subtasks: List[str] = Field(description="Specific computational tasks")
-       output_state: str = Field(description="What this phase produces")
-
-   class AnalysisPlan(BaseModel):
-       """Complete analysis plan with structured phases."""
-       phases: List[AnalysisPhase] = Field(description="Ordered list of analysis phases")
-
-   # === LLM-POWERED PLANNING ===
-   
-   async def create_turbine_analysis_plan(task_objective: str, state: AgentState) -> List[AnalysisPhase]:
-       """Use LLM to create hierarchical analysis plan for complex turbine analysis."""
-       
-       system_prompt = textwrap.dedent(f"""
-           You are an expert in wind turbine performance analysis.
-           Create a structured analysis plan for: "{task_objective}"
-           
-           DOMAIN KNOWLEDGE - CRITICAL CONCEPTS:
-           - Wind turbine efficiency should be calculated relative to available wind conditions
-           - True efficiency compares actual performance to theoretical maximum given wind resource
-           - Industry benchmarks classify turbines by actual vs expected performance
-           
-           ANALYSIS CONSTRAINTS:
-           - Focus on computational/analytical aspects only
-           - Must correlate turbine data with weather data by timestamp
-           - Must use knowledge base thresholds for performance classification
-           - Create exactly 3-4 phases maximum for manageable Python code generation
-           
-           Structure each phase with:
-           - phase: Name of the major analytical phase
-           - subtasks: List of 2-3 specific computational tasks
-           - output_state: What this phase accomplishes
-           
-           REQUIRED PHASES (adapt to specific task):
-           1. Data Preparation and Correlation
-           2. Performance Metrics Calculation  
-           3. Industry Benchmark Comparison
-           """)
-
-       try:
-           model_config = get_model_config("wind_turbine", "turbine_analysis")
-           
-           response_data = await get_chat_completion(
-               model_config=model_config,
-               message=f"{system_prompt}\n\nCreate the analysis plan.",
-               output_model=AnalysisPlan,
-           )
-           
-           return response_data.phases
-           
-       except Exception as e:
-           logger.error(f"Failed to generate analysis plan: {e}")
-           # Fallback to default structured plan
-           return [
-               AnalysisPhase(
-                   phase="Data Preparation and Correlation",
-                   subtasks=[
-                       "Merge turbine power data with weather data by timestamp",
-                       "Calculate theoretical power for each wind speed condition"
-                   ],
-                   output_state="Correlated turbine and weather dataset"
-               ),
-               AnalysisPhase(
-                   phase="Performance Metrics Calculation",
-                   subtasks=[
-                       "Calculate actual vs theoretical efficiency for each turbine",
-                       "Compute capacity factors relative to rated capacity"
-                   ],
-                   output_state="Efficiency metrics and capacity factors"
-               ),
-               AnalysisPhase(
-                   phase="Industry Benchmark Comparison",
-                   subtasks=[
-                       "Apply knowledge base thresholds for performance classification",
-                       "Rank turbines by performance metrics"
-                   ],
-                   output_state="Performance classifications and rankings"
-               )
-           ]
-
-   @capability_node  
-   class TurbineAnalysisCapability(BaseCapability):
-       """Production-ready analysis capability with advanced patterns."""
-       
-       name = "turbine_analysis"
-       description = "Analyze wind turbine performance against industry benchmarks"
-       provides = [registry.context_types.ANALYSIS_RESULTS]
-       requires = [registry.context_types.TURBINE_DATA, registry.context_types.WEATHER_DATA, registry.context_types.TURBINE_KNOWLEDGE]
-       
-       @staticmethod
-       async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
-           """Execute sophisticated turbine analysis with planning and Python execution."""
-           
-           step = StateManager.get_current_step(state)
-           streamer = get_streamer("wind_turbine", "turbine_analysis", state)
-           
-           # Get Python executor service from registry
-           python_service = registry.get_service("python_executor")
-           if not python_service:
-               raise RuntimeError("Python executor service not available")
-           
-           # =====================================================
-           # PHASE 1: CHECK FOR APPROVED CODE EXECUTION
-           # =====================================================
-           
-           # Check if resuming from human approval
-           has_approval_resume, approved_payload = get_approval_resume_data(
-               state, 
-               create_approval_type("turbine_analysis")
-           )
-           
-           if has_approval_resume:
-               if approved_payload:
-                   logger.success("Executing approved analysis code")
-                   streamer.status("Executing approved code...")
-                   resume_response = {"approved": True, **approved_payload}
-               else:
-                   logger.info("Analysis was rejected by user")
-                   resume_response = {"approved": False}
-               
-               # Create service configuration
-               service_config = {
-                   "configurable": {
-                       "thread_id": f"python_service_{step.get('context_key', 'default')}",
-                       "checkpoint_ns": "python_executor"
-                   }
-               }
-               
-               # Resume with approval decision
-               service_result = await python_service.ainvoke(
-                   Command(resume=resume_response),
-                   config=service_config
-               )
-           else:
-               # =====================================================
-               # PHASE 2: STRUCTURED ANALYSIS FLOW
-               # =====================================================
-               
-               # Extract and validate required contexts
-               context_manager = ContextManager(state)
-               contexts = context_manager.extract_from_step(
-                   step, state,
-                   constraints=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"],
-                   constraint_mode="hard"
-               )
-               
-               turbine_data = contexts[registry.context_types.TURBINE_DATA]
-               weather_data = contexts[registry.context_types.WEATHER_DATA]
-               knowledge_data = contexts[registry.context_types.TURBINE_KNOWLEDGE]
-               
-               # STEP 1: Create LLM-powered analysis plan
-               streamer.status("Creating analysis plan...")
-               task_objective = step.get("task_objective", "")
-               
-               analysis_plan = await create_turbine_analysis_plan(task_objective, state)
-               logger.info(f"Generated plan with {len(analysis_plan)} phases")
-               
-               # STEP 2: Create structured prompts from plan
-               context_description = context_manager.get_context_access_description(step.get('inputs', []))
-               capability_prompts = [
-                   f"ANALYSIS PLAN: {len(analysis_plan)} phases planned",
-                   f"AVAILABLE DATA: {context_description}",
-                   "Generate Python code following the structured analysis plan phases"
-               ]
-               
-               # STEP 3: Execute with Python service and approval handling
-               expected_results = {"turbine_metrics": {}, "performance_analysis": {}, "summary": {}}
-               
-               execution_request = PythonExecutionRequest(
-                   user_query=state.get("input_output", {}).get("user_query", ""),
-                   task_objective=task_objective,
-                   expected_results=expected_results,
-                   capability_prompts=capability_prompts,
-                   execution_folder_name="turbine_analysis",
-                   capability_context_data=state.get('capability_context_data', {}),
-                   retries=3
-               )
-               
-               streamer.status("Generating and executing Python code...")
-               
-               # Use centralized approval handling
-               service_result = await handle_service_with_interrupts(
-                   service=python_service,
-                   request=execution_request,
-                   config=service_config,
-                   logger=logger,
-                   capability_name="TurbineAnalysis"
-               )
-           
-           # =====================================================
-           # CONVERGENCE: Process results from either path
-           # =====================================================
-           
-           # Create structured analysis context
-           analysis_context = AnalysisResultsContext(
-               results=service_result.results,
-               expected_schema=execution_request.expected_results if not has_approval_resume else None
-           )
-           
-           logger.success("Turbine analysis completed successfully")
-           streamer.status("Analysis complete")
-           
-           # Store results
-           return StateManager.store_context(
-               state, 
-               registry.context_types.ANALYSIS_RESULTS, 
-               step.get("context_key"), 
-               analysis_context
-           )
-
-.. tip::
-   **Advanced Patterns Demonstrated:**
-   
-   - **LLM Planning**: Dynamic analysis plan generation based on task requirements
-   - **Python Execution**: Integration with secure Python execution services  
-   - **Approval Workflows**: Human oversight for sensitive operations
-   - **Structured Prompts**: Converting analysis plans into executable Python code
-   - **Error Recovery**: Fallback plans when LLM planning fails
-   - **State Management**: Handling complex approval/resume flows
-
-Step 5: Register Your Components
---------------------------------
-
-The registry tells the framework about all your components. This is where everything comes together.
-
-**File:** ``src/applications/wind_turbine/registry.py``
-
-.. code-block:: python
-
-   """
-   Wind Turbine Application Registry Configuration.
-   
-   This module defines the component registry for the Wind Turbine Monitoring application.
-   All wind turbine-specific capabilities, context classes, and data sources are declared here.
-   """
-   
-   from framework.registry import (
-       CapabilityRegistration, 
-       ContextClassRegistration,
-       DataSourceRegistration,
-       RegistryConfig,
-       RegistryConfigProvider
-   )
 
    class WindTurbineRegistryProvider(RegistryConfigProvider):
-       """Registry provider for Wind Turbine application."""
-       
        def get_registry_config(self) -> RegistryConfig:
-           """Get wind turbine application registry configuration."""
            return RegistryConfig(
-               core_nodes=[],  # Applications don't define core nodes
-               
-               # Exclude framework components that conflict with specialized implementations
+               # Advanced: Override framework defaults
                framework_exclusions={
                    "capabilities": ["python"]  # Use specialized turbine_analysis instead
                },
                
+               # Register 4 capabilities with complex dependencies
                capabilities=[
-                   CapabilityRegistration(
-                       name="weather_data_retrieval",
-                       module_path="applications.wind_turbine.capabilities.weather_data_retrieval",
-                       class_name="WeatherDataRetrievalCapability", 
-                       description="Retrieve weather data for wind analysis",
-                       provides=["WEATHER_DATA"],
-                       requires=["TIME_RANGE"]
-                   ),
-                   CapabilityRegistration(
-                       name="knowledge_retrieval",
-                       module_path="applications.wind_turbine.capabilities.knowledge_retrieval",
-                       class_name="KnowledgeRetrievalCapability",
-                       description="Retrieve technical standards and performance benchmarks from knowledge base",
-                       provides=["TURBINE_KNOWLEDGE"],
-                       requires=[]
-                   ),
-                   CapabilityRegistration(
-                       name="turbine_data_archiver",
-                       module_path="applications.wind_turbine.capabilities.turbine_data_archiver",
-                       class_name="TurbineDataArchiverCapability",
-                       description="Retrieve historical turbine performance data",
-                       provides=["TURBINE_DATA"],
-                       requires=["TIME_RANGE"]
-                   ),
-                   CapabilityRegistration(
-                       name="turbine_analysis",
-                       module_path="applications.wind_turbine.capabilities.turbine_analysis",
-                       class_name="TurbineAnalysisCapability",
-                       description="Analyze turbine performance against industry benchmarks",
-                       provides=["ANALYSIS_RESULTS"],
-                       requires=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"]
-                   )
+                   CapabilityRegistration(name="turbine_analysis", requires=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"]),
+                   # ... 3 other capabilities
                ],
                
-               context_classes=[
-                   ContextClassRegistration(
-                       context_type="TURBINE_DATA",
-                       module_path="applications.wind_turbine.context_classes", 
-                       class_name="TurbineDataContext"
-                   ),
-                   ContextClassRegistration(
-                       context_type="WEATHER_DATA",
-                       module_path="applications.wind_turbine.context_classes",
-                       class_name="WeatherDataContext"
-                   ),
-                   ContextClassRegistration(
-                       context_type="ANALYSIS_RESULTS",
-                       module_path="applications.wind_turbine.context_classes",
-                       class_name="AnalysisResultsContext"
-                   ),
-                   ContextClassRegistration(
-                       context_type="TURBINE_KNOWLEDGE",
-                       module_path="applications.wind_turbine.context_classes",
-                       class_name="TurbineKnowledgeContext"
-                   ),
-               ],
-               
-               data_sources=[
-                   DataSourceRegistration(
-                       name="wind_farm_knowledge",
-                       module_path="applications.wind_turbine.data_sources.knowledge_provider",
-                       class_name="WindFarmKnowledgeProvider",
-                       description="Mock RAG-style knowledge base for wind farm domain expertise"
-                   )
-               ],
-               
-               framework_prompt_providers=[],
-               
-               initialization_order=[
-                   "context_classes",
-                   "data_sources", 
-                   "capabilities",
-                   "framework_prompt_providers"
-               ]
+               # Register knowledge provider for basic RAG integration
+               data_sources=[DataSourceRegistration(name="wind_farm_knowledge", ...)]
            )
 
-Step 6: Professional Configuration Management
----------------------------------------------
+**Integration Features:**
+- **Framework Exclusions**: Override default Python capability with specialized analysis
+- **Complex Dependencies**: Multi-input capabilities requiring coordination
+- **Data Source Integration**: Knowledge providers for domain expertise
+- **Custom Framework Prompts**: Domain-specific prompt builders for specialized AI behavior
 
-Configuration files enable fine-tuned control over model behavior, performance optimization, and operational parameters for production deployments.
+**File Location:** ``src/applications/wind_turbine/registry.py``
 
-**File:** ``src/applications/wind_turbine/config.yml``
+Step 6: Custom Framework Prompts
+--------------------------------
 
-.. code-block:: yaml
+**What's New Here:** **Domain-specific AI behavior** through custom prompt builders that override framework defaults.
 
-   # Wind Turbine Monitoring Application Configuration
-   # Professional configuration with detailed explanations
+The framework uses generic prompts by default, but you can replace them with domain-specific instructions:
 
-   # === APPLICATION-SPECIFIC MODEL CONFIGURATIONS ===
-   # Different capabilities need different model parameters for optimal performance
-   models:
-     # Complex analysis requiring detailed reasoning and Python code generation
-     turbine_analysis:
-       provider: cborg                    # Cloud provider for enterprise models
-       model_id: anthropic/claude-sonnet  # High-reasoning model for complex analysis
-       max_tokens: 8192                   # Large context for multi-phase analysis plans
-       temperature: 0.1                   # Low temperature for consistent technical output
-       
-     # Knowledge extraction requiring structured output
-     knowledge_retrieval:
-       provider: cborg
-       model_id: anthropic/claude-sonnet
-       max_tokens: 2048                   # Smaller context for focused knowledge extraction
-       temperature: 0.0                   # Deterministic for consistent parameter extraction
+.. dropdown:: 🎨 **Custom Response Generation** - Wind turbine-specific AI behavior
+   :color: info
+   :icon: paintbrush
 
-   # === PIPELINE CONFIGURATION ===
-   # Application identity and operational parameters
-   pipeline:
-     name: "Wind Turbine Monitor"
-     description: "Advanced wind turbine performance monitoring and analysis system"
-     version: "1.0.0"
-     
-   # === OPERATIONAL LOGGING ===
-   # Color-coded logging for operational visibility and debugging
-   logging:
-     level: "INFO"                        # Production logging level
-     logging_colors:
-       # Wind turbine capability color coding for operational monitoring
-       time_range_parsing: "light_blue"   # Time/date processing operations
-       weather_data_retrieval: "cyan"     # External weather service calls
-       turbine_data_archiver: "green"     # Historical data retrieval operations
-       turbine_analysis: "yellow"         # Complex analysis and Python execution
-       knowledge_retrieval: "magenta"     # Knowledge base operations
-       
-   # === PERFORMANCE TUNING ===
-   # Production performance and reliability settings
-   performance:
-     max_concurrent_requests: 5           # Limit concurrent LLM calls for cost control
-     request_timeout_seconds: 120         # Timeout for complex analysis operations
-     retry_attempts: 3                    # Automatic retry for transient failures
-     
-   # === SECURITY AND COMPLIANCE ===
-   # Production security settings
-   security:
-     enable_code_review: true             # Require human approval for Python execution
-     allowed_packages: ["pandas", "numpy", "matplotlib", "seaborn"]  # Restrict Python packages
-     max_execution_time: 300              # Limit Python execution time (seconds)
-
-.. tip::
-   **Production Configuration Patterns:**
+   **The Problem:** Generic framework responses don't understand your domain's terminology, formatting needs, or industry standards.
    
-   - **Model Specialization**: Different capabilities use different model configurations optimized for their specific tasks
-   - **Operational Visibility**: Color-coded logging enables rapid debugging in production
-   - **Performance Controls**: Concurrency limits and timeouts prevent resource exhaustion
-   - **Security Boundaries**: Code review requirements and package restrictions ensure safe operation
-   - **Cost Management**: Token limits and retry controls manage LLM usage costs
+   **The Solution:** Custom prompt builders that inject domain expertise into the AI's responses.
 
-See It In Action
-----------------
+   .. code-block:: python
 
-Once you've built these components, your agent can handle complex requests automatically:
+      # src/applications/wind_turbine/framework_prompts/response_generation.py
+      class WindTurbineResponseGenerationPromptBuilder(DefaultResponseGenerationPromptBuilder):
+          
+          def get_role_definition(self) -> str:
+              return "You are an expert wind turbine performance analyst providing detailed technical analysis and maintenance recommendations."
+          
+          def _get_guidelines_section(self, info) -> str:
+              guidelines = [
+                  "ALWAYS present turbine performance data in well-formatted tables for clarity",
+                  "Include capacity factor percentages rounded to 1 decimal place for readability", 
+                  "Reference specific industry standards from knowledge base when available",
+                  "Use proper turbine industry terminology (capacity factor, efficiency ratio, etc.)",
+                  "Structure analysis with clear headings: Performance Overview, Rankings, Maintenance Recommendations"
+              ]
+              return "GUIDELINES:\n" + "\n".join(f"{i+1}. {g}" for i, g in enumerate(guidelines))
 
-**User Request:**
-.. code-block:: text
+   **Registration in Registry:**
 
-   "Analyze turbine performance over the past week and identify which turbines 
-   need maintenance based on efficiency drops."
+   .. code-block:: python
 
-**Automatic Execution Plan:**
-1. **Parse time range** → "past week" becomes specific dates
-2. **Retrieve knowledge** → Industry benchmarks and technical standards (85% excellent, 75% good, <75% maintenance)
-3. **Fetch turbine data** → Historical performance records (T-001 through T-005)
-4. **Fetch weather data** → Wind conditions for correlation (12-15 m/s optimal range)
-5. **Create analysis plan** → LLM generates structured 3-phase analysis approach
-6. **Execute Python analysis** → Statistical calculations with approval workflow
-7. **Generate insights** → Performance classifications and maintenance rankings
+      # In your RegistryConfig
+      framework_prompt_providers=[
+          FrameworkPromptProviderRegistration(
+              application_name="wind_turbine",
+              module_path="applications.wind_turbine.framework_prompts",
+              prompt_builders={
+                  "response_generation": "WindTurbineResponseGenerationPromptBuilder"
+              }
+          )
+      ]
 
-**Example Results:**
-.. code-block:: text
+   **Result:** The AI now responds with wind turbine expertise - structured tables, industry terminology, proper formatting, and domain-specific analysis patterns.
 
-   📊 **Wind Farm Performance Analysis Results**
-   
-   **Turbine Rankings (by efficiency):**
-   1. T-001: 94.2% efficiency → Excellent performer ✅
-   2. T-004: 87.1% efficiency → Very good performer ✅  
-   3. T-002: 79.3% efficiency → Good performer ⚠️
-   4. T-005: 64.8% efficiency → Below average → **Maintenance recommended** 🔧
-   5. T-003: 59.1% efficiency → Poor performer → **Immediate maintenance required** 🚨
-   
-   **Farm Average:** 76.9% efficiency
-   **Industry Benchmark:** 75% maintenance threshold
-   **Maintenance Priority:** T-003, T-005
+   **Pattern Benefits:**
+   - **Domain Expertise**: AI understands your industry's language and standards
+   - **Consistent Formatting**: Responses follow your preferred structure and style
+   - **Quality Control**: Built-in guidelines ensure professional, accurate outputs
+   - **Maintainable**: Centralized prompt logic that's easy to update and version
 
-The framework coordinates all these steps automatically, handling dependencies, error recovery, data flow between capabilities, and even human approval for Python code execution.
+**File Locations:** ``src/applications/wind_turbine/framework_prompts/response_generation.py``, ``src/applications/wind_turbine/registry.py``
 
-Production Deployment Patterns
-------------------------------
+Integration Patterns Mastered
+-----------------------------
 
-The wind turbine agent demonstrates enterprise-ready patterns for production deployment. Here are the key architectural decisions that make it production-grade:
+**Building on the Hello World foundation**, you now understand **workflow integration patterns**:
 
-**🔐 Security and Compliance**
+✅ **Multi-Capability Orchestration** - 6-step execution plans with dependencies  
 
-.. code-block:: python
+✅ **Basic RAG Integration** - Simple knowledge extraction that shows how to connect knowledge sources  
 
-   # Human approval for sensitive operations
-   from framework.approval import handle_service_with_interrupts
-   
-   # Code execution requires explicit approval
-   service_result = await handle_service_with_interrupts(
-       service=python_service,
-       request=execution_request,
-       config=service_config,
-       logger=logger,
-       capability_name="TurbineAnalysis"
-   )
+✅ **Human-in-the-Loop Workflows** - Approval systems for sensitive operations  
 
-**📊 Operational Monitoring**
+✅ **Dynamic Python Generation** - LLM planning + Code execution + Human oversight  
 
-.. code-block:: python
+✅ **Context Flow Management** - Data flow across multiple capabilities  
 
-   # Structured logging with operational context
-   logger = get_logger("wind_turbine", "turbine_analysis")
-   streamer = get_streamer("wind_turbine", "turbine_analysis", state)
-   
-   # Real-time status updates
-   streamer.status("Creating analysis plan...")
-   streamer.status("Generating and executing Python code...")
-   streamer.status("Analysis complete")
+✅ **Custom Framework Prompts** - Domain-specific AI behavior through prompt customization  
 
-**⚡ Performance Optimization**
 
-.. code-block:: python
+.. _planning-mode-demonstration:
 
-   # Model-specific configurations for optimal performance
-   model_config = get_model_config("wind_turbine", "turbine_analysis")
-   
-   # Structured error recovery with domain-specific handling
-   if isinstance(exc, MissingTimeRangeError):
-       return ErrorClassification(severity=ErrorSeverity.CRITICAL, ...)
-   elif isinstance(exc, TurbineDataRetrievalError):
-       return ErrorClassification(severity=ErrorSeverity.RETRIABLE, ...)
+Interactive Planning Mode Demonstration
+---------------------------------------
 
-**🔄 State Management**
+The Alpha Berkeley Framework's planning mode provides full transparency into multi-step execution plans before they execute. This is especially powerful for complex analysis tasks where you want to understand and approve the approach before execution begins.
 
-.. code-block:: python
+.. dropdown:: **The Power of Planning Mode**
+   :open:
+   :color: primary
+   :icon: tools
 
-   # Robust approval/resume flow handling
-   has_approval_resume, approved_payload = get_approval_resume_data(state, approval_type)
-   
-   if has_approval_resume:
-       # Resume from approval decision
-       service_result = await python_service.ainvoke(Command(resume=response))
-   else:
-       # Normal execution flow
-       service_result = await handle_service_with_interrupts(...)
+   In the wind turbine example above, when a user asks: *"Our wind farm has been underperforming lately. Can you analyze the turbine performance over the past 2 weeks, identify which turbines are operating below industry standards, and rank them by efficiency? I need to know which ones require immediate maintenance attention."*, the orchestrator creates a complete execution plan that shows exactly how it will approach this complex task.
 
-What's Next?
-------------
+   .. tab-set::
 
-Now that you understand both basic and advanced patterns, you can build production-ready agentic systems:
+      .. tab-item:: 📄 Execution Plan JSON
 
-**🔧 Extend Capabilities:**
-- **Real-time Monitoring**: Add streaming data capabilities with WebSocket integration
-- **Predictive Maintenance**: Implement ML models using the Python execution service
-- **Automated Actions**: Build control capabilities with approval workflows
-- **Multi-Source Integration**: Connect multiple data sources (SCADA, historians, APIs)
+         The execution plan below shows the exact 6-step approach the orchestrator designed for the wind turbine analysis task. This is the real plan that gets generated and reviewed before execution:
 
-**🧠 Advanced Intelligence Patterns:**
-- **Dynamic Planning**: Use LLM-powered workflow generation for complex scenarios
-- **Learning Systems**: Implement feedback loops using the memory storage service
-- **Domain Expertise**: Expand knowledge bases with vector storage and semantic search
-- **Contextual Reasoning**: Build capabilities that adapt behavior based on operational context
+         .. literalinclude:: /_static/resources/execution_plans/wind_turbine_analysis.json
+            :language: json
+            :caption: Wind Turbine Analysis - Orchestrator Generated Execution Plan
+            :linenos:
 
-**🔗 Enterprise Integration:**
-- **Authentication**: Integrate with enterprise identity providers (LDAP, SAML)
-- **Monitoring**: Connect to enterprise monitoring (Grafana, Datadog, Splunk)
-- **Data Sources**: Replace mock APIs with real enterprise systems
-- **Compliance**: Add audit trails and regulatory compliance features
+         **Key Planning Features Demonstrated:**
 
-**📊 Scaling Patterns:**
-- **Multi-tenant**: Extend for multiple wind farms with tenant isolation
-- **High Availability**: Implement redundancy and failover strategies
-- **Performance**: Add caching layers and request optimization
-- **Cost Control**: Implement LLM usage monitoring and budget controls
+         📊 **Dependency Visualization**: Notice how steps 2-3 depend on step 1's TIME_RANGE output (lines 23, 35), and step 5 requires outputs from steps 2, 3, and 4 (lines 45-51).
 
-**🚀 Advanced Architectures:**
-- **Microservices**: Split capabilities into independent deployable services
-- **Event-Driven**: Build reactive systems using the framework's event capabilities
-- **Multi-Agent**: Coordinate multiple specialized agents for complex operations
-- **Edge Computing**: Deploy lightweight agents at turbine locations
+         🔗 **Context Flow Management**: The orchestrator ensures data flows correctly: TIME_RANGE → TURBINE_DATA + WEATHER_DATA + TURBINE_KNOWLEDGE → ANALYSIS_RESULTS → Response.
 
-.. tip::
-   **Production Success Patterns:**
-   
-   - **Start with Domain Expertise**: Your knowledge providers are the foundation of intelligent behavior
-   - **Design for Operations**: Include logging, monitoring, and debugging from day one
-   - **Build in Security**: Use approval workflows for sensitive operations and validate all inputs
-   - **Plan for Scale**: Design context classes and capabilities with performance in mind
-   - **Implement Gradually**: Use the progressive complexity approach - basic → advanced → production
+         🎯 **Task Decomposition**: A complex request is automatically broken into 6 logical, manageable steps that build upon each other.
 
-**Framework Advantages in Production:**
+         🛡️ **Human Oversight**: In the actual Open Web UI, this plan would require approval before execution, allowing you to review and modify the approach.
 
-The Alpha Berkeley Framework provides enterprise-grade foundations:
+         **Plan Structure Explanation:**
 
-- **LangGraph Integration**: Native support for complex, stateful workflows
-- **Type Safety**: Pydantic-based context classes prevent runtime errors
-- **Error Recovery**: Sophisticated error classification and retry mechanisms
-- **Human Oversight**: Built-in approval systems for sensitive operations
-- **Operational Visibility**: Comprehensive logging and real-time status updates
-- **Service Integration**: Seamless integration with Python execution, memory, and data services
+         - **Metadata** (lines 2-7): Contains both the extracted task, original user query, creation timestamp, and plan version
+         - **Steps Array**: Each step defines a specific capability execution with clear objectives
+         - **Dependencies**: The ``inputs`` field shows which previous steps' outputs this step requires
+         - **Context Keys**: Unique identifiers for data that flows between steps
+         - **Success Criteria**: Clear definitions of what constitutes successful completion
 
-The patterns you've learned work across domains - financial analysis, IoT monitoring, scientific research, manufacturing optimization. The key is understanding your data structures, building domain expertise through knowledge providers, and creating capabilities that demonstrate intelligent coordination.
+         **In the Open Web UI Interface:**
 
-Ready to build your production agentic system? Start with your domain's context classes and knowledge sources, then progressively add capabilities that demonstrate the sophisticated patterns shown here. The framework provides the enterprise infrastructure - you provide the domain intelligence!
+         When you use planning mode (``/planning`` command), you'll see this exact plan structure with additional functionality:
+
+         - **Edit Individual Steps**: Modify task objectives, success criteria, or dependencies
+         - **Add/Remove Steps**: Insert new capabilities or remove unnecessary steps
+         - **Approve/Reject**: Decide whether to execute the plan as-is or request modifications
+         - **Real-time Validation**: The editor validates dependencies and highlights potential issues
+
+         This transparency ensures you understand exactly what your agent will do before it starts, providing confidence in complex multi-step operations.
+
+         **Production Benefits:**
+
+         - **Auditability**: Every execution has a clear, reviewable plan
+         - **Optimization**: Identify inefficient step sequences before execution
+         - **Learning**: Understand how the orchestrator approaches different types of problems
+         - **Control**: Modify the approach when domain expertise suggests better alternatives
+
+      .. tab-item:: 🖥️ Execution Plan CLI Example
+
+         **Planning Mode in Action**
+
+         Here's what the actual CLI interaction looks like when using planning mode:
+
+         .. code-block:: text
+
+            👤 You: /planning Our wind farm has been underperforming lately. Can you analyze the turbine performance over the past 2 weeks, identify which turbines are operating below industry standards, and rank them by efficiency? I need to know which ones require immediate maintenance attention.
+
+            🔄 Processing: /planning Our wind farm has been underperforming lately...
+            ✅ Processed commands: ['planning']
+            🔄 Extracting actionable task from conversation
+            🔄 Analyzing task requirements...
+            🔄 Generating execution plan...
+            🔄 Requesting plan approval...
+
+            ⚠️ **HUMAN APPROVAL REQUIRED** ⚠️
+
+            **Planned Steps (6 total):**
+            **Step 1:** Parse "past 2 weeks" timeframe → TIME_RANGE
+            **Step 2:** Retrieve historical turbine data → TURBINE_DATA  
+            **Step 3:** Retrieve weather data for correlation → WEATHER_DATA
+            **Step 4:** Get industry performance benchmarks → TURBINE_KNOWLEDGE
+            **Step 5:** Analyze performance against standards → ANALYSIS_RESULTS
+            **Step 6:** Present findings and maintenance recommendations → Response
+
+            **To proceed, respond with:**
+            - **`yes`** to approve and execute the plan
+            - **`edit`** to modify the plan in the interactive editor
+            - **`no`** to cancel this operation
+
+            👤 You: 
+
+         The execution plan editor provides unprecedented transparency into agentic system behavior, making complex multi-step operations both understandable and controllable. This is especially valuable in production environments where understanding the approach is as important as getting results.

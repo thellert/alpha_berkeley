@@ -44,71 +44,43 @@ class WindFarmKnowledgeProvider(DataSourceProvider):
     with LLM-enhanced query processing to extract relevant domain information.
     """
     
-    # Raw knowledge base - simulates enterprise technical documentation
-    # Contains realistic technical documents that LLM will extract parameters from
+    # Simplified knowledge base focused on essential parameters for tutorial
+    # Contains clean technical documents that LLM will extract numerical parameters from
     KNOWLEDGE_BASE = {
-        "turbine_technical_specifications": """
-        WindMax 2500 Turbine Technical Specifications
+        "turbine_specifications": """
+        WindMax 2500 Turbine Specifications
         
-        Our wind farm operates WindMax 2500 turbines with a rated capacity of 2.5 MW each.
-        The turbines have an optimal operating range between 12-18 m/s wind speeds, with
-        cut-in at 3 m/s and cut-out at 25 m/s for safety. The theoretical maximum power
-        coefficient for this turbine design is 0.47, representing peak efficiency under
-        ideal conditions.
-        
+        Rated capacity: 2.5 MW per turbine
+        Cut-in wind speed: 3 m/s  
+        Cut-out wind speed: 25 m/s
+        Optimal wind range: 12-18 m/s
         Rotor diameter: 112 meters
         Hub height: 95 meters
-        Design life: 20 years
         """,
         
-        "performance_standards_guide": """
-        Wind Turbine Performance Standards and Benchmarks
+        "performance_benchmarks": """
+        Industry Performance Standards
         
-        Industry performance standards for 2.5MW turbines indicate that excellent 
-        performers achieve efficiency ratings above 85% of their theoretical maximum 
-        output under given wind conditions. Good performers typically maintain 
-        75-85% efficiency, while turbines operating below 75% efficiency require 
-        maintenance intervention.
+        Excellent performance: Above 85% capacity factor
+        Good performance: 75-85% capacity factor  
+        Maintenance required: Below 75% capacity factor
+        Economic viability threshold: 70% capacity factor
         
-        For capacity factor analysis, top-tier turbines achieve over 35% annual 
-        capacity factor, while industry average ranges from 25-35%. Turbines with 
-        capacity factors below 25% indicate potential mechanical issues or 
-        suboptimal placement.
-        
-        The economic viability threshold is generally considered to be 70% efficiency - 
-        turbines performing below this level are typically not cost-effective to operate 
-        without immediate maintenance.
+        Typical fleet capacity factors: 25-35% annually
+        Target operational uptime: 97%
+        Performance consistency target: Low variability preferred
         """,
         
-        "maintenance_protocols": """
-        Maintenance and Performance Monitoring Guidelines
+        "maintenance_thresholds": """
+        Maintenance Decision Criteria
         
-        Scheduled maintenance should prioritize turbines showing sustained efficiency 
-        below 75% or capacity factors under 25%. Historical data shows that turbines 
-        operating consistently below 70% efficiency require immediate intervention 
-        to remain economically viable.
+        Immediate intervention: Below 70% performance
+        Scheduled maintenance: Below 75% performance
+        Monitoring required: 75-85% performance  
+        Excellent operation: Above 85% performance
         
-        Performance monitoring should track:
-        - Daily efficiency relative to wind conditions
-        - Monthly capacity factor calculations  
-        - Comparative performance against peer turbines
-        - Degradation trends over time
-        
-        Maintenance costs typically represent 2-3% of initial investment annually for 
-        turbines operating within normal parameters.
-        """,
-        
-        "operational_guidelines": """
-        Wind Farm Operational Best Practices
-        
-        Optimal turbine performance occurs when wind speeds are consistently within 
-        the 12-18 m/s range. Performance degrades significantly outside this range, 
-        with efficiency dropping below 60% when winds are consistently under 8 m/s 
-        or over 22 m/s.
-        
-        Turbine availability should target 97% uptime for economic viability. 
-        Seasonal performance variations of 15-25% are considered normal due to 
-        changing wind patterns throughout the year.
+        Annual maintenance costs: 2-3% of initial investment
+        Fleet performance tracking: Monthly capacity factor analysis
         """
     }
     
@@ -153,7 +125,7 @@ class WindFarmKnowledgeProvider(DataSourceProvider):
             
             retrieval_prompt = self._create_knowledge_retrieval_prompt(query)
             
-            model_config = get_model_config("wind_turbine", "weather_analysis")
+            model_config = get_model_config("wind_turbine", "knowledge_retrieval")
             
             logger.debug("Invoking LLM for knowledge retrieval...")
             
@@ -202,31 +174,43 @@ class WindFarmKnowledgeProvider(DataSourceProvider):
         knowledge_base_text = "\n".join(knowledge_sections)
         
         return textwrap.dedent(f"""
-            **TECHNICAL PARAMETER EXTRACTION**
+            **EXTRACT ESSENTIAL PARAMETERS FOR TURBINE ANALYSIS**
             
-            Extract relevant numerical parameters and thresholds from technical documentation for: {query}
+            Extract these specific numerical parameters from the documentation for: {query}
             
             **AVAILABLE TECHNICAL DOCUMENTATION:**
             {knowledge_base_text}
             
-            **EXTRACTION REQUIREMENTS:**
-            1. Focus on numerical values, thresholds, and measurable specifications
-            2. Convert all values to clean numerical format suitable for Python analysis
-            3. Use descriptive keys that include units for clarity
+            **REQUIRED PARAMETERS TO EXTRACT:**
+            
+            From specifications:
+            - rated_capacity_mw (from "2.5 MW")
+            - cut_in_wind_speed_ms (from "3 m/s")
+            - cut_out_wind_speed_ms (from "25 m/s")
+            - optimal_wind_min_ms (from "12-18 m/s" range)
+            - optimal_wind_max_ms (from "12-18 m/s" range)
+            
+            From performance benchmarks:  
+            - excellent_performance_threshold_percent (from "above 85%")
+            - good_performance_min_percent (from "75-85%")
+            - good_performance_max_percent (from "75-85%")
+            - maintenance_threshold_percent (from "below 75%")
+            - economic_threshold_percent (from "70%")
+            
+            From maintenance criteria:
+            - immediate_intervention_threshold_percent (from "below 70%")
+            - target_uptime_percent (from "97%")
+            
+            **EXTRACTION RULES:**
+            - Extract only numerical values (no text descriptions)
+            - Include units in parameter names for clarity
+            - Use consistent naming convention with underscores
+            - Convert percentages to decimal numbers (e.g., "85%" → 85.0)
             
             **OUTPUT FORMAT:**
-            - knowledge_data: Flat dictionary with numerical parameters only
+            - knowledge_data: Flat dictionary with the extracted parameters
             - knowledge_source: "Wind Farm Knowledge Base" 
             - query_processed: "{query}"
-            
-            **NUMERICAL EXTRACTION GUIDELINES:**
-            - Extract percentages as numbers (e.g., "above 85%" → "excellent_efficiency_percent": 85.0)
-            - Extract thresholds (e.g., "below 75%" → "maintenance_threshold_percent": 75.0)  
-            - Extract capacities with units (e.g., "2.5 MW" → "rated_capacity_mw": 2.5)
-            - Extract ranges as min/max (e.g., "12-18 m/s" → "optimal_wind_min_ms": 12.0, "optimal_wind_max_ms": 18.0)
-            - Use descriptive keys that indicate measurement type and units
-            
-            **FOCUS:** Extract only actionable numerical parameters that can be used in quantitative analysis.
             """).strip()
     
     def _format_knowledge_section(self, knowledge_section: str) -> str:

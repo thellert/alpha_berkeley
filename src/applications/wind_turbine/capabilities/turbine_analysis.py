@@ -170,7 +170,13 @@ async def create_turbine_analysis_plan(current_step: Dict[str, Any], task_object
         ]
 
 async def create_turbine_results_dictionary(analysis_plan: List[AnalysisPhase]) -> Dict[str, Any]:
-    """Use LLM to create a results dictionary structure template from the analysis plan."""
+    """Use LLM to create a results dictionary structure template from the analysis plan.
+    
+    NOTE: This function demonstrates how to dynamically generate results structures
+    using an LLM based on the analysis plan. While not used in the tutorial for
+    predictability reasons, this approach provides greater flexibility in production
+    systems where analysis requirements may vary significantly.
+    """
     
     def _format_analysis_plan(plan: List[AnalysisPhase]) -> str:
         """Format the hierarchical plan for the prompt"""
@@ -280,15 +286,26 @@ def _create_structured_analysis_prompts(analysis_plan: List[AnalysisPhase], expe
             plan_text += f"  → {phase.output_state}\n\n"
         return plan_text
     
-    # Execution plan summary (simplified)
+    # Execution plan summary
     prompts.append(textwrap.dedent(f"""
         **STRUCTURED EXECUTION PLAN:**
         {_format_plan_for_prompt(analysis_plan)}
         
         **KEY REQUIREMENTS:**
         - Merge turbine and weather data by timestamp
-        - Calculate efficiency relative to wind conditions (not just rated capacity)
-        - Use knowledge base thresholds for performance classification
+        - Calculate metrics using knowledge base parameters (NO unit conversions needed)
+        - Focus on computational analysis only (no business classifications)
+        
+        **CRITICAL CALCULATION GUIDANCE:**
+        - Capacity Factor = (average_power_output / knowledge['rated_capacity_mw']) * 100
+        - Efficiency Ratio = turbine_performance / fleet_average_performance  
+        - Performance Consistency = coefficient_of_variation(power_outputs)
+        - Use knowledge base values directly (all in consistent MW units)
+        
+        **DO NOT INCLUDE:**
+        - Performance classifications ("Excellent", "Poor", etc.)
+        - Business recommendations or maintenance decisions
+        - Threshold comparisons (save for response analysis)
         """))
 
     # Required output format (simplified)
@@ -306,78 +323,6 @@ def _create_structured_analysis_prompts(analysis_plan: List[AnalysisPhase], expe
     prompts.append(f"**AVAILABLE DATA:** {context_description}")
 
     return prompts
-
-def _create_simple_turbine_prompt(context_description: str = "") -> str:
-    """Create a focused prompt for turbine performance benchmarking analysis.
-    
-    Args:
-        context_description: Optional context access description for available data
-    """
-    base_prompt = textwrap.dedent("""
-        **TURBINE PERFORMANCE BENCHMARKING ANALYSIS:**
-        Analyze wind turbine performance against industry standards and identify underperformers.
-        
-        **DATA AVAILABLE:**
-        - Turbine data: turbine_id, timestamp, power_output (MW)
-        - Weather data: timestamp, wind_speed (m/s)  
-        - Knowledge base: Performance thresholds and industry standards
-        
-        **CRITICAL UNITS NOTE:**
-        - DO NOT convert units - keep everything in MW for calculations
-        
-        **ANALYSIS OBJECTIVES:**
-        1. Calculate efficiency for each turbine against theoretical maximum
-        2. Calculate capacity factors and compare to industry benchmarks
-        3. Classify turbine performance against industry standards
-        4. Rank turbines by overall performance
-        
-        **ANALYSIS OBJECTIVE:**
-        Perform comprehensive wind farm performance benchmarking to identify underperforming turbines.
-        Use the extracted industry standards and performance thresholds from the knowledge base to 
-        classify performance and rank turbines.
-        
-        **AVAILABLE DATA:**
-        - Historical turbine power output data with timestamps (multiple turbines per timestamp)
-        - Weather data (wind speeds) with timestamps (one reading per timestamp)
-        - Industry performance benchmarks and thresholds from knowledge base
-        
-        **DATA RELATIONSHIPS:**
-        Turbine and weather data share timestamps but have different structures - weather data
-        needs to be joined with turbine data by timestamp to correlate performance with wind conditions.
-        
-        **EXPECTED INSIGHTS:**
-        - Which turbines are excellent performers vs poor performers
-        - How each turbine compares to industry standards
-        - Performance trends and consistency metrics
-        - Turbine performance rankings
-        
-        **DOMAIN CONTEXT:**
-        Wind turbines convert wind energy to electrical power. Performance should be evaluated
-        relative to available wind resource (wind speed), not just absolute power output. 
-        True efficiency compares actual power generation to what's theoretically possible 
-        given the wind conditions.
-        
-        **CAPACITY FACTOR CALCULATION:**
-        Capacity Factor = (Actual Energy Output) / (Maximum Theoretical Output) * 100
-        - Use actual power_output values in MW (do NOT convert to kW)
-        - Use rated_capacity_mw from knowledge base (already in MW)
-        - Typical wind farm capacity factors range from 25-45%
-    
-        
-        **USE KNOWLEDGE BASE THRESHOLDS:**
-        Access extracted numerical thresholds from knowledge base to classify performance:
-        - Excellent vs good vs poor efficiency ratings
-        - Industry benchmark comparisons
-        - Performance classification standards
-        
-        **OUTPUT:** Store results with turbine performance metrics, rankings, and classifications.
-        """)
-    
-    # Add context description if available
-    if context_description:
-        return f"{base_prompt}\n\n**CONTEXT ACCESS DESCRIPTION:**\n{context_description}"
-    
-    return base_prompt
 
 def _create_turbine_analysis_context(service_result: PythonServiceResult, expected_schema: Dict[str, Any]) -> AnalysisResultsContext:
     """
@@ -415,9 +360,9 @@ class TurbineAnalysisCapability(BaseCapability):
     """Simplified turbine analysis capability using Python execution."""
     
     name = "turbine_analysis"
-    description = "Analyze wind turbine performance against industry benchmarks to identify underperformers and rank performance"
+    description = "Analyze wind turbine performance"
     provides = [registry.context_types.ANALYSIS_RESULTS]
-    requires = [registry.context_types.TURBINE_DATA, registry.context_types.WEATHER_DATA, registry.context_types.TURBINE_KNOWLEDGE]
+    requires = [registry.context_types.TURBINE_DATA, registry.context_types.WEATHER_DATA]
     
     @staticmethod
     async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
@@ -489,12 +434,11 @@ class TurbineAnalysisCapability(BaseCapability):
             try:
                 contexts = context_manager.extract_from_step(
                     step, state,
-                    constraints=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"],
+                    constraints=["TURBINE_DATA", "WEATHER_DATA"],
                     constraint_mode="hard"
                 )
                 turbine_data = contexts[registry.context_types.TURBINE_DATA]
                 weather_data = contexts[registry.context_types.WEATHER_DATA]
-                knowledge_data = contexts[registry.context_types.TURBINE_KNOWLEDGE]
             except ValueError as e:
                 raise DataValidationError(str(e))
             
@@ -502,7 +446,6 @@ class TurbineAnalysisCapability(BaseCapability):
                 raise DataValidationError(f"Expected TurbineDataContext, got {type(turbine_data)}")
             if not isinstance(weather_data, WeatherDataContext):
                 raise DataValidationError(f"Expected WeatherDataContext, got {type(weather_data)}")
-            # Note: knowledge_data validation is handled by context manager
             
             # Create execution request parameters
             user_query = state.get("input_output", {}).get("user_query", "")
@@ -525,8 +468,29 @@ class TurbineAnalysisCapability(BaseCapability):
             # ===================================
             streamer.status("Creating results structure template...")
             
-            expected_results = await create_turbine_results_dictionary(analysis_plan)
-            logger.info(f"Generated results template with keys: {list(expected_results.keys()) if expected_results else 'None'}")
+            # NOTE: For tutorial purposes, we use a fixed results structure to ensure
+            # predictable and reproducible outcomes. In production, you would typically
+            # use an LLM to dynamically generate the results structure based on the
+            # analysis plan, as demonstrated in the create_turbine_results_dictionary()
+            # function above. This provides more flexibility and adaptability to
+            # different types of analysis tasks.
+            expected_results = {
+                "turbine_metrics": {
+                    "<turbine_id>": {
+                        "capacity_factor_percent": "<float>",
+                        "efficiency_ratio": "<float>", 
+                        "average_power_mw": "<float>",
+                        "performance_consistency": "<float>",
+                        "rank_by_capacity_factor": "<int>"
+                    }
+                },
+                "fleet_summary": {
+                    "average_capacity_factor": "<float>",
+                    "total_turbines": "<int>",
+                    "data_period_hours": "<int>"
+                }
+            }
+            logger.info(f"Generated fixed results template with keys: {list(expected_results.keys())}")
             
             # ===================================
             # STEP 3: Create Structured Prompts

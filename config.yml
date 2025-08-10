@@ -13,8 +13,8 @@ project_root: ${PROJECT_ROOT}
 
 applications:
   # - als_expert
-  # - wind_turbine
-  - hello_world_weather
+  - wind_turbine
+  # - hello_world_weather
   
 # ============================================================
 # OPERATOR CONTROLS - System-wide governance and safety policies
@@ -75,7 +75,7 @@ deployed_services:
   # Framework services (essential for framework operation, see also src/framework/config.yml)
   # - framework.jupyter          # Python execution environment with EPICS support
   # - framework.langfuse         # Observability and tracing infrastructure
-  # - framework.open_webui       # Primary user interface frontend  
+  - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
   # - framework.mem0             # Vector-based memory store
   
@@ -139,6 +139,8 @@ api:
       base_url: https://api.anthropic.com
     ollama:
       api_key: ollama  # Default for ollama
-      base_url: http://localhost:11434 # http://host.containers.internal:11434 <_> http://localhost:11434  <_> http://doudna:11434
-      host: localhost # host.containers.internal <_> localhost
+      # For framework use
+      base_url: http://host.containers.internal:11434 # http://host.containers.internal:11434 <_> http://localhost:11434  <_> http://doudna:11434
+      # For container services
+      host: host.containers.internal # host.containers.internal <_> localhost
       port: 11434

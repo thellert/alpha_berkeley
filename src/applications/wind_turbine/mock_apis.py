@@ -4,7 +4,6 @@ Mock APIs for Wind Turbine Monitoring
 Simulate external services for development and testing.
 """
 
-import random
 import asyncio
 import math
 from typing import List, Dict
@@ -39,45 +38,38 @@ class TurbineSensorAPI:
     
     def __init__(self):
         self.turbine_ids = ["T-001", "T-002", "T-003", "T-004", "T-005"]
-        # Each turbine has different efficiency characteristics for performance benchmarking
+        # Each turbine has different efficiency characteristics designed around knowledge thresholds
+        # Knowledge thresholds: Excellent >85%, Good 75-85%, Maintenance <75%, Critical <70%
         self.turbine_efficiency_factors = {
-            "T-001": 0.95,   # Excellent performer (95% of theoretical) 
-            "T-002": 0.80,   # Good performer (80% of theoretical)
-            "T-003": 0.60,   # Poor performer (60% of theoretical) - needs maintenance
-            "T-004": 0.88,   # Very good performer (88% of theoretical)
-            "T-005": 0.65    # Below average performer (65% of theoretical) - maintenance candidate
-        }
-        # Minimal noise factors for predictable tutorial results
-        self.turbine_noise_factors = {
-            "T-001": 0.02,   # Very stable
-            "T-002": 0.02,   # Stable
-            "T-003": 0.03,   # Slightly variable (compounds poor performance)
-            "T-004": 0.02,   # Very stable
-            "T-005": 0.03    # Slightly variable
+            "T-001": 0.90,   # Excellent: above 85% threshold
+            "T-002": 0.72,   # Below maintenance: under 75% threshold  
+            "T-003": 0.88,   # Excellent: above 85% threshold
+            "T-004": 0.65,   # Critical: under 70% economic threshold
+            "T-005": 0.82,   # Good: between 75-85% thresholds
         }
     
     async def get_historical_data(self, start_time: datetime, end_time: datetime) -> List[Dict]:
         """Get historical turbine data for time range."""
         readings = []
-        time_delta = (end_time - start_time) / 100
         
-        for i in range(100):
+        # Calculate realistic data points based on time range
+        # Generate data every hour for realistic turbine monitoring
+        total_hours = int((end_time - start_time).total_seconds() / 3600)
+        num_points = min(max(total_hours, 24), 500)  # At least 24 points, max 500 for performance
+        time_delta = (end_time - start_time) / num_points
+        
+        for i in range(num_points):
             timestamp = start_time + (time_delta * i)
             base_wind = get_wind_speed(timestamp)
             
             for turbine_id in self.turbine_ids:
                 # Calculate theoretical power output based on wind speed
-                # Simplified power curve: starts at 3 m/s, max at 2.5MW
-                theoretical_power = min(2.5, max(0, (base_wind - 3) * 0.20))
+                # Simplified linear power curve: wind_speed * 0.18, capped at 2.5MW
+                theoretical_power = min(2.5, base_wind * 0.18)
                 
                 # Apply turbine-specific efficiency factor
                 efficiency_factor = self.turbine_efficiency_factors[turbine_id]
-                base_power = theoretical_power * efficiency_factor
-                
-                # Add realistic noise variation  
-                noise_factor = self.turbine_noise_factors[turbine_id]
-                power_noise = random.uniform(-noise_factor, noise_factor) * base_power
-                final_power = max(0, base_power + power_noise)
+                final_power = theoretical_power * efficiency_factor
                 
                 readings.append({
                     "turbine_id": turbine_id,
@@ -94,9 +86,14 @@ class WeatherAPI:
     async def get_weather_history(self, start_time: datetime, end_time: datetime) -> List[Dict]:
         """Get historical weather data for time range."""
         readings = []
-        time_delta = (end_time - start_time) / 100
         
-        for i in range(100):
+        # Calculate realistic data points based on time range
+        # Weather data should match turbine data collection intervals
+        total_hours = int((end_time - start_time).total_seconds() / 3600)
+        num_points = min(max(total_hours, 24), 500)  # Match turbine data points exactly
+        time_delta = (end_time - start_time) / num_points
+        
+        for i in range(num_points):
             timestamp = start_time + (time_delta * i)
             readings.append({
                 "timestamp": timestamp,
