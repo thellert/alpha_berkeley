@@ -349,6 +349,23 @@ class StateManager:
         return state.get('task_current_task')
     
     @staticmethod
+    def get_user_query(state: AgentState) -> Optional[str]:
+        """Get the user's query from the current conversation.
+        
+        Extracts the most recent user message from the conversation history,
+        which represents the original user query that started the current
+        conversation turn.
+        
+        Args:
+            state: Current conversation state
+            
+        Returns:
+            The user's query string, or None if no user messages exist
+        """
+        from .messages import ChatHistoryFormatter
+        return ChatHistoryFormatter.get_latest_user_message(state.get('messages', []))
+    
+    @staticmethod
     def store_context(
         state: AgentState,
         context_type: str,
