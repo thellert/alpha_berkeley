@@ -42,7 +42,6 @@ The container management system supports two service categories:
    
    - ``jupyter``: Python execution environment with EPICS support
    - ``open-webui``: Web interface for agent interaction  
-   - ``mem0``: Vector-based memory storage
    - ``pipelines``: Processing pipeline infrastructure
    - ``langfuse``: Observability and tracing
 

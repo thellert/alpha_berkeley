@@ -176,7 +176,7 @@ These systems work together to provide comprehensive production capabilities:
          # Container deployment configuration
          deployed_services:
            - framework.jupyter              # Secure execution environment
-           - framework.mem0                 # Memory service
+           - framework.pipelines            # Processing pipeline infrastructure
            - applications.als_expert.logbook  # Application data
 
          framework:

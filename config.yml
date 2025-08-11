@@ -83,7 +83,6 @@ deployed_services:
   - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
   # - framework.langfuse         # Observability and tracing infrastructure
-  # - framework.mem0             # Vector-based memory store
   
   # ALS Expert application services (domain-specific) - MOVED HERE FROM src/applications/als_expert/config.yml as CONVENIENCE
   # - applications.als_expert.mongo        # Primary database for ALS Expert data
