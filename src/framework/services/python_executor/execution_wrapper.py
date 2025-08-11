@@ -427,6 +427,27 @@ print(f"Container working directory: {{Path.cwd()}}")
     
     def _convert_host_path_to_container_path(self, host_path: Path) -> str:
         """Convert host path to container path (for container execution)."""
-        # This is simplified - in reality you'd need proper path mapping
-        # based on your Docker volume mounts
-        return f"/home/jovyan/work/{host_path.name}" 
+        # Use the convenient get_agent_dir function to get the configured executed scripts directory
+        from configs.unified_config import get_agent_dir
+        
+        # Get the full path to the executed scripts directory as configured
+        executed_scripts_base_path = get_agent_dir("executed_python_scripts_dir")
+        executed_scripts_base = Path(executed_scripts_base_path)
+        
+        host_path_str = str(host_path)
+        executed_scripts_base_str = str(executed_scripts_base)
+        
+        # Check if the host path is under the configured executed scripts directory
+        if host_path_str.startswith(executed_scripts_base_str):
+            # Extract the relative path from the executed scripts base directory
+            try:
+                relative_path = host_path.relative_to(executed_scripts_base)
+                return f"/home/jovyan/work/executed_scripts/{relative_path.as_posix()}"
+            except ValueError:
+                # Should not happen if startswith check passed, but handle gracefully
+                logger.warning(f"Could not get relative path from {host_path} to {executed_scripts_base}")
+        
+        # Fallback: log the issue and use the folder name
+        logger.warning(f"Host path {host_path} is not under configured executed scripts directory {executed_scripts_base}")
+        logger.warning(f"Using fallback container path mapping")
+        return f"/home/jovyan/work/executed_scripts/{host_path.name}" 
