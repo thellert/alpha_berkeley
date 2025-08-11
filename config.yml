@@ -42,6 +42,12 @@ execution_control:
     max_execution_time_seconds: 3000 # Maximum execution time (50 minutes)
     graph_recursion_limit: 100       # LangGraph recursion limit to prevent infinite loops
 
+# System Configuration - Infrastructure-wide settings
+system:
+  # Timezone configuration for all containers and services
+  # Ensures consistent timestamps across all framework components
+  timezone: ${TZ:-America/Los_Angeles}  # Use host TZ env var or default to Pacific Time
+
 # File Paths - System-wide data organization (operators control where data goes)
 file_paths:
   # Parent directory for all agent-related data
@@ -73,10 +79,10 @@ file_paths:
 
 deployed_services:
   # Framework services (essential for framework operation, see also src/framework/config.yml)
-  # - framework.jupyter          # Python execution environment with EPICS support
-  # - framework.langfuse         # Observability and tracing infrastructure
+  - framework.jupyter          # Python execution environment with EPICS support
   - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
+  # - framework.langfuse         # Observability and tracing infrastructure
   # - framework.mem0             # Vector-based memory store
   
   # ALS Expert application services (domain-specific) - MOVED HERE FROM src/applications/als_expert/config.yml as CONVENIENCE

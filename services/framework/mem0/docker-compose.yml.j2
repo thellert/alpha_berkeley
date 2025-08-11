@@ -17,7 +17,8 @@ services:
       - HOST={{framework.services.mem0.host}}
       - PORT={{framework.services.mem0.port_container}}
       - MEM0_TELEMETRY={{framework.services.mem0.telemetry}}  # Disable Mem0 telemetry
-      - TZ=America/Los_Angeles
+      # Timezone synchronization with host (from system configuration)
+      - TZ={{system.timezone}}
       - NO_PROXY=${NO_PROXY}
       # ollama
       - OLLAMA_PORT={{api.providers.ollama.port}}
