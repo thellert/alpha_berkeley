@@ -21,6 +21,8 @@ services:
       - PYTHONPATH=/pipelines/repo_src
       # Python executable path for local execution mode (container-specific override)
       - CONTAINER_PYTHON_ENV=/usr/local/bin/python3
+      # Timezone synchronization with host (from system configuration)
+      - TZ={{system.timezone}}
       # Enable colored output in container
       - TERM=xterm-256color
       - COLORTERM=truecolor

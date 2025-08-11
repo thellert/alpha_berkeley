@@ -148,6 +148,8 @@ services:
       REDIS_TLS_CA: /certs/ca.crt
       REDIS_TLS_CERT: /certs/redis.crt
       REDIS_TLS_KEY: /certs/redis.key
+      # Timezone synchronization with host (from system configuration)
+      TZ: {{system.timezone}}
       NO_PROXY: ${NO_PROXY}
     networks:
       - als-agents-network

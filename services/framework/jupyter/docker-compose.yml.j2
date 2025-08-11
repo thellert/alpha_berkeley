@@ -13,11 +13,12 @@ services:
       - {{project_root}}/{{file_paths.agent_data_dir}}/{{file_paths.executed_python_scripts_dir}}:/home/jovyan/work/executed_scripts/
       # Mount safe kernels only
       - ./framework/jupyter/python3-epics-readonly:/opt/conda/share/jupyter/kernels/python3-epics-readonly
-      - ./framework/jupyter/python3-epics-simulation:/opt/conda/share/jupyter/kernels/python3-epics-simulation
     environment:
       - NOTEBOOK_DIR=/home/jovyan/work
       - JUPYTER_ENABLE_LAB=yes
       - PYTHONPATH=/jupyter/repo_src
+      # Timezone synchronization with host (from system configuration)
+      - TZ={{system.timezone}}
       - HTTP_PROXY=${HTTP_PROXY}
       - NO_PROXY=${NO_PROXY}
       # EPICS Read Container Configuration (kernels define specific gateways)
@@ -41,12 +42,13 @@ services:
       - {{project_root}}/{{file_paths.agent_data_dir}}/{{file_paths.executed_python_scripts_dir}}:/home/jovyan/work/executed_scripts/
       # Mount all kernels (full flexibility in write container)
       - ./framework/jupyter/python3-epics-readonly:/opt/conda/share/jupyter/kernels/python3-epics-readonly
-      - ./framework/jupyter/python3-epics-simulation:/opt/conda/share/jupyter/kernels/python3-epics-simulation
       - ./framework/jupyter/python3-epics-write:/opt/conda/share/jupyter/kernels/python3-epics-write
     environment:
       - NOTEBOOK_DIR=/home/jovyan/work
       - JUPYTER_ENABLE_LAB=yes
       - PYTHONPATH=/jupyter/repo_src
+      # Timezone synchronization with host (from system configuration)
+      - TZ={{system.timezone}}
       - HTTP_PROXY=${HTTP_PROXY}
       - NO_PROXY=${NO_PROXY}
       # EPICS Write Access Configuration (kernels define specific gateways)
