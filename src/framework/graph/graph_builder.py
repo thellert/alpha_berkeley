@@ -22,7 +22,7 @@ from framework.state import AgentState
 from framework.registry.manager import RegistryManager, get_registry
 from framework.infrastructure.router_node import router_conditional_edge
 from configs.logger import get_logger
-from configs.unified_config import get_current_application
+from configs.config import get_current_application
 
 logger = get_logger(name="builder", color="white")
 

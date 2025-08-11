@@ -13,7 +13,7 @@ import textwrap
 from framework.data_management import DataSourceProvider, DataSourceContext
 from framework.data_management.request import DataSourceRequest
 from framework.models.completion import get_chat_completion
-from configs.unified_config import get_model_config
+from configs.config import get_model_config
 from applications.wind_turbine.context_classes import TurbineKnowledgeContext
 
 logger = logging.getLogger(__name__)

@@ -21,7 +21,7 @@ from framework.registry import get_registry
 from framework.base import BaseCapability, ClassifierExample, CapabilityMatch
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from configs.unified_config import get_full_configuration, get_model_config
+from configs.config import get_full_configuration, get_model_config
 from configs.logger import get_logger
 from configs.streaming import get_streamer
 from framework.base.errors import ErrorClassification, ErrorSeverity

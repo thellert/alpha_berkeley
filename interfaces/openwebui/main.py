@@ -30,7 +30,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel, Field
 from configs.logger import get_logger
-from configs.unified_config import get_full_configuration, get_current_application, get_pipeline_config
+from configs.config import get_full_configuration, get_current_application, get_pipeline_config
 
 logger = get_logger("interface", "pipeline")
 
@@ -49,7 +49,7 @@ def execute_startup_hook(hook_function_path: str):
     the hook execution is skipped.
     
     Hook Resolution Process:
-    1. Get current application name from unified configuration
+    1. Get current application name from configuration
     2. Parse hook path to extract module and function components
     3. Construct full module path: applications.{app_name}.{module_path}
     4. Import target module and retrieve function reference
@@ -81,7 +81,7 @@ def execute_startup_hook(hook_function_path: str):
             # Calls applications.my_application.database.initialize_connections()
     
     .. seealso::
-       :func:`configs.unified_config.get_current_application` : Application detection
+       :func:`configs.config.get_current_application` : Application detection
        :class:`Pipeline` : Main pipeline class that uses startup hooks
        :meth:`Pipeline.on_startup` : Pipeline startup method that executes hooks
     """
@@ -153,7 +153,7 @@ class Pipeline:
     
     Configuration System:
         The pipeline uses a two-tier configuration approach:
-        1. Base configuration from unified config system
+        1. Base configuration from config system
         2. Runtime overrides through user-configurable valves
         3. Session-specific configuration building per request
     
@@ -188,7 +188,7 @@ class Pipeline:
        :class:`Valves` : User-configurable pipeline settings
        :func:`execute_startup_hook` : Application-specific initialization
        :class:`framework.infrastructure.gateway.Gateway` : Message processing
-       :func:`configs.unified_config.get_full_configuration` : Configuration system
+       :func:`configs.config.get_full_configuration` : Configuration system
     """
     
     class Valves(BaseModel):
@@ -299,7 +299,7 @@ class Pipeline:
         blocking OpenWebUI's startup process.
         
         Initialization Process:
-        1. Load pipeline configuration from unified config system
+        1. Load pipeline configuration from config system
         2. Extract pipeline name and startup hooks from configuration
         3. Initialize valves with environment variable overrides
         4. Set up framework component placeholders (graph, gateway)
@@ -332,8 +332,8 @@ class Pipeline:
                 True
         
         .. seealso::
-           :func:`configs.unified_config.get_pipeline_config` : Pipeline configuration
-           :func:`configs.unified_config.get_current_application` : Application detection
+           :func:`configs.config.get_pipeline_config` : Pipeline configuration
+           :func:`configs.config.get_current_application` : Application detection
            :meth:`on_startup` : Complete framework initialization
         """
         
@@ -563,7 +563,7 @@ class Pipeline:
             raise
 
     def _build_config_for_session(self, user_id: str, chat_id: str, session_id: str) -> dict:
-        """Build comprehensive configuration for a session using unified config with valve overrides"""
+        """Build comprehensive configuration for a session using config with valve overrides"""
         
         # Get base configurable and add session info
         configurable = get_full_configuration().copy()
@@ -598,7 +598,7 @@ class Pipeline:
         configurable["execution_limits"] = execution_limits
         
         # Add recursion limit to runtime config (LangGraph requires this at runtime, not compile time)
-        from configs.unified_config import get_config_value
+        from configs.config import get_config_value
         recursion_limit = get_config_value("execution_limits.graph_recursion_limit")
         
         config = {

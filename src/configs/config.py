@@ -1,5 +1,5 @@
 """
-Unified Configuration System
+Configuration System
 
 Professional configuration system that works seamlessly both inside and outside 
 LangGraph contexts. Features:
@@ -7,7 +7,7 @@ LangGraph contexts. Features:
 - LangGraph integration, pre-computed structures, context awareness
 - Single source of truth with automatic context detection
 
-Replaces both GlobalConfig and ConfigAdapter with a clean, unified architecture.
+Clean, modern configuration architecture supporting both standalone and graph execution.
 """
 
 import os
@@ -40,9 +40,9 @@ except ImportError:
     logger.warning("python-dotenv not available, skipping .env file loading")
 
 
-class UnifiedConfigBuilder:
+class ConfigBuilder:
     """
-    Unified configuration builder with clean, modern architecture.
+    Configuration builder with clean, modern architecture.
     
     Features:
     - YAML loading with validation and error handling
@@ -104,7 +104,7 @@ class UnifiedConfigBuilder:
     
     def __init__(self, config_path: Optional[str] = None):
         """
-        Initialize unified configuration builder.
+        Initialize configuration builder.
         
         Args:
             config_path: Path to the config.yml file. If None, uses default path.
@@ -391,32 +391,32 @@ class UnifiedConfigBuilder:
 
 
 # =============================================================================
-# GLOBAL UNIFIED CONFIGURATION
+# GLOBAL CONFIGURATION
 # =============================================================================
 
 # Global configuration instance
-_unified_config: Optional[UnifiedConfigBuilder] = None
+_config: Optional[ConfigBuilder] = None
 _global_configurable: Optional[Dict[str, Any]] = None
 
 
-def _get_unified_config() -> UnifiedConfigBuilder:
-    """Get the global unified configuration instance (singleton pattern)."""
-    global _unified_config, _global_configurable
+def _get_config() -> ConfigBuilder:
+    """Get the global configuration instance (singleton pattern)."""
+    global _config, _global_configurable
     
-    if _unified_config is None:
+    if _config is None:
         # Check for environment variable override
         config_file = os.environ.get('CONFIG_FILE')
         if config_file:
-            _unified_config = UnifiedConfigBuilder(config_file)
+            _config = ConfigBuilder(config_file)
         else:
-            _unified_config = UnifiedConfigBuilder()
+            _config = ConfigBuilder()
         
         # Cache configurable for efficient non-LangGraph contexts
-        _global_configurable = _unified_config.configurable.copy()
+        _global_configurable = _config.configurable.copy()
         
-        logger.info("Initialized unified configuration system")
+        logger.info("Initialized configuration system")
     
-    return _unified_config
+    return _config
 
 
 def _get_configurable() -> Dict[str, Any]:
@@ -431,7 +431,7 @@ def _get_configurable() -> Dict[str, Any]:
     except (RuntimeError, ImportError):
         # Use cached global configurable for standalone execution
         if _global_configurable is None:
-            _get_unified_config()
+            _get_config()
         return _global_configurable
 
 
@@ -511,9 +511,9 @@ def get_pipeline_config(app_name: str = None) -> Dict[str, Any]:
     
     if app_name:
         # Try to get from raw config since pipeline configs aren't pre-computed
-        unified_config = _get_unified_config()
+        config = _get_config()
         app_path = f"applications.{app_name}.pipeline"
-        app_config = unified_config.get(app_path, {})
+        app_config = config.get(app_path, {})
         
         if app_config:
             return app_config
@@ -578,11 +578,11 @@ def get_agent_dir(sub_dir: str) -> str:
     Returns:
         Absolute path to the target directory
     """
-    unified_config = _get_unified_config()
+    config = _get_config()
     
     # Get project root and file paths configuration
-    project_root = unified_config.get("project_root")
-    file_paths = unified_config.get("file_paths", {})
+    project_root = config.get("project_root")
+    file_paths = config.get("file_paths", {})
     agent_data_dir = file_paths.get("agent_data_dir", "_agent_data")
     
     # Get the specific subdirectory path, fallback to the sub_dir name itself
@@ -688,4 +688,4 @@ def get_full_configuration() -> Dict[str, Any]:
     return _get_configurable()
 
 # Initialize the global configuration on import
-_get_unified_config() 
+_get_config() 

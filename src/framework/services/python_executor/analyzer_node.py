@@ -22,7 +22,7 @@ from .execution_control import ExecutionMode
 from .execution_policy_analyzer import BasicAnalysisResult, DomainAnalysisManager, ExecutionPolicyManager
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_full_configuration
+from configs.config import get_full_configuration
 from framework.approval.approval_manager import get_python_execution_evaluator
 
 logger = get_logger("framework", "python_analyzer")

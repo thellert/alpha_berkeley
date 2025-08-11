@@ -189,7 +189,7 @@ Core API Sections
    * :doc:`01_core_framework/01_base_components` - Foundation classes, decorators, and planning
    * :doc:`01_core_framework/02_state_and_context` - LangGraph state management and tracking
    * :doc:`01_core_framework/03_registry_system` - Component discovery and registration
-   * :doc:`01_core_framework/04_configuration_system` - Unified configuration management
+   * :doc:`01_core_framework/04_configuration_system` - Configuration management
    * :doc:`01_core_framework/05_prompt_management` - Framework prompt providers and builders
    
    **⚡ Infrastructure**

@@ -63,12 +63,12 @@ from framework.services.memory_storage import MemoryContent
 
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_model_config, get_session_info
+from configs.config import get_model_config, get_session_info
 from framework.models import get_model, get_chat_completion
 from framework.state import ChatHistoryFormatter, AgentState, StateManager
 from langchain_core.messages import BaseMessage
 from framework.prompts.loader import get_framework_prompts
-from langgraph.types import RetryPolicy, interrupt
+from langgraph.types import interrupt
 
 logger = get_logger("framework", "memory")
 
@@ -345,7 +345,7 @@ async def _classify_memory_operation(task_objective: str, logger) -> MemoryOpera
     :raises LLMCallError: If the underlying LLM call fails
     
     .. note::
-       Uses the framework's unified configuration system for model selection
+       Uses the framework's configuration system for model selection
        and structured output parsing for reliable classification.
     
     Examples:
@@ -373,7 +373,7 @@ async def _classify_memory_operation(task_objective: str, logger) -> MemoryOpera
     user_prompt = f"Classify this memory task: '{task_objective}'"
     
     try:
-        # Use unified config helper for model configuration
+        # Use config helper for model configuration
         classifier_config = get_model_config("framework", "classifier")
         
         # Create full message combining system and user prompts
@@ -478,7 +478,6 @@ class LLMCallError(MemoryCapabilityError):
 from framework.base.decorators import capability_node
 from framework.base.capability import BaseCapability
 from framework.state import AgentState
-from langgraph.types import RetryPolicy
 
 @capability_node
 class MemoryOperationsCapability(BaseCapability):
@@ -612,7 +611,7 @@ class MemoryOperationsCapability(BaseCapability):
         step = StateManager.get_current_step(state)
         
         try:
-            # Get user ID from unified config system
+            # Get user ID from config system
             session_info = get_session_info()
             user_id = session_info.get("user_id")
             

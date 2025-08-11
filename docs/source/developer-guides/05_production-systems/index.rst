@@ -126,7 +126,8 @@ Production Integration Patterns
       .. code-block:: python
 
          # Security analysis determines approval requirements
-         analysis = await analyze_code_security(generated_code)
+         analyzer = StaticCodeAnalyzer(configurable)
+         analysis = await analyzer.analyze_code(generated_code, context)
          
          # Domain-specific approval policies
          approval_evaluator = get_python_execution_evaluator()
@@ -143,7 +144,11 @@ Production Integration Patterns
              )
          
          # Container-isolated execution
-         result = await execute_in_container(code, environment)
+         result = await execute_python_code_in_container(
+             code=code,
+             endpoint=container_endpoint,
+             execution_folder=execution_folder
+         )
 
       - **Code-level security analysis** with EPICS operation detection
       - **Configurable approval modes** (disabled, epics_writes, all_code)
@@ -175,23 +180,28 @@ Production Integration Patterns
 
       .. code-block:: python
 
-         # Container management with service discovery
-         container_manager = ContainerManager()
+         # Container management using the function-based system
+         from deployment.container_manager import find_service_config, setup_build_dir
          
-         # Deploy related services as a group
-         services = await container_manager.deploy_service_group([
-             "pipelines-processing-service",
-             "jupyter-execution-environment", 
-             "langfuse-observability"
-         ])
+         # Deploy services by configuring them in deployed_services list
+         deployed_services = [
+             "framework.pipelines",
+             "framework.jupyter", 
+             "framework.langfuse"
+         ]
          
-         # Health monitoring and automatic recovery
-         for service in services:
-             await monitor_service_health(service)
+         # Services are deployed through container_manager.py script
+         # python container_manager.py config.yml up -d
+         
+         # Service management through compose files
+         for service_name in deployed_services:
+             service_config, template_path = find_service_config(config, service_name)
+             if service_config and template_path:
+                 compose_file = setup_build_dir(template_path, config, service_config)
 
-      - **Hierarchical service dependencies** with automatic ordering
-      - **Health monitoring** with automatic restart policies
-      - **Configuration templating** for environment-specific deployments
+      - **Hierarchical service discovery** through framework.* and applications.* naming
+      - **Template-based configuration** for environment-specific deployments  
+      - **Podman Compose orchestration** with multi-file support
 
    .. tab-item:: Memory Integration
 
@@ -199,22 +209,22 @@ Production Integration Patterns
 
       .. code-block:: python
 
-         # Memory-enhanced capability execution
+         # Memory-enhanced capability execution  
          @capability_node
          class DataAnalysisCapability(BaseCapability):
              async def execute(state: AgentState, **kwargs):
-                 # Automatic memory integration
-                 user_context = await memory_provider.get_user_context(
-                     user_id=state.user_id,
-                     context_window=30  # days
-                 )
+                 # Retrieve user memory through data source integration
+                 data_manager = get_data_source_manager()
+                 requester = DataSourceRequester("capability", "data_analysis")
+                 request = create_data_source_request(state, requester)
+                 retrieval_result = await data_manager.retrieve_all_context(request)
                  
-                 # Enhanced analysis with historical context
-                 analysis = await analyze_with_memory(
-                     current_data=state.current_task,
-                     historical_context=user_context
-                 )
+                 # Access memory context from data sources
+                 user_memory_context = retrieval_result.context_data.get("core_user_memory")
+                 if user_memory_context:
+                     user_memories = user_memory_context.data  # UserMemories object
+                     # Use memory data to enhance analysis
 
-      - **Automatic context injection** into capability execution
-      - **Intelligent memory retrieval** based on task relevance
-      - **Cross-session learning** from user interaction patterns
+      - **Data source integration** for automatic memory context injection
+      - **Persistent memory storage** through UserMemoryProvider
+      - **Framework-native memory operations** through MemoryOperationsCapability

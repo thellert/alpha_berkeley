@@ -21,7 +21,7 @@ from framework.prompts.loader import get_framework_prompts
     
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_model_config, get_config_value
+from configs.config import get_model_config, get_config_value
 from pydantic_ai import Agent
 
 

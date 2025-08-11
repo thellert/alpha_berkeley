@@ -23,7 +23,7 @@ Core Framework
    - **AgentState & StateManager** - LangGraph-native state management with selective persistence
    - **ContextManager & CapabilityContext** - Type-safe data exchange between components
    - **RegistryManager & component discovery** - Convention-based component loading
-   - **UnifiedConfig & environment resolution** - Seamless configuration management
+   - **Configuration & environment resolution** - Seamless configuration management
    - **FrameworkPromptProvider & customization** - Domain-agnostic prompt management
 
    **Prerequisites:** Basic Python knowledge and agentic system concepts
@@ -162,7 +162,7 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from configs.unified_config import (
+         from configs.config import (
              get_config_value, get_model_config, get_full_configuration
          )
          
@@ -191,7 +191,7 @@ These systems work together to provide a unified development experience:
          from framework.base import BaseCapability, capability_node
          from framework.state import AgentState, StateManager
          from framework.context import ContextManager
-         from configs.unified_config import get_model_config
+         from configs.config import get_model_config
          from applications.als_expert.context_classes import AnalysisResultsContext
          
          @capability_node

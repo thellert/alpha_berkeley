@@ -44,7 +44,7 @@ Architecture Overview:
    :class:`framework.data_management.providers.DataSourceProvider` : Base provider interface
    :class:`framework.capabilities.memory.MemoryOperationsCapability` : Memory operations capability
    :class:`framework.state.UserMemories` : Framework state integration
-   :func:`configs.unified_config.get_agent_dir` : Configuration system integration
+   :func:`configs.config.get_agent_dir` : Configuration system integration
 """
 
 from .storage_manager import MemoryStorageManager, get_memory_storage_manager

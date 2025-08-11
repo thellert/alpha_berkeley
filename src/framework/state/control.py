@@ -15,7 +15,7 @@ configuration interface.
 The control system provides centralized management of agent behavior through
 configuration parameters that can be overridden at runtime through various sources:
 
-- **Global Configuration**: Base configuration from unified config system
+- **Global Configuration**: Base configuration from config system
 - **User Valves**: User-specific overrides through UI controls
 - **Slash Commands**: Real-time overrides through chat commands
 - **Runtime Updates**: Programmatic overrides during execution
@@ -40,7 +40,7 @@ compatibility.
 
 .. seealso::
    :class:`framework.state.AgentState` : Main state structure using control state
-   :mod:`configs.unified_config` : Base configuration system
+   :mod:`configs.config` : Base configuration system
    :mod:`framework.infrastructure.gateway` : Gateway applying slash commands
 """
 
@@ -68,7 +68,7 @@ class AgentControlState(TypedDict, total=False):
     
     The control state implements a layered configuration approach:
     
-    1. **Base Configuration**: Default values from unified configuration system
+    1. **Base Configuration**: Default values from configuration system
     2. **User Overrides**: User-specific settings through UI valve controls
     3. **Slash Commands**: Real-time overrides through chat-based commands
     4. **Runtime Updates**: Programmatic overrides during execution
@@ -134,7 +134,7 @@ class AgentControlState(TypedDict, total=False):
     .. seealso::
        :func:`apply_slash_commands_to_agent_control_state` : Runtime override utilities
        :class:`framework.state.AgentState` : Main state containing control state
-       :mod:`configs.unified_config` : Base configuration system
+       :mod:`configs.config` : Base configuration system
     """
     
     # Planning control

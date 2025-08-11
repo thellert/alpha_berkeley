@@ -185,7 +185,7 @@ Uses framework prompt builders for domain-specific extraction:
 Configuration
 -------------
 
-Task extraction uses unified configuration:
+Task extraction uses configuration:
 
 .. code-block:: python
 

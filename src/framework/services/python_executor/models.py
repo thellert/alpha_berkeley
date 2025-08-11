@@ -16,7 +16,7 @@ progress, approval workflows, and intermediate results throughout the service
 execution lifecycle.
 
 **Configuration Utilities**: Factory functions and configuration classes that
-integrate with the framework's unified configuration system to provide execution
+integrate with the framework's configuration system to provide execution
 mode settings, container endpoints, and security policies.
 
 **Result Structures**: Comprehensive result classes that capture execution

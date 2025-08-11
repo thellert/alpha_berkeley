@@ -19,17 +19,17 @@ from pydantic import BaseModel, Field
 # Set up logger
 logger = logging.getLogger(__name__)
 
-# Import the unified config system for consistent configuration
+# Import the config system for consistent configuration
 try:
     # Add the framework source path to enable imports
     framework_src = Path("/app/src")
     if framework_src.exists():
         sys.path.insert(0, str(framework_src))
     
-    from configs.unified_config import get_agent_dir
+    from configs.config import get_agent_dir
     
     def get_execution_plans_path() -> Path:
-        """Get the execution plans directory path using unified config system.
+        """Get the execution plans directory path using config system.
         
         This uses the exact same configuration system as the framework,
         ensuring complete consistency with the orchestrator.
@@ -40,14 +40,14 @@ try:
         execution_plans_dir = get_agent_dir("execution_plans_dir")
         return Path(execution_plans_dir)
     
-    logger.info("Using unified config system for path resolution")
+    logger.info("Using config system for path resolution")
     
 except ImportError as e:
-    logger.warning(f"Could not import unified config system: {e}")
+    logger.warning(f"Could not import config system: {e}")
     logger.warning("Falling back to direct configuration loading")
     
     def get_execution_plans_path() -> Path:
-        """Fallback path resolution when unified config is not available."""
+        """Fallback path resolution when config is not available."""
         # Use hardcoded path that matches standard framework configuration
         return Path("/app/_agent_data/execution_plans")
 
@@ -63,15 +63,15 @@ def load_registry_data(agent_data_dir: str = None) -> dict:
         Dictionary containing success flag, data/error info, and capabilities/context types/templates
     """
     try:
-        # Use unified config system for consistent paths
+        # Use config system for consistent paths
         if agent_data_dir is None:
             try:
-                # Use unified config to get the exact same path as the framework
+                # Use config to get the exact same path as the framework
                 agent_data_dir = get_agent_dir("registry_exports_dir")
                 # Get parent directory (agent_data_dir) since registry_exports is a subdirectory
                 agent_data_dir = str(Path(agent_data_dir).parent)
             except Exception:
-                # Fallback to standard path if unified config fails
+                # Fallback to standard path if config fails
                 agent_data_dir = "/app/_agent_data"
                 logger.warning(f"Using fallback path: {agent_data_dir}")
             

@@ -58,7 +58,7 @@ from .messages import MessageUtils
 from framework.base.planning import ExecutionPlan, PlannedStep
 from framework.context.base import CapabilityContext
 from framework.context.context_manager import ContextManager
-from configs.unified_config import get_agent_control_defaults as _get_agent_control_defaults
+from configs.config import get_agent_control_defaults as _get_agent_control_defaults
 
 # LangGraph native imports
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -111,7 +111,7 @@ def get_agent_control_defaults() -> Dict[str, Any]:
     
     .. seealso::
        :class:`framework.state.AgentControlState` : Agent control state structure
-       :mod:`configs.unified_config` : Unified configuration system
+       :mod:`configs.config` : Configuration system
     """
     try:
         return _get_agent_control_defaults()

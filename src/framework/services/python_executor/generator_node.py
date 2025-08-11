@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 
 from framework.models import get_chat_completion
 from configs.logger import get_logger
-from configs.unified_config import get_model_config
+from configs.config import get_model_config
 from configs.streaming import get_streamer
 
 from .exceptions import CodeGenerationError, MaxAttemptsExceededError

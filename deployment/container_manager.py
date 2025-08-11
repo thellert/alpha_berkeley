@@ -13,7 +13,7 @@ through Podman Compose with proper networking and dependency management.
 
 Key Features:
     - Hierarchical service discovery (framework.service, applications.app.service)
-    - Jinja2 template rendering with unified configuration context
+    - Jinja2 template rendering with configuration context
     - Intelligent build directory management with selective file copying
     - Environment variable expansion and configuration flattening
     - Podman Compose orchestration with multi-file support
@@ -47,7 +47,7 @@ Examples:
         
     Template rendering workflow::
     
-        1. Load unified configuration with imports and merging
+        1. Load configuration with imports and merging
         2. Discover services listed in deployed_services
         3. Process Jinja2 templates with configuration context
         4. Copy source code and additional directories as specified
@@ -56,7 +56,7 @@ Examples:
 
 .. seealso::
    :mod:`deployment.loader` : Configuration loading system used by this module
-   :class:`configs.unified_config.UnifiedConfigBuilder` : Configuration management
+   :class:`configs.config.ConfigBuilder` : Configuration management
    :func:`find_service_config` : Service discovery implementation
    :func:`render_template` : Template processing engine
 """
@@ -75,7 +75,7 @@ current_dir = Path(__file__).parent
 src_dir = current_dir.parent / "src"
 sys.path.insert(0, str(src_dir))
 
-from configs.unified_config import UnifiedConfigBuilder
+from configs.config import ConfigBuilder
 
 SERVICES_DIR = "services"
 SRC_DIR = "src"
@@ -102,7 +102,7 @@ def find_service_config(config, service_name):
     to the Docker Compose template, enabling the caller to access service
     settings and initiate template rendering.
     
-    :param config: Unified configuration containing service definitions
+    :param config: Configuration containing service definitions
     :type config: dict
     :param service_name: Service identifier (short name or full dotted path)
     :type service_name: str
@@ -181,7 +181,7 @@ def get_templates(config):
     Individual service templates are then discovered through the service discovery
     system and added to the template list.
     
-    :param config: Unified configuration containing deployed_services list
+    :param config: Configuration containing deployed_services list
     :type config: dict
     :return: List of template file paths for processing
     :rtype: list[str]
@@ -235,7 +235,7 @@ def get_templates(config):
 def render_template(template_path, config, out_dir):
     """Render Jinja2 template with configuration context to output directory.
     
-    This function processes Jinja2 templates using the unified configuration
+    This function processes Jinja2 templates using the configuration
     as context, generating concrete configuration files for container deployment.
     The system supports multiple template types including Docker Compose files
     and Jupyter kernel configurations, with intelligent output filename detection.
@@ -441,7 +441,7 @@ def setup_build_dir(template_path, config, container_cfg):
     .. seealso::
        :func:`render_template` : Template rendering used by this function
        :func:`render_kernel_templates` : Kernel template processing
-       :class:`configs.unified_config.UnifiedConfigBuilder` : Configuration flattening
+       :class:`configs.config.ConfigBuilder` : Configuration flattening
     """
     # Create the build directory for this service 
     source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
@@ -505,7 +505,7 @@ def setup_build_dir(template_path, config, container_cfg):
         # Create flattened configuration file for container
         # This merges all imports and creates a complete config without import directives
         try:
-            global_config = UnifiedConfigBuilder()
+            global_config = ConfigBuilder()
             flattened_config = global_config.raw_config  # This contains the already-merged configuration
             
             config_yml_dst = os.path.join(out_dir, "config.yml")
@@ -658,7 +658,7 @@ if __name__ == "__main__":
     Exit codes indicate success (0) or various failure conditions (1).
     
     Workflow:
-        1. Configuration Loading: Use UnifiedConfigBuilder to load and merge
+        1. Configuration Loading: Use ConfigBuilder to load and merge
            configuration files with proper error handling
         2. Service Discovery: Process deployed_services list to identify
            active services for deployment
@@ -684,15 +684,15 @@ if __name__ == "__main__":
     
     .. seealso::
        :func:`parse_args` : Command-line argument processing
-       :class:`configs.unified_config.UnifiedConfigBuilder` : Configuration management
+       :class:`configs.config.ConfigBuilder` : Configuration management
        :func:`find_service_config` : Service discovery implementation
     """
     args = parse_args()
     
     try:
-        unified_config = UnifiedConfigBuilder(args.config)
+        config = ConfigBuilder(args.config)
         # Wrap the raw config in DotDict for compatibility with existing container manager code
-        config = unified_config.raw_config
+        config = config.raw_config
     except Exception as e:
         print(f"Error: Could not load config file {args.config}: {e}")
         sys.exit(1)

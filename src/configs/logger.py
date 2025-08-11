@@ -30,7 +30,7 @@ from rich.logging import RichHandler
 from rich.console import Console
 from typing import Optional, Dict, Any, Union
 
-from configs.unified_config import get_config_value
+from configs.config import get_config_value
 
 
 class ComponentLogger:
@@ -168,7 +168,7 @@ def _setup_rich_logging(level: int = logging.INFO) -> None:
     
     root_logger.setLevel(level)
     
-    # Load user-configurable display preferences from unified config
+    # Load user-configurable display preferences from config
     try:
         # Security-conscious defaults: hide locals to prevent sensitive data exposure
         rich_tracebacks = get_config_value("logging.rich_tracebacks", True)
@@ -259,7 +259,7 @@ def get_logger(source: str = None,
             # Framework components use centralized color scheme
             config_path = f"logging.framework.logging_colors.{component_name}"
         else:
-            # Application components: unified config wraps app configs under applications.{app_name}
+            # Application components: config wraps app configs under applications.{app_name}
             config_path = f"applications.{source}.logging.logging_colors.{component_name}"
         color = get_config_value(config_path)
             

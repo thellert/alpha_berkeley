@@ -33,7 +33,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.types import Command
 
 from configs.logger import get_logger
-from configs.unified_config import get_model_config
+from configs.config import get_model_config
 from framework.state import AgentState, StateManager
 from framework.state.messages import MessageUtils
 from framework.models import get_chat_completion
@@ -100,7 +100,7 @@ class Gateway:
         
         # Initialize global configuration
         try:
-            # Using unified config - no need to store config instance
+            # Using config - no need to store config instance
             pass
         except Exception as e:
             self.logger.warning(f"Could not load config system: {e}")

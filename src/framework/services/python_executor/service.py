@@ -16,7 +16,7 @@ from .executor_node import create_executor_node
 from .approval_node import create_approval_node
 from .exceptions import CodeRuntimeError
 from framework.graph.graph_builder import create_memory_checkpointer, create_async_postgres_checkpointer
-from configs.unified_config import get_full_configuration
+from configs.config import get_full_configuration
 from configs.logger import get_logger
 
 logger = get_logger("framework", "python")

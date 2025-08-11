@@ -10,7 +10,7 @@ The module supports advanced features including:
 - Timeout management and connection pooling
 - TypedDict to Pydantic model conversion for structured outputs
 - Extended thinking capabilities for Anthropic and Google models
-- Automatic provider configuration loading from unified config system
+- Automatic provider configuration loading from config system
 
 .. note::
    Model instances created by :func:`get_model` are designed for use with PydanticAI
@@ -20,7 +20,7 @@ The module supports advanced features including:
 .. seealso::
    :func:`get_model` : Create model instances for structured generation
    :func:`get_chat_completion` : Direct chat completion requests
-   :mod:`configs.unified_config` : Provider configuration management
+   :mod:`configs.config` : Provider configuration management
    :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Model setup and configuration guide
 """
 

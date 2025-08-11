@@ -56,7 +56,7 @@ from framework.base import BaseCapability
 from framework.base.planning import ExecutionPlan
 from framework.base.results import ExecutionRecord, ExecutionResult
 # Context data is now stored as pure dictionaries - no import needed
-from configs.unified_config import get_config_value
+from configs.config import get_config_value
 
 
 @dataclass
@@ -276,13 +276,13 @@ def create_control_flow_state_from_config() -> ControlFlowState:
     """Create ControlFlowState with limits from configuration.
     
     Initializes a ControlFlowState instance with execution limits extracted
-    from the unified configuration. Provides safe defaults if configuration
+    from the configuration. Provides safe defaults if configuration
     values are not available.
     
     :return: ControlFlowState instance with configured limits
     :rtype: ControlFlowState
     """
-    # Get execution limits from unified config, with fallback defaults
+    # Get execution limits from config, with fallback defaults
     limits = get_config_value('execution_control.limits', {})
     
     return ControlFlowState(

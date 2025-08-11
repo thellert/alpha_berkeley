@@ -21,7 +21,7 @@ Key capabilities include:
 .. seealso::
    :func:`get_chat_completion` : Main chat completion interface
    :func:`~factory.get_model` : Model factory for structured generation
-   :mod:`configs.unified_config` : Provider configuration management
+   :mod:`configs.config` : Provider configuration management
 """
 
 import logging
@@ -37,7 +37,7 @@ import httpx
 from google import genai
 from google.genai import types as genai_types
 
-from configs.unified_config import get_provider_config
+from configs.config import get_provider_config
 
 
 def _is_typed_dict(cls) -> bool:
@@ -328,7 +328,7 @@ def get_chat_completion(
     
     .. seealso::
        :func:`~factory.get_model` : Create model instances for PydanticAI agents
-       :func:`configs.unified_config.get_provider_config` : Provider configuration loading
+       :func:`configs.config.get_provider_config` : Provider configuration loading
        :class:`pydantic.BaseModel` : Base class for structured output models
        :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Complete model configuration and usage guide
     """

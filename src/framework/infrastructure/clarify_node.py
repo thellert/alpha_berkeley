@@ -23,7 +23,7 @@ from framework.base.planning import PlannedStep
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
 from configs.logger import get_logger
-from configs.unified_config import get_full_configuration, get_model_config
+from configs.config import get_full_configuration, get_model_config
 from langchain_core.messages import AIMessage
 from langgraph.config import get_stream_writer
 
