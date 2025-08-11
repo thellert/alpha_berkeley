@@ -6,11 +6,10 @@
 # Enable framework services by uncommenting them below.
 # The main config.yml can override these settings for convenience.
 deployed_services:
-  # - framework.jupyter          # Python execution environment with EPICS support
-  # - framework.open_webui       # Primary user interface frontend  
+  - framework.jupyter          # Python execution environment with EPICS support
+  - framework.open_webui       # Primary user interface frontend  
+  - framework.pipelines        # Processing pipeline infrastructure
   # - framework.langfuse         # Observability and tracing infrastructure
-  # - framework.mem0             # Vector-based memory store
-  # - framework.pipelines        # Processing pipeline infrastructure
 
 framework:
   # Framework Services - Essential for framework operation
@@ -41,24 +40,6 @@ framework:
 
     langfuse:
       path: ./services/framework/langfuse
-
-    mem0:
-      path: ./services/framework/mem0
-      name: mem0-server
-      port_host: 8050
-      port_container: 8050
-      host: "0.0.0.0"
-      telemetry: false
-      transport: "sse"
-      vector_store_collection: "mem0_collection"
-      embedding_model_dims: 768
-      embedding_model: "nomic-embed-text:latest"
-      embedding_model_provider: "ollama"
-      llm_model: "qwen3:8b"
-      llm_model_provider: "ollama"
-      llm_temperature: 0.1
-      llm_max_tokens: 1000
-      copy_src: true
 
     pipelines:
       path: ./services/framework/pipelines
