@@ -21,14 +21,20 @@ Error Handling Infrastructure: Intelligent Error Recovery and Communication
 Core Problem
 ------------
 
-Error handling in agentic systems requires intelligent analysis and user-friendly communication that goes beyond traditional software error management:
+Agentic systems present a unique opportunity to handle errors more intelligently than traditional software applications. With capable language models at our disposal and users who are often domain experts rather than developers, we can move beyond simply throwing stack traces at users:
 
 - **Error Context Complexity:** Errors occur at different levels with varying context
-- **User Communication:** Technical errors must become understandable explanations
-- **Recovery Strategy Selection:** Different error types require different recovery approaches
+- **User Communication:** Domain experts need actionable explanations, not technical stack traces
+- **Recovery Strategy Selection:** Different error types require different recovery approaches  
 - **State Consistency:** Errors must be handled without corrupting execution flow
+- **LLM Capabilities:** Language models excel at interpreting code errors and generating user-friendly explanations
 
 **Framework Solution:** Centralized error processing with LLM-generated responses and classification-based recovery.
+
+.. admonition:: 🚧 Development Note
+   :class: info
+
+   The LLM-powered error analysis system is actively being optimized. Current focus areas include refining context provision to language models and improving response quality. Users should expect that generated error messages may not always be as informative as desired while these improvements are being implemented.
 
 Architecture Overview
 ---------------------
@@ -126,6 +132,7 @@ System automatically creates comprehensive error context:
        current_task: str
        capability_name: Optional[str] = None
        technical_details: Optional[str] = None
+       total_operations: int = 0
        execution_time: Optional[float] = None
        retry_count: Optional[int] = None
        successful_steps: List[str] = None
@@ -137,29 +144,47 @@ System automatically creates comprehensive error context:
 .. code-block:: python
 
    def _create_error_context_from_state(state: AgentState) -> ErrorContext:
-       # Extract error information
-       error_info = state.get('control_error_info', {})
-       capability_name = error_info.get('capability_name')
-       original_error = error_info.get('original_error', 'Unknown error')
+       # Get current task from task state
+       current_task = state.get("task_current_task", "Unknown task")
        
-       # Map error classification to error type
+       # Get error information that was set by the router
+       error_info = state.get('control_error_info')
+       if not isinstance(error_info, dict):
+           error_info = {}
+       
+       # Extract error details from router-provided error info
+       capability_name = error_info.get('capability_name') or error_info.get('node_name')
+       original_error = error_info.get('original_error', 'Unknown error occurred')
+       user_message = error_info.get('user_message', original_error)
+       technical_details = error_info.get('technical_details', original_error)
+       execution_time = error_info.get('execution_time', 0.0)
+       
+       # Determine error type based on classification severity
        error_classification = error_info.get('classification')
-       if error_classification:
-           if error_classification.severity == ErrorSeverity.RETRIABLE:
-               error_type = ErrorType.RETRIABLE_FAILURE
-           elif error_classification.severity == ErrorSeverity.REPLANNING:
+       if error_classification and hasattr(error_classification, 'severity'):
+           severity_value = getattr(error_classification.severity, 'value', str(error_classification.severity))
+           
+           if severity_value == "retriable":
+               error_type = ErrorType.RETRIABLE_FAILURE  
+           elif severity_value == "replanning":
                error_type = ErrorType.RECLASSIFICATION_LIMIT
+           elif severity_value == "critical":
+               error_type = ErrorType.CRITICAL_ERROR
            else:
                error_type = ErrorType.CRITICAL_ERROR
+       else:
+           error_type = ErrorType.CRITICAL_ERROR
        
        return ErrorContext(
            error_type=error_type,
-           error_message=error_info.get('user_message', original_error),
+           error_message=user_message,
            failed_operation=capability_name or "Unknown operation",
-           current_task=state.get("task_current_task", "Unknown task"),
-           technical_details=error_info.get('technical_details'),
-           execution_time=error_info.get('execution_time', 0.0),
-           retry_count=state.get('control_retry_count', 0)
+           current_task=current_task,
+           capability_name=capability_name,
+           technical_details=technical_details,
+           execution_time=execution_time,
+           retry_count=state.get('control_retry_count', 0),
+           total_operations=StateManager.get_current_step_index(state) + 1
        )
 
 LLM-Generated Error Responses
@@ -171,12 +196,12 @@ Error responses combine structured reports with LLM analysis:
 
    async def _generate_error_response(error_context: ErrorContext) -> str:
        # Build structured error report
-       error_report = _build_structured_error_report(error_context)
+       error_report_sections = _build_structured_error_report(error_context)
        
        # Generate LLM explanation
        llm_explanation = await asyncio.to_thread(_generate_llm_explanation, error_context)
        
-       return f"{error_report}\n\n{llm_explanation}"
+       return f"{error_report_sections}\n\n{llm_explanation}"
 
 **Structured Report Components:**
 
@@ -283,19 +308,23 @@ System automatically enhances context with execution history:
 .. code-block:: python
 
    def _populate_error_context(error_context: ErrorContext, state: AgentState):
-       # Generate execution summary from step results
+       # Generate execution summary from execution_step_results (ordered by step_index)
        step_results = state.get("execution_step_results", {})
        if step_results:
-           for step_key, result in step_results.items():
+           # Sort by step_index for proper ordering
+           ordered_results = sorted(step_results.items(), key=lambda x: x[1].get('step_index', 0))
+           
+           for step_key, result in ordered_results:
                step_index = result.get('step_index', 0)
-               task_objective = result.get('task_objective', 'unknown')
+               capability_name = result.get('capability', 'unknown')
+               task_objective = result.get('task_objective', capability_name)
                
                if result.get('success', False):
                    error_context.successful_steps.append(f"Step {step_index + 1}: {task_objective}")
                else:
                    error_context.failed_steps.append(f"Step {step_index + 1}: {task_objective} - Failed")
        
-       # Add generic suggestions based on error type
+       # Use capability-specific suggestions if available, otherwise generate generic ones
        if not error_context.capability_suggestions:
            error_context.capability_suggestions = _generate_generic_suggestions(error_context.error_type)
 
@@ -304,22 +333,42 @@ System automatically enhances context with execution history:
 .. code-block:: python
 
    def _generate_generic_suggestions(error_type: ErrorType) -> List[str]:
-       suggestions_map = {
+       generic_suggestions_map = {
            ErrorType.TIMEOUT: [
                "Reduce request complexity or scope",
                "Specify narrower time ranges for data queries"
+           ],
+           ErrorType.STEP_FAILURE: [
+               "Rephrase request with clearer parameters",
+               "Simplify query complexity"
+           ],
+           ErrorType.SAFETY_LIMIT: [
+               "Reduce request scope to single operation",
+               "Break complex tasks into sequential steps"
+           ],
+           ErrorType.RETRIABLE_FAILURE: [
+               "Retry request (temporary service issue)",
+               "Check system service status"
+           ],
+           ErrorType.RECLASSIFICATION_LIMIT: [
+               "Clarify request with specific technical parameters",
+               "Use domain-specific terminology"
            ],
            ErrorType.CRITICAL_ERROR: [
                "Contact user support for assistance",
                "Verify system prerequisites and permissions"
            ],
-           ErrorType.RETRIABLE_FAILURE: [
-               "Retry request (temporary service issue)",
-               "Check system service status"
+           ErrorType.INFRASTRUCTURE_ERROR: [
+               "Contact user support for assistance",
+               "Verify access permissions for requested resources"
+           ],
+           ErrorType.EXECUTION_KILLED: [
+               "Reduce operation scope or complexity",
+               "Review request against system constraints"
            ]
        }
        
-       return suggestions_map.get(error_type, [
+       return generic_suggestions_map.get(error_type, [
            "Rephrase request with clearer parameters",
            "Simplify operation complexity"
        ])
