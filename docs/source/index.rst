@@ -4,7 +4,7 @@ Alpha Berkeley Framework Documentation
 .. admonition:: 🚧 Early Access Documentation
    :class: warning
 
-   **Current Release**: v0.1.1 Early Access  
+   **Current Release**: |release| Early Access  
 
    This documentation is part of an early access release and is **under active development**.  
    Many sections are still being written, edited, or reorganized.  

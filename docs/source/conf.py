@@ -6,6 +6,7 @@
 import os
 import sys
 import warnings
+import subprocess
 
 # Keep warnings visible to catch documentation issues
 # Do NOT suppress warnings - we want to see import problems
@@ -30,10 +31,30 @@ sys.path.insert(0, os.path.join(project_root, 'deployment'))
 
 # -- Project information -----------------------------------------------------
 
+# Function to get version from git
+def get_version_from_git():
+    """Get the current version from git tags, fallback to a default if not available."""
+    try:
+        # Get the latest git tag
+        result = subprocess.run(
+            ['git', 'describe', '--tags', '--abbrev=0'], 
+            capture_output=True, 
+            text=True, 
+            cwd=project_root
+        )
+        if result.returncode == 0:
+            # Remove 'v' prefix if present
+            version = result.stdout.strip()
+            return version.lstrip('v')
+        else:
+            return '0.2.0'  # fallback version
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return '0.2.0'  # fallback version
+
 project = 'Alpha Berkeley Framework'
 copyright = '2025, ALS Team'
 author = 'ALS Team'
-release = '1.0.0'
+release = get_version_from_git()
 
 # -- General configuration ---------------------------------------------------
 
@@ -65,7 +86,7 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/als-computing/alpha_berkeley",
+            "url": "https://github.com/thellert/alpha_berkeley",
             "icon": "fa-brands fa-github",
         },
     ],
@@ -262,6 +283,12 @@ myst_enable_extensions = [
     "substitution",
     "dollarmath",
 ]
+
+# Make version available as substitution variables for RST files
+rst_prolog = f"""
+.. |version| replace:: {release}
+.. |release| replace:: v{release}
+"""
 
 # -- Todo configuration -----------------------------------------------------
 
