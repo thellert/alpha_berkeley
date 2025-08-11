@@ -234,7 +234,7 @@ Templates are located at ``{service_path}/docker-compose.yml.j2`` and have acces
          - PYTHONPATH=/jupyter/repo_src
          - HTTP_PROXY=${HTTP_PROXY}
        networks:
-         - als-agents-network
+         - alpha-berkeley-network
 
 **Template Features:**
 

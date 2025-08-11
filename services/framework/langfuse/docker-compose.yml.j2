@@ -23,7 +23,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   clickhouse:
     container_name: clickhouse
@@ -45,7 +45,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   redis:
     container_name: redis
@@ -63,7 +63,7 @@ services:
       timeout: 10s
       retries: 10
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   minio:
     container_name: minio
@@ -87,7 +87,7 @@ services:
       retries: 5
       start_period: 1s
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   langfuse-worker:
     container_name: langfuse_worker
@@ -152,7 +152,7 @@ services:
       TZ: {{system.timezone}}
       NO_PROXY: ${NO_PROXY}
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   langfuse-web:
     container_name: langfuse-web
@@ -188,5 +188,5 @@ services:
         http_proxy: ""
         https_proxy: ""
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
