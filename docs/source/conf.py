@@ -47,7 +47,7 @@ def get_version_from_git():
             version = result.stdout.strip()
             return version.lstrip('v')
         else:
-            return '0.2.0'  # fallback version
+            return '0.2.1'  # fallback version
     except (subprocess.SubprocessError, FileNotFoundError):
         return '0.2.0'  # fallback version
 
