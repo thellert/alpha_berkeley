@@ -30,7 +30,7 @@ from framework.approval import (
     handle_service_with_interrupts
 )
 from configs.streaming import get_streamer
-from configs.unified_config import get_full_configuration, get_model_config
+from configs.config import get_full_configuration, get_model_config
 from langgraph.types import Command
 from configs.logger import get_logger
 from framework.models import get_chat_completion

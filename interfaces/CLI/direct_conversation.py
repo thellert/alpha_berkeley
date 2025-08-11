@@ -30,7 +30,7 @@ from framework.infrastructure.gateway import Gateway
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage
 from configs.logger import get_logger
-from configs.unified_config import get_full_configuration
+from configs.config import get_full_configuration
 from rich.console import Console
 from rich.text import Text
 
@@ -109,7 +109,7 @@ class CLI:
     .. seealso::
        :class:`framework.infrastructure.gateway.Gateway` : Message processing gateway
        :class:`framework.graph.create_graph` : LangGraph instance creation
-       :func:`configs.unified_config.get_full_configuration` : Configuration management
+       :func:`configs.config.get_full_configuration` : Configuration management
        :class:`rich.console.Console` : Rich console formatting
     """
     
@@ -214,7 +214,7 @@ class CLI:
         This method handles the complete startup sequence:
         1. Display startup banner with framework branding
         2. Generate unique thread ID for conversation persistence
-        3. Load and merge configuration from unified config system
+        3. Load and merge configuration from config system
         4. Initialize framework registry with all capabilities
         5. Create LangGraph instance with memory checkpointer
         6. Initialize Gateway for message processing
@@ -284,7 +284,7 @@ class CLI:
         })
         
         # Add recursion limit to runtime config
-        from configs.unified_config import get_config_value
+        from configs.config import get_config_value
         recursion_limit = get_config_value("execution_limits.graph_recursion_limit")
         
         self.base_config = {

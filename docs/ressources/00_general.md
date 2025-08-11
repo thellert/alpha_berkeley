@@ -164,7 +164,7 @@ Alpha Berkeley Framework Docs/
 │   │   ├── State_Management/              # AgentState + StateManager + StateUpdate + MessageUtils 
 │   │   ├── Context_Management/            # ContextManager + CapabilityContext + load_context utilities
 │   │   ├── Registry_System/               # RegistryManager + RegistryConfig + discovery patterns
-│   │   ├── Configuration_System/          # UnifiedConfig + get_config_value + model configs + environment resolution
+│   │   ├── Configuration_System/          # ConfigBuilder + get_config_value + model configs + environment resolution
 │   │   └── Prompt_Management/             # FrameworkPromptProvider + builder + loader + defaults + customization
 │   ├── Infrastructure/                    # Sprint 2: Message processing workflow - framework understanding
 │   │   ├── Gateway/                       # Gateway + GatewayResult + process_message + state lifecycle + slash commands + approval flow

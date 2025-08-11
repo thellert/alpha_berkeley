@@ -251,7 +251,7 @@ def get_execution_control_config() -> ExecutionControlConfig:
     """
     try:
         # Import here to avoid circular imports
-        from configs.unified_config import get_config_value
+        from configs.config import get_config_value
         
         # Load from config.yml
         exec_config = get_config_value("execution_control", {})

@@ -428,7 +428,7 @@ print(f"Container working directory: {{Path.cwd()}}")
     def _convert_host_path_to_container_path(self, host_path: Path) -> str:
         """Convert host path to container path (for container execution)."""
         # Use the convenient get_agent_dir function to get the configured executed scripts directory
-        from configs.unified_config import get_agent_dir
+        from configs.config import get_agent_dir
         
         # Get the full path to the executed scripts directory as configured
         executed_scripts_base_path = get_agent_dir("executed_python_scripts_dir")

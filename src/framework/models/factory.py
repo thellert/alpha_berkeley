@@ -16,7 +16,7 @@ requirements for API keys, base URLs, and model identifiers that are validated a
 .. seealso::
    :func:`get_model` : Main factory function for creating model instances
    :func:`~completion.get_chat_completion` : Direct chat completion interface
-   :mod:`configs.unified_config` : Provider configuration and credential management
+   :mod:`configs.config` : Provider configuration and credential management
 """
 
 import logging
@@ -33,7 +33,7 @@ from pydantic_ai.providers.anthropic import AnthropicProvider
 import openai
 from google import genai
 
-from configs.unified_config import get_provider_config
+from configs.config import get_provider_config
 
 
 def _create_openai_compatible_model(
@@ -291,7 +291,7 @@ def get_model(
     The function supports flexible configuration through multiple approaches:
     - Direct parameter specification for programmatic use
     - Model configuration dictionaries from YAML files
-    - Automatic credential loading from unified configuration system
+    - Automatic credential loading from configuration system
     - Environment-based HTTP proxy detection and configuration
     
     Provider-specific behavior:
@@ -327,7 +327,7 @@ def get_model(
     
     .. warning::
        API keys and base URLs are validated before model creation. Ensure proper
-       configuration is available through the unified config system or direct
+       configuration is available through the config system or direct
        parameter specification.
     
     Examples:
@@ -362,7 +362,7 @@ def get_model(
     
     .. seealso::
        :func:`~completion.get_chat_completion` : Direct chat completion without structured output
-       :func:`configs.unified_config.get_provider_config` : Provider configuration loading
+       :func:`configs.config.get_provider_config` : Provider configuration loading
        :class:`pydantic_ai.Agent` : PydanticAI agent that uses these models
        :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Complete model setup guide
     """

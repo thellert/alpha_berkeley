@@ -429,7 +429,7 @@ def create_executor_node():
             }
         
         # Set up execution context - get config from LangGraph configurable
-        from configs.unified_config import get_full_configuration
+        from configs.config import get_full_configuration
         configurable = get_full_configuration()  # Get entire configurable
         
         file_manager = FileManager(configurable)

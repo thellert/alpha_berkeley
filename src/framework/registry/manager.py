@@ -109,7 +109,7 @@ from typing import Dict, List, Optional, Type, Any, TYPE_CHECKING
 from .base import RegistryConfig, RegistryConfigProvider
 from framework.base.errors import RegistryError, ConfigurationError
 from configs.logger import get_logger
-from configs.unified_config import get_config_value, get_agent_dir
+from configs.config import get_config_value, get_agent_dir
 
 # Import for prompt loading
 try:

@@ -237,7 +237,7 @@ def get_approval_manager() -> ApprovalManager:
     """Get global ApprovalManager instance using singleton pattern.
     
     Provides access to the system-wide approval manager instance, initializing
-    it from the unified configuration system on first access. The function
+    it from the configuration system on first access. The function
     performs extensive validation to ensure security-critical approval
     configuration is present and valid before creating the manager instance.
     
@@ -277,7 +277,7 @@ def get_approval_manager() -> ApprovalManager:
     .. seealso::
        :class:`ApprovalManager` : Manager class created by this function
        :class:`GlobalApprovalConfig` : Configuration model used for initialization
-       :func:`configs.unified_config.get_config` : Configuration source
+       :func:`configs.config.get_config_value` : Configuration source
        :meth:`ApprovalManager.get_config_summary` : Configuration validation method
     
     .. warning::
@@ -292,9 +292,9 @@ def get_approval_manager() -> ApprovalManager:
     global _approval_manager
     
     if _approval_manager is None:
-        from configs.unified_config import get_config_value
+        from configs.config import get_config_value
         
-        # Get approval configuration from unified config system
+        # Get approval configuration from config system
         approval_config = get_config_value('approval_config')
         
         # Critical security configuration - fail fast if missing or invalid

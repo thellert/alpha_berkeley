@@ -25,7 +25,7 @@ from framework.context.context_manager import ContextManager
 # Factory code consolidated inline as helper function
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_model_config, get_agent_dir
+from configs.config import get_model_config, get_agent_dir
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
 
@@ -555,7 +555,7 @@ def _load_execution_plan_from_file(logger = None) -> Dict[str, Any]:
         Dictionary with success status and execution plan data
     """
     try:
-        # Get execution plans directory using unified config
+        # Get execution plans directory using config
         execution_plans_dir = get_agent_dir("execution_plans")
         pending_plans_dir = Path(execution_plans_dir) / "pending_plans"
         
@@ -617,7 +617,7 @@ def _cleanup_processed_plan_files(logger = None):
         logger: Logger instance for logging
     """
     try:
-        # Get execution plans directory using unified config
+        # Get execution plans directory using config
         execution_plans_dir = get_agent_dir("execution_plans")
         pending_plans_dir = Path(execution_plans_dir) / "pending_plans"
         

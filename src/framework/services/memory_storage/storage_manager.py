@@ -12,7 +12,7 @@ from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
 
-from configs.unified_config import get_framework_service_config, get_session_info, get_agent_dir
+from configs.config import get_framework_service_config, get_session_info, get_agent_dir
 from framework.state import UserMemories
 
 try:
@@ -287,7 +287,7 @@ def get_memory_storage_manager() -> MemoryStorageManager:
     """
     global _memory_storage_manager
     if _memory_storage_manager is None:
-        # Memory storage config now accessed via unified config
+        # Memory storage config now accessed via config
         # Use get_agent_dir to properly construct the path
         memory_dir = get_agent_dir('user_memory_dir')
         

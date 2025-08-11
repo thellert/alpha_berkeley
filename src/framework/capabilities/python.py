@@ -55,7 +55,7 @@ from framework.services.python_executor.models import PythonExecutionRequest
 from framework.approval import get_approval_resume_data, clear_approval_state, create_approval_type, handle_service_with_interrupts
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_full_configuration
+from configs.config import get_full_configuration
 from framework.prompts.loader import get_framework_prompts
 from langgraph.types import Command, interrupt
 from langgraph.errors import GraphInterrupt

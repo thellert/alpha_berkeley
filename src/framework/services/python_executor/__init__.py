@@ -72,7 +72,7 @@ Exception Hierarchy:
         - :exc:`WorkflowError`: General workflow control errors
 
 Configuration System:
-    The service integrates with the framework's unified configuration system and
+    The service integrates with the framework's configuration system and
     supports multiple execution environments with configurable security policies.
     Execution modes range from read-only safe environments to write-enabled
     environments for EPICS control operations.

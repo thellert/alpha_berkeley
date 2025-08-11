@@ -55,14 +55,12 @@ from framework.base.capability import BaseCapability
 from framework.context.base import CapabilityContext
 from framework.base.errors import ErrorClassification, ErrorSeverity
 from framework.state import AgentState, StateManager
-from framework.base.planning import PlannedStep
-from framework.base.examples import OrchestratorGuide, TaskClassifierGuide, ClassifierExample
+from framework.base.examples import OrchestratorGuide, TaskClassifierGuide
 from framework.registry import get_registry
 from configs.logger import get_logger
 from configs.streaming import get_streamer
-from configs.unified_config import get_model_config
+from configs.config import get_model_config
 from framework.prompts.loader import get_framework_prompts
-from langgraph.types import RetryPolicy
 
 
 registry = get_registry()
@@ -693,15 +691,13 @@ class TimeRangeParsingCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Unable to identify time reference in query, please clarify the time period",
-                technical_details=str(exc),
-                replanning_reason=f"Ambiguous time reference: {exc}"
+                technical_details=str(exc)
             )
         elif isinstance(exc, TimeParsingDependencyError):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Missing required information for time parsing",
-                technical_details=str(exc),
-                replanning_reason=f"Missing dependency: {exc}"
+                technical_details=str(exc)
             )
         elif isinstance(exc, TimeParsingError):
             return ErrorClassification(
@@ -714,8 +710,7 @@ class TimeRangeParsingCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Permission denied for time parsing operations",
-                technical_details=str(exc),
-                safety_abort_reason=f"Unauthorized time parsing: {exc}"
+                technical_details=str(exc)
             )
         # Retry on temporary issues
         elif any(keyword in str(exc).lower() for keyword in ['timeout', 'connection', 'temporary']):

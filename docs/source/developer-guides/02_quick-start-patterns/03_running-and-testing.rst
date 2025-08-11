@@ -180,7 +180,7 @@ Create simple test scripts using the Gateway pattern:
    from framework.graph import create_graph
    from framework.infrastructure.gateway import Gateway
    from langgraph.checkpoint.memory import MemorySaver
-   from configs.unified_config import get_full_configuration
+   from configs.config import get_full_configuration
    
    async def test_capability():
        # Initialize framework
@@ -372,7 +372,7 @@ Configuration Issues
 
 .. code-block:: python
 
-   from configs.unified_config import get_full_configuration
+   from configs.config import get_full_configuration
    import os
    
    # Check environment variables

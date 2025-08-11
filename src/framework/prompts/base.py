@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from configs.logger import get_logger
-from configs.unified_config import get_config_value, get_agent_dir
+from configs.config import get_config_value, get_agent_dir
 from framework.base import TaskClassifierGuide
 if TYPE_CHECKING:
     from framework.base import OrchestratorGuide, BaseExample

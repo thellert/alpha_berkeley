@@ -293,7 +293,7 @@ class UserMemoryProvider(DataSourceProvider):
         
         The returned configuration specification includes parameter descriptions,
         types, requirements status, and configuration path mappings for integration
-        with the unified configuration system.
+        with the configuration system.
         
         :return: Dictionary of required configuration parameters with specifications
         :rtype: dict
@@ -311,7 +311,7 @@ class UserMemoryProvider(DataSourceProvider):
                 Directory where core user memory files are stored
         
         .. seealso::
-           :func:`configs.unified_config.get_agent_dir` : Configuration path resolution
+           :func:`configs.config.get_agent_dir` : Configuration path resolution
            :class:`framework.services.memory_storage.MemoryStorageManager` : Uses configured directory
         """
         return {

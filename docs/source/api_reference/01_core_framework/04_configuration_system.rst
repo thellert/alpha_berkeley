@@ -2,17 +2,17 @@
 Configuration System
 ====================
 
-Unified configuration system with YAML loading, environment resolution, and seamless LangGraph integration.
+Configuration system with YAML loading, environment resolution, and seamless LangGraph integration.
 
-.. currentmodule:: configs.unified_config
+.. currentmodule:: configs.config
 
 Core Classes
 ============
 
-UnifiedConfigBuilder
---------------------
+ConfigBuilder
+-------------
 
-.. autoclass:: UnifiedConfigBuilder
+.. autoclass:: ConfigBuilder
    :members:
    :undoc-members:
    :show-inheritance:
@@ -69,7 +69,7 @@ Development Utilities
 Internal Implementation
 =======================
 
-.. autofunction:: _get_unified_config
+.. autofunction:: _get_config
 
 .. autofunction:: _get_configurable
 

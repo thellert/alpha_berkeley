@@ -241,7 +241,7 @@ Framework components use LangGraph's native streaming:
            
            streamer.status("Processing data...")
            result = await process_data()
-           streamer.success("Processing complete")
+           streamer.status("Processing complete")
            
            return {"processed_data": result}
 
@@ -336,7 +336,7 @@ Common Issues
 Development Utilities Integration
 =================================
 
-The framework's development utilities follow the same convention-over-configuration patterns, providing consistent interfaces that reduce boilerplate and integrate seamlessly with the unified configuration system.
+The framework's development utilities follow the same convention-over-configuration patterns, providing consistent interfaces that reduce boilerplate and integrate seamlessly with the configuration system.
 
 Framework Logging Conventions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -365,7 +365,7 @@ Component logging follows the structured API pattern used throughout the framewo
    logger.timing("Execution completed in 2.3 seconds")
    logger.approval("Awaiting human approval")
 
-**Configuration Integration**: Color schemes are automatically loaded from the unified configuration using the same paths as component registration:
+**Configuration Integration**: Color schemes are automatically loaded from the configuration using the same paths as component registration:
 
 .. code-block:: yaml
 
@@ -377,7 +377,7 @@ Component logging follows the structured API pattern used throughout the framewo
          task_extraction: "thistle1"
    
    # Application component colors (in src/applications/{app_name}/config.yml)
-   # Note: These get automatically namespaced under applications.{app_name} by unified config
+   # Note: These get automatically namespaced under applications.{app_name} by config
    logging:
      logging_colors:
        current_weather: "blue"
@@ -403,7 +403,7 @@ Streaming events integrate with LangGraph's native streaming and follow the same
            
            streamer.status("Processing data...")
            result = await process_data()
-           streamer.success("Processing complete")
+           streamer.status("Processing complete")
            
            return {"processed_data": result}
 
@@ -416,12 +416,12 @@ Streaming events integrate with LangGraph's native streaming and follow the same
 Model Factory Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The model factory integrates with the unified configuration system following the same provider configuration patterns:
+The model factory integrates with the configuration system following the same provider configuration patterns:
 
 .. code-block:: python
 
    from framework.models import get_model
-   from configs.unified_config import get_provider_config
+   from configs.config import get_provider_config
    
    # Configuration-driven model creation
    provider_config = get_provider_config("anthropic")
@@ -463,7 +463,7 @@ Consistency Benefits
 Development utilities provide the same benefits as component registration:
 
 - **Standardized Interfaces**: All utilities use the same source/component naming pattern
-- **Configuration Integration**: Automatic loading from unified configuration system  
+- **Configuration Integration**: Automatic loading from configuration system  
 - **Graceful Degradation**: Continue functioning when configuration is unavailable
 - **Type Safety**: Full type hints and validation for development-time error detection
 - **Performance Optimization**: Caching and lazy loading reduce overhead
