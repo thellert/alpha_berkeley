@@ -5,6 +5,25 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-01-31
+
+### Added
+- Enhanced execution plan editor with file-based persistence
+- Comprehensive approval system with human-in-the-loop workflows
+- Complete advanced wind turbine tutorial application
+- Improved documentation with execution plan viewer
+- Execution plan viewer JavaScript support for interactive documentation
+
+### Changed
+- Modernized docker-compose configurations
+- Enhanced framework robustness and capabilities
+- Improved documentation build system and content
+
+### Fixed
+- Repository hygiene improvements with better .gitignore
+- Removed deprecated version fields from docker-compose files
+- Cleaned up PID files from repository
+
 ## [0.1.1] - 2025-08-08
 
 ### Fixed
