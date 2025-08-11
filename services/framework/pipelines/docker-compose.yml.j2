@@ -19,6 +19,8 @@ services:
       - PIPELINES_API_KEY=0p3n-w3bu!
       # Python path points to source directory for clean imports
       - PYTHONPATH=/pipelines/repo_src
+      # Python executable path for local execution mode (container-specific override)
+      - CONTAINER_PYTHON_ENV=/usr/local/bin/python3
       # Enable colored output in container
       - TERM=xterm-256color
       - COLORTERM=truecolor

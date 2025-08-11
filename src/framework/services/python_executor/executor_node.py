@@ -64,28 +64,9 @@ class LocalCodeExecutor:
         
         start_time = time.time()
         
-        # Detect Python environment from configuration
-        framework_config = self.configurable.get('framework', {})
-        execution_config = framework_config.get('execution', {})
-        configured_python_path = execution_config.get('python_env_path')
-        
-        if configured_python_path:
-            # Use configured Python environment
-            python_path = os.path.expanduser(configured_python_path)
-            
-            if not Path(python_path).exists():
-                raise CodeRuntimeError(
-                    message=f"Configured Python environment not found: {python_path}",
-                    traceback_info=f"Check your config.yml python_env_path setting.\nPath does not exist: {python_path}",
-                    execution_attempt=1
-                )
-            
-            logger.info(f"LOCAL EXECUTION: Using configured Python environment: {python_path}")
-        else:
-            # Use current Python executable as default
-            import sys
-            python_path = sys.executable
-            logger.warning(f"LOCAL EXECUTION: Using current Python executable: {python_path}")
+        # Detect Python environment with container-aware logic
+        python_path = self._detect_python_environment()
+        logger.info(f"LOCAL EXECUTION: Using Python environment: {python_path}")
         
         # Write code to temporary file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -225,6 +206,36 @@ class LocalCodeExecutor:
                 os.unlink(temp_script)
             except:
                 pass
+    
+    def _detect_python_environment(self) -> str:
+        """Detect appropriate Python environment with container-aware logic"""
+        import sys
+        
+        # First: Check for container-specific Python environment override
+        container_python_env = os.environ.get('CONTAINER_PYTHON_ENV')
+        if container_python_env:
+            if Path(container_python_env).exists():
+                logger.info(f"LOCAL EXECUTION: Using container Python environment: {container_python_env}")
+                return container_python_env
+            else:
+                logger.warning(f"Container Python environment not found: {container_python_env}")
+        
+        # Second: Try configured Python environment from config
+        framework_config = self.configurable.get('framework', {})
+        execution_config = framework_config.get('execution', {})
+        configured_python_path = execution_config.get('python_env_path')
+        
+        if configured_python_path:
+            python_path = os.path.expanduser(configured_python_path)
+            if Path(python_path).exists():
+                logger.info(f"LOCAL EXECUTION: Using configured Python environment: {python_path}")
+                return python_path
+            else:
+                logger.warning(f"Configured Python environment not found: {python_path}")
+        
+        # Final fallback: Use current Python executable
+        logger.warning("LOCAL EXECUTION: Using current Python executable as fallback")
+        return sys.executable
     
     def _extract_missing_module(self, error_text: str) -> str:
         """Extract module name from import error"""
