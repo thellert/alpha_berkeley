@@ -26,7 +26,7 @@ services:
       - EPICS_EXECUTION_MODE=read
     command: ["/bin/bash", "/jupyter/custom_start.sh"]
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
 
   # Write Access EPICS Container (DANGEROUS - DEV ONLY)
   jupyter-write:
@@ -57,4 +57,4 @@ services:
       - EPICS_WRITE_ACCESS=development
     command: ["/bin/bash", "/jupyter/custom_start.sh"]
     networks:
-      - als-agents-network
+      - alpha-berkeley-network
