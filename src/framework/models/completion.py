@@ -163,6 +163,48 @@ def _validate_proxy_url(proxy_url: str) -> bool:
         return False
 
 
+def _get_ollama_fallback_urls(base_url: str) -> list[str]:
+    """Generate fallback URLs for Ollama based on the current base URL.
+    
+    This helper function generates appropriate fallback URLs to handle
+    common development scenarios where the execution context (container vs local)
+    doesn't match the configured Ollama URL.
+    
+    :param base_url: Current configured Ollama base URL
+    :type base_url: str
+    :return: List of fallback URLs to try in order
+    :rtype: list[str]
+    
+    .. note::
+       Fallback URLs are generated based on common patterns:
+       - host.containers.internal -> localhost (container to local)
+       - localhost -> host.containers.internal (local to container)
+       - Generic fallbacks for other scenarios
+    """
+    fallback_urls = []
+    
+    if "host.containers.internal" in base_url:
+        # Running in container but Ollama might be on localhost
+        fallback_urls = [
+            base_url.replace("host.containers.internal", "localhost"),
+            "http://localhost:11434"
+        ]
+    elif "localhost" in base_url:
+        # Running locally but Ollama might be in container context
+        fallback_urls = [
+            base_url.replace("localhost", "host.containers.internal"),
+            "http://host.containers.internal:11434"
+        ]
+    else:
+        # Generic fallbacks for other scenarios
+        fallback_urls = [
+            "http://localhost:11434",
+            "http://host.containers.internal:11434"
+        ]
+    
+    return fallback_urls
+
+
 def get_chat_completion(
     message: str,
     max_tokens: int = 1024,
@@ -474,9 +516,56 @@ def get_chat_completion(
             # The user's prompt ('message') should ideally also guide the model
             # towards generating the desired structured output.
         
-        # Getting chat completion from ollama
-        client = ollama.Client(host=base_url)
-        response = client.chat(**request_args)
+        # Ollama connection with graceful fallback for development workflows
+        client = None
+        used_fallback = False
+        
+        try:
+            # First attempt: Use configured base_url
+            client = ollama.Client(host=base_url)
+            # Test connection with a simple health check
+            client.list()  # This will fail if Ollama is not accessible
+            logger.debug(f"Successfully connected to Ollama at {base_url}")
+        except Exception as e:
+            logger.debug(f"Failed to connect to Ollama at {base_url}: {e}")
+            
+            # Determine fallback URLs based on current base_url
+            fallback_urls = _get_ollama_fallback_urls(base_url)
+            
+            # Try fallback URLs
+            for fallback_url in fallback_urls:
+                try:
+                    logger.debug(f"Attempting fallback connection to Ollama at {fallback_url}")
+                    client = ollama.Client(host=fallback_url)
+                    client.list()  # Test connection
+                    used_fallback = True
+                    logger.warning(
+                        f"⚠️  Ollama connection fallback: configured URL '{base_url}' failed, "
+                        f"using fallback '{fallback_url}'. Consider updating your configuration "
+                        f"for your current execution environment."
+                    )
+                    break
+                except Exception as fallback_e:
+                    logger.debug(f"Fallback attempt failed for {fallback_url}: {fallback_e}")
+                    continue
+            
+            if client is None:
+                # All connection attempts failed
+                raise ValueError(
+                    f"Failed to connect to Ollama at configured URL '{base_url}' "
+                    f"and all fallback URLs {fallback_urls}. Please ensure Ollama is running "
+                    f"and accessible, or update your configuration."
+                )
+        
+        try:
+            response = client.chat(**request_args)
+        except Exception as e:
+            # Provide helpful error context
+            current_url = fallback_urls[0] if used_fallback else base_url
+            raise ValueError(
+                f"Ollama chat request failed using {current_url}. "
+                f"Error: {e}. Please verify the model '{model_id}' is available."
+            )
         
         # response is a dict, e.g.:
         # {'model': 'llama3.1', 'created_at': ..., 

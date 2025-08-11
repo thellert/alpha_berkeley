@@ -131,6 +131,147 @@ def _validate_proxy_url(proxy_url: str) -> bool:
         return False
 
 
+def _get_ollama_fallback_urls(base_url: str) -> list[str]:
+    """Generate fallback URLs for Ollama based on the current base URL.
+    
+    This helper function generates appropriate fallback URLs to handle
+    common development scenarios where the execution context (container vs local)
+    doesn't match the configured Ollama URL.
+    
+    :param base_url: Current configured Ollama base URL
+    :type base_url: str
+    :return: List of fallback URLs to try in order
+    :rtype: list[str]
+    
+    .. note::
+       Fallback URLs are generated based on common patterns:
+       - host.containers.internal -> localhost (container to local)
+       - localhost -> host.containers.internal (local to container)
+       - Generic fallbacks for other scenarios
+    """
+    fallback_urls = []
+    
+    if "host.containers.internal" in base_url:
+        # Running in container but Ollama might be on localhost
+        fallback_urls = [
+            base_url.replace("host.containers.internal", "localhost"),
+            "http://localhost:11434"
+        ]
+    elif "localhost" in base_url:
+        # Running locally but Ollama might be in container context
+        fallback_urls = [
+            base_url.replace("localhost", "host.containers.internal"),
+            "http://host.containers.internal:11434"
+        ]
+    else:
+        # Generic fallbacks for other scenarios
+        fallback_urls = [
+            "http://localhost:11434",
+            "http://host.containers.internal:11434"
+        ]
+    
+    return fallback_urls
+
+
+def _test_ollama_connection(base_url: str) -> bool:
+    """Test if Ollama is accessible at the given URL.
+    
+    Performs a simple health check by attempting to connect to Ollama
+    and calling the list models endpoint.
+    
+    :param base_url: Ollama base URL to test
+    :type base_url: str
+    :return: True if connection successful, False otherwise
+    :rtype: bool
+    """
+    try:
+        # Test with a simple synchronous request to avoid async complications
+        import requests
+        # Convert to OpenAI-compatible endpoint for testing
+        test_url = base_url.rstrip('/') + '/v1/models'
+        response = requests.get(test_url, timeout=2)
+        return response.status_code == 200
+    except Exception:
+        return False
+
+
+def _create_ollama_model_with_fallback(
+    model_id: str,
+    base_url: str,
+    provider_config: dict,
+    timeout: Optional[float],
+    async_http_client: Optional[httpx.AsyncClient]
+) -> OpenAIModel:
+    """Create Ollama model with graceful fallback for development workflows.
+    
+    This function attempts to connect to Ollama at the configured URL first,
+    then tries common fallback URLs if the initial connection fails. This
+    handles the common development scenario where execution context (container
+    vs local) doesn't match the configured Ollama endpoint.
+    
+    :param model_id: Ollama model identifier
+    :type model_id: str
+    :param base_url: Primary Ollama base URL from configuration
+    :type base_url: str
+    :param provider_config: Provider configuration dictionary
+    :type provider_config: dict
+    :param timeout: Request timeout in seconds
+    :type timeout: float, optional
+    :param async_http_client: Pre-configured HTTP client
+    :type async_http_client: httpx.AsyncClient, optional
+    :return: Configured OpenAI-compatible model for Ollama
+    :rtype: OpenAIModel
+    :raises ValueError: If no working Ollama endpoint is found
+    """
+    effective_base_url = base_url
+    if not base_url.endswith('/v1'):
+        effective_base_url = base_url.rstrip('/') + '/v1'
+    
+    used_fallback = False
+    
+    # Test primary URL first
+    if _test_ollama_connection(base_url):
+        logger.debug(f"Successfully connected to Ollama at {base_url}")
+    else:
+        logger.debug(f"Failed to connect to Ollama at {base_url}")
+        
+        # Try fallback URLs
+        fallback_urls = _get_ollama_fallback_urls(base_url)
+        working_url = None
+        
+        for fallback_url in fallback_urls:
+            logger.debug(f"Attempting fallback connection to Ollama at {fallback_url}")
+            if _test_ollama_connection(fallback_url):
+                working_url = fallback_url
+                used_fallback = True
+                logger.warning(
+                    f"⚠️  Ollama connection fallback: configured URL '{base_url}' failed, "
+                    f"using fallback '{fallback_url}'. Consider updating your configuration "
+                    f"for your current execution environment."
+                )
+                break
+        
+        if working_url:
+            effective_base_url = working_url
+            if not working_url.endswith('/v1'):
+                effective_base_url = working_url.rstrip('/') + '/v1'
+        else:
+            # All connection attempts failed
+            raise ValueError(
+                f"Failed to connect to Ollama at configured URL '{base_url}' "
+                f"and all fallback URLs {fallback_urls}. Please ensure Ollama is running "
+                f"and accessible, or update your configuration."
+            )
+    
+    return _create_openai_compatible_model(
+        model_id=model_id,
+        api_key=provider_config.get("api_key"),
+        base_url=effective_base_url,
+        timeout_arg_from_get_model=timeout,
+        shared_http_client=async_http_client
+    )
+
+
 def get_model(
     provider: Optional[str] = None,
     model_config: Optional[dict] = None,
@@ -313,16 +454,12 @@ def get_model(
         )
 
     elif provider == "ollama":
-        effective_ollama_base_url = base_url
-        if not base_url.endswith('/v1'):
-            effective_ollama_base_url = base_url.rstrip('/') + '/v1' 
-        
-        return _create_openai_compatible_model(
+        return _create_ollama_model_with_fallback(
             model_id=model_id,
-            api_key=provider_config.get("api_key"),
-            base_url=effective_ollama_base_url,
-            timeout_arg_from_get_model=timeout,
-            shared_http_client=async_http_client
+            base_url=base_url,
+            provider_config=provider_config,
+            timeout=timeout,
+            async_http_client=async_http_client
         )
 
     elif provider == "cborg":
