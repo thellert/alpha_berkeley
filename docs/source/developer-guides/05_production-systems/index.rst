@@ -180,7 +180,7 @@ Production Integration Patterns
          
          # Deploy related services as a group
          services = await container_manager.deploy_service_group([
-             "mem0-memory-service",
+             "pipelines-processing-service",
              "jupyter-execution-environment", 
              "langfuse-observability"
          ])

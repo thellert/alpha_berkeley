@@ -23,7 +23,7 @@ Architecture:
     The system supports two service categories:
     
     1. Framework Services: Core infrastructure services like databases,
-       web interfaces, and development tools (jupyter, open-webui, mem0)
+       web interfaces, and development tools (jupyter, open-webui, pipelines)
     
     2. Application Services: Domain-specific services tied to particular
        applications (als_expert.mongo, als_expert.pv_finder)
@@ -37,10 +37,10 @@ Examples:
     Service discovery patterns::
     
         # Framework service (short name)
-        deployed_services: ["jupyter", "mem0"]
+        deployed_services: ["jupyter", "pipelines"]
         
         # Framework service (full path)
-        deployed_services: ["framework.jupyter", "framework.mem0"]
+        deployed_services: ["framework.jupyter", "framework.pipelines"]
         
         # Application service (full path required)
         deployed_services: ["applications.als_expert.mongo"]
@@ -573,6 +573,16 @@ def parse_args():
         
             $ python container_manager.py config.yml down
             # Stops and removes deployed services
+            
+        Clean deployment (remove images/volumes)::
+        
+            $ python container_manager.py config.yml clean
+            # Removes containers, images, volumes, and networks
+            
+        Rebuild from scratch::
+        
+            $ python container_manager.py config.yml rebuild -d
+            # Clean + rebuild + start in detached mode
     
     .. seealso::
        :func:`main execution block` : Uses parsed arguments for deployment operations
@@ -582,11 +592,10 @@ def parse_args():
     # Mandatory config path
     parser.add_argument("config", help="Path to the config file")
     
-    # Optional 'up' or 'down' command
+    # Optional command
     parser.add_argument(
-        "command", nargs='?', choices=["up", "down"],
-        help="Command to run (up/down). If not provided, then just generate "\
-             "the compose files")
+        "command", nargs='?', choices=["up", "down", "clean", "rebuild"],
+        help="Command to run: 'up' (start), 'down' (stop), 'clean' (remove images/volumes), 'rebuild' (clean + up). If not provided, just generate compose files")
 
     # Optional -d / --detached flag
     parser.add_argument(
@@ -596,10 +605,43 @@ def parse_args():
     args = parser.parse_args()
 
     # Validation
-    if args.detached and args.command != "up":
-        parser.error("The -d/--detached flag is only allowed with 'up'.")
+    if args.detached and args.command not in ["up", "rebuild"]:
+        parser.error("The -d/--detached flag is only allowed with 'up' or 'rebuild'.")
 
     return args
+
+def clean_deployment(compose_files):
+    """Clean up containers, images, volumes, and networks for a fresh deployment.
+    
+    This function provides comprehensive cleanup capabilities for container
+    deployments, removing containers, images, volumes, and networks to enable
+    fresh rebuilds. It's particularly useful when configuration changes require
+    complete environment reconstruction.
+    
+    :param compose_files: List of Docker Compose file paths for the deployment
+    :type compose_files: list[str]
+    """
+    print("Cleaning up deployment...")
+    
+    # Stop and remove containers, networks, volumes
+    cmd_down = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd_down.extend(("-f", compose_file))
+    cmd_down.extend(["--env-file", ".env", "down", "--volumes", "--remove-orphans"])
+    
+    print(f"Running: {' '.join(cmd_down)}")
+    subprocess.run(cmd_down)
+    
+    # Remove images built by the compose files
+    cmd_rmi = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd_rmi.extend(("-f", compose_file))
+    cmd_rmi.extend(["--env-file", ".env", "down", "--rmi", "all"])
+    
+    print(f"Running: {' '.join(cmd_rmi)}")
+    subprocess.run(cmd_rmi)
+    
+    print("Cleanup completed.")
 
 if __name__ == "__main__":
     """Main execution block for container management operations.
@@ -688,26 +730,40 @@ if __name__ == "__main__":
             sys.exit(1)
 
     if args.command:
-        # run the podman compose command up or down
-        cmd = ["podman", "compose"]
-        for compose_file in compose_files:
-            cmd.extend(("-f", compose_file))
+        if args.command == "clean":
+            clean_deployment(compose_files)
+        elif args.command == "rebuild":
+            clean_deployment(compose_files)
+            # After cleaning, proceed with 'up'
+            cmd = ["podman", "compose"]
+            for compose_file in compose_files:
+                cmd.extend(("-f", compose_file))
+            cmd.extend(["--env-file", ".env", "up"])
+            if args.detached:
+                cmd.append("-d")
+            print(f"Running command:\n    {' '.join(cmd)}")
+            os.execvp(cmd[0], cmd)
+        else:
+            # run the podman compose command up or down
+            cmd = ["podman", "compose"]
+            for compose_file in compose_files:
+                cmd.extend(("-f", compose_file))
 
-        # --------------------------------------
-        # Add the env file
-        # --------------------------------------
-        cmd.append('--env-file')
-        cmd.append('.env')
-                
-        cmd.append(args.command)
+            # --------------------------------------
+            # Add the env file
+            # --------------------------------------
+            cmd.append('--env-file')
+            cmd.append('.env')
+                    
+            cmd.append(args.command)
+            
+            if args.detached:
+                cmd.append("-d")
         
-        if args.detached:
-            cmd.append("-d")
-    
-       
-        
-        print(f"Running command:\n    {' '.join(cmd)}")
-        os.execvp(cmd[0], cmd)
+           
+            
+            print(f"Running command:\n    {' '.join(cmd)}")
+            os.execvp(cmd[0], cmd)
     else:
         print("Generated compose files:")
         for compose_file in compose_files:
