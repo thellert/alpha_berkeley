@@ -1,0 +1,10 @@
+# Hello World Weather Application Configuration - Quick Start Version
+
+# Pipeline configuration
+pipeline:
+  name: "bolt"
+
+# Logging
+logging:
+  logging_colors:
+    current_weather: "blue" 
