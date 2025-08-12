@@ -32,6 +32,57 @@ The Data Source Integration system provides a unified architecture for accessing
 - **Registry Integration**: Automatic provider discovery through the framework registry
 - **LLM Formatting**: Standardized formatting for prompt integration
 
+.. dropdown:: Data Source Integration Points
+   :color: info
+   :icon: workflow
+
+   .. tab-set::
+
+      .. tab-item:: Task Extraction
+         :sync: task-extraction
+
+         **Automatic Context Discovery**
+
+         Framework queries all data sources and provides a summary to help understand user intent and available context. This helps the task extraction system recognize when users are referencing domain-specific information.
+
+         **Benefits:**
+         - Better task understanding with domain context
+         - Improved intent recognition for specialized queries  
+         - Automatic detection of data-dependent requests
+
+      .. tab-item:: Capability Execution  
+         :sync: capability-execution
+
+         **Runtime Data Access**
+
+         Individual capabilities request specific data through the unified manager, receiving formatted content for processing and analysis.
+
+         **Benefits:**
+         - Real-time data retrieval during task execution
+         - Parallel fetching from multiple sources with timeout handling
+         - Standardized data formatting for LLM integration
+
+      .. tab-item:: Response Control
+         :sync: response-control
+
+         **Configurable Access Patterns**
+
+         Each data source can configure when it responds using the ``should_respond()`` method. Common patterns:
+
+         - **Task extraction only**: Always return ``True`` to provide context during task understanding
+         - **Capability execution only**: Return ``False`` for ``"task_extraction"`` requests to avoid expensive operations during planning  
+         - **Conditional access**: Check user permissions, connection status, or request context to determine availability
+
+         **Example Configuration:**
+         
+         .. code-block:: python
+
+            def should_respond(self, request: DataSourceRequest) -> bool:
+                # Skip expensive LLM calls during task extraction
+                if request.requester.component_type == "task_extraction":
+                    return False
+                return True
+
 Architecture Components
 =======================
 
@@ -45,6 +96,8 @@ The data source system has three main components:
 
 **3. Registry Integration (Discovery)**
    Automatic provider loading through the framework registry system
+
+
 
 Step-by-Step Implementation
 ===========================
@@ -113,8 +166,10 @@ Create a data source provider by extending the base provider interface:
        
        def should_respond(self, request: DataSourceRequest) -> bool:
            """Determine if this provider should respond to the request."""
-           # Example: respond to requests from specific components
-           return request.requester.component_type == "capability"
+           # Example: Skip expensive operations during task extraction
+           if request.requester.component_type == "task_extraction":
+               return False  # Only respond during capability execution
+           return True
        
        async def _fetch_data(self, query: Optional[str]) -> list:
            """Fetch data from the database."""
@@ -330,48 +385,6 @@ Test your data source integration:
        
        return result.has_data
 
-**Production Deployment Checklist:**
-
-- [ ] Custom providers implement required methods correctly
-- [ ] Provider registration works in application registry
-- [ ] Error handling manages provider failures gracefully
-- [ ] Timeout values are appropriate for your data sources
-- [ ] Testing validates data retrieval functionality
-
-Troubleshooting
-===============
-
-**Common Issues:**
-
-**Issue**: Provider not being discovered by the manager
-   - **Cause**: Provider not registered in application registry
-   - **Solution**: Verify provider is in `data_sources` list in registry config
-
-**Issue**: `create_data_source_request` failing
-   - **Cause**: Incorrect function signature
-   - **Solution**: Use `create_data_source_request(state, requester, ...)` format
-
-**Issue**: Provider errors affecting other sources
-   - **Cause**: Provider raising exceptions instead of returning None
-   - **Solution**: Handle all errors in provider and return None
-
-**Debugging Data Sources:**
-
-.. code-block:: python
-
-   # Enable detailed logging
-   import logging
-   logging.getLogger("framework.data_management").setLevel(logging.DEBUG)
-   
-   # Test individual provider
-   from framework.data_management import get_data_source_manager
-   manager = get_data_source_manager()
-   provider = manager.get_provider("custom_database")
-   
-   if provider:
-       print(f"Provider found: {provider.name}")
-   else:
-       print("Provider not found - check registration")
 
 Next Steps
 ==========

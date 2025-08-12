@@ -32,12 +32,17 @@ The Memory Storage Service provides basic user memory infrastructure for persist
 - **Simple Memory Model**: Timestamped entries with content
 - **Framework Integration**: Works with existing context and approval systems
 
-**Current Limitations:**
+.. admonition:: Current Limitations
+   :class: warning
 
-- No advanced querying or search capabilities
-- All memories retrieved together (no selective retrieval)
-- Simple file-based backend only
-- No backup or advanced storage features
+   The built-in memory storage service is currently a basic implementation with known limitations:
+
+   - **No advanced querying or search capabilities** - Simple retrieve-all approach only
+   - **All memories retrieved together** - No selective retrieval by date, content, or tags
+   - **Simple file-based backend only** - No database integration or advanced storage options
+   - **No backup or advanced storage features** - Basic JSON persistence without redundancy
+
+   For production systems requiring advanced memory features, consider implementing custom storage providers or extending the existing system.
 
 Architecture
 ============
