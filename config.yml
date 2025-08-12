@@ -5,7 +5,7 @@ build_dir: ./build
 
 # Root directory (absolute path)
 # If you operate on local and remote machines, recommended to use environment variable
-project_root: ${PROJECT_ROOT}
+project_root: /Users/magarces/test/alpha_berkeley
 
 # Application Configuration (paths are derived by convention)
 # - Config: src/applications/{app}/config.yml  
@@ -13,8 +13,9 @@ project_root: ${PROJECT_ROOT}
 
 applications:
   # - als_expert
-  - wind_turbine
-  # - hello_world_weather
+  #- wind_turbine
+  #- hello_world_weather
+  - bolt
   
 # ============================================================
 # OPERATOR CONTROLS - System-wide governance and safety policies
@@ -145,7 +146,7 @@ api:
     ollama:
       api_key: ollama  # Default for ollama
       # For framework use
-      base_url: http://host.containers.internal:11434 # http://host.containers.internal:11434 <_> http://localhost:11434  <_> http://doudna:11434
+      base_url: http://localhost:11434 # http://host.containers.internal:11434 <_> http://localhost:11434  <_> http://doudna:11434
       # For container services
-      host: host.containers.internal # host.containers.internal <_> localhost
+      host: localhost # host.containers.internal <_> localhost
       port: 11434
