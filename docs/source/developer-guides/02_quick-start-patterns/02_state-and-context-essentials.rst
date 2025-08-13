@@ -4,7 +4,7 @@ State and Context Essentials
 
 .. currentmodule:: framework.state
 
-Master the essential state and context management patterns for Alpha Berkeley Framework development.
+The Alpha Berkeley Framework supports multi-turn conversations, preserving relevant context across conversation turns through selective persistence of capability data. Master the essential state and context management patterns for Alpha Berkeley Framework development.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary

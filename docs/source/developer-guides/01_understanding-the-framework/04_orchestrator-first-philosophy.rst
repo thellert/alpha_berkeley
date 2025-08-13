@@ -356,10 +356,16 @@ Next Steps
 3. **Explore Approval Workflows**: :doc:`../05_production-systems/01_human-approval-workflows` - Add human oversight to plans
 4. **See Real Applications**: :doc:`../../example-applications/index` - Orchestration in complex scenarios
 
-Related API Reference
-=====================
+.. seealso::
 
-- :class:`framework.infrastructure.orchestration_node.OrchestrationNode` - Complete orchestration implementation
-- :class:`framework.base.planning.ExecutionPlan` - Plan data structures
-- :func:`framework.infrastructure.router_node.router_conditional_edge` - Plan execution routing
-- :class:`framework.state.StateManager` - State utilities for orchestration
+   :doc:`../../api_reference/02_infrastructure/04_orchestrator-planning`
+       Complete orchestration implementation and execution planning
+   
+   :doc:`../../api_reference/01_core_framework/04_execution_planning`
+       Plan data structures and validation patterns
+   
+   :doc:`../../api_reference/02_infrastructure/05_execution-control`
+       Plan execution routing and deterministic flow control
+   
+   :doc:`../../api_reference/01_core_framework/02_state_and_context`
+       State utilities for orchestration and plan management

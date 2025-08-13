@@ -131,6 +131,7 @@ Complete Provider Interface
 ---------------------------
 
 .. tab-set::
+   :class: natural-width
 
    .. tab-item:: Orchestrator
 
@@ -267,6 +268,7 @@ The framework provides individual default prompt builder implementations organiz
    :animate: fade-in-slide-down
 
    .. tab-set::
+      :class: natural-width
 
       .. tab-item:: Orchestrator
       

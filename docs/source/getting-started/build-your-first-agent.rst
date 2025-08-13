@@ -3,7 +3,7 @@ Build Your First Agent - Multi-Capability Integration Tutorial
 
 This tutorial builds on the Hello World foundations to demonstrate **orchestration integration patterns** through a wind turbine monitoring agent. You'll learn multi-step workflows, simple RAG integration, Python service integration, and human-in-the-loop workflows. The wind turbine scenario shows how to connect multiple capabilities in coordinated workflows - the techniques are intentionally straightforward to focus on the integration patterns.
 
-.. dropdown:: **Prerequisites** ⚡
+.. dropdown:: **Prerequisites**
    :color: info
    :icon: list-unordered
 
@@ -248,7 +248,7 @@ Step 4: Multi-Capability Coordination
 
 .. tab-set::
 
-   .. tab-item:: 📤 Context Storage Pattern
+   .. tab-item:: 📤 Context Storage
 
       **Pattern:** How capabilities store their results for other capabilities to use
       
@@ -273,7 +273,7 @@ Step 4: Multi-Capability Coordination
              turbine_data                          # The actual data object
          )
 
-   .. tab-item:: 📥 Context Retrieval Pattern
+   .. tab-item:: 📥 Context Retrieval
 
       **Pattern:** How capabilities access data from previous steps
       
@@ -299,7 +299,7 @@ Step 4: Multi-Capability Coordination
          timestamps = turbine_data.timestamps
          power_outputs = turbine_data.power_outputs
 
-   .. tab-item:: 🔗 Multi-Dependency Coordination
+   .. tab-item:: 🔗 Context Coordination
 
       **Pattern:** How complex capabilities coordinate multiple data sources
       
@@ -368,17 +368,17 @@ Step 5: Multi-Component Registry Configuration
 Step 6: Custom Framework Prompts
 --------------------------------
 
-**What's New Here:** **Domain-specific AI behavior** through custom prompt builders that override framework defaults.
+**What's New Here:** **Domain-specific LLM behavior** through custom prompt builders that override framework defaults.
 
-The framework uses generic prompts by default, but you can replace them with domain-specific instructions:
+The framework uses generic prompts by default, but you can replace them with domain-specific instructions. In this wind turbine example, we override the response generation default framework prompt:
 
-.. dropdown:: 🎨 **Custom Response Generation** - Wind turbine-specific AI behavior
+.. dropdown:: **Custom Response Generation** - Wind turbine-specific LLM behavior
    :color: info
    :icon: paintbrush
 
    **The Problem:** Generic framework responses don't understand your domain's terminology, formatting needs, or industry standards.
    
-   **The Solution:** Custom prompt builders that inject domain expertise into the AI's responses.
+   **The Solution:** Custom prompt builders that inject domain expertise into the LLM's responses.
 
    .. code-block:: python
 
@@ -414,12 +414,6 @@ The framework uses generic prompts by default, but you can replace them with dom
       ]
 
    **Result:** The AI now responds with wind turbine expertise - structured tables, industry terminology, proper formatting, and domain-specific analysis patterns.
-
-   **Pattern Benefits:**
-   - **Domain Expertise**: AI understands your industry's language and standards
-   - **Consistent Formatting**: Responses follow your preferred structure and style
-   - **Quality Control**: Built-in guidelines ensure professional, accurate outputs
-   - **Maintainable**: Centralized prompt logic that's easy to update and version
 
 **File Locations:** ``src/applications/wind_turbine/framework_prompts/response_generation.py``, ``src/applications/wind_turbine/registry.py``
 

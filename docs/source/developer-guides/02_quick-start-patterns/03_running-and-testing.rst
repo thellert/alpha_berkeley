@@ -25,7 +25,7 @@ Learn essential patterns for running, testing, and debugging capabilities within
 Gateway Architecture
 ====================
 
-The Gateway serves as the single entry point for all message processing.
+The Gateway serves as the single entry point for all message processing. It operates outside the compiled LangGraph to handle meta-operations like state creation, approval detection, and slash command processing before execution begins. 
 
 Basic Usage Pattern
 -------------------
@@ -154,9 +154,16 @@ Example CLI Session
    🔄 Analyzing task complexity and requirements...
    🤖 I can help you analyze data. What type of data would you like to analyze?
 
-   👤 You: /reset
-   ✅ Processed commands: ['/reset']
-   ✅ Conversation state reset. Starting fresh!
+   👤 You: /approval:off Execute python code
+   ✅ Processed commands: ['approval']
+   🔄 Extracting actionable task from conversation
+   🔄 Classification completed with 1 capabilities
+   🔄 Execution plan created
+   🔄 Generating Python code...
+   🔄 Executing Python code...
+   🔄 Python execution complete - 1.42s, 0 figures
+   🔄 Generating response...
+   🤖 I've executed the Python code successfully. Here are the results...
 
    👤 You: bye
    👋 Goodbye!

@@ -375,10 +375,16 @@ Next Steps
 3. **Production Setup**: :doc:`../05_production-systems/05_container-and-deployment` - Deploy with PostgreSQL checkpointing
 4. **Advanced Patterns**: :doc:`../05_production-systems/01_human-approval-workflows` - Complex interrupt handling
 
-Related API Reference
-=====================
+.. seealso::
 
-- :doc:`../../../api_reference/01_core_framework/02_state_and_context` - Complete state structure
-- :doc:`../../../api_reference/02_infrastructure/01_gateway` - LangGraph integration entry point
-- :doc:`../../../api_reference/03_production_systems/01_human-approval` - Interrupt system API
-- :doc:`../../../api_reference/03_production_systems/05_container-management` - Production deployment patterns
+   :doc:`../../api_reference/01_core_framework/02_state_and_context`
+       Complete state structure and MessagesState integration
+   
+   :doc:`../../api_reference/02_infrastructure/01_gateway`
+       LangGraph integration entry point for message processing
+   
+   :doc:`../../api_reference/03_production_systems/01_human-approval`
+       Interrupt system API for human-in-the-loop workflows
+   
+   :doc:`../../api_reference/03_production_systems/05_container-management`
+       Production deployment patterns with PostgreSQL checkpointing

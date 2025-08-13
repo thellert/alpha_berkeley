@@ -467,3 +467,14 @@ Development utilities provide the same benefits as component registration:
 - **Graceful Degradation**: Continue functioning when configuration is unavailable
 - **Type Safety**: Full type hints and validation for development-time error detection
 - **Performance Optimization**: Caching and lazy loading reduce overhead
+
+.. seealso::
+
+   :doc:`../../api_reference/01_core_framework/03_registry_system`
+       API reference for registry management and component discovery
+   
+   :doc:`../03_core-framework-systems/03_registry-and-discovery`
+       Registry patterns and component registration workflows
+   
+   :doc:`../02_quick-start-patterns/01_building-your-first-capability`
+       Hands-on guide to implementing components with decorators

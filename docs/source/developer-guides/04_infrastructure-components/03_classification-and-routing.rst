@@ -286,6 +286,17 @@ Performance Considerations
 - Minimal state access for routing decisions
 - Clean error state management
 
+.. seealso::
+
+   :doc:`../../api_reference/02_infrastructure/03_classification`
+       API reference for classification and routing system
+   
+   :doc:`../03_core-framework-systems/03_registry-and-discovery`
+       Capability registration and discovery patterns
+   
+   :doc:`02_task-extraction-system`
+       Task analysis and capability selection prerequisites
+
 Next Steps
 ----------
 

@@ -21,7 +21,7 @@ Gateway Architecture: Universal Message Processing Entry Point
 Core Concept
 ------------
 
-Gateway serves as the **single entry point** for all message processing, eliminating interface duplication and ensuring consistent state management across CLI, web, and API interfaces.
+Gateway serves as the **single entry point** for all message processing, eliminating interface duplication and ensuring consistent state management across CLI, web, and API interfaces. As an external coordinator, it operates outside the compiled LangGraph to handle preprocessing operations.
 
 **Problem Solved:** Without centralized processing, each interface duplicates message logic, state creation, and approval handling.
 
@@ -273,11 +273,15 @@ Complete CLI interface using Gateway:
                
                print(f"Agent: {self._extract_message(response)}")
 
-Next Steps
-----------
-
-- :doc:`02_task-extraction-system` - First step in message processing pipeline
-- :doc:`../05_production-systems/01_human-approval-workflows` - Advanced approval patterns
-- :doc:`../03_core-framework-systems/01_state-management-architecture` - State management details
-
 Gateway Architecture provides the foundation for consistent, reliable message processing across all interfaces in the Alpha Berkeley Framework.
+
+.. seealso::
+
+   :doc:`../../api_reference/02_infrastructure/01_gateway`
+       API reference for Gateway classes and functions
+   
+   :doc:`../03_core-framework-systems/01_state-management-architecture`
+       State lifecycle management and conversation handling
+   
+   :doc:`../05_production-systems/01_human-approval-workflows`
+       Advanced approval workflow integration patterns

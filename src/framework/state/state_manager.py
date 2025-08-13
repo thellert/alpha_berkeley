@@ -72,7 +72,7 @@ logger = logging.getLogger(__name__)
 def get_agent_control_defaults() -> Dict[str, Any]:
     """Get agent control configuration defaults with robust error handling.
     
-    This function retrieves the default agent control configuration from the unified
+    This function retrieves the default agent control configuration from the 
     configuration system with comprehensive error handling and safe fallbacks. The
     configuration includes planning mode settings, EPICS execution controls, approval
     workflows, and execution limits.

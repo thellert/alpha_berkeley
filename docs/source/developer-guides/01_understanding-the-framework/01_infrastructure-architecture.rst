@@ -1,5 +1,5 @@
-Infrastructure Architecture: Gateway-Driven Agent Framework
-===========================================================
+Infrastructure Architecture: Classification-Orchestration Pipeline
+==================================================================
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -7,11 +7,11 @@ Infrastructure Architecture: Gateway-Driven Agent Framework
 
    **Key Concepts:**
    
-   - How the Gateway provides a single entry point for all message processing
-   - The complete message processing pipeline from user input to agent response
-   - How the Router coordinates infrastructure components with state-based routing
-   - The role of Task Extraction, Classification, and Orchestration in the pipeline
-   - Error handling and retry logic within the infrastructure
+   - The complete classification-orchestration pipeline from user input to agent response
+   - How Task Extraction, Classification, and Orchestration work together
+   - The role of the Gateway as a single entry point and the Router for coordination
+   - State-based routing and deterministic execution planning
+   - Error handling and retry logic throughout the infrastructure
 
    **Prerequisites:** Basic understanding of LangGraph and agentic frameworks
    
@@ -20,7 +20,7 @@ Infrastructure Architecture: Gateway-Driven Agent Framework
 Overview
 ========
 
-The Alpha Berkeley Framework uses a **Gateway-Driven Architecture** where all message processing flows through a centralized Gateway that coordinates with infrastructure components via a Router-controlled pipeline.
+The Alpha Berkeley Framework uses a **Classification-Orchestration Pipeline** where every user request flows through task extraction, capability classification, execution planning, and deterministic routing. The Gateway provides a unified entry point while the Router coordinates infrastructure components through state-based decisions.
 
 Core Components
 ===============
@@ -28,7 +28,7 @@ Core Components
 Gateway - Single Entry Point
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Gateway serves as the **only entry point** for all message processing across all interfaces (CLI, OpenWebUI, etc.).
+The Gateway serves as the **only entry point** for all message processing across all interfaces (CLI, OpenWebUI, etc.). Operating outside the compiled graph, it handles preprocessing like state creation and slash commands before graph execution.
 
 .. code-block:: python
 
@@ -213,6 +213,8 @@ A user message flows through the complete architecture:
 7. **Orchestrator** creates execution plan → returns validated plan
 8. **Router** executes plan step by step → routes through each capability → "END"
 
+This pipeline ensures every request goes through the same structured analysis and planning before execution begins.
+
 Graph Construction
 ==================
 
@@ -313,16 +315,18 @@ Architecture Benefits
    - Consistent preprocessing and state management
    - Single point of error handling and logging
 
-**Performance Through State-Based Routing**
-   - Router makes decisions based on current state
-   - No redundant processing or state checks
-   - Efficient execution plan following
+**Performance Through Efficient Classification**
+   - Binary yes/no decisions for each capability
+   - Only relevant capabilities loaded into orchestration context
+   - State-based routing eliminates redundant processing
+   - Deterministic execution plan following
 
 **Maintainability Through Clear Separation**
-   - Gateway handles preprocessing only
-   - Router handles routing decisions only
-   - Infrastructure nodes handle specific processing steps
-   - Capabilities handle business logic
+   - Task Extraction isolates conversation analysis
+   - Classification handles capability selection
+   - Orchestration manages execution planning
+   - Router coordinates deterministic execution
+   - Gateway and capabilities handle specific domain concerns
 
 Next Steps
 ==========
@@ -332,10 +336,16 @@ Next Steps
 3. **Build Your First Capability**: :doc:`../02_quick-start-patterns/01_building-your-first-capability` - Hands-on implementation
 4. **Understand Error Handling**: :doc:`../04_infrastructure-components/06_error-handling-infrastructure` - Comprehensive error management
 
-Related API Reference
-=====================
+.. seealso::
 
-- :doc:`../../api_reference/02_infrastructure/01_gateway` - Complete Gateway API
-- :doc:`../../api_reference/02_infrastructure/05_execution-control` - Router and routing logic
-- :doc:`../../api_reference/02_infrastructure/02_task-extraction` - Task extraction methods
-- :doc:`../../api_reference/02_infrastructure/03_classification` - Capability selection API
+   :doc:`../../api_reference/02_infrastructure/01_gateway`
+       Complete Gateway API for message processing and state management
+   
+   :doc:`../../api_reference/02_infrastructure/05_execution-control`
+       Router and routing logic for deterministic execution flow
+   
+   :doc:`../../api_reference/02_infrastructure/02_task-extraction`
+       Task extraction methods for conversation analysis
+   
+   :doc:`../../api_reference/02_infrastructure/03_classification`
+       Capability selection API for LLM-based classification
