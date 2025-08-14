@@ -1,0 +1,32 @@
+[
+  {
+    "context_type": "MEMORY_CONTEXT",
+    "class_name": "MemoryContext",
+    "module_path": "framework.capabilities.memory",
+    "description": "Context class MemoryContext"
+  },
+  {
+    "context_type": "TIME_RANGE",
+    "class_name": "TimeRangeContext",
+    "module_path": "framework.capabilities.time_range_parsing",
+    "description": "Context class TimeRangeContext"
+  },
+  {
+    "context_type": "PYTHON_RESULTS",
+    "class_name": "PythonResultsContext",
+    "module_path": "framework.capabilities.python",
+    "description": "Context class PythonResultsContext"
+  },
+  {
+    "context_type": "CURRENT_ANGLE",
+    "class_name": "CurrentAngleContext",
+    "module_path": "applications.bolt.context_classes",
+    "description": "Context class CurrentAngleContext"
+  },
+  {
+    "context_type": "MOVE_MOTOR",
+    "class_name": "CurrentMoveMotorContext",
+    "module_path": "applications.bolt.context_classes",
+    "description": "Context class CurrentMoveMotorContext"
+  }
+]

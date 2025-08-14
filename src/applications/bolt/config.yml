@@ -1,4 +1,4 @@
-# Hello World Weather Application Configuration - Quick Start Version
+# BOLT Beamline Application Configuration
 
 # Pipeline configuration
 pipeline:
@@ -7,4 +7,7 @@ pipeline:
 # Logging
 logging:
   logging_colors:
-    current_weather: "blue" 
+    motor_position_read: "cyan"
+    motor_position_set: "green"  
+    detector_image_capture: "yellow"
+    photogrammetry_scan_execute: "magenta" 

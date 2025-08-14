@@ -1,11 +1,18 @@
 """
-Bolt Capabilities Module.
+BOLT Beamline Capabilities Module.
+
+This module provides capabilities for the BOLT imaging beamline system,
+including motor control, detector imaging, and photogrammetry scan execution.
 """
 
-from .current_angle import CurrentAngleCapability
-from .move_motor import CurrentMoveMotorCapability
+from .motor_position_read import MotorPositionReadCapability
+from .motor_position_set import MotorPositionSetCapability
+from .detector_image_capture import DetectorImageCaptureCapability
+from .photogrammetry_scan_execute import PhotogrammetryScanExecuteCapability
 
 __all__ = [
-    'CurrentAngleCapability',
-    'CurrentMoveMotorCapability',
+    'MotorPositionReadCapability',
+    'MotorPositionSetCapability',
+    'DetectorImageCaptureCapability',
+    'PhotogrammetryScanExecuteCapability',
 ]
