@@ -48,12 +48,19 @@ class MotorPositionSetCapability(BaseCapability):
             query = StateManager.get_current_task(state).lower()
             import re
             
-            # Extract numerical value from query
-            match = re.search(r"-?\d+\.?\d*", query)
-            if not match:
+            # Extract numerical value from query (looking for angles/positions)
+            # Use findall to get all numbers, then take the most likely angle value
+            numbers = re.findall(r"-?\d+(?:\.\d+)?", query)
+            if not numbers:
                 raise ValueError("No target angle specified in query")
             
-            target_angle = match.group()
+            # Take the last number found (most likely to be the target angle)
+            # or the largest number if multiple found (angles are typically larger than motor IDs)
+            if len(numbers) == 1:
+                target_angle = numbers[0]
+            else:
+                # If multiple numbers, take the largest one (likely the angle, not motor ID)
+                target_angle = max(numbers, key=lambda x: abs(float(x)))
             print(target_angle)
             
             # Check for relative vs absolute movement

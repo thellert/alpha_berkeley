@@ -92,6 +92,7 @@ class BoltAPI:
     def move_motor(self, motor: str, move_amount: str, flag: int) -> CurrentMoveMotorReading:
         """Move motor to specified position (absolute or relative based on flag).
         """
+        print(move_amount)
         move_motor_api = f"{self.FASTAPI_URL}/move_motor/{move_amount}/{flag}/"
         print(move_motor_api)
         # Normalize motor name for consistent matching

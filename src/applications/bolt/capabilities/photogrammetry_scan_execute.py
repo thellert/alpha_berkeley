@@ -32,7 +32,7 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
     # Required class attributes for registry configuration
     name = "photogrammetry_scan_execute"
     description = "Execute complete photogrammetry scan with multiple projections"
-    provides = ["TOMOGRAPHY_SCAN"]
+    provides = ["PHOTOGRAMMETRY_SCAN"]
     requires = []
     
     def extract_scan_params(query: str) -> dict:
@@ -111,7 +111,7 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
             # Store context in framework state
             context_updates = StateManager.store_context(
                 state, 
-                registry.context_types.TOMOGRAPHY_SCAN, 
+                registry.context_types.PHOTOGRAMMETRY_SCAN, 
                 step.get("context_key"), 
                 context
             )

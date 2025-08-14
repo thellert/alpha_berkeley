@@ -280,7 +280,7 @@ class CurrentRunScanContext(CapabilityContext):
 - `MOTOR_POSITION`: Current angle data structures
 - `MOTOR_MOVEMENT`: Movement operation results
 - `DETECTOR_IMAGE`: Image capture metadata
-- `TOMOGRAPHY_SCAN`: Scan execution results
+- `PHOTOGRAMMETRY_SCAN`: Scan execution results
 
 ---
 
