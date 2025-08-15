@@ -52,7 +52,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
             Never plan for simulated or fictional data - only real system operations.
             """).strip()
     
-    def get_dynamic_context(self, context_manager: Optional[ContextManager] = None, **kwargs) -> Optional[str]:
+    def _get_dynamic_context(self, context_manager: Optional[ContextManager] = None, **kwargs) -> Optional[str]:
         """Get dynamic context showing available context data."""
         if context_manager and context_manager.get_raw_data():
             return self._build_context_section(context_manager)
@@ -60,22 +60,22 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
     
     def get_system_instructions(
         self,
-        user_query: str = "",
         active_capabilities: List[BaseCapability] = None,
         context_manager: ContextManager = None,
         task_depends_on_chat_history: bool = False,
         task_depends_on_user_memory: bool = False,
+        error_context: Optional[str] = None,
         **kwargs
     ) -> str:
         """
         Get system instructions for orchestrator agent configuration.
         
         Args:
-            user_query: The user's query
             active_capabilities: List of active capabilities
             context_manager: Current context manager with available data
             task_depends_on_chat_history: Whether task builds on previous conversation context
             task_depends_on_user_memory: Whether task depends on user memory information
+            error_context: Formatted error context from previous execution failure (for replanning)
             
         Returns:
             Complete orchestrator prompt text
@@ -104,13 +104,31 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
         if context_guidance:
             prompt_sections.append(context_guidance)
         
-        # 3. Add context information if available
+        # 3. Add error context for replanning if available
+        if error_context:
+            error_section = textwrap.dedent(f"""
+                **REPLANNING CONTEXT:**
+
+                The previous execution failed and needs replanning. Consider this error information when creating the new plan:
+
+                {error_context}
+
+                **Replanning Guidelines:**
+                - Analyze the error context to understand why the previous approach failed
+                - Consider alternative capabilities or different sequencing to avoid the same issue
+                - If required context is missing, include clarification steps to gather needed information
+                - Learn from the technical details and suggestions provided in the error context
+                - Adapt the execution strategy based on the specific failure mode identified""").strip()
+            
+            prompt_sections.append(error_section)
+        
+        # 4. Add context information if available
         if context_manager and context_manager.get_raw_data():
             context_section = self._build_context_section(context_manager)
             if context_section:
                 prompt_sections.append(context_section)
         
-        # 4. Add capability-specific prompts with examples
+        # 5. Add capability-specific prompts with examples
         capability_sections = self._build_capability_sections(active_capabilities)
         prompt_sections.extend(capability_sections)
         

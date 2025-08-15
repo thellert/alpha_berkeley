@@ -121,25 +121,25 @@ class WeatherDataRetrievalCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message=f"Missing time range dependency: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, WeatherDataRetrievalError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Weather data retrieval failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, WeatherDataError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Weather data error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Unknown error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

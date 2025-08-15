@@ -260,12 +260,12 @@ class BaseInfrastructureNode(ABC):
                     return ErrorClassification(
                         severity=ErrorSeverity.RETRIABLE,
                         user_message="Network timeout, retrying...",
-                        technical_details=str(exc)
+                        metadata={"technical_details": str(exc)}
                     )
                 return ErrorClassification(
                     severity=ErrorSeverity.CRITICAL,
                     user_message=f"Infrastructure error: {exc}",
-                    technical_details=str(exc)
+                    metadata={"technical_details": str(exc)}
                 )
         
         .. note::
@@ -277,7 +277,7 @@ class BaseInfrastructureNode(ABC):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Infrastructure error in {node_name}: {exc}",
-            technical_details=str(exc)
+            metadata={"technical_details": str(exc)}
         )
     
     @staticmethod

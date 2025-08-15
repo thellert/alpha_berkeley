@@ -61,7 +61,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
         self._load_examples()
     
     def _load_examples(self):
-        """Load memory extraction examples - ported from old framework with native LangGraph messages."""
+        """Load memory extraction examples with native LangGraph messages."""
         
         # Explicit save instruction with quoted content
         self.examples.append(MemoryExtractionExample(
@@ -171,18 +171,18 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             - Be conservative - if unclear, set found=false
             """).strip()
     
-    def get_examples(self, **kwargs) -> List[MemoryExtractionExample]:
+    def _get_examples(self, **kwargs) -> List[MemoryExtractionExample]:
         """Get generic memory extraction examples."""
         return self.examples
     
-    def format_examples(self, examples: List[MemoryExtractionExample]) -> str:
+    def _format_examples(self, examples: List[MemoryExtractionExample]) -> str:
         """Format multiple MemoryExtractionExample objects for inclusion in prompts."""
         examples_formatted = ""
         for i, example in enumerate(examples, 1):
             examples_formatted += f"\n**Example {i}:**\n{example.format_for_prompt()}\n"
         return examples_formatted.strip()
     
-    def get_dynamic_context(self, **kwargs) -> str:
+    def _get_dynamic_context(self, **kwargs) -> str:
         """Build the response format section."""
         return textwrap.dedent("""
             RESPOND WITH VALID JSON IN THIS EXACT FORMAT:

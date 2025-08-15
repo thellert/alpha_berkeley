@@ -345,7 +345,7 @@ def create_analyzer_node():
         except Exception as e:
             # Truly unexpected analyzer crashes are critical system errors
             # This should only happen due to framework bugs, not code quality issues
-            logger.error(f"❌ Critical system error: Analyzer crashed unexpectedly: {e}")
+            logger.error(f"Critical system error: Analyzer crashed unexpectedly: {e}")
             logger.error(f"This indicates a framework bug, not a code quality issue")
             
             return {

@@ -62,7 +62,7 @@ class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
         self._load_examples()
     
     def _load_examples(self):
-        """Load task extraction examples - ported from old framework with native LangGraph messages."""
+        """Load task extraction examples with native LangGraph messages."""
         
         # Examples without memory first
         

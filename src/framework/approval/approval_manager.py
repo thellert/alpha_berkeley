@@ -143,7 +143,7 @@ class ApprovalManager:
             logger.info(f"   - Memory enabled: {self.config.memory.enabled}")
             
         except ValueError as e:
-            logger.error(f"❌ Invalid approval configuration: {e}")
+            logger.error(f"Invalid approval configuration: {e}")
             raise
     
     def get_python_execution_config(self) -> PythonExecutionApprovalConfig:

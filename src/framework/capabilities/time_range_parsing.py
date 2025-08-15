@@ -74,7 +74,7 @@ except ImportError:
 
 
 # ========================================================
-# Context Class - Migrated from Old Framework
+# Context Class
 # ========================================================
 
 class TimeRangeContext(CapabilityContext):
@@ -246,7 +246,7 @@ class TimeRangeContext(CapabilityContext):
 
 
 # ========================================================
-# Time Parsing Errors - Migrated from Old Framework
+# Time Parsing Errors
 # ========================================================
 
 class TimeParsingError(Exception):
@@ -294,7 +294,7 @@ class TimeParsingDependencyError(TimeParsingError):
 
 
 # ========================================================
-# Pydantic Models - Migrated from Old Framework
+# Pydantic Models
 # ========================================================
 
 class TimeRange(BaseModel):
@@ -345,7 +345,7 @@ class TimeRangeOutput(BaseModel):
 
 
 # ========================================================
-# LLM Prompting System - Migrated from Old Framework
+# LLM Prompting System
 # ========================================================
 
 def _get_time_parsing_system_prompt(user_query: str) -> str:
@@ -559,7 +559,7 @@ class TimeRangeParsingCapability(BaseCapability):
            :class:`framework.models.get_chat_completion` : LLM interface used for parsing
            :meth:`classify_error` : Error classification method for parsing failures
         """
-        
+            
         # Explicit logger retrieval - professional practice
         logger = get_logger("framework", "time_range_parsing")
         
@@ -575,7 +575,7 @@ class TimeRangeParsingCapability(BaseCapability):
         # Use task_objective as primary instruction for focused time parsing
         task_objective = step.get('task_objective', 'unknown')
         
-        # Build sophisticated system prompt (migrated from old framework)
+        # Build sophisticated system prompt
         full_prompt = _get_time_parsing_system_prompt(task_objective)
         
         logger.debug(f"Time parsing for task '{step.get('task_objective', 'unknown')}': {task_objective}")
@@ -584,7 +584,7 @@ class TimeRangeParsingCapability(BaseCapability):
             # Get model config from LangGraph configurable
             model_config = get_model_config("framework", "time_parsing")
             
-            # LLM call with structured output (migrated from old framework)
+            # LLM call with structured output
             response_data = await asyncio.to_thread(
                 get_chat_completion,
                 model_config=model_config,
@@ -610,7 +610,7 @@ class TimeRangeParsingCapability(BaseCapability):
             logger.warning(f"No time range found in query: '{task_objective}'")
             raise AmbiguousTimeReferenceError(f"No time range found in query: '{task_objective}'")
         
-        # VALIDATION: Check for invalid date ranges (migrated from old framework)
+        # VALIDATION: Check for invalid date ranges
         if response_data.start_date >= response_data.end_date:
             logger.error(f"⚠️ LLM returned INVALID date range: start={response_data.start_date} >= end={response_data.end_date}")
             raise InvalidTimeFormatError(f"Invalid date range: start_date ({response_data.start_date}) must be before end_date ({response_data.end_date})")
@@ -623,7 +623,7 @@ class TimeRangeParsingCapability(BaseCapability):
         
         streamer.status("Creating time range context...")
         
-        # Create rich context object (migrated from old framework)
+        # Create rich context object
         time_context = TimeRangeContext(
             start_date=response_data.start_date,
             end_date=response_data.end_date,
@@ -685,46 +685,46 @@ class TimeRangeParsingCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Invalid time format detected, retrying",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, AmbiguousTimeReferenceError):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Unable to identify time reference in query, please clarify the time period",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, TimeParsingDependencyError):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Missing required information for time parsing",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, TimeParsingError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Time parsing failed, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         # Handle permission/configuration errors
         elif "permission" in str(exc).lower():
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Permission denied for time parsing operations",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         # Retry on temporary issues
         elif any(keyword in str(exc).lower() for keyword in ['timeout', 'connection', 'temporary']):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Temporary system issue, retrying time parsing...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         # Default: critical for unknown errors
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Time parsing failed: {exc}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

@@ -375,7 +375,7 @@ class PythonExecutorService:
             max_retries = 3  # Configurable limit
             
             if generation_attempt >= max_retries:
-                logger.error(f"❌ Max retries ({max_retries}) exceeded for code generation")
+                logger.error(f"Max retries ({max_retries}) exceeded for code generation")
                 # Force permanent failure instead of infinite retries
                 state["is_failed"] = True
                 state["failure_reason"] = f"Code generation failed after {max_retries} attempts"

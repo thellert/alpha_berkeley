@@ -43,7 +43,7 @@ compatibility with LangGraph's checkpoint and streaming systems.
 """
 
 from enum import Enum
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from dataclasses import dataclass
 
 
@@ -124,18 +124,19 @@ class ErrorClassification:
     1. **Severity Assessment**: Clear classification of error impact and recovery strategy
     2. **User Communication**: Human-readable error descriptions for interfaces
     3. **Technical Context**: Detailed debugging information for developers
+    4. **Extensible Metadata**: Additional context for capability-specific error handling
     
     The classification system supports multiple recovery approaches including
     automatic retries, execution replanning, and graceful degradation patterns.
     The severity field determines the recovery strategy while user_message and
-    technical_details provide contextual information for logging and debugging.
+    metadata provide contextual information for logging, debugging, and recovery guidance.
     
     :param severity: Error severity level determining recovery strategy
     :type severity: ErrorSeverity
     :param user_message: Human-readable error description for user interfaces and logs
     :type user_message: Optional[str]
-    :param technical_details: Detailed technical information for debugging and logging
-    :type technical_details: Optional[str]
+    :param metadata: Structured error context including technical details and recovery hints
+    :type metadata: Optional[Dict[str, Any]]
     
     .. note::
        The framework uses this classification to coordinate recovery strategies
@@ -153,7 +154,7 @@ class ErrorClassification:
             classification = ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network connection timeout, retrying...",
-                technical_details="HTTP request timeout after 30 seconds"
+                metadata={"technical_details": "HTTP request timeout after 30 seconds"}
             )
         
         Missing step input requiring replanning::
@@ -161,15 +162,24 @@ class ErrorClassification:
             classification = ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Required data not available, need different approach",
-                technical_details="Step expected 'SENSOR_DATA' context but found None"
+                metadata={
+                    "technical_details": "Step expected 'SENSOR_DATA' context but found None",
+                    "replanning_reason": "Missing required input data"
+                }
             )
         
-        Critical validation failure::
+        Comprehensive error with rich metadata::
         
             classification = ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Invalid configuration detected",
-                technical_details="Missing required parameter 'api_key' in capability config"
+                metadata={
+                    "technical_details": "Missing required parameter 'api_key' in capability config",
+                    "safety_abort_reason": "Security validation failed",
+                    "suggestions": ["Check configuration file", "Verify credentials"],
+                    "error_code": "CONFIG_MISSING_KEY",
+                    "retry_after": 30
+                }
             )
         
 
@@ -180,7 +190,67 @@ class ErrorClassification:
     """
     severity: ErrorSeverity
     user_message: Optional[str] = None
-    technical_details: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+    
+    def format_for_llm(self) -> str:
+        """Format this error classification for LLM consumption during replanning.
+        
+        Converts the error classification into a structured, human-readable format
+        optimized for LLM understanding and processing. Follows the framework's
+        established format_for_llm() pattern for consistent formatting.
+        
+        :return: Formatted string optimized for LLM prompt inclusion
+        :rtype: str
+        
+        Examples:
+            Basic error formatting::
+            
+                classification = ErrorClassification(
+                    severity=ErrorSeverity.REPLANNING,
+                    user_message="Data not available",
+                    metadata={"technical_details": "Missing sensor data"}
+                )
+                formatted = classification.format_for_llm()
+                # Returns:
+                # **Previous Execution Error:**
+                # - **Failed Operation:** unknown operation
+                # - **User Message:** Data not available
+                # - **Technical Details:** Missing sensor data
+        
+        .. note::
+           This method formats error classification data independently of the
+           error_info dictionary structure, making it suitable for direct
+           error classification formatting.
+        """
+        import json
+        
+        # Build basic error context sections
+        sections = [
+            "**Previous Execution Error:**",
+            f"- **User Message:** {self.user_message or 'No error message available'}"
+        ]
+        
+        # Add metadata if available
+        if self.metadata:
+            # Process all metadata keys generically
+            for key, value in self.metadata.items():
+                # Format key name for display (convert snake_case to Title Case)
+                display_key = key.replace('_', ' ').title()
+                
+                # Handle different value types appropriately
+                if isinstance(value, (list, tuple)):
+                    formatted_value = ', '.join(str(item) for item in value)
+                elif isinstance(value, dict):
+                    try:
+                        formatted_value = json.dumps(value, indent=2)
+                    except (TypeError, ValueError):
+                        formatted_value = str(value)
+                else:
+                    formatted_value = str(value)
+                
+                sections.append(f"- **{display_key}:** {formatted_value}")
+        
+        return '\n'.join(sections)
 
 
 @dataclass
@@ -197,7 +267,7 @@ class ExecutionError:
     1. **Error Classification**: Severity-based recovery strategy determination
     2. **User Communication**: Clear, actionable error messages for interfaces
     3. **Developer Support**: Technical details and debugging context
-    4. **Recovery Guidance**: Specific suggestions for error resolution
+
     5. **System Integration**: Context for automated recovery systems
     
     The error structure supports both automated error handling workflows and
@@ -211,10 +281,9 @@ class ExecutionError:
     :type message: str
     :param capability_name: Name of the capability or component that generated this error
     :type capability_name: Optional[str]
-    :param suggestions: Domain-specific suggestions for error resolution and recovery
-    :type suggestions: Optional[List[str]]
-    :param technical_details: Detailed technical information for debugging and analysis
-    :type technical_details: Optional[str]
+
+    :param metadata: Structured error context including technical details and debugging information
+    :type metadata: Optional[Dict[str, Any]]
 
     
     .. note::
@@ -234,12 +303,8 @@ class ExecutionError:
                 severity=ErrorSeverity.RETRIABLE,
                 message="Database connection failed",
                 capability_name="database_query",
-                suggestions=[
-                    "Check database server status",
-                    "Verify connection credentials",
-                    "Ensure network connectivity"
-                ],
-                technical_details="PostgreSQL connection timeout after 30 seconds"
+
+                metadata={"technical_details": "PostgreSQL connection timeout after 30 seconds"}
             )
         
 
@@ -250,7 +315,10 @@ class ExecutionError:
                 severity=ErrorSeverity.FATAL,
                 message="Critical data corruption detected",
                 capability_name="data_processor",
-                technical_details="Checksum validation failed on primary data store",
+                metadata={
+                    "technical_details": "Checksum validation failed on primary data store",
+                    "safety_abort_reason": "Data integrity compromised"
+                },
                 suggestions=[
                     "Initiate emergency backup procedures",
                     "Contact system administrator immediately",
@@ -266,8 +334,8 @@ class ExecutionError:
     severity: ErrorSeverity
     message: str
     capability_name: Optional[str] = None  # Which capability generated this error
-    suggestions: Optional[List[str]] = None  # Capability-specific recovery suggestions
-    technical_details: Optional[str] = None  # Additional technical context for debugging
+
+    metadata: Optional[Dict[str, Any]] = None  # Structured error context and debugging information
 
 
 

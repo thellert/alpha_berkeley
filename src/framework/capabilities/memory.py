@@ -681,7 +681,7 @@ class MemoryOperationsCapability(BaseCapability):
                             output_model=MemoryContentExtraction
                         )
                         
-                        # Enhanced logging pattern from old framework for debugging
+                        # Enhanced logging pattern for debugging
                         logger.info(f"LLM extraction result:")
                         logger.info(f" found={response_data.found}")
                         logger.info(f" content='{response_data.content}'")
@@ -794,31 +794,31 @@ class MemoryOperationsCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Cannot perform memory operations: user ID not available",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, ContentExtractionError):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message="Need clarification on what to save to memory",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, MemoryRetrievalError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Failed to retrieve memory, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, MemoryFileError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Memory file operation failed, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Memory operation error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
 
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

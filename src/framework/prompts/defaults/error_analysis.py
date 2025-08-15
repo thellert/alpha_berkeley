@@ -41,7 +41,7 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
             - Use a professional, technical tone
             """).strip()
     
-    def get_dynamic_context(self, 
+    def _get_dynamic_context(self, 
                           capabilities_overview: str = "",
                           error_context=None,
                           **kwargs) -> str:

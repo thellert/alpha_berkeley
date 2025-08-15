@@ -20,10 +20,9 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
     
     def get_instructions(self) -> str:
         """Instructions are completely dynamic based on execution context."""
-        # This will be handled in get_dynamic_context
         return ""
     
-    def get_dynamic_context(self, current_task: str = "", info=None, **kwargs) -> str:
+    def _get_dynamic_context(self, current_task: str = "", info=None, **kwargs) -> str:
         """Build dynamic response generation prompt based on execution context."""
         sections = []
         

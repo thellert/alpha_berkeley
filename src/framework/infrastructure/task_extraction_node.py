@@ -128,7 +128,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network timeout during task extraction, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Don't retry on validation or configuration errors  
@@ -136,7 +136,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Task extraction configuration error",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Don't retry on import/module errors (missing dependencies)
@@ -144,7 +144,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Task extraction dependencies not available",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Default: CRITICAL for unknown errors (fail safe principle)
@@ -152,7 +152,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown task extraction error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
+            metadata={"technical_details": f"Error type: {type(exc).__name__}, Details: {str(exc)}"}
         )
     
     @staticmethod

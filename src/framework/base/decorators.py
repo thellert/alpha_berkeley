@@ -282,7 +282,6 @@ def capability_node(cls):
                     "retry_policy": retry_policy,
                     "original_error": str(exc),
                     "user_message": error_classification.user_message or str(exc),
-                    "technical_details": error_classification.technical_details or str(exc),
                     "execution_time": execution_time,
                     "timestamp": datetime.now().isoformat()
                 },
@@ -628,9 +627,13 @@ def _create_infrastructure_node(cls, quiet=False):
             # Check for FATAL severity - raise exception to stop execution entirely
             if classification.severity == ErrorSeverity.FATAL:
                 logger.error(f"FATAL error in {node_name} - Terminating execution to prevent system issues")
+                technical_details = ""
+                if classification.metadata and 'technical_details' in classification.metadata:
+                    technical_details = f"Technical details: {classification.metadata['technical_details']}. "
+                
                 raise RuntimeError(
                     f"Fatal error in {node_name}: {classification.user_message or str(exc)}. "
-                    f"Technical details: {classification.technical_details or str(exc)}. "
+                    f"{technical_details}"
                     f"Execution terminated due to system-level failure."
                 )
             
@@ -663,7 +666,6 @@ def _create_infrastructure_node(cls, quiet=False):
                     "retry_policy": retry_policy,
                     "original_error": str(exc),
                     "user_message": classification.user_message or str(exc),
-                    "technical_details": classification.technical_details or str(exc),
                     "execution_time": execution_time,
                     "timestamp": datetime.now().isoformat()
                 },

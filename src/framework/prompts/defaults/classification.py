@@ -27,7 +27,7 @@ class DefaultClassificationPromptBuilder(FrameworkPromptBuilder):
             Respond ONLY with the JSON object. Do not provide any explanation, preamble, or additional text.
             """).strip()
     
-    def get_dynamic_context(self, 
+    def _get_dynamic_context(self, 
                           capability_instructions: str = "",
                           classifier_examples: str = "",
                           context: Optional[Dict] = None,
@@ -69,7 +69,7 @@ class DefaultClassificationPromptBuilder(FrameworkPromptBuilder):
         sections.append(self.get_instructions())
         
         # Dynamic context
-        dynamic_context = self.get_dynamic_context(
+        dynamic_context = self._get_dynamic_context(
             capability_instructions=capability_instructions,
             classifier_examples=classifier_examples,
             context=context,

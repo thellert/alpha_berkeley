@@ -125,25 +125,25 @@ class TurbineDataArchiverCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message=f"Missing time range dependency: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, TurbineDataRetrievalError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Turbine data retrieval failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, TurbineDataError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Turbine data error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Unknown error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

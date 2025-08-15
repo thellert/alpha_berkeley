@@ -1,25 +1,34 @@
-"""
-ALS Expert Agent - Dedicated Error Node
+"""Error Response Generation Infrastructure
 
-This module contains the ErrorNode that provides centralized, intelligent error handling
-using LLM-generated responses with automatically generated context and suggestions.
+This module provides centralized, intelligent error handling for the Alpha Berkeley 
+Agent Framework. The ErrorNode generates comprehensive error responses by combining
+structured error reports with LLM-generated explanations and recovery suggestions.
 
-Features:
-- Single point for all error handling
-- Automatic error context generation from execution state
-- Dynamic suggestions based on error type
-- Clean LLM prompt generation with minimal templates
-- User-friendly error explanations
+The error handling system follows a two-phase approach:
+1. Structured Error Report: Automatically generated factual information including
+   error classification, execution statistics, and step-by-step execution summary
+2. LLM Analysis: Intelligent explanation of what went wrong and why, with context-aware
+   recovery suggestions based on available system capabilities
+
+Key Components:
+    ErrorNode: Primary infrastructure node for error response generation
+    ErrorContext: Data structure containing error details and execution state
+    
+Integration:
+    - Receives error information from capability decorators via agent state
+    - Uses ErrorClassification.format_for_llm() for consistent metadata formatting  
+    - Integrates with LangGraph streaming for real-time progress updates
+    - Returns responses as AIMessage objects for direct user presentation
+
+The error node is designed to never fail - if LLM generation fails, it provides
+a structured fallback response to ensure users always receive meaningful error information.
 """
 
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
-from enum import Enum
-import textwrap
-import time
 from datetime import datetime
+from typing import List, Optional, Dict, Any
 
 from framework.base.decorators import infrastructure_node
 from framework.base.nodes import BaseInfrastructureNode
@@ -34,396 +43,874 @@ from langchain_core.messages import AIMessage
 from langgraph.config import get_stream_writer
 
 
-# Use colored logger for error node
 logger = get_logger("framework", "error")
-
-
-class ErrorType(Enum):
-    """Standard error types with associated recovery suggestions.
-    
-    Defines the various error categories that can occur during execution,
-    each with specific handling and recovery strategies.
-    """
-    
-    TIMEOUT = "timeout"
-    STEP_FAILURE = "step_failure" 
-    SAFETY_LIMIT = "safety_limit"
-    RETRIABLE_FAILURE = "retriable_failure"
-    RECLASSIFICATION_LIMIT = "reclassification_limit"
-    CRITICAL_ERROR = "critical_error"
-    INFRASTRUCTURE_ERROR = "infrastructure_error"
-    EXECUTION_KILLED = "execution_killed"
 
 
 @dataclass
 class ErrorContext:
-    """Context for error handling with all relevant information.
+    """Comprehensive error context for generating detailed error responses.
     
-    Contains all information needed to generate comprehensive error responses
-    including execution state, error details, and recovery suggestions.
+    This data structure encapsulates all information required to generate meaningful
+    error reports including original error classification, execution statistics, and
+    step-by-step execution history. The class serves as the primary data container
+    for the error response generation pipeline, ensuring consistent access to error
+    details and execution context across all error handling components.
+    
+    The ErrorContext integrates with the ErrorClassification system to maintain
+    authoritative error information while adding execution-specific details such as
+    timing, retry attempts, and step-by-step progress tracking.
+    
+    :param error_classification: Complete error classification with severity, messages, and metadata
+    :type error_classification: ErrorClassification
+    :param current_task: Human-readable description of the high-level task being executed
+    :type current_task: str
+    :param failed_operation: Specific operation or capability name that encountered the error
+    :type failed_operation: str
+    :param total_operations: Total number of operations attempted in current execution cycle
+    :type total_operations: int
+    :param execution_time: Duration in seconds from start to error occurrence
+    :type execution_time: float, optional
+    :param retry_count: Number of retry attempts made before final failure
+    :type retry_count: int, optional
+    :param successful_steps: Chronological list of execution steps that completed successfully
+    :type successful_steps: list[str], optional
+    :param failed_steps: Chronological list of execution steps that failed during execution
+    :type failed_steps: list[str], optional
+    
+    .. note::
+       The class automatically initializes list fields to empty lists if None is provided,
+       ensuring safe iteration over step results in error report generation.
+    
+    .. warning::
+       This class is designed for read-only access during error response generation.
+       Modifying fields after creation may lead to inconsistent error reports.
+    
+    Examples:
+        Basic error context creation::
+        
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> classification = ErrorClassification(
+            ...     severity=ErrorSeverity.CRITICAL,
+            ...     user_message="Database connection failed",
+            ...     metadata={"host": "db.example.com"}
+            ... )
+            >>> context = ErrorContext(
+            ...     error_classification=classification,
+            ...     current_task="Fetch user data",
+            ...     failed_operation="database_query",
+            ...     execution_time=2.5
+            ... )
+            >>> print(f"Severity: {context.error_severity.value}")
+            critical
+            
+        Context with execution history::
+        
+            >>> context = ErrorContext(
+            ...     error_classification=classification,
+            ...     current_task="Process user request",
+            ...     failed_operation="user_authentication",
+            ...     total_operations=3,
+            ...     successful_steps=["Step 1: Validate input", "Step 2: Load config"],
+            ...     failed_steps=["Step 3: Authenticate user - Failed"]
+            ... )
+            >>> print(f"Progress: {len(context.successful_steps)}/{context.total_operations}")
+            Progress: 2/3
+    
+    .. seealso::
+       :class:`framework.base.errors.ErrorClassification` : Error classification system
+       :class:`ErrorNode` : Primary consumer of ErrorContext instances
     """
     
-    error_type: ErrorType
-    error_message: str
-    failed_operation: str
+    error_classification: ErrorClassification
     current_task: str
-    capability_name: Optional[str] = None
-    technical_details: Optional[str] = None
+    failed_operation: str
     total_operations: int = 0
     execution_time: Optional[float] = None
     retry_count: Optional[int] = None
     successful_steps: List[str] = None
     failed_steps: List[str] = None
-    capability_suggestions: List[str] = None
     
     def __post_init__(self):
+        """Initialize list fields to empty lists if None."""
         if self.successful_steps is None:
             self.successful_steps = []
         if self.failed_steps is None:
             self.failed_steps = []
-        if self.capability_suggestions is None:
-            self.capability_suggestions = []
+    
+    @property
+    def error_severity(self) -> ErrorSeverity:
+        """Extract error severity level from the underlying error classification.
+        
+        :return: Severity level indicating error impact and recovery strategy
+        :rtype: ErrorSeverity
+        
+        .. note::
+           Severity levels guide error handling strategy: RETRIABLE errors may be
+           retried, REPLANNING errors require task modification, CRITICAL errors
+           need user intervention, and FATAL errors terminate execution.
+        """
+        return self.error_classification.severity
+    
+    @property 
+    def error_message(self) -> str:
+        """Extract user-friendly error message from the error classification.
+        
+        :return: Human-readable error message suitable for user presentation,
+                with automatic fallback to generic message if none provided
+        :rtype: str
+        
+        .. note::
+           This property ensures that error responses always contain a meaningful
+           message even when the original error classification lacks user-facing text.
+        """
+        return self.error_classification.user_message or "Unknown error occurred"
+    
+    @property
+    def capability_name(self) -> Optional[str]:
+        """Extract the name of the specific capability that encountered the error.
+        
+        :return: Name of the failing capability if available in context, None otherwise
+        :rtype: str, optional
+        
+        .. note::
+           This property accesses a dynamically set attribute (_capability_name)
+           that is populated during error context creation from agent state.
+        """
+        return getattr(self, '_capability_name', None)
 
-
-
-
-
-
-# =============================================================================
-# CONVENTION-BASED ERROR NODE
-# =============================================================================
 
 @infrastructure_node
 class ErrorNode(BaseInfrastructureNode):
-    """Convention-based error node with intelligent error handling and response generation.
+    """Generate comprehensive, user-friendly error responses with intelligent analysis.
     
-    Provides centralized error handling with LLM-generated responses and automatic
-    context generation. Creates user-friendly error explanations with recovery
-    suggestions based on error type and execution context.
+    The ErrorNode serves as the centralized error response generation system for the
+    Alpha Berkeley Agent Framework. It transforms technical error information into
+    comprehensive user responses by combining structured factual reports with
+    context-aware LLM analysis and recovery suggestions.
     
-    Features:
-    - Configuration-driven error classification and retry policies
-    - LLM-generated error explanations with structured context
-    - Automatic error context generation from execution state
-    - Capability-specific recovery suggestions
-    - Sophisticated error handling for different error types
+    This infrastructure node operates as the final destination in the error handling
+    pipeline, ensuring that all system failures result in meaningful, actionable
+    information for users. The node implements a robust two-phase approach to error
+    response generation with multiple fallback mechanisms to guarantee response
+    delivery even under adverse conditions.
+    
+    Architecture Overview:
+        The error response generation follows a structured two-phase approach:
+        
+        1. **Structured Report Generation**:
+           - Extracts error details from agent state control_error_info
+           - Formats using ErrorClassification.format_for_llm() for consistency
+           - Adds execution statistics, timing data, and retry information
+           - Generates step-by-step execution summaries with success/failure tracking
+        
+        2. **LLM Analysis Phase**:
+           - Provides error context and available system capabilities to LLM
+           - Generates intelligent explanations of failure causes
+           - Produces context-aware recovery suggestions and next steps
+           - Integrates with framework prompt system for consistent analysis quality
+    
+    Error Recovery Strategy:
+        The node implements multiple layers of error handling to ensure reliability:
+        - Comprehensive fallback response if LLM generation fails
+        - Self-classification of internal errors as FATAL to prevent infinite loops
+        - Structured logging of all error generation attempts for monitoring
+        - Guaranteed response delivery through robust exception handling
+    
+    Integration Points:
+        - **Input**: Pre-classified errors from capability decorators via agent state
+        - **Streaming**: Real-time progress updates through LangGraph streaming system
+        - **Output**: AIMessage objects formatted for direct user presentation
+        - **Monitoring**: Comprehensive logging integration for operational visibility
+    
+    .. warning::
+       The ErrorNode must never raise unhandled exceptions as it serves as the
+       final error handling mechanism. All internal errors are caught and result
+       in structured fallback responses.
+    
+    .. note::
+       Error classification within this node always uses FATAL severity to prevent
+       recursive error handling that could lead to infinite loops or system instability.
+    
+    Examples:
+        The ErrorNode is typically invoked automatically by the framework, but can
+        be tested with manual state construction::
+        
+            >>> from framework.state import AgentState
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> 
+            >>> # Construct agent state with error information
+            >>> state = AgentState()
+            >>> state['control_error_info'] = {
+            ...     'classification': ErrorClassification(
+            ...         severity=ErrorSeverity.CRITICAL,
+            ...         user_message="Database connection timeout",
+            ...         metadata={"timeout": 30, "host": "db.example.com"}
+            ...     ),
+            ...     'capability_name': 'database_query',
+            ...     'execution_time': 31.5
+            ... }
+            >>> state['task_current_task'] = "Retrieve user profile data"
+            >>> 
+            >>> # Execute error response generation
+            >>> result = await ErrorNode.execute(state)
+            >>> print(f"Response type: {type(result['messages'][0])}")
+            <class 'langchain_core.messages.ai.AIMessage'>
+            
+        Framework integration through error decorator::
+        
+            >>> @capability("database_operations")
+            ... async def query_user_data(user_id: int, state: AgentState):
+            ...     # This will automatically route to ErrorNode on failure
+            ...     connection = await get_db_connection()
+            ...     return await connection.fetch_user(user_id)
+    
+    .. seealso::
+       :class:`ErrorContext` : Data structure for error response generation
+       :class:`framework.base.errors.ErrorClassification` : Error classification system
+       :func:`framework.base.decorators.capability` : Capability decorator with error handling
+       :class:`framework.state.AgentState` : Agent state management system
     """
     
     name = "error"
     description = "Error Response Generation"
     
     @staticmethod
-    def classify_error(exc: Exception, context: dict):
-        """Built-in error classification for error handling operations.
+    def classify_error(exc: Exception, context: dict) -> ErrorClassification:
+        """Classify internal ErrorNode failures with FATAL severity to prevent infinite loops.
         
-        Any error in the error node is treated as FATAL to prevent infinite loops.
-        If the error node fails, execution should terminate immediately rather than
-        attempt any retry or recovery mechanisms.
+        This method handles the critical responsibility of classifying errors that occur
+        within the error response generation system itself. All such errors are automatically
+        classified as FATAL to ensure clean termination and prevent recursive error handling
+        scenarios that could destabilize the entire system.
         
-        :param exc: Exception that occurred during error handling
+        The FATAL classification ensures that if the error response generation mechanism
+        fails, execution terminates immediately rather than attempting additional error
+        recovery operations that could compound the original problem or create infinite
+        error handling loops.
+        
+        :param exc: Exception that occurred during error response generation process
         :type exc: Exception
-        :param context: Execution context with error handling details
+        :param context: Execution context containing node information, timing data, and state
         :type context: dict
-        :return: Error classification with FATAL severity
+        :return: Error classification with FATAL severity and diagnostic metadata
         :rtype: ErrorClassification
-        """
-        from framework.base.errors import ErrorClassification, ErrorSeverity
         
-        # All errors in error node are FATAL - prevents infinite loops
+        .. warning::
+           This method should only be called by the framework's error handling system.
+           Manual invocation could disrupt the error classification hierarchy.
+        
+        .. note::
+           The FATAL severity ensures immediate execution termination without further
+           error recovery attempts, preventing system instability.
+        
+        Examples:
+            Framework automatic error classification::
+            
+                >>> try:
+                ...     # ErrorNode internal operation fails
+                ...     await ErrorNode.execute(state)
+                ... except Exception as e:
+                ...     classification = ErrorNode.classify_error(e, context)
+                ...     print(f"Severity: {classification.severity.value}")
+                fatal
+                
+            Error classification structure::
+            
+                >>> context = {"node_name": "error", "execution_time": 1.2}
+                >>> exc = RuntimeError("LLM generation failed")
+                >>> classification = ErrorNode.classify_error(exc, context)
+                >>> print(classification.metadata["technical_details"])
+                Error node failure: LLM generation failed
+        """
         return ErrorClassification(
             severity=ErrorSeverity.FATAL,
             user_message="Error node failed during error handling",
-            technical_details=f"Error node failure: {str(exc)}"
+            metadata={"technical_details": f"Error node failure: {str(exc)}"}
         )
         
     @staticmethod
-    async def execute(
-        state: AgentState, 
-        **kwargs
-    ) -> Dict[str, Any]:
-        """Main error handling logic with sophisticated error response generation.
+    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+        """Generate comprehensive error response with structured analysis and LLM insights.
         
-        Generates comprehensive error responses with LLM-generated explanations
-        and automatic context generation from execution state.
+        This method orchestrates the complete error response generation pipeline,
+        transforming technical error information into user-friendly responses with
+        actionable recovery suggestions. The process combines factual error reporting
+        with intelligent analysis to provide maximum value to users encountering issues.
         
-        :param state: Current agent state
+        The execution follows a carefully designed two-phase approach that ensures
+        robust error handling even when components of the error generation system
+        itself experience failures. Streaming progress updates keep users informed
+        during the response generation process.
+        
+        Processing Pipeline:
+            1. **Context Extraction**: Reads error details from agent state including
+               error classification, execution statistics, and step-by-step history
+            2. **Context Population**: Enriches error context with execution timeline,
+               successful operations, and failure categorization
+            3. **Structured Report Generation**: Creates factual error report using
+               standardized formatting and execution statistics
+            4. **LLM Analysis**: Generates intelligent explanations and recovery
+               suggestions based on error context and available capabilities
+            5. **Response Assembly**: Combines structured report with LLM analysis
+               into coherent user response
+        
+        Error Handling Strategy:
+            - Comprehensive exception handling prevents method failure
+            - Streaming progress updates provide real-time feedback
+            - Automatic fallback to structured response if LLM generation fails
+            - All failures logged for operational monitoring and debugging
+        
+        :param state: Agent state containing error information in control_error_info field
         :type state: AgentState
-        :param kwargs: Additional LangGraph parameters
-        :return: Dictionary of state updates for LangGraph
-        :rtype: Dict[str, Any]
+        :param kwargs: Additional LangGraph execution parameters including config and streaming
+        :type kwargs: dict
+        :return: Dictionary containing AIMessage with formatted error response for user presentation
+        :rtype: dict[str, list[AIMessage]]
+        
+        .. note::
+           This method is designed to never raise exceptions. All internal errors
+           result in structured fallback responses to ensure users receive meaningful
+           information regardless of system state.
+        
+        .. warning::
+           The method expects error information to be present in state['control_error_info'].
+           Missing error information will result in fallback responses with generic messaging.
+        
+        Examples:
+            Standard error response generation::
+            
+                >>> from framework.state import AgentState
+                >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+                >>> 
+                >>> # Prepare agent state with error information
+                >>> state = AgentState()
+                >>> state['control_error_info'] = {
+                ...     'classification': ErrorClassification(
+                ...         severity=ErrorSeverity.REPLANNING,
+                ...         user_message="API rate limit exceeded",
+                ...         metadata={"retry_after": 300}
+                ...     ),
+                ...     'capability_name': 'external_api_call',
+                ...     'execution_time': 5.2
+                ... }
+                >>> state['task_current_task'] = "Fetch weather data"
+                >>> 
+                >>> # Generate error response
+                >>> result = await ErrorNode.execute(state)
+                >>> message = result['messages'][0]
+                >>> print(f"Response length: {len(message.content)} characters")
+                Response length: 847 characters
+                
+            Error response with execution history::
+            
+                >>> state['execution_step_results'] = {
+                ...     'step_0': {
+                ...         'step_index': 0,
+                ...         'capability': 'input_validation',
+                ...         'task_objective': 'Validate API parameters',
+                ...         'success': True
+                ...     },
+                ...     'step_1': {
+                ...         'step_index': 1,
+                ...         'capability': 'external_api_call',
+                ...         'task_objective': 'Fetch weather data',
+                ...         'success': False
+                ...     }
+                ... }
+                >>> result = await ErrorNode.execute(state)
+                >>> # Response includes execution summary with successful/failed steps
+        
+        .. seealso::
+           :func:`_create_error_context_from_state` : Error context extraction
+           :func:`_generate_error_response` : Response generation pipeline
+           :class:`AIMessage` : Response message format
         """
-        
-        # Explicit logger retrieval - professional practice
-        from configs.logger import get_logger
-        logger = get_logger("framework", "error")
-        
         logger.key_info("Starting error response generation")
         
-        # Use get_stream_writer() for pure LangGraph streaming
-        from langgraph.config import get_stream_writer
         streaming = get_stream_writer()
-        
         if streaming:
-            streaming({"event_type": "status", "message": "Generating error response...", "progress": 0.1})
+            streaming({
+                "event_type": "status", 
+                "message": "Generating error response...", 
+                "progress": 0.1
+            })
         
         try:
-            # Create error context from state
             error_context = _create_error_context_from_state(state)
-            
-            # Auto-populate execution summary and suggestions
             _populate_error_context(error_context, state)
             
             if streaming:
-                streaming({"event_type": "status", "message": "Generating LLM explanation...", "progress": 0.5})
+                streaming({
+                    "event_type": "status", 
+                    "message": "Generating LLM explanation...", 
+                    "progress": 0.5
+                })
             
-            # Generate LLM response with clean prompt
             response = await _generate_error_response(error_context)
             
             if streaming:
-                streaming({"event_type": "status", "message": "Error response generated", "progress": 1.0, "complete": True})
+                streaming({
+                    "event_type": "status", 
+                    "message": "Error response generated", 
+                    "progress": 1.0, 
+                    "complete": True
+                })
             
-            logger.key_info(f"Generated error response for {error_context.error_type.value}: {error_context.error_message}")
+            logger.key_info(
+                f"Generated error response for {error_context.error_severity.value}: "
+                f"{error_context.error_message}"
+            )
             
-            # Return messages like respond capability so user sees the error response
-            from langchain_core.messages import AIMessage
-            return {
-                "messages": [AIMessage(content=response)]
-            }
+            return {"messages": [AIMessage(content=response)]}
             
         except Exception as e:
-            # Fallback response if error handling fails
             logger.error(f"Error response generation failed: {e}")
             
             if streaming:
-                streaming({"event_type": "status", "message": "Using fallback error response", "progress": 1.0, "complete": True})
+                streaming({
+                    "event_type": "status", 
+                    "message": "Using fallback error response", 
+                    "progress": 1.0, 
+                    "complete": True
+                })
             
-            # Get the original error details for transparency
-            error_info = state.get('control_error_info')
-            if not isinstance(error_info, dict):
-                error_info = {}
-            original_error = error_info.get('original_error', 'Unknown error occurred')
-            capability_name = error_info.get('capability_name') or error_info.get('node_name', 'unknown operation')
+            return {"messages": [AIMessage(content=_create_fallback_response(state, e))]}
+
+
+def _create_fallback_response(state: AgentState, generation_error: Exception) -> str:
+    """Generate structured fallback response when LLM error analysis fails.
+    
+    This function provides a critical safety mechanism for error response generation
+    by creating meaningful error messages even when the intelligent LLM analysis
+    component fails. The fallback response combines original error information
+    with diagnostic details about the analysis failure, ensuring users receive
+    actionable information regardless of system state.
+    
+    The fallback mechanism maintains the dual-error reporting pattern where both
+    the original operational error and the secondary error generation failure are
+    clearly communicated to users with appropriate context and severity indication.
+    
+    :param state: Agent state containing original error details in control_error_info
+    :type state: AgentState
+    :param generation_error: Exception that occurred during LLM analysis generation
+    :type generation_error: Exception
+    :return: Formatted fallback error message combining original and generation errors
+    :rtype: str
+    
+    .. warning::
+       This function is called only when the primary error response generation
+       fails. It should be robust and never raise additional exceptions.
+    
+    .. note::
+       The fallback response format clearly distinguishes between the original
+       operational error and the secondary error generation failure.
+    
+    Examples:
+        Fallback response for LLM generation failure::
+        
+            >>> from framework.state import AgentState
+            >>> state = AgentState()
+            >>> state['control_error_info'] = {
+            ...     'original_error': 'Database connection timeout',
+            ...     'capability_name': 'user_data_fetch'
+            ... }
+            >>> generation_error = RuntimeError("OpenAI API unavailable")
+            >>> response = _create_fallback_response(state, generation_error)
+            >>> print("⚠️" in response and "Original Issue" in response)
+            True
             
-            fallback_response = f"""⚠️ **System Error During Error Handling**
+        Fallback with minimal error information::
+        
+            >>> state = AgentState()  # Empty state
+            >>> generation_error = ConnectionError("Network timeout")
+            >>> response = _create_fallback_response(state, generation_error)
+            >>> print("unknown operation" in response)
+            True
+    
+    .. seealso::
+       :func:`ErrorNode.execute` : Primary error response generation
+       :func:`_generate_error_response` : LLM-based error analysis
+    """
+    error_info = state.get('control_error_info', {})
+    original_error = error_info.get('original_error', 'Unknown error occurred')
+    capability_name = error_info.get('capability_name', 'unknown operation')
+    
+    return f"""⚠️ **System Error During Error Handling**
 
 **Original Issue:** The '{capability_name}' operation failed with: {original_error}
 
-**Secondary Issue:** The error response generation system encountered an internal error: {str(e)}
+**Secondary Issue:** The error response generation system encountered an internal error: {str(generation_error)}
 
 This appears to be a system-level issue. The original operation failed (which may be expected), but the error handling system also experienced problems.
 """
-            
-            # Return fallback response as messages like respond capability
-            from langchain_core.messages import AIMessage
-            return {
-                "messages": [AIMessage(content=fallback_response)]
-            }
 
-
-# =============================================================================
-# HELPER FUNCTIONS
-# =============================================================================
 
 def _create_error_context_from_state(state: AgentState) -> ErrorContext:
-    """Create error context from agent state.
+    """Extract and structure comprehensive error information from agent execution state.
     
-    Reads error information from control_error_info that was set by the router
-    when retries were exhausted or when an error occurred.
+    This function serves as the primary interface between the agent state management
+    system and the error response generation pipeline. It reads error details from
+    the control_error_info field (populated by capability decorators) and constructs
+    a complete ErrorContext object containing all information needed for comprehensive
+    error response generation.
     
-    :param state: Current agent state
+    The function implements robust error information extraction with fallback
+    mechanisms to ensure error response generation can proceed even when state
+    information is incomplete or malformed. ErrorClassification serves as the
+    authoritative source for error severity and metadata.
+    
+    Error Information Sources:
+        - **control_error_info**: Primary error details from capability decorators
+        - **task_current_task**: High-level task description for context
+        - **control_retry_count**: Retry attempt information for execution statistics
+        - **execution_step_results**: Step-by-step execution history for progress tracking
+    
+    :param state: Agent state containing error information and complete execution history
     :type state: AgentState
-    :return: Constructed error context
+    :return: Comprehensive error context ready for response generation pipeline
     :rtype: ErrorContext
-    """
-    # Get current task from task state
-    current_task = state.get("task_current_task", "Unknown task")
     
-    # Get error information that was set by the router
-    error_info = state.get('control_error_info')
+    .. note::
+       If no error classification is found in state, the function creates a fallback
+       CRITICAL classification to ensure error response generation can proceed safely.
     
-    # Handle case where error_info is None or not a dictionary
-    if not isinstance(error_info, dict):
-        error_info = {}
+    .. warning::
+       This function assumes state follows the standard agent state structure.
+       Malformed state may result in incomplete error context with fallback values.
     
-    # Extract error details from router-provided error info
-    capability_name = error_info.get('capability_name') or error_info.get('node_name')
-    original_error = error_info.get('original_error', 'Unknown error occurred')
-    user_message = error_info.get('user_message', original_error)
-    technical_details = error_info.get('technical_details', original_error)
-    execution_time = error_info.get('execution_time', 0.0)
-    
-    # Determine error type based on classification severity
-    error_classification = error_info.get('classification')
-    if error_classification and hasattr(error_classification, 'severity'):
-        severity = error_classification.severity
-        if hasattr(severity, 'value'):
-            severity_value = severity.value
-        else:
-            severity_value = str(severity)
+    Examples:
+        Extract context from complete error state::
         
-        # Map severity to error type
-        if severity_value == "retriable":
-            error_type = ErrorType.RETRIABLE_FAILURE  
-        elif severity_value == "replanning":
-            error_type = ErrorType.RECLASSIFICATION_LIMIT
-        elif severity_value == "critical":
-            error_type = ErrorType.CRITICAL_ERROR
-        else:
-            error_type = ErrorType.CRITICAL_ERROR
-    else:
-        error_type = ErrorType.CRITICAL_ERROR
+            >>> from framework.state import AgentState
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> 
+            >>> state = AgentState()
+            >>> state['control_error_info'] = {
+            ...     'classification': ErrorClassification(
+            ...         severity=ErrorSeverity.RETRIABLE,
+            ...         user_message="Temporary network error",
+            ...         metadata={"retry_delay": 5}
+            ...     ),
+            ...     'capability_name': 'api_client',
+            ...     'execution_time': 2.8
+            ... }
+            >>> state['task_current_task'] = "Fetch user preferences"
+            >>> state['control_retry_count'] = 2
+            >>> 
+            >>> context = _create_error_context_from_state(state)
+            >>> print(f"Severity: {context.error_severity.value}, Retries: {context.retry_count}")
+            Severity: retriable, Retries: 2
+            
+        Fallback context creation with minimal state::
+        
+            >>> state = AgentState()
+            >>> state['control_error_info'] = {
+            ...     'original_error': 'Unknown system error'
+            ... }
+            >>> context = _create_error_context_from_state(state)
+            >>> print(f"Fallback severity: {context.error_severity.value}")
+            Fallback severity: critical
     
-    # Build failed operation description
+    .. seealso::
+       :class:`ErrorContext` : Target data structure for error information
+       :class:`framework.base.errors.ErrorClassification` : Error classification system
+       :func:`_populate_error_context` : Additional context population
+    """
+    current_task = state.get("task_current_task", "Unknown task")
+    error_info = state.get('control_error_info', {})
+    
+    # Extract or create error classification
+    error_classification = error_info.get('classification')
+    if not error_classification:
+        original_error = error_info.get('original_error', 'Unknown error occurred')
+        error_classification = ErrorClassification(
+            severity=ErrorSeverity.CRITICAL,
+            user_message=original_error,
+            metadata={"technical_details": original_error}
+        )
+    
+    # Extract execution details
+    capability_name = error_info.get('capability_name') or error_info.get('node_name')
+    execution_time = error_info.get('execution_time', 0.0)
+    retry_count = state.get('control_retry_count', 0)
     failed_operation = capability_name or "Unknown operation"
     
-    # Get retry count from state
-    retry_count = state.get('control_retry_count', 0)
-    
-    return ErrorContext(
-        error_type=error_type,
-        error_message=user_message,
-        failed_operation=failed_operation,
+    # Construct error context
+    context = ErrorContext(
+        error_classification=error_classification,
         current_task=current_task,
-        capability_name=capability_name,
-        technical_details=technical_details,
+        failed_operation=failed_operation,
         execution_time=execution_time,
         retry_count=retry_count,
         total_operations=StateManager.get_current_step_index(state) + 1
     )
-
-
-
+    
+    # Store capability name for property access
+    context._capability_name = capability_name
+    return context
 
 
 def _populate_error_context(error_context: ErrorContext, state: AgentState) -> None:
-    """Auto-populate execution summary and use capability-specific suggestions.
+    """Enrich error context with chronological execution history and step categorization.
     
-    :param error_context: Error context to populate
+    This function enhances the error context with detailed execution history by
+    extracting step-by-step results from agent state and organizing them into
+    successful and failed operation categories. This provides users with valuable
+    context about system behavior leading up to the failure, enabling better
+    understanding of the error's impact and potential recovery strategies.
+    
+    The function processes execution_step_results from agent state, maintaining
+    chronological order through step_index sorting to present a coherent narrative
+    of system execution. Each step is categorized based on its success status and
+    formatted with descriptive information for user comprehension.
+    
+    Processing Logic:
+        1. Extract execution_step_results from agent state
+        2. Sort results by step_index to maintain chronological order
+        3. Format each step with index, capability name, and task objective
+        4. Categorize steps into successful_steps or failed_steps based on status
+        5. Populate error_context lists in-place for response generation
+    
+    :param error_context: Error context object to enhance with execution history
     :type error_context: ErrorContext
-    :param state: Current agent state
+    :param state: Agent state containing execution_step_results with detailed step information
     :type state: AgentState
-    """
     
-    # Generate execution summary from execution_step_results (ordered by step_index)
-    step_results = state.get("execution_step_results", {})
-    if step_results:
-        # Sort by step_index for proper ordering
-        ordered_results = sorted(step_results.items(), key=lambda x: x[1].get('step_index', 0))
+    .. note::
+       This function modifies the error_context object in-place, populating the
+       successful_steps and failed_steps lists with formatted step descriptions.
+    
+    .. warning::
+       The function assumes execution_step_results follows the standard format
+       with step_index, capability, task_objective, and success fields.
+    
+    Examples:
+        Populate context with execution history::
         
-        for step_key, result in ordered_results:
-            step_index = result.get('step_index', 0)
-            capability_name = result.get('capability', 'unknown')
-            task_objective = result.get('task_objective', capability_name)
+            >>> from framework.state import AgentState
+            >>> context = ErrorContext(
+            ...     error_classification=classification,
+            ...     current_task="Process user request",
+            ...     failed_operation="database_query"
+            ... )
+            >>> state = AgentState()
+            >>> state['execution_step_results'] = {
+            ...     'step_0': {
+            ...         'step_index': 0,
+            ...         'capability': 'input_validation',
+            ...         'task_objective': 'Validate user input',
+            ...         'success': True
+            ...     },
+            ...     'step_1': {
+            ...         'step_index': 1,
+            ...         'capability': 'database_query',
+            ...         'task_objective': 'Fetch user data',
+            ...         'success': False
+            ...     }
+            ... }
+            >>> _populate_error_context(context, state)
+            >>> print(f"Successful: {len(context.successful_steps)}, Failed: {len(context.failed_steps)}")
+            Successful: 1, Failed: 1
             
-            if result.get('success', False):
-                error_context.successful_steps.append(f"Step {step_index + 1}: {task_objective}")
-            else:
-                error_context.failed_steps.append(f"Step {step_index + 1}: {task_objective} - Failed")
+        Handle missing execution results gracefully::
+        
+            >>> state = AgentState()  # No execution_step_results
+            >>> _populate_error_context(context, state)
+            >>> print(f"Steps populated: {len(context.successful_steps + context.failed_steps)}")
+            Steps populated: 0
     
-    # Use capability-specific suggestions if available, otherwise generate generic ones
-    if not error_context.capability_suggestions:
-        error_context.capability_suggestions = _generate_generic_suggestions(error_context.error_type)
-
-
-def _generate_generic_suggestions(error_type: ErrorType) -> List[str]:
-    """Generate generic recovery suggestions when capability-specific ones aren't available.
-    
-    :param error_type: Type of error that occurred
-    :type error_type: ErrorType
-    :return: List of recovery suggestions
-    :rtype: List[str]
+    .. seealso::
+       :class:`ErrorContext` : Error context data structure
+       :class:`framework.state.AgentState` : Agent state management
+       :func:`_create_error_context_from_state` : Initial context creation
     """
+    step_results = state.get("execution_step_results", {})
+    if not step_results:
+        return
+        
+    # Sort by step_index to maintain chronological order
+    ordered_results = sorted(
+        step_results.items(), 
+        key=lambda x: x[1].get('step_index', 0)
+    )
     
-    generic_suggestions_map = {
-        ErrorType.TIMEOUT: [
-            "Reduce request complexity or scope",
-            "Specify narrower time ranges for data queries"
-        ],
-        ErrorType.STEP_FAILURE: [
-            "Rephrase request with clearer parameters",
-            "Simplify query complexity"
-        ],
-        ErrorType.SAFETY_LIMIT: [
-            "Reduce request scope to single operation",
-            "Break complex tasks into sequential steps"
-        ],
-        ErrorType.RETRIABLE_FAILURE: [
-            "Retry request (temporary service issue)",
-            "Check system service status"
-        ],
-        ErrorType.RECLASSIFICATION_LIMIT: [
-            "Clarify request with specific technical parameters",
-            "Use domain-specific terminology"
-        ],
-        ErrorType.CRITICAL_ERROR: [
-            "Contact user support for assistance",
-            "Verify system prerequisites and permissions"
-        ],
-        ErrorType.INFRASTRUCTURE_ERROR: [
-            "Contact user support for assistance",
-            "Verify access permissions for requested resources"
-        ],
-        ErrorType.EXECUTION_KILLED: [
-            "Reduce operation scope or complexity",
-            "Review request against system constraints"
-        ]
-    }
-    
-    return generic_suggestions_map.get(error_type, [
-        "Rephrase request with clearer parameters",
-        "Simplify operation complexity"
-    ])
+    for step_key, result in ordered_results:
+        step_index = result.get('step_index', 0)
+        capability_name = result.get('capability', 'unknown')
+        task_objective = result.get('task_objective', capability_name)
+        step_description = f"Step {step_index + 1}: {task_objective}"
+        
+        if result.get('success', False):
+            error_context.successful_steps.append(step_description)
+        else:
+            error_context.failed_steps.append(f"{step_description} - Failed")
 
 
 async def _generate_error_response(error_context: ErrorContext) -> str:
-    """Generate structured error response with clear separation of auto-generated vs LLM content.
+    """Orchestrate complete error response generation with structured reporting and LLM analysis.
     
-    :param error_context: Error context with all relevant details
+    This function coordinates the comprehensive two-phase error response generation
+    process that transforms technical error information into user-friendly responses.
+    The approach combines factual structured reporting with intelligent LLM analysis
+    to provide maximum value and actionability for users encountering system errors.
+    
+    The function implements asynchronous processing to maintain system responsiveness
+    during LLM generation while ensuring that streaming progress updates continue
+    to provide real-time feedback to users. The structured report provides immediate
+    factual information while the LLM analysis adds contextual understanding and
+    recovery guidance.
+    
+    Response Generation Pipeline:
+        1. **Structured Report Building**: Creates factual error report using standardized
+           formatting with execution statistics, timing information, and step summaries
+        2. **Asynchronous LLM Analysis**: Generates intelligent explanations and recovery
+           suggestions using context-aware prompting and capability information
+        3. **Response Assembly**: Combines structured report with LLM insights into
+           coherent, comprehensive user response
+    
+    :param error_context: Complete error context containing classification and execution data
     :type error_context: ErrorContext
-    :return: Complete error response
+    :return: Formatted error response combining structured facts with intelligent analysis
     :rtype: str
+    
+    .. note::
+       Uses asyncio.to_thread for LLM generation to prevent blocking of streaming
+       updates and maintain system responsiveness during response generation.
+    
+    .. warning::
+       This function assumes error_context is fully populated with all required
+       fields. Incomplete context may result in reduced response quality.
+    
+    Examples:
+        Generate complete error response::
+        
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> context = ErrorContext(
+            ...     error_classification=ErrorClassification(
+            ...         severity=ErrorSeverity.REPLANNING,
+            ...         user_message="API authentication failed",
+            ...         metadata={"endpoint": "/api/v1/users"}
+            ...     ),
+            ...     current_task="Fetch user profile",
+            ...     failed_operation="api_authentication",
+            ...     execution_time=1.2,
+            ...     successful_steps=["Step 1: Validate input"],
+            ...     failed_steps=["Step 2: Authenticate API - Failed"]
+            ... )
+            >>> response = await _generate_error_response(context)
+            >>> print("ERROR REPORT" in response and "Analysis:" in response)
+            True
+            
+        Response structure verification::
+        
+            >>> response_lines = response.split('\n')
+            >>> structured_section = any("ERROR REPORT" in line for line in response_lines)
+            >>> analysis_section = any("Analysis:" in line for line in response_lines)
+            >>> print(f"Structured: {structured_section}, Analysis: {analysis_section}")
+            Structured: True, Analysis: True
+    
+    .. seealso::
+       :func:`_build_structured_error_report` : Structured report generation
+       :func:`_generate_llm_explanation` : LLM analysis generation
+       :class:`ErrorContext` : Error context data structure
     """
-    
-    # Auto-generate structured error report sections
     error_report_sections = _build_structured_error_report(error_context)
-    
-    # Generate LLM explanation for the structured report
-    # Run sync function in thread pool to avoid blocking event loop for streaming
     llm_explanation = await asyncio.to_thread(_generate_llm_explanation, error_context)
-    
-    # Combine structured report with LLM explanation
-    full_report = f"{error_report_sections}\n\n{llm_explanation}"
-    
-    return full_report
+    return f"{error_report_sections}\n\n{llm_explanation}"
 
 
 def _build_structured_error_report(error_context: ErrorContext) -> str:
-    """Build the structured, factual error report sections.
+    """Build comprehensive structured error report with standardized formatting.
     
-    :param error_context: Error context with all relevant details
+    This function creates the factual foundation of error responses by generating
+    standardized reports that combine error classification details with execution
+    statistics and chronological progress summaries. The structured report provides
+    immediate, actionable information to users while maintaining consistent formatting
+    across all error types and severity levels.
+    
+    The report generation uses ErrorClassification.format_for_llm() for consistent
+    error detail formatting and integrates execution-specific information including
+    timing data, retry statistics, and step-by-step progress tracking to provide
+    comprehensive context for error understanding and recovery planning.
+    
+    Report Structure:
+        - **Header**: Timestamp and severity indication
+        - **Context**: Task description and failed operation identification
+        - **Error Details**: Standardized error classification formatting
+        - **Execution Statistics**: Timing, operations count, and retry information
+        - **Progress Summary**: Chronological breakdown of successful and failed steps
+    
+    :param error_context: Complete error context with classification and execution data
     :type error_context: ErrorContext
-    :return: Structured error report
+    :return: Formatted structured report ready for integration with LLM analysis
     :rtype: str
-    """
-    from datetime import datetime
     
-    # Header with timestamp and error type
+    .. note::
+       The function uses ErrorClassification.format_for_llm() when available,
+       falling back to basic error message formatting for compatibility.
+    
+    .. warning::
+       This function assumes error_context contains valid error_classification.
+       Missing classification will result in fallback formatting.
+    
+    Examples:
+        Generate structured report with full context::
+        
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> context = ErrorContext(
+            ...     error_classification=ErrorClassification(
+            ...         severity=ErrorSeverity.CRITICAL,
+            ...         user_message="Database connection failed",
+            ...         metadata={"host": "db.example.com", "port": 5432}
+            ...     ),
+            ...     current_task="Update user profile",
+            ...     failed_operation="database_connection",
+            ...     total_operations=3,
+            ...     execution_time=15.7,
+            ...     retry_count=2,
+            ...     successful_steps=["Step 1: Validate input", "Step 2: Prepare query"],
+            ...     failed_steps=["Step 3: Connect to database - Failed"]
+            ... )
+            >>> report = _build_structured_error_report(context)
+            >>> print("ERROR REPORT" in report and "CRITICAL" in report)
+            True
+            
+        Report with minimal execution context::
+        
+            >>> minimal_context = ErrorContext(
+            ...     error_classification=ErrorClassification(
+            ...         severity=ErrorSeverity.RETRIABLE,
+            ...         user_message="Temporary network error"
+            ...     ),
+            ...     current_task="Fetch data",
+            ...     failed_operation="network_request"
+            ... )
+            >>> report = _build_structured_error_report(minimal_context)
+            >>> print("Execution Stats" not in report)  # No stats to include
+            True
+    
+    .. seealso::
+       :class:`ErrorContext` : Error context data structure
+       :meth:`ErrorClassification.format_for_llm` : Standardized error formatting
+       :func:`_generate_error_response` : Complete response generation
+    """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     report_sections = [
         f"⚠️  **ERROR REPORT** - {timestamp}",
-        f"**Error Type:** {error_context.error_type.value.upper()}",
+        f"**Error Severity:** {error_context.error_severity.value.upper()}",
         f"**Task:** {error_context.current_task}",
-        f"**Failed Operation:** {error_context.failed_operation}",
-        f"**Error Message:** {error_context.error_message}"
+        f"**Failed Operation:** {error_context.failed_operation}"
     ]
     
-    # Add capability information if available
     if error_context.capability_name:
         report_sections.append(f"**Capability:** {error_context.capability_name}")
     
-    # Add technical details if available
-    if error_context.technical_details:
-        report_sections.append(f"**Technical Details:** {error_context.technical_details}")
+    # Use standardized error formatting
+    if hasattr(error_context.error_classification, 'format_for_llm'):
+        error_details = error_context.error_classification.format_for_llm()
+        report_sections.append(error_details)
+    else:
+        report_sections.append(f"**Error Message:** {error_context.error_message}")
     
     # Add execution statistics
     stats_parts = []
@@ -431,48 +918,94 @@ def _build_structured_error_report(error_context: ErrorContext) -> str:
         stats_parts.append(f"Total operations: {error_context.total_operations}")
     if error_context.execution_time is not None:
         stats_parts.append(f"Execution time: {error_context.execution_time:.1f}s")
-    if error_context.retry_count is not None and error_context.retry_count > 0:
+    if error_context.retry_count and error_context.retry_count > 0:
         stats_parts.append(f"Retry attempts: {error_context.retry_count}")
     
     if stats_parts:
         report_sections.append(f"**Execution Stats:** {', '.join(stats_parts)}")
     
-    # Add execution summary if available
+    # Add execution summary if steps were tracked
     if error_context.successful_steps or error_context.failed_steps:
         summary_lines = ["**Execution Summary:**"]
         if error_context.successful_steps:
             summary_lines.append("✅ **Completed successfully:**")
-            for step in error_context.successful_steps:
-                summary_lines.append(f"   • {step}")
+            summary_lines.extend(f"   • {step}" for step in error_context.successful_steps)
         if error_context.failed_steps:
             summary_lines.append("❌ **Failed steps:**")
-            for step in error_context.failed_steps:
-                summary_lines.append(f"   • {step}")
+            summary_lines.extend(f"   • {step}" for step in error_context.failed_steps)
         report_sections.extend(summary_lines)
-    
-    # Add recovery options if available
-    if error_context.capability_suggestions:
-        suggestions_lines = ["**Recovery Options:**"]
-        for suggestion in error_context.capability_suggestions:
-            suggestions_lines.append(f"• {suggestion}")
-        report_sections.extend(suggestions_lines)
     
     return "\n".join(report_sections)
 
 
 def _generate_llm_explanation(error_context: ErrorContext) -> str:
-    """Generate LLM explanation that complements the structured report.
+    """Generate intelligent error analysis and recovery suggestions using LLM reasoning.
     
-    :param error_context: Error context with all relevant details
+    This function leverages large language model capabilities to create context-aware
+    error explanations and actionable recovery suggestions. The LLM analysis goes
+    beyond basic error reporting to provide intelligent insights about failure causes,
+    system context, and practical next steps for error resolution.
+    
+    The function integrates error context with system capability information to
+    generate contextually appropriate suggestions that align with available system
+    functionality. Robust error handling ensures that LLM generation failures never
+    prevent error response delivery, with graceful fallback to structured messaging.
+    
+    Analysis Generation Process:
+        1. **Context Assembly**: Combines error details with system capabilities overview
+        2. **Prompt Construction**: Uses framework prompt system for consistent analysis quality
+        3. **LLM Generation**: Invokes language model with optimized parameters for concise analysis
+        4. **Response Validation**: Ensures generated content is meaningful and properly formatted
+        5. **Fallback Handling**: Provides structured fallback if LLM generation fails
+    
+    :param error_context: Complete error context with classification and execution details
     :type error_context: ErrorContext
-    :return: LLM-generated explanation
+    :return: Formatted LLM analysis with explanations and recovery suggestions,
+             or structured fallback message if generation fails
     :rtype: str
-    """
     
-    try:
-        # Get capabilities overview for system context
-        capabilities_overview = get_registry().get_capabilities_overview()
+    .. note::
+       The function uses framework model configuration for "response" type to ensure
+       appropriate token limits and generation parameters for error analysis.
+    
+    .. warning::
+       This function handles all LLM generation errors internally. External callers
+       should not expect exceptions from this function.
+    
+    Examples:
+        Generate LLM analysis for API error::
         
+            >>> from framework.base.errors import ErrorClassification, ErrorSeverity
+            >>> context = ErrorContext(
+            ...     error_classification=ErrorClassification(
+            ...         severity=ErrorSeverity.REPLANNING,
+            ...         user_message="Rate limit exceeded",
+            ...         metadata={"retry_after": 300, "limit": 1000}
+            ...     ),
+            ...     current_task="Fetch weather data",
+            ...     failed_operation="weather_api_call",
+            ...     execution_time=0.8
+            ... )
+            >>> analysis = _generate_llm_explanation(context)
+            >>> print(analysis.startswith("**Analysis:**"))
+            True
+            
+        Fallback behavior on LLM failure::
+        
+            >>> # Simulate LLM unavailability
+            >>> import unittest.mock
+            >>> with unittest.mock.patch('framework.models.get_chat_completion', side_effect=Exception("API down")):
+            ...     analysis = _generate_llm_explanation(context)
+            ...     print("structured report" in analysis.lower())
+            True
+    
+    .. seealso::
+       :func:`framework.models.get_chat_completion` : LLM generation interface
+       :func:`framework.prompts.loader.get_framework_prompts` : Prompt system
+       :func:`framework.registry.get_registry` : System capabilities registry
+    """
+    try:
+        capabilities_overview = get_registry().get_capabilities_overview()
         prompt_provider = get_framework_prompts()
         error_builder = prompt_provider.get_error_analysis_prompt_builder()
         
@@ -481,7 +1014,6 @@ def _generate_llm_explanation(error_context: ErrorContext) -> str:
             error_context=error_context
         )
 
-        # Generate LLM explanation
         explanation = get_chat_completion(
             model_config=get_model_config("framework", "response"),
             message=prompt,

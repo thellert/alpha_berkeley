@@ -62,14 +62,14 @@ class ClassificationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Classification service temporarily unavailable, retrying...",
-                technical_details=f"LLM timeout: {str(exc)}"
+                metadata={"technical_details": f"LLM timeout: {str(exc)}"}
             )
         
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network connectivity issues during classification, retrying...",
-                technical_details=f"Network error: {str(exc)}"
+                metadata={"technical_details": f"Network error: {str(exc)}"}
             )
         
         # Don't retry validation errors (data/logic issues)
@@ -77,7 +77,10 @@ class ClassificationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Task classification configuration error",
-                technical_details=f"Validation error: {str(exc)}"
+                metadata={
+                    "technical_details": f"Validation error: {str(exc)}",
+                    "safety_abort_reason": "Classification system misconfiguration detected"
+                }
             )
         
         # Don't retry import/module errors (missing dependencies or path issues)
@@ -94,7 +97,10 @@ class ClassificationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Task classification dependencies not available",
-                technical_details=f"Import error: {str(exc)}"
+                metadata={
+                    "technical_details": f"Import error: {str(exc)}",
+                    "safety_abort_reason": "Required classification dependencies missing"
+                }
             )
         
         # Default: CRITICAL for unknown errors (fail safe principle)
@@ -102,7 +108,10 @@ class ClassificationNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown classification error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
+            metadata={
+                "technical_details": f"Error type: {type(exc).__name__}, Details: {str(exc)}",
+                "safety_abort_reason": "Unhandled classification system error"
+            }
         )
     
     @staticmethod

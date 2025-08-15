@@ -138,7 +138,7 @@ class ClarifyCapability(BaseCapability):
         return ErrorClassification(
             severity=ErrorSeverity.RETRIABLE,
             user_message=f"Failed to generate clarifying questions: {str(exc)}",
-            technical_details=str(exc)
+            metadata={"technical_details": str(exc)}
         )
 
     def _create_orchestrator_guide(self):

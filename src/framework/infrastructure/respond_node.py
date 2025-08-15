@@ -161,7 +161,7 @@ class RespondCapability(BaseCapability):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Failed to generate response: {str(exc)}",
-            technical_details=str(exc)
+            metadata={"technical_details": str(exc)}
         )
 
     def _create_orchestrator_guide(self):

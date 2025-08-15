@@ -108,12 +108,12 @@ class BaseCapability(ABC):
                         return ErrorClassification(
                             severity=ErrorSeverity.RETRIABLE,
                             user_message="Database connection lost, retrying...",
-                            technical_details=str(exc)
+                            metadata={"technical_details": str(exc)}
                         )
                     return ErrorClassification(
                         severity=ErrorSeverity.CRITICAL,
                         user_message=f"Database error: {exc}",
-                        technical_details=str(exc)
+                        metadata={"technical_details": str(exc)}
                     )
                 
                 @staticmethod
@@ -306,7 +306,7 @@ class BaseCapability(ABC):
                         return ErrorClassification(
                             severity=ErrorSeverity.RETRIABLE,
                             user_message="Network issue detected, retrying...",
-                            technical_details=str(exc)
+                            metadata={"technical_details": str(exc)}
                         )
                     
 
@@ -314,7 +314,7 @@ class BaseCapability(ABC):
                     return ErrorClassification(
                         severity=ErrorSeverity.CRITICAL,
                         user_message=f"Unexpected error: {exc}",
-                        technical_details=str(exc)
+                        metadata={"technical_details": str(exc)}
                     )
             
             Missing input data requiring replanning::
@@ -325,7 +325,7 @@ class BaseCapability(ABC):
                         return ErrorClassification(
                             severity=ErrorSeverity.REPLANNING,
                             user_message="Required data not available, trying different approach",
-                            technical_details=f"Missing context data: {str(exc)}"
+                            metadata={"technical_details": f"Missing context data: {str(exc)}"}
                         )
                     return BaseCapability.classify_error(exc, context)
         
@@ -337,7 +337,7 @@ class BaseCapability(ABC):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unhandled error in {capability_name}: {exc}",
-            technical_details=str(exc)
+            metadata={"technical_details": str(exc)}
         )
     
     @staticmethod

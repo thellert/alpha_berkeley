@@ -579,31 +579,31 @@ class TurbineAnalysisCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.REPLANNING,
                 user_message=f"Data validation failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, ExecutorCommunicationError):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Python Executor communication failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, ResultProcessingError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Result processing failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, AnalysisError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Analysis error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Unknown error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

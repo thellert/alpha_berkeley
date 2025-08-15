@@ -72,7 +72,7 @@ class FrameworkPromptBuilder(ABC):
                 def get_instructions(self) -> str:
                     return "Provide technical analysis using ALS-specific terminology."
                 
-                def get_dynamic_context(self, **kwargs) -> Optional[str]:
+                def _get_dynamic_context(self, **kwargs) -> Optional[str]:
                     if 'device_status' in kwargs:
                         return f"Current device status: {kwargs['device_status']}"
                     return None
@@ -155,12 +155,15 @@ class FrameworkPromptBuilder(ABC):
         """
         pass
     
-    def get_examples(self, **kwargs) -> Optional[List['BaseExample']]:
+    def _get_examples(self, **kwargs) -> Optional[List['BaseExample']]:
         """Provide few-shot examples to guide agent behavior and output format.
         
         This method can return static examples or generate dynamic examples based
         on the provided context. Examples are particularly valuable for structured
         output tasks, complex reasoning patterns, or domain-specific formatting.
+        
+        This is an internal method called only by get_system_instructions().
+        Subclasses can override this to provide custom examples.
         
         :param kwargs: Context parameters for dynamic example generation
         :type kwargs: dict
@@ -170,7 +173,7 @@ class FrameworkPromptBuilder(ABC):
         Examples:
             Static examples::
             
-                def get_examples(self, **kwargs):
+                def _get_examples(self, **kwargs):
                     return [
                         TaskExtractionExample(
                             input="Show me yesterday's beam current data",
@@ -180,19 +183,22 @@ class FrameworkPromptBuilder(ABC):
             
             Dynamic examples based on context::
             
-                def get_examples(self, **kwargs):
+                def _get_examples(self, **kwargs):
                     if kwargs.get('task_type') == 'data_analysis':
                         return self._get_analysis_examples()
                     return self._get_general_examples()
         """
         return None
     
-    def get_dynamic_context(self, **kwargs) -> Optional[str]:
+    def _get_dynamic_context(self, **kwargs) -> Optional[str]:
         """Inject runtime context information into the prompt.
         
         This method allows prompts to incorporate dynamic information such as
         current system state, user preferences, or execution context. The context
         is appended to the prompt after all other components.
+        
+        This is an internal method called only by get_system_instructions().
+        Subclasses can override this to provide custom dynamic context.
         
         :param kwargs: Runtime context data for prompt customization
         :type kwargs: dict
@@ -202,14 +208,14 @@ class FrameworkPromptBuilder(ABC):
         Examples:
             System status context::
             
-                def get_dynamic_context(self, **kwargs):
+                def _get_dynamic_context(self, **kwargs):
                     if 'system_status' in kwargs:
                         return f"Current system status: {kwargs['system_status']}"
                     return None
             
             User preferences context::
             
-                def get_dynamic_context(self, **kwargs):
+                def _get_dynamic_context(self, **kwargs):
                     prefs = kwargs.get('user_preferences', {})
                     if prefs:
                         return f"User preferences: {prefs}"
@@ -260,7 +266,7 @@ class FrameworkPromptBuilder(ABC):
         
         .. seealso::
            :meth:`debug_print_prompt` : Debug output for prompt development
-           :meth:`format_examples` : Custom example formatting override
+           :meth:`_format_examples` : Custom example formatting override
         """
         sections = []
         
@@ -277,13 +283,13 @@ class FrameworkPromptBuilder(ABC):
         sections.append(instructions)
         
         # Examples (optional, can be static or dynamic)
-        examples = self.get_examples(**context)
+        examples = self._get_examples(**context)
         if examples:
-            formatted_examples = self.format_examples(examples)
+            formatted_examples = self._format_examples(examples)
             sections.append(f"EXAMPLES:\n{formatted_examples}")
         
         # Dynamic context (optional)
-        dynamic_context = self.get_dynamic_context(**context)
+        dynamic_context = self._get_dynamic_context(**context)
         if dynamic_context:
             sections.append(dynamic_context)
         
@@ -362,12 +368,14 @@ class FrameworkPromptBuilder(ABC):
         return getattr(self, 'PROMPT_TYPE', self.__class__.__name__.replace('PromptBuilder', '').lower())
 
     
-    def format_examples(self, examples: List['BaseExample']) -> str:
+    def _format_examples(self, examples: List['BaseExample']) -> str:
         """Format example objects into prompt-ready text representation.
         
         This method converts a list of BaseExample objects into a formatted string
         suitable for inclusion in the final prompt. The default implementation
         calls format_for_prompt() on each example and joins them with newlines.
+        
+        This is an internal method called only by get_system_instructions().
         Subclasses can override this method to provide custom formatting.
         
         :param examples: List of example objects to format
@@ -379,12 +387,12 @@ class FrameworkPromptBuilder(ABC):
             Default formatting::
             
                 examples = [TaskExample(input="...", output="...")]
-                formatted = self.format_examples(examples)
+                formatted = self._format_examples(examples)
                 # Returns: "Input: ...\nOutput: ...\n"
             
             Custom formatting override::
             
-                def format_examples(self, examples):
+                def _format_examples(self, examples):
                     formatted = []
                     for i, ex in enumerate(examples, 1):
                         formatted.append(f"Example {i}:\n{ex.format_for_prompt()}")

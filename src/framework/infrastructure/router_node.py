@@ -121,7 +121,7 @@ def router_conditional_edge(state: AgentState) -> str:
                     state['control_retry_count'] = new_retry_count
                     
                     # Retry available - route back to same capability
-                    logger.error(f"❌ Router: Retrying {capability_name} (attempt {new_retry_count}/{max_retries})")
+                    logger.error(f"Router: Retrying {capability_name} (attempt {new_retry_count}/{max_retries})")
                     return capability_name
                 else:
                     # Retries exhausted - route to error node
@@ -138,12 +138,12 @@ def router_conditional_edge(state: AgentState) -> str:
                 
                 if current_plans_created < max_planning_attempts:
                     # Orchestrator will increment counter when it creates new plan
-                    logger.error(f"❌ Router: Replanning error in {capability_name}, routing to orchestrator "
+                    logger.error(f"Router: Replanning error in {capability_name}, routing to orchestrator "
                                f"(plan #{current_plans_created + 1}/{max_planning_attempts})")
                     return "orchestrator"
                 else:
                     # Planning attempts exhausted - route to error node
-                    logger.error(f"❌ Router: Planning attempts exhausted for {capability_name} "
+                    logger.error(f"Router: Planning attempts exhausted for {capability_name} "
                                f"({current_plans_created}/{max_planning_attempts} plans created), routing to error node")
                     return "error"
             

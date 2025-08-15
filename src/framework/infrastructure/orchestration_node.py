@@ -18,6 +18,7 @@ from framework.base.errors import ErrorClassification, ErrorSeverity
 from framework.base.nodes import BaseInfrastructureNode
 from framework.base.planning import ExecutionPlan, PlannedStep
 from framework.base import BaseCapability
+
 from framework.state import AgentState
 from framework.state.state import create_status_update
 from framework.registry import get_registry
@@ -161,7 +162,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="LLM timeout during execution planning, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Retry network/connection errors
@@ -169,7 +170,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message="Network timeout during execution planning, retrying...",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Don't retry planning/validation errors (logic issues)
@@ -177,7 +178,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message="Execution planning configuration error",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Don't retry import/module errors (infrastructure issues)
@@ -185,7 +186,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Infrastructure dependency error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         
         # Default: CRITICAL for unknown errors (fail safe principle)
@@ -193,7 +194,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
             user_message=f"Unknown execution planning error: {str(exc)}",
-            technical_details=f"Error type: {type(exc).__name__}, Details: {str(exc)}"
+            metadata={"technical_details": f"Error type: {type(exc).__name__}, Details: {str(exc)}"}
         )
     
     @staticmethod
@@ -339,16 +340,28 @@ class OrchestrationNode(BaseInfrastructureNode):
             # Create ContextManager from state data
             context_manager = ContextManager(state)
             
+            # Format error context for replanning if available
+            error_info = state.get('control_error_info')
+            error_context = None
+            if error_info and isinstance(error_info, dict):
+                classification = error_info.get('classification')
+                if classification and hasattr(classification, 'format_for_llm'):
+                    error_context = classification.format_for_llm()
+            
+            if error_context:
+                logger.info("Error context detected - enabling replanning mode with failure analysis")
+                logger.debug(f"Error context for replanning: {error_context}")
+            
             # Use the prompt system to build the complete orchestrator prompt
             prompt_provider = get_framework_prompts()
             orchestrator_builder = prompt_provider.get_orchestrator_prompt_builder()
             
             system_instructions = orchestrator_builder.get_system_instructions(
-                user_query=current_task,
                 active_capabilities=active_capabilities,
-                execution_context=context_manager,
+                context_manager=context_manager,
                 task_depends_on_chat_history=state.get('task_depends_on_chat_history', False),
-                task_depends_on_user_memory=state.get('task_depends_on_user_memory', False)
+                task_depends_on_user_memory=state.get('task_depends_on_user_memory', False),
+                error_context=error_context
             )
 
             if not system_instructions:
@@ -367,6 +380,8 @@ class OrchestrationNode(BaseInfrastructureNode):
             logger.info(f" - {len(active_capabilities)} capabilities")
             logger.info(f" - {total_examples} structured examples")
             logger.info(f" - {context_types} context types")
+            if error_context:
+                logger.info(f" - Error context for replanning (previous failure analysis)")
             
             logger.debug(f"\n\n\n------------Orchestrator System Prompt:\n{system_instructions}\n------------\n\n\n")
             
@@ -387,7 +402,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         
         # Get model configuration and call LLM
         model_config = get_model_config("framework", "orchestrator")
-        message = f"{system_prompt}\n\nUser message: {current_task}"
+        message = f"{system_prompt}\n\nTASK TO PLAN: {current_task}"
         
         # Run sync LLM call in thread pool to avoid blocking event loop for streaming
         execution_plan = await asyncio.to_thread(

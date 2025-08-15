@@ -121,19 +121,19 @@ class KnowledgeRetrievalCapability(BaseCapability):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Data source communication failed: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         elif isinstance(exc, KnowledgeRetrievalError):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
                 user_message=f"Knowledge retrieval error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
         else:
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
                 user_message=f"Unknown error: {str(exc)}",
-                technical_details=str(exc)
+                metadata={"technical_details": str(exc)}
             )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

@@ -645,7 +645,7 @@ async def handle_service_with_interrupts(
                 interrupt(interrupt_data)
                 
                 # This line should never be reached - interrupt() should pause execution
-                logger.error(f"❌ UNEXPECTED: interrupt() returned instead of pausing execution in {capability_name}")
+                logger.error(f"UNEXPECTED: interrupt() returned instead of pausing execution in {capability_name}")
                 raise RuntimeError(f"Interrupt mechanism failed in {capability_name}")
                 
             except (IndexError, KeyError, AttributeError) as extract_error:

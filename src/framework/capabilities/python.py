@@ -555,7 +555,7 @@ class PythonCapability(BaseCapability):
         return ErrorClassification(
             severity=ErrorSeverity.RETRIABLE,
             user_message=f"Python execution service error: {exc}",
-            technical_details=str(exc)
+            metadata={"technical_details": str(exc)}
         )
     
     def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:

@@ -106,7 +106,7 @@ class ExecutionResult:
                 error=ExecutionError(
                     severity=ErrorSeverity.RETRIABLE,
                     message="Connection timeout",
-                    technical_details="HTTP 408 Request Timeout"
+                    metadata={"technical_details": "HTTP 408 Request Timeout"}
                 ),
                 execution_time=5.0,
                 start_time=datetime.utcnow(),
