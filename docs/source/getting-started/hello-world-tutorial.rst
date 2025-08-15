@@ -349,13 +349,15 @@ Every capability needs basic error handling and retry policies:
                return ErrorClassification(
                    severity=ErrorSeverity.RETRIABLE,
                    user_message="Weather service timeout, retrying...",
-                   technical_details=str(exc)
+                   metadata={"technical_details": str(exc)}
                )
            
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
                user_message=f"Weather service error: {str(exc)}",
-               technical_details=f"Error: {type(exc).__name__}"
+               metadata={
+                   "technical_details": f"Error: {type(exc).__name__}"
+               }
            )
        
        @staticmethod 
@@ -544,13 +546,13 @@ The classifier guide teaches the LLM when to activate your capability based on u
                   return ErrorClassification(
                       severity=ErrorSeverity.RETRIABLE,
                       user_message="Weather service timeout, retrying...",
-                      technical_details=str(exc)
+                      metadata={"technical_details": str(exc)}
                   )
               
               return ErrorClassification(
                   severity=ErrorSeverity.CRITICAL,
                   user_message=f"Weather service error: {str(exc)}",
-                  technical_details=f"Error: {type(exc).__name__}"
+                  metadata={"technical_details": f"Error: {type(exc).__name__}"}
               )
           
           @staticmethod 

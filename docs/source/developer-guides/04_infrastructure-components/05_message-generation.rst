@@ -1,5 +1,5 @@
-Message Generation: Response and Clarification System
-=====================================================
+Message Generation
+==================
 
 .. currentmodule:: framework.infrastructure.respond_node
 
@@ -208,7 +208,7 @@ Message generation uses the framework's prompt builder architecture:
 .. code-block:: python
 
    class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
-       def get_dynamic_context(self, current_task="", info=None, **kwargs):
+       def _get_dynamic_context(self, current_task="", info=None, **kwargs):
            sections = []
            
            # Base role with current task  
@@ -234,9 +234,9 @@ Message generation uses the framework's prompt builder architecture:
        def get_role_definition(self):
            return "You are a specialized domain expert assistant."
        
-       def get_dynamic_context(self, current_task="", info=None, **kwargs):
+       def _get_dynamic_context(self, current_task="", info=None, **kwargs):
            # Customize response generation for specific domain
-           return super().get_dynamic_context(current_task, info, **kwargs)
+           return super()._get_dynamic_context(current_task, info, **kwargs)
 
 Error Handling
 --------------

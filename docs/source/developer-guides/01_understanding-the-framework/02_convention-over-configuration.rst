@@ -190,12 +190,12 @@ All components must be explicitly declared in registry configurations and implem
                return ErrorClassification(
                    severity=ErrorSeverity.RETRIABLE,
                    user_message="Connection lost, retrying...",
-                   technical_details=str(exc)
+                   metadata={"technical_details": str(exc)}
                )
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
                user_message=f"Error: {exc}",
-               technical_details=str(exc)
+               metadata={"technical_details": str(exc)}
            )
 
 Error Classification Levels

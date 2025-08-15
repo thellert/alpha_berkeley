@@ -33,7 +33,10 @@ ErrorSeverity
       if isinstance(exc, ConnectionError):
           return ErrorClassification(severity=ErrorSeverity.RETRIABLE, ...)
       elif isinstance(exc, AuthenticationError):
-          return ErrorClassification(severity=ErrorSeverity.CRITICAL, ...)
+          return ErrorClassification(
+              severity=ErrorSeverity.CRITICAL, 
+              metadata={"safety_abort_reason": "Authentication failed"}
+          )
 
 Classification Results
 ======================
@@ -47,14 +50,30 @@ ErrorClassification
 
    Structured error analysis result that determines recovery strategy.
 
-   .. rubric:: Usage Pattern
+   .. rubric:: Basic Usage Pattern
 
    .. code-block:: python
 
       classification = ErrorClassification(
           severity=ErrorSeverity.RETRIABLE,
           user_message="Network connection timeout, retrying...",
-          technical_details="HTTP request timeout after 30 seconds"
+          metadata={"technical_details": "HTTP request timeout after 30 seconds"}
+      )
+
+   .. rubric:: Advanced Usage with Rich Metadata
+
+   .. code-block:: python
+
+      classification = ErrorClassification(
+          severity=ErrorSeverity.CRITICAL,
+          user_message="Service validation failed",
+          metadata={
+              "technical_details": "Authentication service returned 403",
+              "safety_abort_reason": "Security validation failed",
+
+              "retry_after": 30,
+              "error_code": "AUTH_FAILED"
+          }
       )
 
 ExecutionError
@@ -70,16 +89,12 @@ ExecutionError
 
    .. code-block:: python
 
-      error = ExecutionError(
-          severity=ErrorSeverity.RETRIABLE,
-          message="Database connection failed",
-          capability_name="database_query",
-          suggestions=[
-              "Check database server status",
-              "Verify connection credentials"
-          ],
-          technical_details="PostgreSQL connection timeout after 30 seconds"
-      )
+    error = ExecutionError(
+         severity=ErrorSeverity.RETRIABLE,
+         message="Database connection failed",
+         capability_name="database_query",
+         metadata={"technical_details": "PostgreSQL connection timeout after 30 seconds"}
+     )
 
 Classification Methods
 ======================
@@ -101,12 +116,16 @@ Base Capability Classification
               return ErrorClassification(
                   severity=ErrorSeverity.RETRIABLE,
                   user_message="Network issue detected, retrying...",
-                  technical_details=str(exc)
+                  metadata={"technical_details": str(exc)}
               )
-          return ErrorClassification(
-              severity=ErrorSeverity.CRITICAL,
-              user_message=f"Unexpected error: {exc}",
-              technical_details=str(exc)
+              return ErrorClassification(
+                severity=ErrorSeverity.CRITICAL,
+                user_message=f"Unexpected error: {exc}",
+                metadata={
+                    "technical_details": str(exc),
+                    "safety_abort_reason": f"Unhandled capability error: {exc}",
+                    "suggestions": ["Check system logs", "Contact support if issue persists"]
+                }
           )
 
 Infrastructure Node Classification
@@ -124,10 +143,10 @@ Infrastructure Node Classification
       def classify_error(exc: Exception, context: dict) -> ErrorClassification:
           # Infrastructure defaults to critical for fast failure
           return ErrorClassification(
-              severity=ErrorSeverity.CRITICAL,
-              user_message=f"Infrastructure error: {exc}",
-              technical_details=str(exc)
-          )
+             severity=ErrorSeverity.CRITICAL,
+             user_message=f"Infrastructure error: {exc}",
+             metadata={"technical_details": str(exc)}
+         )
 
 Retry Policy Configuration
 ==========================
@@ -184,10 +203,55 @@ Basic Error Handling
        elif classification.severity == ErrorSeverity.CRITICAL:
            # End execution with clear error message
            raise ExecutionError(
-               severity=ErrorSeverity.CRITICAL,
-               message=classification.user_message,
-               technical_details=classification.technical_details
-           )
+              severity=ErrorSeverity.CRITICAL,
+              message=classification.user_message,
+              metadata=classification.metadata
+          )
+
+Primary Error Context: Metadata Field
+=====================================
+
+The ``metadata`` field is the **primary mechanism** for providing structured error context in ``ErrorClassification``.
+
+**Suggested Metadata Keys:**
+
+- ``technical_details``: Detailed technical information (replaces old technical_details field)
+- ``safety_abort_reason``: Explanation for critical/fatal errors requiring immediate termination
+- ``replanning_reason``: Explanation for errors requiring new execution plan generation
+- ``suggestions``: List of actionable recovery steps for users
+- ``error_code``: Machine-readable error identifier for programmatic handling
+- ``retry_after``: Suggested delay before retry attempts (in seconds)
+
+**Advanced Usage Patterns:**
+
+1. **Structured Technical Details**: Replace simple strings with nested objects
+2. **Contextual Information**: Include relevant state and execution context
+3. **Recovery Guidance**: Provide specific, actionable recovery steps
+4. **System Integration**: Enable programmatic error handling and monitoring
+
+.. code-block:: python
+
+   # Example: Comprehensive metadata usage
+   return ErrorClassification(
+       severity=ErrorSeverity.REPLANNING,
+       user_message="Data query scope too broad for current system limits",
+       metadata={
+           "technical_details": f"Query returned {result_count} results, limit is {max_limit}",
+           "replanning_reason": "Query scope exceeded system performance limits",
+           "suggestions": [
+               "Reduce time range to last 24 hours",
+               "Specify fewer measurement types",
+               "Use data filtering parameters"
+           ],
+           "error_code": "QUERY_SCOPE_EXCEEDED",
+           "retry_after": 10,
+           "query_metrics": {
+               "result_count": result_count,
+               "max_limit": max_limit,
+               "query_duration": query_time
+           }
+       }
+   )
 
 .. seealso::
 

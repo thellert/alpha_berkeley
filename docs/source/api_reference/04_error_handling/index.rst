@@ -105,24 +105,32 @@ The system coordinates recovery through a unified strategy hierarchy:
          @staticmethod
          def classify_error(exc: Exception, context: dict) -> ErrorClassification:
              if isinstance(exc, (ConnectionError, TimeoutError)):
-                 return ErrorClassification(
-                     severity=ErrorSeverity.RETRIABLE,
-                     user_message="Network issue detected, retrying...",
-                     technical_details=str(exc)
-                 )
+                return ErrorClassification(
+                    severity=ErrorSeverity.RETRIABLE,
+                    user_message="Network issue detected, retrying...",
+                    metadata={"technical_details": str(exc)}
+                )
              elif isinstance(exc, KeyError) and "context" in str(exc):
-                 return ErrorClassification(
-                     severity=ErrorSeverity.REPLANNING,
-                     user_message="Required data not available, trying different approach",
-                     technical_details=f"Missing context data: {str(exc)}"
-                 )
+                                 return ErrorClassification(
+                    severity=ErrorSeverity.REPLANNING,
+                    user_message="Required data not available, trying different approach",
+                    metadata={
+                        "technical_details": f"Missing context data: {str(exc)}",
+                        "replanning_reason": f"Missing required context: {exc}",
+                        "suggestions": ["Verify data dependencies", "Check previous steps"]
+                    }
+                )
              # Default from BaseCapability implementation
              capability_name = context.get('capability', 'unknown_capability')
-             return ErrorClassification(
-                 severity=ErrorSeverity.CRITICAL,
-                 user_message=f"Unhandled error in {capability_name}: {exc}",
-                 technical_details=str(exc)
-             )
+                         return ErrorClassification(
+                severity=ErrorSeverity.CRITICAL,
+                user_message=f"Unhandled error in {capability_name}: {exc}",
+                metadata={
+                    "technical_details": str(exc),
+                    "safety_abort_reason": f"Unhandled error in {capability_name}: {exc}",
+                    "suggestions": ["Check capability logs", "Contact support team"]
+                }
+            )
 
    .. tab-item:: Recovery Coordination
 

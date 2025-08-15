@@ -1,5 +1,5 @@
-Gateway Architecture: Universal Message Processing Entry Point
-==============================================================
+Gateway Architecture
+====================
 
 .. currentmodule:: framework.infrastructure.gateway
 

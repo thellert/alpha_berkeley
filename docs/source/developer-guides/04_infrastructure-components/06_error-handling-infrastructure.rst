@@ -1,5 +1,5 @@
-Error Handling Infrastructure: Intelligent Error Recovery and Communication
-============================================================================
+Error Handling
+==============
 
 .. currentmodule:: framework.infrastructure.error_node
 
@@ -106,7 +106,7 @@ Different error types trigger appropriate recovery strategies:
            return ErrorClassification(
                severity=ErrorSeverity.RETRIABLE,
                user_message="Network timeout, retrying...",
-               technical_details=str(exc)
+               metadata={"technical_details": str(exc)}
            )
        
        # Don't retry validation errors
@@ -114,9 +114,44 @@ Different error types trigger appropriate recovery strategies:
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
                user_message="Configuration error",
-               technical_details=str(exc)
+               metadata={
+                   "technical_details": str(exc),
+                   "safety_abort_reason": f"Configuration validation failed: {exc}",
+                   "suggestions": ["Check configuration parameters", "Verify required fields"]
+               }
            )
 
+.. admonition:: 💡 Metadata Best Practices
+   :class: tip
+
+   **Enhanced User Experience Through Structured Metadata**
+
+   The framework supports flexible metadata structures, but adopting these established patterns enhances error analysis capabilities and improves user communication quality. All metadata content is forwarded to the LLM for dynamic error response generation.
+
+   **Recommended Metadata Patterns:**
+
+   .. code-block:: python
+
+      # Basic technical details
+      metadata = {
+          "technical_details": "Connection timeout after 30 seconds"
+      }
+      
+      # Enhanced error context with user guidance
+      metadata = {
+          "technical_details": "Missing required parameter 'api_key'",
+          "safety_abort_reason": "Agent execution aborted due to missing critical parameter", 
+          "suggestions": ["Check configuration", "Check environment variables", "Verify credentials"],
+      }
+           
+      # Replanning context for orchestrator
+      metadata = {
+          "technical_details": "Step expected 'SENSOR_DATA' but found None",
+          "replanning_reason": "Missing required input data",
+          "required_context": ["SENSOR_DATA", "TIME_RANGE"],
+          "suggestions": "Ask clarifying question to user if required context and capabilities are not available"
+      }
+   
 Error Context Generation
 ------------------------
 
@@ -131,13 +166,13 @@ System automatically creates comprehensive error context:
        failed_operation: str
        current_task: str
        capability_name: Optional[str] = None
-       technical_details: Optional[str] = None
+       error_metadata: Optional[Dict[str, Any]] = None
        total_operations: int = 0
        execution_time: Optional[float] = None
        retry_count: Optional[int] = None
        successful_steps: List[str] = None
        failed_steps: List[str] = None
-       capability_suggestions: List[str] = None
+
 
 **Context Creation:**
 
@@ -156,7 +191,6 @@ System automatically creates comprehensive error context:
        capability_name = error_info.get('capability_name') or error_info.get('node_name')
        original_error = error_info.get('original_error', 'Unknown error occurred')
        user_message = error_info.get('user_message', original_error)
-       technical_details = error_info.get('technical_details', original_error)
        execution_time = error_info.get('execution_time', 0.0)
        
        # Determine error type based on classification severity
@@ -175,13 +209,18 @@ System automatically creates comprehensive error context:
        else:
            error_type = ErrorType.CRITICAL_ERROR
        
+       # Extract metadata from error classification
+       error_metadata = None
+       if error_classification and hasattr(error_classification, 'metadata'):
+           error_metadata = error_classification.metadata
+       
        return ErrorContext(
            error_type=error_type,
            error_message=user_message,
            failed_operation=capability_name or "Unknown operation",
            current_task=current_task,
            capability_name=capability_name,
-           technical_details=technical_details,
+           error_metadata=error_metadata,
            execution_time=execution_time,
            retry_count=state.get('control_retry_count', 0),
            total_operations=StateManager.get_current_step_index(state) + 1
@@ -217,16 +256,33 @@ Error responses combine structured reports with LLM analysis:
            f"**Error Message:** {error_context.error_message}"
        ]
        
-       # Add execution statistics
-       if error_context.execution_time:
-           report_sections.append(f"**Execution Time:** {error_context.execution_time:.1f}s")
+       # Add capability information if available
+       if error_context.capability_name:
+           report_sections.append(f"**Capability:** {error_context.capability_name}")
        
-       if error_context.retry_count:
-           report_sections.append(f"**Retry Attempts:** {error_context.retry_count}")
+       # Add complete metadata if available (displayed as JSON)
+       if error_context.error_metadata:
+           import json
+           metadata_str = json.dumps(error_context.error_metadata, indent=2, ensure_ascii=False)
+           report_sections.append(f"**Error Metadata:**\n```json\n{metadata_str}\n```")
+       
+       # Add execution statistics
+       stats_parts = []
+       if error_context.total_operations > 0:
+           stats_parts.append(f"Total operations: {error_context.total_operations}")
+       if error_context.execution_time is not None:
+           stats_parts.append(f"Execution time: {error_context.execution_time:.1f}s")
+       if error_context.retry_count is not None and error_context.retry_count > 0:
+           stats_parts.append(f"Retry attempts: {error_context.retry_count}")
+       
+       if stats_parts:
+           report_sections.append(f"**Execution Stats:** {', '.join(stats_parts)}")
        
        return "\n".join(report_sections)
 
 **LLM Analysis Generation:**
+
+The LLM receives the complete error context including all metadata for intelligent analysis:
 
 .. code-block:: python
 
@@ -237,9 +293,10 @@ Error responses combine structured reports with LLM analysis:
            prompt_provider = get_framework_prompts()
            error_builder = prompt_provider.get_error_analysis_prompt_builder()
            
+           # Error context (including complete metadata) is passed to LLM
            prompt = error_builder.get_system_instructions(
                capabilities_overview=capabilities_overview,
-               error_context=error_context
+               error_context=error_context  # Complete ErrorContext with metadata
            )
            
            explanation = get_chat_completion(
@@ -252,6 +309,9 @@ Error responses combine structured reports with LLM analysis:
            
        except Exception:
            return "**Analysis:** Error details are provided in the structured report above."
+
+.. note::
+   The LLM can leverage rich metadata fields like ``suggestions``, ``safety_abort_reason``, and domain-specific context to provide more informed error analysis and recovery guidance to the user.
 
 Retry Policy Framework
 ----------------------
@@ -324,54 +384,7 @@ System automatically enhances context with execution history:
                else:
                    error_context.failed_steps.append(f"Step {step_index + 1}: {task_objective} - Failed")
        
-       # Use capability-specific suggestions if available, otherwise generate generic ones
-       if not error_context.capability_suggestions:
-           error_context.capability_suggestions = _generate_generic_suggestions(error_context.error_type)
 
-**Generic Recovery Suggestions:**
-
-.. code-block:: python
-
-   def _generate_generic_suggestions(error_type: ErrorType) -> List[str]:
-       generic_suggestions_map = {
-           ErrorType.TIMEOUT: [
-               "Reduce request complexity or scope",
-               "Specify narrower time ranges for data queries"
-           ],
-           ErrorType.STEP_FAILURE: [
-               "Rephrase request with clearer parameters",
-               "Simplify query complexity"
-           ],
-           ErrorType.SAFETY_LIMIT: [
-               "Reduce request scope to single operation",
-               "Break complex tasks into sequential steps"
-           ],
-           ErrorType.RETRIABLE_FAILURE: [
-               "Retry request (temporary service issue)",
-               "Check system service status"
-           ],
-           ErrorType.RECLASSIFICATION_LIMIT: [
-               "Clarify request with specific technical parameters",
-               "Use domain-specific terminology"
-           ],
-           ErrorType.CRITICAL_ERROR: [
-               "Contact user support for assistance",
-               "Verify system prerequisites and permissions"
-           ],
-           ErrorType.INFRASTRUCTURE_ERROR: [
-               "Contact user support for assistance",
-               "Verify access permissions for requested resources"
-           ],
-           ErrorType.EXECUTION_KILLED: [
-               "Reduce operation scope or complexity",
-               "Review request against system constraints"
-           ]
-       }
-       
-       return generic_suggestions_map.get(error_type, [
-           "Rephrase request with clearer parameters",
-           "Simplify operation complexity"
-       ])
 
 Integration Patterns
 --------------------
@@ -387,13 +400,19 @@ Integration Patterns
            if isinstance(exc, (ConnectionError, TimeoutError)):
                return ErrorClassification(
                    severity=ErrorSeverity.RETRIABLE,
-                   user_message="Network issue detected, retrying..."
+                   user_message="Network issue detected, retrying...",
+                   metadata={"technical_details": str(exc)}
                )
            
            # Default to critical for unknown errors
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
-               user_message=f"Unexpected error: {exc}"
+               user_message=f"Unexpected error: {exc}",
+               metadata={
+                   "technical_details": str(exc),
+                   "safety_abort_reason": f"Unhandled capability error: {exc}",
+                   "suggestions": ["Check system status", "Contact support if issue persists"]
+               }
            )
 
 **Custom Retry Policies:**
@@ -458,3 +477,5 @@ Next Steps
 - :doc:`05_message-generation` - How error responses are formatted
 
 Error Handling Infrastructure provides the resilience and user-friendly error communication that makes the Alpha Berkeley Framework production-ready, ensuring graceful failure handling while keeping users informed and engaged.
+
+

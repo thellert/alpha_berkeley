@@ -29,8 +29,8 @@ Core Prompt Builder Interface
       :nosignatures:
       
       ~FrameworkPromptBuilder.get_task_definition
-      ~FrameworkPromptBuilder.get_dynamic_context
-      ~FrameworkPromptBuilder.get_examples
+      ~FrameworkPromptBuilder._get_dynamic_context
+      ~FrameworkPromptBuilder._get_examples
 
    .. rubric:: Prompt Assembly Methods
 
@@ -39,7 +39,7 @@ Core Prompt Builder Interface
       
       ~FrameworkPromptBuilder.get_system_instructions
       ~FrameworkPromptBuilder.debug_print_prompt
-      ~FrameworkPromptBuilder.format_examples
+      ~FrameworkPromptBuilder._format_examples
 
 Framework Access
 ================

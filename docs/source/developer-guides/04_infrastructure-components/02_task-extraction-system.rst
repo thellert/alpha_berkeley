@@ -1,5 +1,5 @@
-Task Extraction System: Conversation to Action Conversion
-=========================================================
+Task Extraction
+================
 
 .. currentmodule:: framework.infrastructure.task_extraction_node
 

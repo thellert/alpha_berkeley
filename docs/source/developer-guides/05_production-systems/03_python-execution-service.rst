@@ -1,6 +1,6 @@
-================================================================
-Python Execution Service: Flexible Code Generation and Execution
-================================================================
+================
+Python Execution
+================
 
 **What you'll build:** Python execution system with LangGraph workflows, human approval integration, and flexible container/local deployment
 

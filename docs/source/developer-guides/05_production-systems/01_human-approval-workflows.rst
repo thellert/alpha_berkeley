@@ -1,6 +1,6 @@
-====================================================================
-Human Approval Workflows: Production-Ready Human-in-the-Loop Control
-====================================================================
+==============
+Human Approval
+==============
 
 **What you'll build:** Human approval workflows for production agent deployments with LangGraph-native interrupts and configurable security policies
 

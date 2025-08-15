@@ -1,6 +1,6 @@
-===================================================
-Memory Storage Service: User Memory Infrastructure
-===================================================
+==============
+Memory Storage
+==============
 
 **What you'll build:** Simple file-based user memory system with data source integration
 

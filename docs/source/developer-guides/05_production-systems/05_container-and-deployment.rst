@@ -1,6 +1,6 @@
-========================================================================
-Container and Deployment: Service Management and Container Orchestration
-========================================================================
+====================
+Container Deployment
+====================
 
 **What you'll learn:** How to deploy and manage containerized services using the Alpha Berkeley Framework's container management system
 

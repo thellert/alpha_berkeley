@@ -251,13 +251,13 @@ The framework includes sophisticated error handling with node-specific retry pol
                return ErrorClassification(
                    severity=ErrorSeverity.RETRIABLE,
                    user_message="Network timeout, retrying...",
-                   technical_details=str(exc)
+                   metadata={"technical_details": str(exc)}
                )
            # Critical errors don't retry
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
                user_message="Task extraction failed",
-               technical_details=str(exc)
+               metadata={"technical_details": str(exc)}
            )
        
        @staticmethod

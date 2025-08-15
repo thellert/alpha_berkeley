@@ -204,13 +204,13 @@ Add custom error classification for domain-specific retry logic:
            return ErrorClassification(
                severity=ErrorSeverity.RETRIABLE,
                user_message="Temporary service issue, retrying...",
-               technical_details=str(exc)
+               metadata={"technical_details": str(exc)}
            )
        
        return ErrorClassification(
            severity=ErrorSeverity.CRITICAL,
            user_message=f"Processing error: {exc}",
-           technical_details=str(exc)
+           metadata={"technical_details": str(exc)}
        )
 
 Streaming Updates

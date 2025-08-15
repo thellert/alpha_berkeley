@@ -1,6 +1,6 @@
-=======================================================
-Data Source Integration: Unified Data Management System
-=======================================================
+================
+Data Integration
+================
 
 **What you'll build:** Data source provider for integrating external data into agent workflows
 

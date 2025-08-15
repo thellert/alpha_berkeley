@@ -1,5 +1,5 @@
-Classification and Routing: Task Analysis and Capability Selection
-=====================================================================
+Classification and Routing
+===========================
 
 .. currentmodule:: framework.infrastructure.classifier
 

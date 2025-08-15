@@ -81,9 +81,8 @@ The orchestrator uses LLM calls to create structured execution plans:
        
        # Create context-aware system instructions
        system_instructions = orchestrator_builder.get_system_instructions(
-           user_query=current_task,
            active_capabilities=active_capabilities,
-           execution_context=context_manager,
+           context_manager=context_manager,
            task_depends_on_chat_history=state.get('task_depends_on_chat_history', False),
            task_depends_on_user_memory=state.get('task_depends_on_user_memory', False)
        )
@@ -92,7 +91,7 @@ The orchestrator uses LLM calls to create structured execution plans:
 
    # Generate plan with single LLM call
    model_config = get_model_config("framework", "orchestrator")
-   message = f"{system_prompt}\n\nUser message: {current_task}"
+   message = f"{system_prompt}\n\nTASK TO PLAN: {current_task}"
    
    execution_plan = await asyncio.to_thread(
        get_chat_completion,
@@ -289,7 +288,7 @@ Production Advantages
            return ErrorClassification(
                severity=ErrorSeverity.RETRIABLE,
                user_message="LLM timeout during execution planning, retrying...",
-               technical_details=str(exc)
+               metadata={"technical_details": str(exc)}
            )
        
        # Don't retry planning/validation errors (logic issues)

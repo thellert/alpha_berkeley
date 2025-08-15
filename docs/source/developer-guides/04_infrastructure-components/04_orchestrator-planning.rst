@@ -1,5 +1,5 @@
-Orchestrator Planning: LLM-Powered Execution Coordination
-==========================================================
+Orchestrator Planning
+=====================
 
 .. currentmodule:: framework.infrastructure.orchestration_node
 
@@ -136,16 +136,15 @@ Orchestrator generates plans using comprehensive prompts with capability context
        orchestrator_builder = prompt_provider.get_orchestrator_prompt_builder()
        
        system_instructions = orchestrator_builder.get_system_instructions(
-           user_query=current_task,
            active_capabilities=active_capabilities,
-           execution_context=context_manager,
+           context_manager=context_manager,
            task_depends_on_chat_history=state.get('task_depends_on_chat_history', False)
        )
        
        # Generate structured plan
        execution_plan = await asyncio.to_thread(
            get_chat_completion,
-           message=f"{system_instructions}\n\nUser message: {current_task}",
+           message=f"{system_instructions}\n\nTASK TO PLAN: {current_task}",
            model_config=get_model_config("framework", "orchestrator"),
            output_model=ExecutionPlan
        )

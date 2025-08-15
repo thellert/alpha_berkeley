@@ -244,12 +244,12 @@ The infrastructure components work together in a deterministic processing flow:
                      return ErrorClassification(
                          severity=ErrorSeverity.RETRIABLE,
                          user_message="Network error, retrying...",
-                         technical_details=str(exc)
+                         metadata={"technical_details": str(exc)}
                      )
                  return ErrorClassification(
                      severity=ErrorSeverity.CRITICAL,
                      user_message=f"Processing error: {exc}",
-                     technical_details=str(exc)
+                     metadata={"technical_details": str(exc)}
                  )
              
              @staticmethod
