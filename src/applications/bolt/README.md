@@ -1,572 +1,331 @@
-# BOLT Beamline Agent - Comprehensive Imaging Control System
+# BOLT - Alpha Berkeley Framework Application
 
-> **Advanced Intelligent Agent for BOLT Beamline Operations**  
-> Natural language control of motor positioning, detector imaging, and photogrammetry scan execution at Lawrence Berkeley National Laboratory's Advanced Light Source (ALS).
+> **Intelligent Agent Application for Scientific Instrument Control**  
+> Natural language interface for beamline operations built on the Alpha Berkeley Framework, demonstrating advanced AI agent patterns for scientific computing.
 
 ## 🚀 Executive Summary
 
-The BOLT Beamline Agent is a sophisticated AI-powered control system that bridges natural language interaction with precision beamline operations. Built on the Alpha Berkeley Framework, it provides researchers with intuitive control over complex scientific instrumentation through conversational interfaces.
+BOLT is the base testbed that showcases the Alpha Berkeley Framework's capabilities for building intelligent scientific automation systems. It provides researchers with natural language control over complex experimental workflows through a modern AI agent architecture.
 
-**Key Capabilities:**
-- **Motor Control**: Precision sample positioning with sub-degree accuracy
-- **Detector Imaging**: Image capture and quality verification
-- **Photogrammetry Scans**: Automated 3D reconstruction data collection
-- **Natural Language Processing**: Intuitive command interpretation and execution
+**Key Framework Features Demonstrated:**
+- **Capability System**: Modular, composable operations with type-safe interfaces
+- **Context Management**: Structured data flow with persistent state tracking
+- **Natural Language Processing**: LLM-powered command interpretation and execution
+- **Streaming Integration**: Real-time operation feedback and status updates
 
 ---
 
 ## 📋 Table of Contents
 
-1. [System Architecture Overview](#system-architecture-overview)
-2. [Hardware Infrastructure](#hardware-infrastructure)
-3. [Software Components](#software-components)
-4. [Communication Layer](#communication-layer)
+1. [Framework Architecture](#framework-architecture)
+2. [Application Components](#application-components)
+3. [Capability System](#capability-system)
+4. [Context Management](#context-management)
 5. [Operation Modes](#operation-modes)
 6. [Setup and Configuration](#setup-and-configuration)
 7. [Development Guide](#development-guide)
-8. [Troubleshooting](#troubleshooting)
-9. [Future Extensions](#future-extensions)
+8. [Extension Patterns](#extension-patterns)
 
 ---
 
-## 🏗️ System Architecture Overview
+## 🏗️ Framework Architecture
 
-### High-Level Architecture
+### Alpha Berkeley Integration
 
-The BOLT system operates through a multi-layered architecture designed for both reliability and extensibility:
+BOLT demonstrates the Alpha Berkeley Framework's architectural patterns for building intelligent agent applications:
 
-1. **Presentation Layer**: Natural language interface via CLI or web UI
-2. **Framework Layer**: Alpha Berkeley intelligent agent framework
-3. **API Layer**: RESTful communication interface
-4. **Hardware Layer**: EPICS-controlled scientific instrumentation
+1. **Agent Layer**: Natural language interface and conversation management
+2. **Framework Layer**: LangGraph-based execution engine with streaming
+3. **Capability Layer**: Modular, composable operations
+4. **API Layer**: External system integration interface
 
 ### Component Flow
 
 ```
 User Natural Language Input 
     ↓
-Alpha Berkeley Framework (LLM Classification)
+Alpha Berkeley Agent (LLM Classification & Planning)
     ↓
-BOLT Capability Router
+LangGraph Execution Engine
     ↓
-Hardware API Layer (FastAPI Server)
+BOLT Capability Registry
     ↓
-BOLT Beamline Hardware (EPICS/Motors/Cameras)
+Context-Aware Operations
+    ↓
+External API Integration
 ```
 
-### Architecture Principles
+### Framework Principles
 
-- **Modular Design**: Each component is independently testable and replaceable
-- **Error Resilience**: Comprehensive error handling with intelligent retry logic
-- **Real-time Feedback**: Streaming status updates throughout operations
-- **Type Safety**: Structured data models for all beamline operations
-- **Extensibility**: Plugin architecture for new capabilities and hardware
+- **Modular Design**: Capabilities are independently developed and composed
+- **Type Safety**: Structured context classes with validation
+- **Streaming Integration**: Real-time feedback through framework streaming
+- **Registry Pattern**: Automatic capability discovery and registration
+- **Context Management**: Persistent state across multi-step operations
 
 ---
 
-## 🔧 Hardware Infrastructure
+## 💻 Application Components
 
-### Core Hardware Components
+### Core Framework Components
 
-#### 1. Galil Motor Controller System
-**Primary Function**: Precision sample rotation for photogrammetry experiments
+#### 1. Capability Registry (`registry.py`)
+**Primary Function**: Automatic capability discovery and registration within the Alpha Berkeley Framework
 
-- **Model**: DMC01:A Series
-- **Precision**: Sub-degree positioning accuracy
-- **Control Protocol**: EPICS Channel Access
-- **Range**: 0-360° continuous rotation
-- **Speed**: Variable, configurable per experiment
+- **Pattern**: Registry Provider implementation
+- **Discovery**: Automatic capability and context type registration
+- **Integration**: Seamless framework compatibility
+- **Extensibility**: Plugin architecture for new capabilities
 
-**Startup Command:**
-```bash
-cd /opt/epics/modules/motorGalil/Galil-3-0/3-6/iocBoot/iocGalilTest
-./st.cmd
-```
+#### 2. Context Classes (`context_classes.py`)
+**Primary Function**: Type-safe data structures for agent state management
 
-#### 2. Allied Vision Area Detector
-**Primary Function**: Image capture and data collection
+- **Type Safety**: Pydantic-based validation and serialization
+- **Framework Integration**: Compatible with Alpha Berkeley context patterns
+- **Streaming Support**: Real-time state updates
+- **Persistence**: Cross-operation state management
 
-- **Model**: Alvium 1800 Series
-- **Interface**: EPICS areaDetector framework
-- **Image Format**: TIFF (converted to PNG for processing)
-- **Resolution**: High-resolution scientific imaging
-- **Frame Rate**: Configurable for experiment requirements
+#### 3. API Integration (`bolt_api.py`)
+**Primary Function**: External system communication interface
 
-**Startup Command:**
-```bash
-cd /opt/epics/modules/synApps_6_1_epics7/support/areaDetector-R3-7/ADAravis/iocs/aravisIOC/iocBoot/iocAravis
-./st.cmd.AV_Alvium_1800
-```
-
-#### 3. EPICS Control System
-**Primary Function**: Unified hardware control and monitoring
-
-- **Process Variables**: Motor positions, camera settings, beam status
-- **Channel Access**: Network-transparent communication protocol
-- **IOCs**: Independent operating units for each hardware component
-- **Record Types**: Optimized for scientific instrument control
-
-**Optional MEDM Interface:**
-```bash
-cd /opt/epics/modules/synApps_6_1_epics7/support/areaDetector-R3-7/ADAravis
-/opt/epics/extensions/bin/linux-x86_64/medm -x -macro "P=13ARV1:,R=cam1:" ./aravisApp/op/adl/ADAravis.adl
-```
-
-### Network Infrastructure
-
-#### Connection Requirements
-- **Network**: EDUROAM
-- **Target IP**: 198.128.193.130 (BOLT machine)
-- **Port**: 8000 (FastAPI server)
-- **Protocol**: HTTP/REST with timeout handling
-
-**Network Validation:**
-```bash
-ping 198.128.193.130
-```
+- **Abstraction**: Clean interface between framework and external systems
+- **Error Handling**: Intelligent retry and error classification
+- **Timeout Management**: Robust network communication
+- **Type Safety**: Structured request/response handling
 
 ---
 
-## 💻 Software Components
+## 🎯 Capability System
 
-### 1. Alpha Berkeley Framework Integration
+### Alpha Berkeley Capability Pattern
 
-#### Core Framework Features
-- **LangGraph Native Architecture**: Modern AI agent execution patterns
-- **Streaming Integration**: Real-time operation feedback
-- **Context Management**: Type-safe data structures for beamline operations
-- **Registry System**: Automatic capability discovery and registration
+BOLT demonstrates the Alpha Berkeley Framework's capability architecture through four core operations:
 
-#### BOLT-Specific Components
-
-##### Context Classes (`context_classes.py`)
+#### Context Classes (`context_classes.py`)
 ```python
 # Motor Position Context
 class CurrentAngleContext(CapabilityContext):
-    motor: str          # Motor identifier (DMC01:A)
-    angle: float        # Current angle in degrees
-    condition: str      # Motor status description
-    timestamp: datetime # Position reading time
+    motor: str          # Motor identifier
+    angle: float        # Current position value
+    condition: str      # Operation status
+    timestamp: datetime # Reading timestamp
 
 # Motor Movement Context  
 class CurrentMoveMotorContext(CapabilityContext):
     motor: str          # Motor identifier
-    angle: float        # Final position in degrees
-    condition: str      # Movement completion status
-    timestamp: datetime # Movement completion time
+    angle: float        # Target position
+    condition: str      # Movement status
+    timestamp: datetime # Operation timestamp
 
-# Detector Image Context
+# Image Capture Context
 class CurrentTakeCaptureContext(CapabilityContext):
-    condition: str      # Image capture status
-    timestamp: datetime # Capture time
+    condition: str      # Capture status
+    timestamp: datetime # Operation timestamp
 
-# Photogrammetry Scan Context
+# Scan Execution Context
 class CurrentRunScanContext(CapabilityContext):
-    condition: str      # Scan completion status
-    timestamp: datetime # Scan completion time
+    condition: str      # Scan status
+    timestamp: datetime # Operation timestamp
 ```
 
-### 2. Capability Architecture
+### Capability Implementations
 
 #### Motor Position Read (`motor_position_read.py`)
-**Purpose**: Retrieve current sample rotation angle
+**Framework Pattern**: Data acquisition capability with context storage
 
 **Key Features:**
-- Real-time motor position querying
-- Error handling with intelligent retry
-- Context storage for downstream operations
-- Streaming status updates
+- **@capability_node decorator**: Framework integration
+- **Context management**: Structured data storage
+- **Error classification**: Intelligent retry logic
+- **Streaming integration**: Real-time feedback
 
 **Example Usage Patterns:**
-- "What's the current motor angle?"
-- "Check sample position before scanning"
-- "Show me the motor status"
+- "What's the current position?"
+- "Check current state before next operation"
+- "Show me the status"
 
 #### Motor Position Set (`motor_position_set.py`)
-**Purpose**: Move sample to specified angular positions
+**Framework Pattern**: Action capability with parameter extraction
 
 **Key Features:**
-- Absolute positioning (move to specific angle)
-- Relative movement (rotate by amount)
-- Parameter extraction from natural language
-- Movement validation and confirmation
+- **Natural language parsing**: LLM-powered parameter extraction
+- **Type validation**: Pydantic-based input validation
+- **State transitions**: Context-aware operations
+- **Streaming updates**: Progress tracking
 
 **Example Usage Patterns:**
-- "Move the motor to 45 degrees"
-- "Rotate the sample by 30 degrees"  
-- "Position sample at 90 degrees"
+- "Move to 45 degrees"
+- "Rotate by 30 degrees"  
+- "Set position to 90"
 
 #### Detector Image Capture (`detector_image_capture.py`)
-**Purpose**: Capture individualimages
+**Framework Pattern**: Simple action capability
 
 **Key Features:**
-- Single-shot image acquisition
-- Test shot capability for alignment
-- Quality verification imaging
-- Synchronization with beam status
+- **Single operation**: Atomic capability execution
+- **Status reporting**: Operation result tracking
+- **Error handling**: Framework error patterns
+- **Context storage**: Result persistence
 
 **Example Usage Patterns:**
 - "Take an image"
-- "Capture a test shot"
-- "Get an image for alignment check"
+- "Capture now"
+- "Get a measurement"
 
 #### Photogrammetry Scan Execute (`photogrammetry_scan_execute.py`)
-**Purpose**: Execute complete multi-projection photogrammetry experiments
+**Framework Pattern**: Complex workflow capability
 
 **Key Features:**
-- Parameterized scan configuration
-- Angular range specification
-- Projection count customization
-- Data organization and metadata
+- **Multi-step coordination**: Sequential operation management
+- **Parameter configuration**: Complex input handling
+- **Progress tracking**: Long-running operation support
+- **Result aggregation**: Comprehensive output context
 
 **Example Usage Patterns:**
-- "Run a photogrammetry scan from 0 to 180 degrees with 20 projections"
-- "Execute a CT scan with 50 projections"
-- "Start 3D reconstruction data collection"
-
-### 3. Hardware API Layer (`bolt_api.py`)
-
-#### BoltAPI Class
-**Primary Interface**: Communication bridge between framework and hardware
-
-**Core Methods:**
-
-##### `get_current_angle(motor: str) -> CurrentAngleReading`
-```python
-# Endpoint: GET /get_angle
-# Function: Retrieves current motor position
-# Returns: Structured angle data with status
-# Error Handling: Network timeouts, communication failures
-```
-
-##### `move_motor(motor: str, move_amount: str, flag: int) -> CurrentMoveMotorReading`
-```python
-# Endpoint: GET /move_motor/{amount}/{flag}/
-# Function: Executes motor movement commands
-# Parameters:
-#   - move_amount: Target angle or relative movement
-#   - flag: 0 = absolute, 1 = relative
-# Returns: Movement confirmation and final position
-```
-
-##### `take_capture() -> CurrentTakeCaptureReading`
-```python
-# Endpoint: GET /take_measurement
-# Function: Captures single image
-# Returns: Capture status and metadata
-# Integration: Allied Vision camera via EPICS
-```
-
-##### `run_photogrammetry_scan() -> CurrentRunScanReading`
-```python
-# Endpoint: GET /run_scan
-# Function: Executes complete photogrammetry scan
-# Returns: Scan completion status and data location
-# Coordination: Motor rotation + image capture sequence
-```
-
-### 4. Registry System (`registry.py`)
-
-#### BoltRegistryProvider
-**Purpose**: Automatic capability discovery and registration
-
-**Capabilities Registration:**
-- `motor_position_read`: Angular position querying
-- `motor_position_set`: Sample positioning control
-- `detector_image_capture`: Imaging operations
-- `photogrammetry_scan_execute`: Complete scan procedures
-
-**Context Types Registration:**
-- `MOTOR_POSITION`: Current angle data structures
-- `MOTOR_MOVEMENT`: Movement operation results
-- `DETECTOR_IMAGE`: Image capture metadata
-- `PHOTOGRAMMETRY_SCAN`: Scan execution results
+- "Run a scan from 0 to 180 degrees with 20 projections"
+- "Execute a complete measurement cycle"
+- "Start the automated sequence"
 
 ---
 
-## 🌐 Communication Layer
+## 🔧 Context Management
 
-### FastAPI Server Architecture
+### Framework Context Pattern
 
-#### Server Implementation
-**Location**: BOLT machine (`198.128.193.130:8000`)
-**Technology**: Python FastAPI with Uvicorn ASGI server
-**Purpose**: Hardware abstraction and network interface
+BOLT demonstrates the Alpha Berkeley Framework's context management system for maintaining state across multi-step operations.
 
-**Startup Command:**
-```bash
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
-```
+#### Context Types and Usage
 
-#### API Endpoints
-
-##### Motor Control Endpoints
-```http
-GET /get_angle
-# Description: Retrieve current motor position
-# Response: Text format with angle value
-# Example: "Motor position: 45.2 degrees"
-
-GET /move_motor/{angle}/{flag}/
-# Description: Move motor to position
-# Parameters:
-#   - angle: Target angle (float)
-#   - flag: Movement type (0=absolute, 1=relative)
-# Response: Movement confirmation
-```
-
-##### Imaging Endpoints
-```http
-GET /take_measurement
-# Description: Capture single image
-# Response: Capture status and file information
-# Integration: EPICS areaDetector framework
-
-GET /run_scan
-# Description: Execute photogrammetry scan
-# Response: Scan completion status
-# Process: Coordinated motor+detector operation
-```
-
-#### Error Handling Strategy
-
-**Network Resilience:**
-- Connection timeout handling (5-second limit)
-- Proxy bypass for direct communication
-- Automatic retry with exponential backoff
-- Graceful degradation for hardware failures
-
-**Error Classification:**
-- `RETRIABLE`: Network timeouts, temporary failures
-- `CRITICAL`: Hardware faults, parameter errors
-- `WARNING`: Non-fatal issues with operation completion
-
----
-
-## 🎯 Operation Modes
-
-### 1. Interactive CLI Mode
-
-#### Access Method
-```bash
-cd interfaces/CLI
-python direct_conversation.py
-```
-
-#### Conversation Examples
-```
-User: "What's the current motor position?"
-BOLT: "Motor DMC01:A is positioned at 45.2°"
-
-User: "Move the sample to 90 degrees"
-BOLT: "Moving motor to 90°... Motor positioned successfully at 90.0°"
-
-User: "Take a test shot"
-BOLT: "Capturing image... Image captured successfully!"
-
-User: "Run a scan from 0 to 180 degrees with 20 projections"
-BOLT: "Starting photogrammetry scan: 0° to 180° with 20 projections... 
-       Scan completed successfully!"
-```
-
-### 2. Web Interface Mode
-
-#### Access Method
-```bash
-# Start containerized services
-python3 ./deployment/container_manager.py config.yml up
-
-# Access web interface
-# URL: http://localhost:8080
-```
-
-#### Features
-- Real-time operation monitoring
-- Visual execution plan display
-- Interactive parameter configuration
-- Historical data access
-
-### 3. Manual Operation Mode
-
-#### BlueSkye Environment
-```bash
-cd /usr/BlueSky/main_folder
-conda activate bluesky-env
-```
-
-#### Available Scripts
-- **`main.py`**: Image gathering with automatic cropping
-- **`colmap.py`**: Feature matching and point detection  
-- **`openMVS.py`**: 3D reconstruction processing
-- **`reconstruction.py`**: Complete pipeline automation
-
----
-
-## ⚙️ Setup and Configuration
-
-### 1. System Requirements
-
-#### Network Configuration
-- **Connection**: EDUROAM network access
-- **Firewall**: Port 8000 accessible to BOLT machine
-- **DNS**: Ability to resolve 198.128.193.130
-
-#### Software Dependencies
-```bash
-# Core requirements
-pip install fastapi
-pip install requests
-pip install uvicorn
-
-# Framework dependencies (see requirements.txt)
-pip install -r requirements.txt
-```
-
-### 2. BOLT Machine Setup
-
-#### Hardware Initialization Sequence
-```bash
-# 1. Start Galil motor controller
-cd /opt/epics/modules/motorGalil/Galil-3-0/3-6/iocBoot/iocGalilTest
-./st.cmd
-
-# 2. Initialize Allied Vision camera
-cd /opt/epics/modules/synApps_6_1_epics7/support/areaDetector-R3-7/ADAravis/iocs/aravisIOC/iocBoot/iocAravis
-./st.cmd.AV_Alvium_1800
-
-# 3. Start FastAPI server
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
-```
-
-### 3. Alpha Berkeley Configuration
-
-#### LLM Model Configuration
-**File**: `src/framework/config.yml`
-
-**Option 1: OpenAI GPT (Recommended)**
-```yaml
-model:
-  provider: "openai"
-  model_name: "gpt-4"
-  api_key: "${OPENAI_API_KEY}"
-```
-
-**Option 2: Local Ollama**
-```yaml
-model:
-  provider: "ollama"  
-  model_name: "mistral:7b"
-  base_url: "http://localhost:11434"
-```
-
-**Option 3: Claude (cborg)**
-```yaml
-model:
-  provider: "cborg"
-  model_name: "claude-3-sonnet"
-  api_key: "${ANTHROPIC_API_KEY}"
-```
-
-#### Application Registration
-**File**: `config.yml` (root level)
-```yaml
-applications:
-  - name: "bolt"
-    path: "src/applications/bolt"
-    enabled: true
-```
-
-### 4. Deployment Process
-
-#### Container-Based Deployment
-```bash
-# 1. Start all services
-python3 ./deployment/container_manager.py config.yml up
-
-# 2. Verify service health
-docker ps
-
-# 3. Access web interface
-curl http://localhost:8080/health
-
-# 4. Test CLI interface
-cd interfaces/CLI
-python direct_conversation.py
-```
-
----
-
-## 👩‍💻 Development Guide
-
-### 1. Architecture Patterns
-
-#### Adding New Capabilities
-
-**Step 1: Create Capability Class**
+##### Data Reading Contexts
 ```python
-from framework.base import BaseCapability, capability_node
-
-@capability_node
-class NewBoltCapability(BaseCapability):
-    name = "new_capability"
-    description = "Description of new functionality"
-    provides = ["NEW_CONTEXT_TYPE"]
-    requires = []
+class CurrentAngleReading(BaseModel):
+    """Framework-compatible data reading structure"""
+    motor: str
+    angle: float
+    condition: str
+    timestamp: datetime
     
-    @staticmethod
-    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
-        # Implementation here
-        pass
+    # Framework integration
+    @classmethod
+    def from_api_response(cls, response_text: str) -> 'CurrentAngleReading':
+        """Parse external API response into structured context"""
 ```
 
-**Step 2: Define Context Class**
+##### Operation Result Contexts
 ```python
-class NewContext(CapabilityContext):
-    CONTEXT_TYPE: ClassVar[str] = "NEW_CONTEXT_TYPE"
-    CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
+class CurrentMoveMotorReading(BaseModel):
+    """Action result with validation and persistence"""
+    motor: str
+    final_angle: float
+    condition: str
+    timestamp: datetime
     
-    # Add fields specific to new capability
-    data_field: str = Field(description="Description")
+    # Type safety and validation
+    @validator('final_angle')
+    def validate_angle_range(cls, v):
+        return max(0, min(360, v))
 ```
 
-**Step 3: Register Components**
+#### Context Storage and Retrieval
+
+**Framework Integration Pattern:**
 ```python
-# In registry.py
-CapabilityRegistration(
-    name="new_capability",
-    module_path="applications.bolt.capabilities.new_capability",
-    class_name="NewBoltCapability",
-    description="New functionality description",
-    provides=["NEW_CONTEXT_TYPE"],
-    requires=[]
+# Store context in framework state
+context_updates = StateManager.store_context(
+    state,
+    registry.context_types.MOTOR_POSITION,
+    "current_angle",
+    angle_context
+)
+
+# Retrieve context for downstream operations
+previous_angle = StateManager.get_context(
+    state,
+    registry.context_types.MOTOR_POSITION,
+    "current_angle"
 )
 ```
 
-#### Hardware API Extensions
+### Registry Implementation (`registry.py`)
 
-**Adding New Hardware Interface:**
+#### BoltRegistryProvider
+**Framework Pattern**: Registry provider for automatic discovery
+
+**Alpha Berkeley Integration:**
 ```python
-class BoltAPI:
-    def new_hardware_operation(self, params) -> NewDataReading:
-        """Interface with new hardware component."""
-        api_endpoint = f"{self.FASTAPI_URL}/new_endpoint"
-        
-        try:
-            response = requests.get(api_endpoint, timeout=5)
-            # Process response
-            return NewDataReading(...)
-        except Exception as e:
-            # Error handling
-            return NewDataReading(error=str(e))
+class BoltRegistryProvider(RegistryProvider):
+    """Demonstrates framework registry patterns"""
+    
+    def get_capabilities(self) -> List[CapabilityRegistration]:
+        return [
+            CapabilityRegistration(
+                name="motor_position_read",
+                module_path="applications.bolt.capabilities.motor_position_read",
+                class_name="MotorPositionReadCapability",
+                description="Framework-integrated position reading",
+                provides=["MOTOR_POSITION"],
+                requires=[]
+            ),
+            # Additional capabilities...
+        ]
+    
+    def get_context_types(self) -> List[ContextTypeRegistration]:
+        return [
+            ContextTypeRegistration(
+                name="MOTOR_POSITION",
+                module_path="applications.bolt.context_classes",
+                class_name="CurrentAngleContext",
+                description="Type-safe position data"
+            ),
+            # Additional context types...
+        ]
 ```
 
-### 2. Best Practices
+**Framework Benefits:**
+- **Automatic Discovery**: No manual capability registration required
+- **Type Safety**: Context classes validated at registration
+- **Dependency Resolution**: Framework handles capability ordering
+- **Plugin Architecture**: Easy extension without core changes
 
-#### Error Handling Strategy
+---
+
+## 🎯 External System Integration
+
+### API Communication Pattern
+
+BOLT demonstrates how Alpha Berkeley applications can integrate with external systems while maintaining framework patterns.
+
+#### API Abstraction Layer (`bolt_api.py`)
+
+**Framework Integration:**
+```python
+class BoltAPI:
+    """External system interface following framework patterns"""
+    
+    def get_current_angle(self, motor: str) -> CurrentAngleReading:
+        """
+        Framework-compatible API call with error handling
+        """
+        try:
+            response = requests.get(f"{self.api_url}/get_angle", timeout=5)
+            return CurrentAngleReading.from_api_response(response.text)
+        except Exception as e:
+            # Framework error classification
+            error_info = self.classify_error(e)
+            raise CapabilityError(
+                message=error_info.user_message,
+                severity=error_info.severity,
+                context={"operation": "get_angle", "motor": motor}
+            )
+```
+
+#### Error Classification
+
+**Framework Error Handling:**
 ```python
 @staticmethod
-def classify_error(exc: Exception, context: dict) -> ErrorClassification:
-    """Intelligent error classification for retry logic."""
+def classify_error(exc: Exception) -> ErrorClassification:
+    """Intelligent error classification for framework retry logic"""
     
     if isinstance(exc, (ConnectionError, TimeoutError)):
         return ErrorClassification(
@@ -582,188 +341,585 @@ def classify_error(exc: Exception, context: dict) -> ErrorClassification:
     )
 ```
 
-#### Streaming Integration
-```python
-streamer = get_streamer("bolt", "capability_name", state)
-streamer.status("Operation starting...")
-# Perform operation
-streamer.status("Operation completed successfully!")
+---
+
+## 🎯 Operation Modes
+
+### 1. Alpha Berkeley CLI Interface
+
+#### Framework Integration
+```bash
+cd interfaces/CLI
+python direct_conversation.py
 ```
 
-#### Context Management
-```python
-context_updates = StateManager.store_context(
-    state,
-    registry.context_types.CONTEXT_TYPE,
-    step.get("context_key"),
-    context_object
-)
-return context_updates
+The BOLT application integrates seamlessly with the Alpha Berkeley Framework's CLI interface, demonstrating:
+
+- **Natural Language Processing**: LLM-powered intent recognition
+- **Capability Routing**: Automatic selection of appropriate operations
+- **Context Persistence**: State management across conversation turns
+- **Streaming Feedback**: Real-time operation updates
+
+#### Framework Conversation Flow
+```
+User: "What's the current position?"
+BOLT: [Invokes motor_position_read capability]
+      → Context stored: CurrentAngleContext
+      → Response: "Current position is 45.2°"
+
+User: "Move to 90 degrees"
+BOLT: [Invokes motor_position_set capability]
+      → Parameter extraction: {"angle": 90, "mode": "absolute"}
+      → Context update: CurrentMoveMotorContext
+      → Response: "Moved to 90.0° successfully"
+
+User: "Take a measurement"
+BOLT: [Invokes detector_image_capture capability]
+      → Context stored: CurrentTakeCaptureContext
+      → Response: "Image captured successfully"
 ```
 
-### 3. Testing Strategies
+### 2. Web Interface Mode
 
-#### Unit Testing
-```python
-# Test capability execution
-async def test_motor_position_read():
-    mock_state = create_mock_state()
-    result = await MotorPositionReadCapability.execute(mock_state)
-    assert result["context"]["angle"] > 0
+#### Framework Web Integration
+```bash
+# Start framework services
+python3 ./deployment/container_manager.py config.yml up
+
+# Access Alpha Berkeley web interface
+# URL: http://localhost:8080
 ```
 
-#### Integration Testing
-```python
-# Test full workflow
-def test_complete_scan_workflow():
-    # Test position read -> movement -> imaging -> scan
-    pass
-```
+**Framework Features Demonstrated:**
+- **LangGraph Visualization**: Real-time execution plan display
+- **Context Inspector**: Live state monitoring
+- **Capability Registry**: Available operations browser
+- **Streaming Updates**: WebSocket-based progress tracking
 
-#### Hardware Simulation
+### 3. API Integration Mode
+
+#### Framework API Patterns
+BOLT demonstrates how Alpha Berkeley applications can integrate with external systems while maintaining framework benefits:
+
 ```python
-class MockBoltAPI:
-    """Test double for hardware interface."""
-    
-    def get_current_angle(self, motor: str) -> CurrentAngleReading:
-        return CurrentAngleReading(
-            motor=motor,
-            angle=45.0,
-            condition="Mock reading",
-            timestamp=datetime.now()
+# Framework-wrapped external operations
+@capability_node
+class MotorPositionReadCapability(BaseCapability):
+    async def execute(self, state: AgentState) -> Dict[str, Any]:
+        # External API call with framework error handling
+        api = BoltAPI()
+        result = api.get_current_angle("DMC01:A") #Pass in motor param
+        
+        # Framework context storage
+        context_updates = StateManager.store_context(
+            state, self.registry.context_types.MOTOR_POSITION,
+            "current_angle", result
         )
+        
+        return context_updates
 ```
 
 ---
 
-## 🛠️ Troubleshooting
+## ⚙️ Setup and Configuration
 
-### Common Issues and Solutions
+### 1. Alpha Berkeley Framework Setup
 
-#### 1. Camera Communication Errors
+#### Network Configuration
+- **Connection**: EDUROAM network access
+- **Firewall**: Port 8000 accessible to BOLT machine
+- **DNS**: Ability to resolve 198.128.193.130
 
-**Problem**: `ADAravis::newBufferCallback bad frame status: Image>bufSize`
-
-**Root Cause**: Known issue with Allied Vision camera buffer management
-
-**Solutions (in order of preference):**
-1. **Retry Strategy**: Implement automatic retries (already built into system)
-2. **Cable Check**: Unplug and replug camera USB connection
-3. **Wait Period**: Allow 30-60 seconds for camera to stabilize
-4. **MEDM Reset**: Use MEDM interface to reset camera parameters
-5. **IOC Restart**: Restart the camera IOC process
-
-**Code Implementation:**
-```python
-def get_retry_policy() -> Dict[str, Any]:
-    return {
-        "max_attempts": 3,
-        "delay_seconds": 0.5,
-        "backoff_factor": 1.5
-    }
-```
-
-#### 2. Motor Communication Issues
-
-**Symptoms:**
-- Motor position reads return -1.0
-- Movement commands fail with timeout
-
-**Diagnostics:**
+#### Software Dependencies
 ```bash
-# Check EPICS IOC status
-ps aux | grep galil
-
-# Test direct EPICS communication
-caget DMC01:A.RBV
-caput DMC01:A.VAL 45.0
+# Alpha Berkeley Framework core
+pip install -r requirements.txt
 ```
 
-**Solutions:**
-1. Restart Galil IOC: `./st.cmd` in IOC directory
-2. Check network connectivity to motor controller
-3. Verify EPICS environment variables
-
-#### 3. Network Connectivity Problems
-
-**Validation Steps:**
-```bash
-# Test basic connectivity
-ping 198.128.193.130
-
-# Test API endpoint
-curl http://198.128.193.130:8000/get_angle
-
-# Check port availability
-nmap -p 8000 198.128.193.130
+#### Framework Structure
+```
+src/applications/bolt/
+├── capabilities/           # Framework capability implementations
+├── context_classes.py     # Type-safe context definitions
+├── registry.py           # Framework registry provider
+├── bolt_api.py           # External system integration
+└── config.yml           # Application configuration
 ```
 
-**Common Fixes:**
-- Ensure EDUROAM connection is active
-- Verify firewall settings allow port 8000
-- Check proxy settings (system bypasses proxies)
+### 2. Alpha Berkeley Configuration
 
-#### 4. Framework Integration Issues
+#### LLM Model Configuration
+**File**: `src/framework/config.yml`
 
-**LLM Model Problems:**
+**Option 1: OpenAI GPT (Recommended for Production)**
 ```yaml
-# If Ollama fails, try cborg alternative
+model:
+  provider: "openai"
+  model_name: "gpt-4"
+  api_key: "${OPENAI_API_KEY}"
+  temperature: 0.1
+  max_tokens: 1000
+```
+
+**Option 2: Local Ollama (Development)**
+```yaml
+model:
+  provider: "ollama"  
+  model_name: "mistral:7b"
+  base_url: "http://localhost:11434"
+  temperature: 0.1
+```
+
+**Option 3: Claude (Alternative)**
+```yaml
 model:
   provider: "cborg"
   model_name: "claude-3-sonnet"
+  api_key: "${ANTHROPIC_API_KEY}"
 ```
 
-**Context Storage Issues:**
-```python
-# Verify registry initialization
-registry = get_registry()
-assert registry.context_types.MOTOR_POSITION is not None
+#### Application Registration
+**File**: `config.yml` (root level)
+```yaml
+applications:
+  - name: "bolt"
+    path: "src/applications/bolt"
+    enabled: true
+    registry_provider: "applications.bolt.registry:BoltRegistryProvider"
 ```
 
-### Debug Mode Operations
+#### BOLT-Specific Configuration
+**File**: `src/applications/bolt/config.yml`
+```yaml
+# External system configuration
+api:
+  base_url: "http://external-system:8000"
+  timeout: 5
+  retry_attempts: 3
 
-#### Enable Verbose Logging
-```python
-import logging
-logging.getLogger("bolt").setLevel(logging.DEBUG)
+# Framework integration settings
+framework:
+  streaming_enabled: true
+  context_persistence: true
+  error_classification: true
 ```
 
-#### State Inspection
-```python
-# In capability execution
-current_state = StateManager.get_current_state(state)
-print(f"Current context: {current_state.context}")
+### 3. Framework Deployment
+
+#### Container-Based Deployment
+```bash
+# 1. Start Alpha Berkeley framework services
+python3 ./deployment/container_manager.py config.yml up
+
+# 2. Test CLI interface with BOLT
+cd interfaces/CLI
+python direct_conversation.py
 ```
 
 ---
 
-## 🚀 Future Extensions
+## 👩‍💻 Development Guide
 
-### 1. Immediate Enhancement Opportunities
+### 1. Alpha Berkeley Framework Patterns
 
-#### Enhanced Scanning Capabilities
-- **Multi-energy photogrammetry**: Energy-resolved 3D imaging
-- **Time-resolved studies**: 4D data collection (3D + time)
-- **Region-of-interest scanning**: Targeted high-resolution areas
-- **Adaptive scanning**: ML-guided parameter optimization
+#### Adding New Capabilities
 
-#### Advanced Motor Control
-- **Multi-axis coordination**: Simultaneous X-Y-Z translation
-- **Trajectory planning**: Optimized movement paths
-- **Vibration compensation**: Real-time stability correction
-- **Speed optimization**: Adaptive movement rates
+**Step 1: Create Framework-Compatible Capability**
+```python
+from framework.base import BaseCapability, capability_node
+from framework.infrastructure import get_streamer
 
-#### Intelligent Data Management
-- **Automatic reconstruction**: Real-time 3D volume generation
-- **Quality assessment**: ML-based image quality scoring
-- **Data compression**: Optimized storage strategies
-- **Metadata enrichment**: Comprehensive experimental logging
+@capability_node
+class NewBoltCapability(BaseCapability):
+    name = "new_capability"
+    description = "Framework-integrated operation"
+    provides = ["NEW_CONTEXT_TYPE"]
+    requires = []
+    
+    @staticmethod
+    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+        # Framework streaming integration
+        streamer = get_streamer("bolt", "new_capability", state)
+        streamer.status("Starting new operation...")
+        
+        try:
+            # Business logic implementation
+            result = await perform_operation()
+            
+            # Framework context storage
+            context_updates = StateManager.store_context(
+                state,
+                registry.context_types.NEW_CONTEXT_TYPE,
+                "operation_result",
+                result
+            )
+            
+            streamer.status("Operation completed successfully!")
+            return context_updates
+            
+        except Exception as e:
+            # Framework error handling
+            error_info = classify_error(e, {"capability": "new_capability"})
+            streamer.error(error_info.user_message)
+            raise CapabilityError(
+                message=error_info.user_message,
+                severity=error_info.severity
+            )
+```
 
-### 2. Framework Extensions
+**Step 2: Define Type-Safe Context Class**
+```python
+from framework.context import CapabilityContext
+from pydantic import Field, validator
+from typing import ClassVar
+
+class NewOperationContext(CapabilityContext):
+    CONTEXT_TYPE: ClassVar[str] = "NEW_CONTEXT_TYPE"
+    CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
+    
+    # Type-safe fields with validation
+    operation_id: str = Field(description="Unique operation identifier")
+    result_data: float = Field(description="Operation result value")
+    status: str = Field(description="Operation completion status")
+    
+    @validator('result_data')
+    def validate_result_range(cls, v):
+        """Framework-compatible validation"""
+        if v < 0:
+            raise ValueError("Result must be non-negative")
+        return v
+```
+
+**Step 3: Register with Framework Registry**
+```python
+# In registry.py - BoltRegistryProvider.get_capabilities()
+CapabilityRegistration(
+    name="new_capability",
+    module_path="applications.bolt.capabilities.new_capability",
+    class_name="NewBoltCapability",
+    description="Framework-integrated new operation",
+    provides=["NEW_CONTEXT_TYPE"],
+    requires=[],
+    category="ACTION"  # Framework capability categorization
+)
+
+# In registry.py - BoltRegistryProvider.get_context_types()
+ContextTypeRegistration(
+    name="NEW_CONTEXT_TYPE",
+    module_path="applications.bolt.context_classes",
+    class_name="NewOperationContext",
+    description="Type-safe operation result data"
+)
+```
+
+### 2. Framework Best Practices
+
+#### Error Handling with Framework Integration
+```python
+from framework.infrastructure.error_node import ErrorClassification, ErrorSeverity
+
+@staticmethod
+def classify_error(exc: Exception, context: dict) -> ErrorClassification:
+    """Framework-compatible error classification"""
+    
+    if isinstance(exc, (ConnectionError, TimeoutError)):
+        return ErrorClassification(
+            severity=ErrorSeverity.RETRIABLE,
+            user_message="Communication timeout, retrying...",
+            technical_details=str(exc),
+            context=context
+        )
+    
+    if isinstance(exc, ValidationError):
+        return ErrorClassification(
+            severity=ErrorSeverity.USER_ERROR,
+            user_message="Invalid parameters provided",
+            technical_details=str(exc),
+            context=context
+        )
+    
+    return ErrorClassification(
+        severity=ErrorSeverity.CRITICAL,
+        user_message=f"Operation failed: {str(exc)}",
+        technical_details=f"Error: {type(exc).__name__}",
+        context=context
+    )
+```
+
+#### Streaming Integration Pattern
+```python
+from framework.infrastructure import get_streamer
+
+async def execute_with_streaming(state: AgentState) -> Dict[str, Any]:
+    """Framework streaming pattern for long-running operations"""
+    
+    streamer = get_streamer("bolt", "operation_name", state)
+    
+    # Initial status
+    streamer.status("Initializing operation...")
+    
+    # Progress updates
+    for i, step in enumerate(operation_steps):
+        streamer.status(f"Executing step {i+1}/{len(operation_steps)}: {step}")
+        await execute_step(step)
+    
+    # Success notification
+    streamer.status("Operation completed successfully!")
+    
+    return context_updates
+```
+
+#### Context Management Pattern
+```python
+from framework.state import StateManager
+
+def manage_context_lifecycle(state: AgentState) -> Dict[str, Any]:
+    """Framework context management best practices"""
+    
+    # Retrieve existing context
+    previous_context = StateManager.get_context(
+        state,
+        registry.context_types.MOTOR_POSITION,
+        "previous_position"
+    )
+    
+    # Perform operation using previous context
+    if previous_context:
+        new_result = build_on_previous_result(previous_context)
+    else:
+        new_result = perform_initial_operation()
+    
+    # Store new context
+    context_updates = StateManager.store_context(
+        state,
+        registry.context_types.MOTOR_POSITION,
+        "current_position",
+        new_result
+    )
+    
+    return context_updates
+```
+
+### 3. Framework Testing Strategies
+
+#### Unit Testing with Framework Mocks
+```python
+import pytest
+from framework.testing import create_mock_state, MockStreamer
+
+@pytest.mark.asyncio
+async def test_capability_execution():
+    """Test capability using framework testing utilities"""
+    
+    # Create framework-compatible mock state
+    mock_state = create_mock_state()
+    
+    # Execute capability
+    result = await MotorPositionReadCapability.execute(mock_state)
+    
+    # Verify framework integration
+    assert "context" in result
+    assert result["context"]["motor_position"]["angle"] > 0
+    
+    # Verify streaming was used
+    assert MockStreamer.was_called("motor_position_read")
+```
+
+#### Integration Testing with Framework
+```python
+from framework.testing import FrameworkTestCase
+
+class TestBoltIntegration(FrameworkTestCase):
+    """Framework-aware integration testing"""
+    
+    def setUp(self):
+        super().setUp()
+        self.app_config = self.load_test_config("bolt")
+        self.mock_external_api()
+    
+    async def test_complete_workflow(self):
+        """Test multi-capability workflow through framework"""
+        
+        # Execute workflow through framework
+        conversation = [
+            "What's the current position?",
+            "Move to 90 degrees", 
+            "Take a measurement"
+        ]
+        
+        results = await self.execute_conversation(conversation)
+        
+        # Verify framework behavior
+        self.assert_capabilities_called([
+            "motor_position_read",
+            "motor_position_set", 
+            "detector_image_capture"
+        ])
+        
+        self.assert_context_stored("MOTOR_POSITION")
+        self.assert_streaming_messages_sent()
+```
+
+#### External System Mocking
+```python
+from unittest.mock import patch, MagicMock
+
+class MockBoltAPI:
+    """Framework-compatible external system mock"""
+    
+    def __init__(self):
+        self.call_history = []
+    
+    def get_current_angle(self, motor: str) -> CurrentAngleReading:
+        self.call_history.append(("get_current_angle", motor))
+        return CurrentAngleReading(
+            motor=motor,
+            angle=45.0,
+            condition="Mock reading - framework test",
+            timestamp=datetime.now()
+        )
+    
+    @property
+    def was_called(self) -> bool:
+        return len(self.call_history) > 0
+
+# Use in tests
+@patch('applications.bolt.bolt_api.BoltAPI', MockBoltAPI)
+async def test_with_mocked_api():
+    # Test capability with mocked external system
+    pass
+```
+
+---
+
+## 🛠️ Framework Troubleshooting
+
+### Common Framework Integration Issues
+
+#### 1. Capability Registration Problems
+
+**Symptoms:**
+- Capabilities not discovered by framework
+- `CapabilityNotFound` errors in logs
+
+**Diagnostics:**
+```python
+# Check registry registration
+from applications.bolt.registry import BoltRegistryProvider
+
+registry = BoltRegistryProvider()
+capabilities = registry.get_capabilities()
+print(f"Registered capabilities: {[c.name for c in capabilities]}")
+
+# Verify module paths
+import importlib
+module = importlib.import_module("applications.bolt.capabilities.motor_position_read")
+assert hasattr(module, "MotorPositionReadCapability")
+```
+
+**Solutions:**
+1. **Verify Registry Provider**: Ensure `BoltRegistryProvider` is correctly configured
+2. **Check Module Paths**: Validate capability module imports
+3. **Framework Logs**: Enable debug logging for registration process
+
+#### 2. Context Management Issues
+
+**Symptoms:**
+- Context data not persisting between capabilities
+- Type validation errors in context classes
+
+**Framework Debugging:**
+```python
+# Inspect context storage
+from framework.state import StateManager
+
+def debug_context_state(state: AgentState):
+    """Debug framework context management"""
+    context_keys = StateManager.get_all_context_keys(state)
+    print(f"Available context keys: {context_keys}")
+    
+    for key in context_keys:
+        context_data = StateManager.get_context(state, "MOTOR_POSITION", key)
+        print(f"Context {key}: {context_data}")
+```
+
+**Solutions:**
+1. **Context Type Registration**: Verify context classes are properly registered
+2. **Pydantic Validation**: Check context class field definitions
+3. **State Management**: Ensure proper context storage/retrieval patterns
+
+#### 3. LLM Integration Problems
+
+**Symptoms:**
+- Capability routing failures
+- Parameter extraction not working
+
+**Framework Configuration Check:**
+```python
+# Verify LLM configuration
+from framework.models import get_completion_model
+
+def test_llm_connection():
+    """Test framework LLM integration"""
+    model = get_completion_model()
+    response = model.complete("Test message")
+    assert response is not None
+```
+
+**Solutions:**
+```yaml
+# Alternative LLM configurations for troubleshooting
+
+# Option 1: Reduce model complexity
+model:
+  provider: "openai"
+  model_name: "gpt-3.5-turbo"
+  temperature: 0.0
+
+# Option 2: Local testing
+model:
+  provider: "ollama"
+  model_name: "mistral:7b"
+  base_url: "http://localhost:11434"
+
+# Option 3: Debug mode
+debug:
+  llm_requests: true
+  capability_routing: true
+```
+
+#### 4. Streaming Integration Issues
+
+**Symptoms:**
+- No real-time feedback in UI
+- Streaming messages not appearing
+
+**Framework Streaming Debug:**
+```python
+from framework.infrastructure import get_streamer
+
+def test_streaming_integration(state: AgentState):
+    """Test framework streaming functionality"""
+    streamer = get_streamer("bolt", "test_capability", state)
+    
+    # Test different message types
+    streamer.status("Testing status message")
+    streamer.info("Testing info message")
+    streamer.error("Testing error message")
+    
+    # Verify streamer is properly configured
+    assert streamer.application_name == "bolt"
+    assert streamer.capability_name == "test_capability"
+```
+---
+
+## 🚀 Extension Patterns
+
+
+### 1. Framework Extensions
 
 #### Enhanced Natural Language Processing
 ```python
-# Future capability example
 @capability_node
 class IntelligentScanPlanningCapability(BaseCapability):
     """AI-powered scan parameter optimization."""
@@ -774,103 +930,6 @@ class IntelligentScanPlanningCapability(BaseCapability):
         # Predict data quality and acquisition time
         pass
 ```
-
-#### Advanced Error Recovery
-```python
-class AdaptiveErrorRecovery:
-    """Machine learning-based error prediction and recovery."""
-    
-    def predict_failure_probability(self, system_state) -> float:
-        # ML model prediction
-        pass
-    
-    def suggest_mitigation_strategy(self, error_type) -> RecoveryPlan:
-        # Intelligent recovery suggestions
-        pass
-```
-
-#### Multi-Modal Integration
-- **Voice control**: Speech-to-text command processing
-- **Visual feedback**: Camera-based sample alignment
-- **Gesture recognition**: Touchless operation interfaces
-- **AR/VR interfaces**: Immersive beamline control
-
-### 3. Hardware Integration Roadmap
-
-#### Expanded Detector Support
-- **Multi-detector arrays**: Simultaneous angle imaging
-- **Energy-dispersive detectors**: Spectroscopic photogrammetry
-- **Time-of-flight systems**: Neutron imaging capabilities
-- **Hybrid pixel detectors**: Ultra-fast data collection
-
-#### Environmental Control Integration
-- **Temperature control**: In-situ heating/cooling stages
-- **Atmosphere management**: Gas flow and composition
-- **Pressure systems**: High-pressure sample environments
-- **Humidity control**: Controlled sample conditions
-
-#### Beamline Optimization
-- **Beam conditioning**: Automatic optics alignment
-- **Flux monitoring**: Real-time intensity adjustment
-- **Energy selection**: Monochromator control
-- **Focusing optimization**: Adaptive beam shaping
-
-### 4. Research Applications
-
-#### Materials Science Extensions
-- **In-situ mechanical testing**: Load frame integration
-- **Chemical reaction monitoring**: Time-resolved studies
-- **Phase transformation tracking**: Temperature-controlled evolution
-- **Microstructure quantification**: Automated analysis pipelines
-
-#### Biological Sample Support
-- **Cryo-photogrammetry**: Low-temperature imaging
-- **Hydrated sample handling**: Environmental chambers
-- **Radiation damage mitigation**: Dose-limited strategies
-- **High-throughput screening**: Automated sample changing
-
-#### Quality Assurance Automation
-- **Calibration procedures**: Automated system verification
-- **Performance monitoring**: Continuous system health
-- **Predictive maintenance**: ML-based failure prediction
-- **Compliance reporting**: Automated documentation
-
-### 5. Integration Ecosystem
-
-#### Laboratory Information Management
-```python
-class LIMSIntegration:
-    """Connection to laboratory data management systems."""
-    
-    def register_experiment(self, parameters) -> ExperimentID:
-        # Automatic experiment registration
-        pass
-    
-    def store_results(self, data, metadata) -> StorageLocation:
-        # Structured data archival
-        pass
-```
-
-#### Analysis Pipeline Integration
-```python
-class AnalysisPipelineConnector:
-    """Integration with reconstruction and analysis tools."""
-    
-    def trigger_reconstruction(self, scan_data) -> ReconstructionJob:
-        # Automatic 3D reconstruction
-        pass
-    
-    def quantitative_analysis(self, volume_data) -> AnalysisResults:
-        # ML-powered feature extraction
-        pass
-```
-
-#### Collaboration Tools
-- **Remote operation**: Secure external access
-- **Real-time collaboration**: Multi-user interfaces
-- **Data sharing**: Automated publication workflows
-- **Educational integration**: Training and demonstration modes
-
 ---
 
 ## 📚 References and Documentation
@@ -896,27 +955,6 @@ class AnalysisPipelineConnector:
 - **Data Management**: Research data lifecycle management
 
 ---
-
-## 🤝 Contributing and Support
-
-### Development Contributions
-1. **Issue Reporting**: Use GitHub issues for bug reports and feature requests
-2. **Code Contributions**: Follow framework patterns and testing requirements
-3. **Documentation**: Help improve and expand this comprehensive guide
-4. **Testing**: Contribute test cases and validation procedures
-
-### Support Channels
-- **Technical Issues**: Framework-specific problems and integration challenges
-- **Scientific Applications**: Experimental design and optimization questions
-- **Hardware Support**: Beamline equipment and control system issues
-
-### Community Resources
-- **User Forums**: Share experiences and best practices
-- **Training Materials**: Educational content and tutorials
-- **Example Applications**: Real-world usage patterns and case studies
-
----
-
 ## 📋 Summary
 
 The BOLT Beamline Agent represents a significant advancement in scientific instrument control, combining the power of modern AI with precision hardware control. This comprehensive system provides:
