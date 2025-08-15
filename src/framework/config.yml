@@ -59,11 +59,11 @@ framework:
       model_id: google/gemini-flash
       max_tokens: 5000
     classifier:
-      provider: ollama
-      model_id: mistral:7b
+      provider: cborg
+      model_id: google/gemini-flash
     approval:
-      provider: ollama
-      model_id: mistral:7b
+      provider: cborg
+      model_id: google/gemini-flash
     task_extraction:
       provider: cborg
       model_id: google/gemini-flash
@@ -77,8 +77,8 @@ framework:
       model_id: anthropic/claude-haiku # claude-sonnet
       max_tokens: 4096
     time_parsing:
-      provider: ollama
-      model_id: mistral:7b
+      provider: cborg
+      model_id: google/gemini-flash
       max_tokens: 512
 
 

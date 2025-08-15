@@ -1,0 +1,72 @@
+[
+  {
+    "name": "memory",
+    "description": "Save content to and retrieve content from user memory files",
+    "provides": [
+      "MEMORY_CONTEXT"
+    ],
+    "requires": [],
+    "module_path": "framework.capabilities.memory",
+    "class_name": "MemoryOperationsCapability"
+  },
+  {
+    "name": "time_range_parsing",
+    "description": "Extract and parse time ranges from user queries into absolute datetime objects",
+    "provides": [
+      "TIME_RANGE"
+    ],
+    "requires": [],
+    "module_path": "framework.capabilities.time_range_parsing",
+    "class_name": "TimeRangeParsingCapability"
+  },
+  {
+    "name": "python",
+    "description": "Generate and execute simple Python code for computational tasks",
+    "provides": [
+      "PYTHON_RESULTS"
+    ],
+    "requires": [],
+    "module_path": "framework.capabilities.python",
+    "class_name": "PythonCapability"
+  },
+  {
+    "name": "respond",
+    "description": "Generate responses to user queries",
+    "provides": [
+      "FINAL_RESPONSE"
+    ],
+    "requires": [],
+    "module_path": "framework.infrastructure.respond_node",
+    "class_name": "RespondCapability"
+  },
+  {
+    "name": "clarify",
+    "description": "Ask clarifying questions for ambiguous queries",
+    "provides": [
+      "CLARIFICATION_REQUEST"
+    ],
+    "requires": [],
+    "module_path": "framework.infrastructure.clarify_node",
+    "class_name": "ClarifyCapability"
+  },
+  {
+    "name": "current_angle",
+    "description": "Get current angle for a motor",
+    "provides": [
+      "CURRENT_ANGLE"
+    ],
+    "requires": [],
+    "module_path": "applications.bolt.capabilities.current_angle",
+    "class_name": "CurrentAngleCapability"
+  },
+  {
+    "name": "move_motor",
+    "description": "Move motor to ",
+    "provides": [
+      "MOVE_MOTOR"
+    ],
+    "requires": [],
+    "module_path": "applications.bolt.capabilities.move_motor",
+    "class_name": "CurrentMoveMotorCapability"
+  }
+]
