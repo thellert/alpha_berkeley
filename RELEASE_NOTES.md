@@ -1,31 +1,38 @@
-# Alpha Berkeley Framework - Latest Release (v0.2.1)
+# Alpha Berkeley Framework - Latest Release (v0.2.2)
 
-🔧 **Major stability and usability improvements** for the Alpha Berkeley Framework!
+🚀 **Major error handling enhancements and framework improvements** for the Alpha Berkeley Framework!
 
-## What's Fixed
+## What's New
 
-### Critical Issues Resolved
-- **Containerized Python Execution**: Fixed critical bug where execution metadata wasn't being created in mounted volumes
-- **Container Build Failures**: Removed obsolete python3-epics-simulation kernel mounts that caused build failures
-- **Path Mapping**: Fixed hardcoded path patterns in container execution using config-driven approach
+### 🔧 New RECLASSIFICATION Error Severity
+- **Smart Task-Capability Matching**: Capabilities can now request reclassification when they receive inappropriate tasks
+- **Improved Workflow**: Enhanced error classification system with configurable reclassification attempt limits
+- **Better Routing**: Router node now properly handles reclassification errors and prevents infinite loops
 
-### Security & Stability Improvements
-- **Repository Security**: Updated .gitignore to exclude development services and sensitive configurations
-- **Network Security**: Renamed container network from als-agents-network to alpha-berkeley-network for consistency
-- **Service Cleanup**: Removed mem0 service references and cleaned up leftover container code
+### ⚠️ Breaking Changes (Backward Compatible)
+- **ErrorClassification Metadata Migration**: Unified error handling with enhanced metadata field
+- **Richer Error Context**: All error information now flows through a consistent metadata structure
+- **Enhanced LLM Integration**: Better error context for AI-driven recovery and analysis
 
-### Developer Experience Enhancements
-- **Configuration System Refactoring**: Renamed `unified_config` module to `config` for improved developer experience
-- **Professional Naming**: Replaced `UnifiedConfigBuilder` with `ConfigBuilder` to eliminate confusing terminology
-- **Automatic Environment Detection**: Added container-aware Python environment detection for convenience
-- **Graceful Ollama Fallback**: Implemented automatic URL fallback for development workflows
+### 🏗️ Framework Enhancements
+- **Enhanced Classification Workflow**: Improved reclassification handling with proper failure context
+- **Router Node Improvements**: Added reclassification tracking and intelligent routing logic
+- **Configuration System**: New execution limits configuration for better control
+- **Error Node Enhancements**: Comprehensive error handling improvements
+
+### 📚 Documentation & Examples
+- **Major Documentation Cleanup**: Removed outdated files and enhanced RST documentation structure
+- **Enhanced Hello World Example**: Better classifier examples and improved context access patterns
+- **Complete Error Handling Docs**: Updated documentation for new reclassification workflow
+- **Developer Guide Improvements**: Enhanced infrastructure component documentation
 
 ## Upgrade Notes
 
 This release maintains full backward compatibility. The main changes are:
-- Import paths updated from `unified_config` to `config` (automatic detection handles this)
-- Container execution is more reliable and requires no manual reconfiguration
-- Timezone handling is now consistent across all services
+- New `RECLASSIFICATION` error severity level available for capability developers
+- ErrorClassification now uses unified metadata field (automatic migration handled)
+- Enhanced error handling workflow with better context for AI-driven recovery
+- Improved documentation structure and examples
 
 ## Get Started
 
@@ -40,23 +47,24 @@ This release maintains full backward compatibility. The main changes are:
 When creating the GitHub release:
 
 1. Go to GitHub repo → Releases → "Create a new release"
-2. **Tag**: `v0.2.1`
-3. **Title**: `Alpha Berkeley Framework v0.2.1 - Critical Fixes & Developer Experience`
-4. **Description**: Copy the content above (from "🔧 Major stability" through "Explore the complete documentation")
+2. **Tag**: `v0.2.2`
+3. **Title**: `Alpha Berkeley Framework v0.2.2 - Enhanced Error Handling & Framework Improvements`
+4. **Description**: Copy the content above (from "🚀 Major error handling" through "See the error handling guide")
 
 ## Technical Details
 
-- Fixed 'Failed to read execution metadata from container' error through proper volume mounting
-- Eliminated manual reconfiguration when switching between local and containerized execution
-- Complete refactoring eliminates confusing "unified" terminology from LangGraph migration era
-- Added proper timezone data (tzdata) package in Jupyter containers for accurate timestamps
-- Maintains backward compatibility through systematic import updates across entire codebase
+- New RECLASSIFICATION severity enables smart task-capability matching
+- Unified metadata approach provides richer context for error analysis and recovery
+- Enhanced classification workflow with configurable attempt limits prevents infinite loops
+- Framework-wide migration to new ErrorClassification metadata structure
+- Complete documentation restructuring with enhanced developer guides
+- Enhanced hello world weather example demonstrates best practices
 
 ---
 
-*Current Release: v0.2.1 (January 2025)*  
-*Release Type: Stability & Developer Experience*  
-*Previous Release: v0.2.0 with advanced tutorials*
+*Current Release: v0.2.2 (August 2025)*  
+*Release Type: Error Handling Enhancements & Framework Improvements*  
+*Previous Release: v0.2.1 with stability improvements*
 
 ---
 

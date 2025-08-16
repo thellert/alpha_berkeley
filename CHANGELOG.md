@@ -5,6 +5,44 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-08-16
+
+### Major Features
+- **New RECLASSIFICATION Error Severity**: Added `RECLASSIFICATION` severity level to ErrorSeverity enum for improved task-capability matching
+- **Enhanced Error Classification Workflow**: Capabilities can now request reclassification when receiving inappropriate tasks
+- **Reclassification Routing Logic**: Router node now properly handles reclassification errors with configurable attempt limits
+
+### Breaking Changes
+- **ErrorClassification Metadata Migration**: Replaced custom error fields with unified metadata field in ErrorClassification
+  - `format_for_llm()` now generically processes all metadata keys
+  - Enhanced error context richness for better LLM understanding
+  - All infrastructure nodes and capabilities updated to use metadata field
+  - Maintains backward compatibility through systematic migration
+
+### Framework Enhancements
+- **Enhanced Classification Node**: Improved reclassification workflow with proper failure context handling
+- **Router Node Improvements**: Added reclassification attempt tracking and routing logic
+- **Execution Limits Configuration**: Added support for configurable reclassification limits
+- **Error Node Enhancements**: Comprehensive error handling improvements with better metadata processing
+
+### Documentation & Examples
+- **Major Documentation Cleanup**: Removed outdated markdown files and enhanced RST documentation structure
+- **Enhanced Hello World Weather Example**: Added comprehensive classifier examples and improved context access details
+- **Error Handling Documentation**: Complete documentation updates for new reclassification workflow
+- **API Reference Updates**: Enhanced error handling API documentation with examples and usage patterns
+- **Developer Guide Improvements**: Updated infrastructure components documentation
+
+### Infrastructure Improvements
+- **Framework-wide Capability Updates**: All capabilities updated to use new ErrorClassification metadata approach
+- **Enhanced Time Range Parsing**: Improved time range parsing capability with better error handling
+- **Configuration System Updates**: Enhanced config system to support execution limits and reclassification controls
+
+### Technical Details
+- Enhanced error classification system enables better task-capability matching
+- Unified metadata approach provides richer context for error analysis and recovery
+- Reclassification workflow prevents infinite loops with configurable attempt limits
+- Complete migration maintains backward compatibility across the entire framework
+
 ## [0.2.1] - 2025-08-11
 
 ### Critical Fixes
