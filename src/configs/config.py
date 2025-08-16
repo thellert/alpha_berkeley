@@ -341,6 +341,7 @@ class ConfigBuilder:
         return {
             "graph_recursion_limit": self._require_config('execution_control.limits.graph_recursion_limit', 100),
             "max_reclassifications": self._require_config('execution_control.limits.max_reclassifications', 1),
+            "max_planning_attempts": self._require_config('execution_control.limits.max_planning_attempts', 2),
             "max_step_retries": self._require_config('execution_control.limits.max_step_retries', 0),
             "max_execution_time_seconds": self._require_config('execution_control.limits.max_execution_time_seconds', 300),
         }
@@ -361,11 +362,8 @@ class ConfigBuilder:
             "python_execution_approval_mode": self._require_config('approval.capabilities.python_execution.mode', 'all_code'),
             "memory_approval_enabled": self._require_config('approval.capabilities.memory.enabled', True),
             
-            # Execution limits
-            "max_reclassifications": self._require_config('execution_control.limits.max_reclassifications', 1),
-            "max_planning_attempts": self.get('execution_control.limits.max_planning_attempts', 2),
-            "max_step_retries": self._require_config('execution_control.limits.max_step_retries', 0),
-            "max_execution_time_seconds": self._require_config('execution_control.limits.max_execution_time_seconds', 300),
+            # Note: Execution limits (max_reclassifications, max_planning_attempts, etc.) 
+            # are now centralized in get_execution_limits() utility function
         }
     
     def _get_current_application(self) -> Optional[str]:

@@ -666,6 +666,21 @@ class CurrentWeatherCapability(BaseCapability):
                     result=False,
                     reason="Request is for tool information, not weather."
                 ),
+                ClassifierExample(
+                    query="What's the temperature in New York?",
+                    result=True,
+                    reason="Temperature is a key component of weather conditions."
+                ),
+                ClassifierExample(
+                    query="Is it rainy in San Francisco right now?",
+                    result=True,
+                    reason="Rain query relates to current atmospheric conditions."
+                ),
+                ClassifierExample(
+                    query="Should I bring a jacket today?",
+                    result=True,
+                    reason="Clothing decision depends on current weather/temperature conditions."
+                ),
             ],
             actions_if_true=ClassifierActions()
         )

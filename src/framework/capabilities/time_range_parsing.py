@@ -559,7 +559,7 @@ class TimeRangeParsingCapability(BaseCapability):
            :class:`framework.models.get_chat_completion` : LLM interface used for parsing
            :meth:`classify_error` : Error classification method for parsing failures
         """
-            
+
         # Explicit logger retrieval - professional practice
         logger = get_logger("framework", "time_range_parsing")
         

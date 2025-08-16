@@ -163,8 +163,9 @@ class CurrentWeatherContext(CapabilityContext):
         :type key_name: str, optional
         :return: Dictionary containing access details with the following structure:
             - location: Human-readable location name
-            - current_temp: Formatted temperature string with units
+            - temperature: Actual temperature value as float
             - conditions: Weather conditions description
+            - temperature_formatted: Formatted temperature string with units
             - access_pattern: Template access pattern for programmatic use
             - example_usage: Complete usage example with context substitution
             - available_fields: List of all accessible field names
@@ -189,7 +190,7 @@ class CurrentWeatherContext(CapabilityContext):
                 ...     timestamp=datetime.now()
                 ... )
                 >>> details = weather_context.get_access_details()
-                >>> print(details["current_temp"])
+                >>> print(details["temperature_formatted"])
                 22.0°C
                 >>> print(details["access_pattern"])
                 context.CURRENT_WEATHER.key_name.temperature, context.CURRENT_WEATHER.key_name.conditions
@@ -215,8 +216,9 @@ class CurrentWeatherContext(CapabilityContext):
         
         return {
             "location": self.location,
-            "current_temp": f"{self.temperature}°C",
+            "temperature": self.temperature,
             "conditions": self.conditions,
+            "temperature_formatted": f"{self.temperature}°C",
             "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.temperature, context.{self.CONTEXT_TYPE}.{key_ref}.conditions",
             "example_usage": f"The temperature in {self.location} is {{context.{self.CONTEXT_TYPE}.{key_ref}.temperature}}°C with {{context.{self.CONTEXT_TYPE}.{key_ref}.conditions}} conditions",
             "available_fields": ["location", "temperature", "conditions", "timestamp"]

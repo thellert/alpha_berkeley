@@ -280,6 +280,7 @@ class BaseCapability(ABC):
         - CRITICAL: End execution immediately
         - RETRIABLE: Retry with same parameters
         - REPLANNING: Create new execution plan
+        - RECLASSIFICATION: Reclassify task capabilities
         - FATAL: System-level failure, terminate execution
         
         :param exc: The exception that occurred during capability execution
