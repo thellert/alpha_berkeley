@@ -80,21 +80,18 @@ The error handling system combines intelligent classification, automated recover
 Error Classification System
 ---------------------------
 
-Different error types trigger appropriate recovery strategies:
+Different error types trigger appropriate recovery strategies using the ErrorSeverity enum:
 
 .. code-block:: python
 
-   class ErrorType(Enum):
-       TIMEOUT = "timeout"
-       STEP_FAILURE = "step_failure"
-       SAFETY_LIMIT = "safety_limit"
-       RETRIABLE_FAILURE = "retriable_failure"
-       RECLASSIFICATION_LIMIT = "reclassification_limit"
-       CRITICAL_ERROR = "critical_error"
-       INFRASTRUCTURE_ERROR = "infrastructure_error"
-       EXECUTION_KILLED = "execution_killed"
+   class ErrorSeverity(Enum):
+       CRITICAL = "critical"                 # End execution
+       RETRIABLE = "retriable"               # Retry execution step
+       REPLANNING = "replanning"             # Replan the execution plan  
+       RECLASSIFICATION = "reclassification" # Reclassify task capabilities
+       FATAL = "fatal"                       # System-level failure - raise exception immediately
 
-**Classification Example:**
+**Error Classification Example:**
 
 .. code-block:: python
 
@@ -193,21 +190,15 @@ System automatically creates comprehensive error context:
        user_message = error_info.get('user_message', original_error)
        execution_time = error_info.get('execution_time', 0.0)
        
-       # Determine error type based on classification severity
+       # Use error classification directly
        error_classification = error_info.get('classification')
-       if error_classification and hasattr(error_classification, 'severity'):
-           severity_value = getattr(error_classification.severity, 'value', str(error_classification.severity))
-           
-           if severity_value == "retriable":
-               error_type = ErrorType.RETRIABLE_FAILURE  
-           elif severity_value == "replanning":
-               error_type = ErrorType.RECLASSIFICATION_LIMIT
-           elif severity_value == "critical":
-               error_type = ErrorType.CRITICAL_ERROR
-           else:
-               error_type = ErrorType.CRITICAL_ERROR
-       else:
-           error_type = ErrorType.CRITICAL_ERROR
+       if not error_classification:
+           # Create fallback classification if none provided
+           error_classification = ErrorClassification(
+               severity=ErrorSeverity.CRITICAL,
+               user_message=original_error,
+               metadata={"technical_details": original_error}
+           )
        
        # Extract metadata from error classification
        error_metadata = None
@@ -215,12 +206,9 @@ System automatically creates comprehensive error context:
            error_metadata = error_classification.metadata
        
        return ErrorContext(
-           error_type=error_type,
-           error_message=user_message,
-           failed_operation=capability_name or "Unknown operation",
+           error_classification=error_classification,
            current_task=current_task,
-           capability_name=capability_name,
-           error_metadata=error_metadata,
+           failed_operation=capability_name or "Unknown operation",
            execution_time=execution_time,
            retry_count=state.get('control_retry_count', 0),
            total_operations=StateManager.get_current_step_index(state) + 1
@@ -349,6 +337,9 @@ Router handles retries embedded in conditional edge function:
                elif error_classification.severity == ErrorSeverity.REPLANNING:
                    return "orchestrator"  # Route for re-planning
                
+               elif error_classification.severity == ErrorSeverity.RECLASSIFICATION:
+                   return "classifier"  # Route for re-classification
+               
                else:
                    return "error"  # Route to error node
        
@@ -357,6 +348,7 @@ Router handles retries embedded in conditional edge function:
 **Recovery Strategies:**
 - **RETRIABLE:** Automatic retry with exponential backoff
 - **REPLANNING:** Route to orchestrator for new execution plan
+- **RECLASSIFICATION:** Route to classifier for new capability selection
 - **CRITICAL:** Route to error node for user communication
 - **FATAL:** Terminate execution immediately
 
@@ -433,7 +425,8 @@ Best Practices
 **Error Classification Guidelines:**
 - Use RETRIABLE for network/temporary issues
 - Use CRITICAL for configuration/validation errors  
-- Use REPLANNING for capability selection issues
+- Use REPLANNING for execution plan strategy issues
+- Use RECLASSIFICATION for capability selection issues
 - Use FATAL only for error node failures
 
 **State Management:**

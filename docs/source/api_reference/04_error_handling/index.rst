@@ -160,9 +160,9 @@ The system coordinates recovery through a unified strategy hierarchy:
              # Check how many plans have been created by orchestrator
              current_plans_created = state.get('control_plans_created_count', 0)
              
-             # Get max planning attempts from agent control state
-             agent_control = state.get('agent_control', {})
-             max_planning_attempts = agent_control.get('max_planning_attempts', 2)
+             # Get max planning attempts from execution limits config
+             limits = get_execution_limits()
+             max_planning_attempts = limits.get('max_planning_attempts', 2)
              
              if current_plans_created < max_planning_attempts:
                  return "orchestrator"  # Create new execution plan

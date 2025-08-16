@@ -22,7 +22,8 @@ ErrorSeverity
    Enumeration of error severity levels with recovery strategies:
 
    - **RETRIABLE**: Retry execution with exponential backoff
-   - **REPLANNING**: Route to orchestrator for new execution plan  
+   - **REPLANNING**: Route to orchestrator for new execution plan
+   - **RECLASSIFICATION**: Route to classifier for new capability selection
    - **CRITICAL**: Graceful termination with user notification
    - **FATAL**: Immediate system termination
 
@@ -36,6 +37,12 @@ ErrorSeverity
           return ErrorClassification(
               severity=ErrorSeverity.CRITICAL, 
               metadata={"safety_abort_reason": "Authentication failed"}
+          )
+      elif isinstance(exc, CapabilityMismatchError):
+          return ErrorClassification(
+              severity=ErrorSeverity.RECLASSIFICATION,
+              user_message="Required capability not available",
+              metadata={"reclassification_reason": "Capability mismatch detected"}
           )
 
 Classification Results
@@ -200,6 +207,9 @@ Basic Error Handling
        elif classification.severity == ErrorSeverity.REPLANNING:
            # Route to orchestrator for new execution plan
            return "orchestrator"
+       elif classification.severity == ErrorSeverity.RECLASSIFICATION:
+           # Route to classifier for new capability selection
+           return "classifier"
        elif classification.severity == ErrorSeverity.CRITICAL:
            # End execution with clear error message
            raise ExecutionError(
@@ -218,6 +228,7 @@ The ``metadata`` field is the **primary mechanism** for providing structured err
 - ``technical_details``: Detailed technical information (replaces old technical_details field)
 - ``safety_abort_reason``: Explanation for critical/fatal errors requiring immediate termination
 - ``replanning_reason``: Explanation for errors requiring new execution plan generation
+- ``reclassification_reason``: Explanation for errors requiring new capability selection
 - ``suggestions``: List of actionable recovery steps for users
 - ``error_code``: Machine-readable error identifier for programmatic handling
 - ``retry_after``: Suggested delay before retry attempts (in seconds)

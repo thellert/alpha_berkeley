@@ -21,7 +21,7 @@ A "Hello World Weather" agent is a simple agent that:
 Prerequisites
 =============
 
-* Alpha Berkeley framework installed and running, otherwise follow the installation guide in the documentation.
+* Alpha Berkeley framework installed and running, otherwise follow the :doc:`installation guide <installation>` in the documentation.
 
 
 Step 1: Explore the Project Structure
@@ -177,8 +177,9 @@ Provides structured access information for LLM consumption. This method is used 
             
             return {
                 "location": self.location,
-                "current_temp": f"{self.temperature}°C",
+                "temperature": self.temperature,
                 "conditions": self.conditions,
+                "temperature_formatted": f"{self.temperature}°C",
                 "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.temperature, context.{self.CONTEXT_TYPE}.{key_ref}.conditions",
                 "example_usage": f"The temperature in {self.location} is {{context.{self.CONTEXT_TYPE}.{key_ref}.temperature}}°C with {{context.{self.CONTEXT_TYPE}.{key_ref}.conditions}} conditions",
                 "available_fields": ["location", "temperature", "conditions", "timestamp"]
@@ -412,7 +413,6 @@ The orchestrator guide teaches the LLM how to plan execution steps and use your 
     )
 
 .. admonition:: For Complex Capabilities
-   :class: important
    
    When building more sophisticated capabilities with multiple steps, dependencies, or complex planning logic, providing comprehensive orchestrator examples becomes crucial. The orchestrator uses these examples to understand when and how to integrate your capability into multi-step execution plans.
 
@@ -687,10 +687,6 @@ Use a list of ``ContextClassRegistration`` objects to register your data structu
        )
    ]
 
-.. admonition:: Framework Benefits
-   
-   The framework provides sensible defaults for initialization order, data sources, and other advanced features. Simple applications only need to register capabilities and context classes.
-
 .. dropdown:: Complete Registry Implementation
    
    Complete registry file (`view registry on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/registry.py>`_)
@@ -769,7 +765,7 @@ Finally, you need to enable your application in the main configuration file. Add
    applications: 
      - hello_world_weather
 
-.. note::
+.. admonition::
    The framework automatically discovers application configurations using this applications list. Without adding your application here, the framework won't load it, even if the application config file exists.
 
 Step 7: Test Your Agent

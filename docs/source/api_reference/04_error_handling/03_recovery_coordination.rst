@@ -23,6 +23,7 @@ Router Conditional Edge
    1. **Manual Retry Handling** (checked first):
       - RETRIABLE errors: retry with backoff if attempts remain
       - REPLANNING errors: route to orchestrator if planning attempts remain
+      - RECLASSIFICATION errors: route to classifier if reclassification attempts remain
       - CRITICAL errors: route to error node immediately
 
    2. **Normal Routing Logic**:
@@ -51,6 +52,22 @@ OrchestrationNode
    - **Capability Validation**: Ensure all planned capabilities exist  
    - **State Updates**: Clear error state and increment plan counter
    - **Limits**: Respect maximum planning attempts to prevent infinite loops
+
+Classifier Reclassification  
+===========================
+
+ClassificationNode
+-------------------
+
+.. automethod:: framework.infrastructure.classification_node.ClassificationNode.execute
+
+   Handles reclassification when RECLASSIFICATION errors are encountered:
+
+   - **Context Awareness**: Uses previous failure context for improved classification
+   - **Capability Reselection**: Analyzes available capabilities with failure context
+   - **State Updates**: Clear reclassification flags and increment counters
+   - **Limits**: Respect maximum reclassification attempts (configurable via ``max_reclassifications``)
+   - **Fresh Analysis**: Resets planning state for completely new capability selection
 
 Error Response Generation
 =========================

@@ -199,17 +199,20 @@ System supports reclassification when initial selection fails:
 
 .. code-block:: python
 
-   # Triggered by validation failures or execution errors
-   if classification_needs_retry:
+   # Triggered by RECLASSIFICATION severity errors from capabilities
+   if error_classification.severity == ErrorSeverity.RECLASSIFICATION:
        return {
            "control_needs_reclassification": True,
-           "control_reclassification_reason": "Initial classification insufficient"
+           "control_reclassification_reason": f"Capability {capability_name} requested reclassification: {error_classification.user_message}"
        }
 
 **Reclassification Handling:**
+- Triggered by capabilities returning ErrorSeverity.RECLASSIFICATION
+- Router checks reclassification count against configured limits
 - Uses same selection logic with previous failure context
 - Increments reclassification counter
 - Clears previous state for fresh analysis
+- Routes to error node when limits exceeded
 
 Usage Examples
 --------------
@@ -252,7 +255,8 @@ Integration Patterns
 
 **Error Recovery:**
 - Automatic retry for network issues
-- Reclassification for capability selection problems
+- Reclassification for capability selection problems (RECLASSIFICATION severity)
+- Replanning for execution strategy issues (REPLANNING severity)
 - Router coordination for failed executions
 
 Troubleshooting
