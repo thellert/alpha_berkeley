@@ -161,21 +161,17 @@ class ClassificationNode(BaseInfrastructureNode):
                 "control_reclassification_reason": "No current task found"
             }
         
-        # Check reclassification status from flat state structure
-        needs_reclassification = state.get('needs_reclassification', False)
-        
-        previous_failure = None
-        reclassification_count = 0
-        
         # Define streaming helper here for step awareness
         streamer = get_streamer("framework", "classifier", state)
         
-        if needs_reclassification:
-            previous_failure = state.get('reclassification_reason')
-            reclassification_count = state.get('reclassification_count', 0)
-            
-            streamer.status("Reclassifying task...")
-            logger.info("Reclassifying task...")
+        # Get previous failure context (may be None for initial classification)
+        previous_failure = state.get('control_reclassification_reason')
+        reclassification_count = state.get('control_reclassification_count', 0)
+        
+        if previous_failure:
+            streamer.status(f"Reclassifying task (attempt {reclassification_count + 1})...")
+            logger.info(f"Reclassifying task (attempt {reclassification_count + 1})...")
+            logger.warning(f"Previous failure reason: {previous_failure}")
         else:
             streamer.status("Analyzing task requirements...")
             logger.info("Analyzing task requirements...")
@@ -193,7 +189,8 @@ class ClassificationNode(BaseInfrastructureNode):
             task=current_task,  # Updated parameter name
             available_capabilities=available_capabilities,
             state=state,
-            logger=logger
+            logger=logger,
+            previous_failure=previous_failure  # Pass failure context for reclassification
         )
         
         logger.key_info(f"Classification completed with {len(active_capabilities)} active capabilities")
@@ -212,21 +209,13 @@ class ClassificationNode(BaseInfrastructureNode):
             "planning_current_step_index": 0
         }
         
-        # Handle reclassification state updates if this was a reclassification
-        if needs_reclassification:
-            control_flow_update = {
-                "control_reclassification_count": reclassification_count + 1,
-                "control_needs_reclassification": False,
-                "control_reclassification_reason": None
-            }
-            
-            logger.info(f"Reclassification completed (attempt {reclassification_count + 1})")
-            logger.info("Orchestration state reset for reclassification")
-        else:
-            control_flow_update = {}
-        
-        # Create planning update using proper LangGraph merging
-        
+        # Always increment classification counter and clear reclassification flags
+        control_flow_update = {
+            "control_reclassification_count": reclassification_count + 1,
+            "control_needs_reclassification": False,
+            "control_reclassification_reason": None
+        }
+                
         # Add status event using LangGraph's add reducer
         status_event = create_status_update(
             message=f"Classification completed with {len(active_capabilities)} capabilities",
@@ -235,9 +224,10 @@ class ClassificationNode(BaseInfrastructureNode):
             node="classifier",
             capabilities_selected=len(active_capabilities),
             capability_names=active_capabilities,  # Already capability names now
-            reclassification=needs_reclassification,
-            reclassification_count=reclassification_count + 1 if needs_reclassification else 0
+            reclassification=bool(previous_failure),
+            reclassification_count=reclassification_count + 1
         )
+        logger.info("Classification completed")
         
         # Merge all updates - LangGraph will handle this properly
         return {**planning_fields, **control_flow_update, **status_event}
@@ -251,7 +241,8 @@ async def select_capabilities(
     task: str,
     available_capabilities: List[BaseCapability],
     state: AgentState,
-    logger
+    logger,
+    previous_failure: Optional[str] = None
 ) -> List[str]:  # Return capability names instead of instances
     """Select capabilities needed for the task by using classification.
     
@@ -282,7 +273,7 @@ async def select_capabilities(
     
     # Classify each remaining capability
     for capability in remaining_capabilities:
-        is_required = await _classify_capability(capability, task, state, logger)
+        is_required = await _classify_capability(capability, task, state, logger, previous_failure)
         
         if is_required:
             active_capabilities.append(capability.name)  # Store name instead of instance
@@ -291,7 +282,7 @@ async def select_capabilities(
     return active_capabilities
 
 
-async def _classify_capability(capability: BaseCapability, task: str, state: AgentState, logger) -> bool:
+async def _classify_capability(capability: BaseCapability, task: str, state: AgentState, logger, previous_failure: Optional[str] = None) -> bool:
     """Classify a single capability to determine if it's needed.
     
     :param capability: The capability to analyze
@@ -329,7 +320,7 @@ async def _classify_capability(capability: BaseCapability, task: str, state: Age
         capability_instructions=capability_instructions,
         classifier_examples=examples_string,
         context=None,
-        previous_failure=None
+        previous_failure=previous_failure
     )
     message = f"{system_prompt}\n\nUser request:\n{task}"
     

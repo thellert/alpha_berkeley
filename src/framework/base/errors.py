@@ -20,6 +20,7 @@ Error Classification Levels:
     - **CRITICAL**: End execution immediately - unrecoverable errors
     - **RETRIABLE**: Retry execution with same parameters - transient failures
     - **REPLANNING**: Create new execution plan - strategy failures
+    - **RECLASSIFICATION**: Reclassify task capabilities
     - **FATAL**: System-level failure - immediate termination required
 
 The error system integrates with LangGraph's execution model while providing
@@ -64,8 +65,9 @@ class ErrorSeverity(Enum):
     Recovery Strategy Hierarchy:
     1. **Automatic Recovery**: RETRIABLE errors with retry mechanisms
     2. **Strategy Adjustment**: REPLANNING for execution plan adaptation
-    3. **Execution Control**: CRITICAL for graceful termination
-    4. **System Protection**: FATAL for immediate termination
+    3. **Capability Adjustment**: RECLASSIFICATION for capability selection adaptation
+    4. **Execution Control**: CRITICAL for graceful termination
+    5. **System Protection**: FATAL for immediate termination
     
     :param CRITICAL: End execution immediately - unrecoverable errors requiring termination
     :type CRITICAL: str
@@ -73,6 +75,8 @@ class ErrorSeverity(Enum):
     :type RETRIABLE: str
     :param REPLANNING: Create new execution plan with different strategy - approach failures
     :type REPLANNING: str
+    :param RECLASSIFICATION: Reclassify task to select different capabilities - selection failures
+    :type RECLASSIFICATION: str
     :param FATAL: System-level failure requiring immediate termination - corruption prevention
     :type FATAL: str
     
@@ -89,17 +93,24 @@ class ErrorSeverity(Enum):
     Examples:
         Network error classification::
         
-            if isinstance(exc, ConnectionError):
+            if isinstance(exc, YourCustomConnectionError):
                 return ErrorClassification(severity=ErrorSeverity.RETRIABLE, ...)
-            elif isinstance(exc, AuthenticationError):
+            elif isinstance(exc, YourCustomAuthenticationError):
                 return ErrorClassification(severity=ErrorSeverity.CRITICAL, ...)
         
-        Data validation error handling::
+        Data validation error handling (example exception classes)::
         
             if isinstance(exc, ValidationError):
                 return ErrorClassification(severity=ErrorSeverity.REPLANNING, ...)
-            elif isinstance(exc, CorruptedDataError):
+            elif isinstance(exc, YourCustomCapabilityMismatchError):
+                return ErrorClassification(severity=ErrorSeverity.RECLASSIFICATION, ...)
+            elif isinstance(exc, YourCustomCorruptionError):
                 return ErrorClassification(severity=ErrorSeverity.FATAL, ...)
+        
+        .. note::
+           The exception classes in these examples (YourCustomCapabilityMismatchError,
+           YourCustomCorruptionError) are not provided by the framework - they are
+           examples of domain-specific exceptions you might implement in your capabilities.
     
     .. seealso::
        :class:`ErrorClassification` : Structured error analysis with severity
@@ -107,7 +118,8 @@ class ErrorSeverity(Enum):
     """
     CRITICAL = "critical"           # End execution
     RETRIABLE = "retriable"         # Retry execution step
-    REPLANNING = "replanning"       # Replan the execution plan
+    REPLANNING = "replanning"       # Replan the execution plan  
+    RECLASSIFICATION = "reclassification"  # Reclassify task capabilities
     FATAL = "fatal"                 # System-level failure - raise exception immediately
 
 
@@ -165,6 +177,17 @@ class ErrorClassification:
                 metadata={
                     "technical_details": "Step expected 'SENSOR_DATA' context but found None",
                     "replanning_reason": "Missing required input data"
+                }
+            )
+        
+        Wrong capability selected requiring reclassification::
+        
+            classification = ErrorClassification(
+                severity=ErrorSeverity.RECLASSIFICATION,
+                user_message="This capability cannot handle this type of request",
+                metadata={
+                    "technical_details": "Weather capability received machine operation request",
+                    "reclassification_reason": "Capability mismatch detected"
                 }
             )
         

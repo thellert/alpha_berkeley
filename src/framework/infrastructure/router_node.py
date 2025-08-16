@@ -21,6 +21,7 @@ from framework.base.nodes import BaseInfrastructureNode
 from framework.base.errors import ErrorSeverity
 from framework.registry import get_registry
 from configs.logger import get_logger
+from configs.config import get_execution_limits
 
 if TYPE_CHECKING:
     from framework.observability import ExecutionObserver
@@ -132,9 +133,9 @@ def router_conditional_edge(state: AgentState) -> str:
                 # Check how many plans have been created by orchestrator
                 current_plans_created = state.get('control_plans_created_count', 0)
                 
-                # Get max planning attempts from agent control state
-                agent_control = state.get('agent_control', {})
-                max_planning_attempts = agent_control.get('max_planning_attempts', 2)
+                # Get max planning attempts from execution limits config
+                limits = get_execution_limits()
+                max_planning_attempts = limits.get('max_planning_attempts', 2)
                 
                 if current_plans_created < max_planning_attempts:
                     # Orchestrator will increment counter when it creates new plan
@@ -145,6 +146,27 @@ def router_conditional_edge(state: AgentState) -> str:
                     # Planning attempts exhausted - route to error node
                     logger.error(f"Router: Planning attempts exhausted for {capability_name} "
                                f"({current_plans_created}/{max_planning_attempts} plans created), routing to error node")
+                    return "error"
+            
+            elif error_classification.severity == ErrorSeverity.RECLASSIFICATION:
+                # Check how many reclassifications have been performed
+                current_reclassifications = state.get('control_reclassification_count', 0)
+                
+                # Get max reclassification attempts from config
+                limits = get_execution_limits()
+                max_reclassifications = limits.get('max_reclassifications', 1)
+                
+                if current_reclassifications < max_reclassifications:
+                    # Set reclassification flag - classifier will increment counter
+                    logger.error(f"Router: Reclassification error in {capability_name}, routing to classifier "
+                               f"(attempt #{current_reclassifications + 1}/{max_reclassifications})")
+                    state['control_needs_reclassification'] = True
+                    state['control_reclassification_reason'] = f"Capability {capability_name} requested reclassification: {error_classification.user_message}"
+                    return "classifier"
+                else:
+                    # Reclassification attempts exhausted - route to error node
+                    logger.error(f"Router: Reclassification attempts exhausted for {capability_name} "
+                               f"({current_reclassifications}/{max_reclassifications} attempts), routing to error node")
                     return "error"
             
             elif error_classification.severity == ErrorSeverity.CRITICAL:
@@ -158,7 +180,7 @@ def router_conditional_edge(state: AgentState) -> str:
     
     # ==== NORMAL ROUTING LOGIC ====
     
-    # CRITICAL FIX: Reset retry count when no error (clean state for next operation)
+    # Reset retry count when no error (clean state for next operation)
     if 'control_retry_count' in state:
         state['control_retry_count'] = 0
     

@@ -50,6 +50,8 @@ from typing_extensions import TypedDict
 from dataclasses import dataclass, field
 import logging
 
+from configs.config import get_execution_limits
+
 
 
 logger = logging.getLogger(__name__)
@@ -239,6 +241,9 @@ def apply_slash_commands_to_agent_control_state(agent_control_state: AgentContro
     if not commands:
         return agent_control_state
         
+    # Get execution limits from configuration for consistent defaults
+    execution_limits = get_execution_limits()
+    
     # Create a copy for modification
     new_instance = AgentControlState(
         planning_mode_enabled=agent_control_state.get('planning_mode_enabled', False),
@@ -247,10 +252,10 @@ def apply_slash_commands_to_agent_control_state(agent_control_state: AgentContro
         python_execution_approval_enabled=agent_control_state.get('python_execution_approval_enabled', True),
         python_execution_approval_mode=agent_control_state.get('python_execution_approval_mode', 'all_code'),
         memory_approval_enabled=agent_control_state.get('memory_approval_enabled', True),
-        max_reclassifications=agent_control_state.get('max_reclassifications', 1),
-        max_planning_attempts=agent_control_state.get('max_planning_attempts', 2),
-        max_step_retries=agent_control_state.get('max_step_retries', 0),
-        max_execution_time_seconds=agent_control_state.get('max_execution_time_seconds', 300),
+        max_reclassifications=agent_control_state.get('max_reclassifications', execution_limits.get('max_reclassifications', 1)),
+        max_planning_attempts=agent_control_state.get('max_planning_attempts', execution_limits.get('max_planning_attempts', 2)),
+        max_step_retries=agent_control_state.get('max_step_retries', execution_limits.get('max_step_retries', 0)),
+        max_execution_time_seconds=agent_control_state.get('max_execution_time_seconds', execution_limits.get('max_execution_time_seconds', 300)),
     )
     
     # Apply planning command: /planning or /planning:on/off
