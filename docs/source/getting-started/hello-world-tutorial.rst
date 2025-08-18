@@ -897,7 +897,7 @@ By completing this tutorial, you've created an agentic system that demonstrates:
    Try invoking other (framework-provided) capabilities :
    
    - "Save the current weather in Prague to my memories"
-   - "Calculate the square root of 42"
+   - "Calculate the square root of the temperature in San Francisco"
 
    Try out 'human in the loop' mechanics, for example by activating ``planning`` mode:
 
