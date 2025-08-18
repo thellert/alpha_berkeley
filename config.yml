@@ -38,6 +38,7 @@ execution_control:
   # Execution safety limits and control flow
   limits:
     max_reclassifications: 1         # Maximum times a task can be reclassified
+    max_planning_attempts: 2         # Maximum number of planning attempts before giving up
     max_step_retries: 3              # Maximum retries per step before failing
     max_execution_time_seconds: 3000 # Maximum execution time (50 minutes)
     graph_recursion_limit: 100       # LangGraph recursion limit to prevent infinite loops
