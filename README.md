@@ -1,9 +1,13 @@
 # Alpha Berkeley Framework
 
+
 > **🚧 Early Access Release**  
 > This is an early access version of the Alpha Berkeley Framework. While the core functionality is stable and ready for experimentation, documentation and APIs may still evolve. We welcome feedback and contributions!
 
 An open-source, domain-agnostic, capability-based architecture for building intelligent agents that can be adapted to any specific domain.
+
+**📢 Conference Update**  
+Our work “Agentic Systems in Accelerator Control and Optimization” will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
 
 ## 📚 Documentation
 
