@@ -47,9 +47,9 @@ def get_version_from_git():
             version = result.stdout.strip()
             return version.lstrip('v')
         else:
-            return '0.2.1'  # fallback version
+            return ''
     except (subprocess.SubprocessError, FileNotFoundError):
-        return '0.2.0'  # fallback version
+        return ''
 
 project = 'Alpha Berkeley Framework'
 copyright = '2025, ALS Team'
