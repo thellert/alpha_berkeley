@@ -161,6 +161,7 @@ all = [
 Homepage = "https://thellert.github.io/alpha_berkeley"
 Documentation = "https://thellert.github.io/alpha_berkeley"
 Repository = "https://github.com/thellert/alpha_berkeley"
+Paper = "https://arxiv.org/abs/2508.15066"
 Issues = "https://github.com/thellert/alpha_berkeley/issues"
 Changelog = "https://github.com/thellert/alpha_berkeley/blob/main/CHANGELOG.md"
 

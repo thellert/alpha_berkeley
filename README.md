@@ -7,7 +7,7 @@
 An open-source, domain-agnostic, capability-based architecture for building intelligent agents that can be adapted to any specific domain.
 
 **📢 Conference Update**  
-Our work “Agentic Systems in Accelerator Control and Optimization” will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
+Our work "Agentic Systems in Accelerator Control and Optimization" will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
 
 ## 📚 Documentation
 
@@ -24,6 +24,24 @@ Our work “Agentic Systems in Accelerator Control and Optimization” will be p
 - **Modular Architecture** - Easily integrates new capabilities without disrupting workflows
 - **Human-in-the-Loop Ready** - Transparent execution plans for inspection and debugging
 - **Domain-Adaptable** - Designed for heterogeneous scientific infrastructure
+
+---
+
+## 📖 Citation
+
+If you use the Alpha Berkeley Framework in your research or projects, please cite our [paper](https://arxiv.org/abs/2508.15066):
+
+```bibtex
+@misc{hellert2025alphaberkeley,
+      title={Alpha Berkeley: A Scalable Framework for the Orchestration of Agentic Systems}, 
+      author={Thorsten Hellert and João Montenegro and Antonin Sulc},
+      year={2025},
+      eprint={2508.15066},
+      archivePrefix={arXiv},
+      primaryClass={cs.MA},
+      url={https://arxiv.org/abs/2508.15066}, 
+}
+```
 
 ---
 

@@ -85,6 +85,21 @@ Documentation Structure
       :class-header: bg-warning text-white
       
       Framework internals, development guidelines, and contribution workflows.
+.. dropdown:: Citation
+   :color: primary
+   :icon: quote
+
+   If you use the Alpha Berkeley Framework in your research or projects, please cite our `paper <https://arxiv.org/abs/2508.15066>`_:
+
+   .. code-block:: bibtex
+
+      @article{hellert2025alpha,
+        title={Alpha Berkeley: A Scalable Framework for the Orchestration of Agentic Systems},
+        author={Hellert, Thorsten and Montenegro, João and Sulc, Antonin},
+        journal={arXiv preprint arXiv:2508.15066},
+        year={2025},
+        url={https://arxiv.org/abs/2508.15066}
+      }
 
 .. toctree::
    :hidden:
@@ -94,4 +109,5 @@ Documentation Structure
    api_reference/index
    example-applications/index
    contributing/index
+   citation
 
