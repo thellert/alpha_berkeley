@@ -681,6 +681,11 @@ class CurrentWeatherCapability(BaseCapability):
                     result=True,
                     reason="Clothing decision depends on current weather/temperature conditions."
                 ),
+                ClassifierExample(
+                    query="Calculate the average of today's temperature readings",
+                    result=True,
+                    reason="Mathematical calculations on weather metrics require current weather data."
+                ),
             ],
             actions_if_true=ClassifierActions()
         )
