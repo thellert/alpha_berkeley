@@ -4,11 +4,17 @@ BOLT Beamline API Interface.
 Provides interface to BOLT imaging beamline hardware systems
 including motor control, detector imaging, and photogrammetry operations.
 """
+<<<<<<< HEAD
 import random
 import requests #added requests
 from datetime import datetime
 from dataclasses import dataclass
 import subprocess
+=======
+import random, requests #added requests
+from datetime import datetime
+from dataclasses import dataclass
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
 @dataclass
 class CurrentAngleReading:
@@ -39,11 +45,14 @@ class CurrentRunScanReading:
     condition: str
     timestamp: datetime
 
+<<<<<<< HEAD
 @dataclass
 class CurrentReconstructObjectReading:
     """Structured data model for reconstruction from folder execution results."""
     condition: str
     timestamp: datetime
+=======
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
 class BoltAPI:
     """BOLT beamline hardware interface.
@@ -58,6 +67,7 @@ class BoltAPI:
     }
     """Motor configuration for BOLT beamline motors."""
 
+<<<<<<< HEAD
     #For WebUI Use
     FASTAPI_URL = "host.docker.internal"
 
@@ -66,6 +76,16 @@ class BoltAPI:
     def get_current_angle(self, motor: str) -> CurrentAngleReading:
         """Retrieve current angular position of the specified motor."""
         
+=======
+    FASTAPI_URL = "http://198.128.193.130:8000"
+
+    def get_current_angle(self, motor: str) -> CurrentAngleReading:
+        """Retrieve current angular position of the specified motor.
+        """
+        
+        get_angle_API = self.FASTAPI_URL + "/get_angle"
+
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         # Normalize motor name for consistent matching
         motor = motor.title()
         if motor not in self.MOTOR_DATA:
@@ -73,6 +93,7 @@ class BoltAPI:
             motor = "DMC01:A"
                 
         try:
+<<<<<<< HEAD
             """Get motor values"""
             import json
             
@@ -104,6 +125,16 @@ class BoltAPI:
             print("STDERR:", result.stderr)
             
             angle_res = 0
+=======
+            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
+            response = requests.get(get_angle_API, timeout=5, proxies={"http": None, "https": None})
+
+            data = response.text
+            angle_str = data.split()
+            angle_str = angle_str[-1][:-1]  #Remove last character from said string
+            
+            angle_res = angle_str
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             return CurrentAngleReading(
                 motor=motor,
@@ -119,10 +150,19 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 
+<<<<<<< HEAD
     def move_motor(self, motor: str, move_amount: str) -> CurrentMoveMotorReading:
         """Move motor to specified position (absolute or relative based on flag).
         """
         move_motor_api = f"{self.FASTAPI_URL}/move_motor/{move_amount}/"
+=======
+    def move_motor(self, motor: str, move_amount: str, flag: int) -> CurrentMoveMotorReading:
+        """Move motor to specified position (absolute or relative based on flag).
+        """
+        print(move_amount)
+        move_motor_api = f"{self.FASTAPI_URL}/move_motor/{move_amount}/{flag}/"
+        print(move_motor_api)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         # Normalize motor name for consistent matching
         motor = motor.title()
         if motor not in self.MOTOR_DATA:
@@ -130,6 +170,7 @@ class BoltAPI:
             motor = "DMC01:A"
                 
         try:
+<<<<<<< HEAD
             import json
             
             # Use the configurable FASTAPI_URL
@@ -161,6 +202,10 @@ class BoltAPI:
             print("Return code:", result.returncode)
             print("STDOUT:", result.stdout)
             print("STDERR:", result.stderr)
+=======
+            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
+            response = requests.get(move_motor_api, timeout=5, proxies={"http": None, "https": None})
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             return CurrentMoveMotorReading(
                 motor=motor,
@@ -200,6 +245,7 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 
+<<<<<<< HEAD
     def run_photogrammetry_scan(self, start_angle: float, end_angle: float, num_projections: int, save_folder: str) -> CurrentRunScanReading:
         """Execute photogrammetry scan with multiple projections."""
         
@@ -236,6 +282,19 @@ class BoltAPI:
             #print("Return code:", result.returncode)
             #print("STDOUT:", result.stdout)
             #print("STDERR:", result.stderr)
+=======
+    def run_photogrammetry_scan(self) -> CurrentRunScanReading:
+        """Execute photogrammetry scan with multiple projections."""
+        
+        scan_API = self.FASTAPI_URL + "/run_scan"
+                
+        try:
+            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
+            response = requests.get(scan_API, timeout=5, proxies={"http": None, "https": None})
+
+            data = response.text
+            print(data)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             return CurrentRunScanReading(
                 condition="Remote Scan Completed",
@@ -247,6 +306,7 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 # Global API instance for BOLT beamline hardware access
+<<<<<<< HEAD
     def reconstruct_object(self, input_folder: str) -> CurrentReconstructObjectReading: 
         """Reconstruct object from folder."""
         try:
@@ -290,4 +350,6 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 
+=======
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 bolt_api = BoltAPI()

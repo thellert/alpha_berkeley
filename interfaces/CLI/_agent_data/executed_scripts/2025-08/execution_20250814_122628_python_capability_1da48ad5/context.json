@@ -1,0 +1,28 @@
+{
+  "MOTOR_MOVEMENT": {
+    "motor_position_320": {
+      "motor": "DMC01:A",
+      "angle": 320.0,
+      "condition": "Remote Movement Succeeded",
+      "timestamp": "2025-08-14 11:24:29.771536"
+    },
+    "motor_move_320": {
+      "motor": "DMC01:A",
+      "angle": 320.0,
+      "condition": "Remote Movement Succeeded",
+      "timestamp": "2025-08-14 11:51:36.905860"
+    },
+    "motor_movement_320": {
+      "motor": "DMC01:A",
+      "angle": 320.0,
+      "condition": "Remote Movement Succeeded",
+      "timestamp": "2025-08-14 12:03:40.333568"
+    }
+  },
+  "DETECTOR_IMAGE": {
+    "measurement_image": {
+      "condition": "Error: HTTPConnectionPool(host='198.128.193.130', port=8000): Read timed out. (read timeout=5)",
+      "timestamp": "2025-08-14 12:24:25.651362"
+    }
+  }
+}

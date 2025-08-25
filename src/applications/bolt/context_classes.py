@@ -142,6 +142,7 @@ class CurrentRunScanContext(CapabilityContext):
         return {
             "summary": f"Photogrammetry scan completed at {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
         }
+<<<<<<< HEAD
 
 class CurrentReconstructObjectContext(CapabilityContext):
     """Structured context for reconstruction from folder data from BOLT beamline.
@@ -173,3 +174,5 @@ class CurrentReconstructObjectContext(CapabilityContext):
         return {
             "summary": f"Reconstruction from folder completed at {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
         }
+=======
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a

@@ -64,13 +64,24 @@ class MotorPositionSetCapability(BaseCapability):
             print(target_angle)
             
             # Check for relative vs absolute movement
+<<<<<<< HEAD
+=======
+            by_flag = 1 if "by" in query else 0
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             
             # BOLT beamline sample rotation motor
             motor = "DMC01:A"
             
+<<<<<<< HEAD
             streamer.status(f"Moving {motor} to {target_angle}°...")
             
             move_data = bolt_api.move_motor(motor, target_angle)
+=======
+            movement_type = "relative" if by_flag else "absolute"
+            streamer.status(f"Moving {motor} to {target_angle}° ({movement_type})...")
+            
+            move_data = bolt_api.move_motor(motor, target_angle, by_flag)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             # Create context object
             context = CurrentMoveMotorContext(
@@ -102,26 +113,41 @@ class MotorPositionSetCapability(BaseCapability):
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
+<<<<<<< HEAD
                 metadata={
                     "user_message": "Motor communication timeout, retrying...",
                     "technical_details": str(exc)
                 }
+=======
+                user_message="Motor communication timeout, retrying...",
+                technical_details=str(exc)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         elif isinstance(exc, ValueError):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
+<<<<<<< HEAD
                 metadata={
                     "user_message": f"Invalid motor position: {str(exc)}",
                     "technical_details": str(exc)
                 }
+=======
+                user_message=f"Invalid motor position: {str(exc)}",
+                technical_details=str(exc)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
+<<<<<<< HEAD
             metadata={
                 "user_message": f"Motor movement error: {str(exc)}",
                 "technical_details": f"Error: {type(exc).__name__}"
             }
+=======
+            user_message=f"Motor movement error: {str(exc)}",
+            technical_details=f"Error: {type(exc).__name__}"
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     @staticmethod

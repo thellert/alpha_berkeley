@@ -81,18 +81,28 @@ class MotorPositionReadCapability(BaseCapability):
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
+<<<<<<< HEAD
                 metadata={
                     "user_message": "Motor communication timeout, retrying...",
                     "technical_details": str(exc)
                 }
+=======
+                user_message="Motor communication timeout, retrying...",
+                technical_details=str(exc)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
+<<<<<<< HEAD
             metadata={
                 "user_message": f"Motor position read error: {str(exc)}",
                 "technical_details": f"Error: {type(exc).__name__}"
             }
+=======
+            user_message=f"Motor position read error: {str(exc)}",
+            technical_details=f"Error: {type(exc).__name__}"
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     @staticmethod

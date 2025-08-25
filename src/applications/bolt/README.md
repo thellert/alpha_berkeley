@@ -28,11 +28,14 @@ BOLT is the base testbed that showcases the Alpha Berkeley Framework's capabilit
 
 ---
 
+<<<<<<< HEAD
 ### On your webUI, modify openAI API to use http://pieplines:9099 instead of 
 ### http://host.docker.internal:9099, which lets you talk to bolt regularly
 
 ---
 
+=======
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 ## 🏗️ Framework Architecture
 
 ### Alpha Berkeley Integration
@@ -335,18 +338,28 @@ def classify_error(exc: Exception) -> ErrorClassification:
     if isinstance(exc, (ConnectionError, TimeoutError)):
         return ErrorClassification(
             severity=ErrorSeverity.RETRIABLE,
+<<<<<<< HEAD
             metadata={
                 "user_message": "Communication timeout, retrying...",
                 "technical_details": str(exc)
             }
+=======
+            user_message="Communication timeout, retrying...",
+            technical_details=str(exc)
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     return ErrorClassification(
         severity=ErrorSeverity.CRITICAL,
+<<<<<<< HEAD
         metadata={
             "user_message": f"Operation failed: {str(exc)}",
             "technical_details": f"Error: {type(exc).__name__}"
         }
+=======
+        user_message=f"Operation failed: {str(exc)}",
+        technical_details=f"Error: {type(exc).__name__}"
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
     )
 ```
 
@@ -634,30 +647,48 @@ def classify_error(exc: Exception, context: dict) -> ErrorClassification:
     if isinstance(exc, (ConnectionError, TimeoutError)):
         return ErrorClassification(
             severity=ErrorSeverity.RETRIABLE,
+<<<<<<< HEAD
             metadata={
                 "user_message": "Communication timeout, retrying...",
                 "technical_details": str(exc),
                 "context": context
             }
+=======
+            user_message="Communication timeout, retrying...",
+            technical_details=str(exc),
+            context=context
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     if isinstance(exc, ValidationError):
         return ErrorClassification(
             severity=ErrorSeverity.USER_ERROR,
+<<<<<<< HEAD
             metadata={
                 "user_message": "Invalid parameters provided",
                 "technical_details": str(exc),
                 "context": context
             }
+=======
+            user_message="Invalid parameters provided",
+            technical_details=str(exc),
+            context=context
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     return ErrorClassification(
         severity=ErrorSeverity.CRITICAL,
+<<<<<<< HEAD
         metadata={
             "user_message": f"Operation failed: {str(exc)}",
             "technical_details": f"Error: {type(exc).__name__}",
             "context": context
         }
+=======
+        user_message=f"Operation failed: {str(exc)}",
+        technical_details=f"Error: {type(exc).__name__}",
+        context=context
+>>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
     )
 ```
 
