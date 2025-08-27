@@ -59,7 +59,6 @@ class BoltRegistryProvider(RegistryConfigProvider):
                     provides=["PHOTOGRAMMETRY_SCAN"],
                     requires=[]
                 ),
-<<<<<<< HEAD
                 CapabilityRegistration(
                     name="reconstruct_object",
                     module_path="applications.bolt.capabilities.reconstruct_object",
@@ -68,8 +67,14 @@ class BoltRegistryProvider(RegistryConfigProvider):
                     provides=["RECONSTRUCT_OBJECT"],
                     requires=[]
                 ),
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
+                CapabilityRegistration(
+                    name="ply_quality_assessment",
+                    module_path="applications.bolt.capabilities.ply_quality_assessment",
+                    class_name="PLYQualityAssessmentCapability", 
+                    description="Assess quality of 3D reconstruction from PLY file",
+                    provides=["PLY_QUALITY_ASSESSMENT"],
+                    requires=[]
+                ),
             ],
             
             context_classes=[
@@ -93,13 +98,15 @@ class BoltRegistryProvider(RegistryConfigProvider):
                     module_path="applications.bolt.context_classes", 
                     class_name="CurrentRunScanContext"
                 ),
-<<<<<<< HEAD
                 ContextClassRegistration(
                     context_type="RECONSTRUCT_OBJECT",
                     module_path="applications.bolt.context_classes", 
                     class_name="CurrentReconstructObjectContext"
                 ),
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
+                ContextClassRegistration(
+                    context_type="PLY_QUALITY_ASSESSMENT",
+                    module_path="applications.bolt.context_classes", 
+                    class_name="CurrentPlyQualityContext"
+                ),
             ]
         )

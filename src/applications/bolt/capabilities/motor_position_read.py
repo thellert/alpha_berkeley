@@ -81,28 +81,18 @@ class MotorPositionReadCapability(BaseCapability):
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
-<<<<<<< HEAD
                 metadata={
                     "user_message": "Motor communication timeout, retrying...",
                     "technical_details": str(exc)
                 }
-=======
-                user_message="Motor communication timeout, retrying...",
-                technical_details=str(exc)
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
-<<<<<<< HEAD
             metadata={
                 "user_message": f"Motor position read error: {str(exc)}",
                 "technical_details": f"Error: {type(exc).__name__}"
             }
-=======
-            user_message=f"Motor position read error: {str(exc)}",
-            technical_details=f"Error: {type(exc).__name__}"
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     @staticmethod
@@ -120,15 +110,15 @@ class MotorPositionReadCapability(BaseCapability):
 
         example = OrchestratorExample(
             step=PlannedStep(
-                context_key="motor_position_status",
+                context_key="current_motor_position",
                 capability="motor_position_read",
                 task_objective="Read current angular position of sample rotation motor",
-                expected_output=registry.context_types.MOTOR_POSITION,
-                success_criteria="Current motor angle retrieved in degrees",
+                expected_output=registry.context_types.MOTOR_POSITION, 
+                success_criteria="Current motor angle retrieved in degrees from Tiled data source",
                 inputs=[]
             ),
             scenario_description="Reading current sample rotation motor position for status check or before movement",
-            notes=f"Output stored as {registry.context_types.MOTOR_POSITION}. Use before motor movements or for status checks."
+            notes=f"Data retrieved from {registry.context_types.MOTOR_POSITION}, generated from Tiled. Use before motor movements or for status checks."
         )
         
         return OrchestratorGuide(
@@ -143,9 +133,10 @@ class MotorPositionReadCapability(BaseCapability):
 - Required before motor position changes
 - Used for sample alignment verification
 
-**Output: {registry.context_types.MOTOR_POSITION}**
-- Contains: motor_id, angle_degrees, timestamp
+**Output:
+- Contains: motor_id, angle_degrees, timestamp  
 - Available for motor movement planning and status reporting
+- Live data acquired via queue server execution and extracted from Tiled metadata
 
 **Typical Workflow Position:**
 - Often first step before motor movements

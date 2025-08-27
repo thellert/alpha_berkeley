@@ -12,10 +12,11 @@ from pydantic import Field
 from framework.context.base import CapabilityContext
 
 class CurrentAngleContext(CapabilityContext):
-    """Structured context for motor position data from BOLT beamline.
+    """Structured context for motor position data from BOLT beamline via Tiled.
     
-    Stores current angular position of sample rotation motor for experimental setup,
-    status reporting, and coordination with other beamline operations.
+    Stores current angular position retrieved from queue server execution and 
+    extracted from Tiled metadata for experimental setup, status reporting, 
+    and coordination with other beamline operations.
     """
 
     CONTEXT_TYPE: ClassVar[str] = "MOTOR_POSITION"
@@ -41,9 +42,9 @@ class CurrentAngleContext(CapabilityContext):
         }
     
     def get_human_summary(self, key: str) -> dict:
-        """Generate human-readable summary of motor position data."""
+        """Generate human-readable summary of motor position data from Tiled."""
         return {
-            "summary": f"Motor {self.motor} positioned at {self.angle}° on {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
+            "summary": f"Motor {self.motor} positioned at {self.angle}° (retrieved from Tiled data after executing through the queue serveron {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')})"
         }
     
 class CurrentMoveMotorContext(CapabilityContext):
@@ -142,7 +143,6 @@ class CurrentRunScanContext(CapabilityContext):
         return {
             "summary": f"Photogrammetry scan completed at {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
         }
-<<<<<<< HEAD
 
 class CurrentReconstructObjectContext(CapabilityContext):
     """Structured context for reconstruction from folder data from BOLT beamline.
@@ -174,5 +174,33 @@ class CurrentReconstructObjectContext(CapabilityContext):
         return {
             "summary": f"Reconstruction from folder completed at {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
         }
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
+
+class CurrentPlyQualityContext(CapabilityContext):
+    """Structured context for PLY quality assessment data from BOLT beamline.
+    
+    Stores information about completed PLY quality assessment including
+    assessment parameters, execution status, and data collection metadata.
+    """
+
+    CONTEXT_TYPE: ClassVar[str] = "PLY_QUALITY_ASSESSMENT"
+    CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
+    # Photogrammetry scan data
+    condition: str = Field(description="PLY quality assessment completion status and experimental condition")
+    timestamp: datetime = Field(description="Timestamp when PLY quality assessment was completed")
+
+    def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Provide structured access information for LLM consumption and templating."""
+        key_ref = key_name if key_name else "key_name"
+        
+        return {
+            "ply_quality_assessment_status": self.condition,
+            "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.condition, context.{self.CONTEXT_TYPE}.{key_ref}.timestamp",
+            "example_usage": f"PLY quality assessment completed with status: {{context.{self.CONTEXT_TYPE}.{key_ref}.condition}}",
+            "available_fields": ["condition", "timestamp"]
+        }
+
+    def get_human_summary(self, key: str) -> dict:
+        """Generate human-readable summary of photogrammetry scan data."""
+        return {
+            "summary": f"PLY quality assessment completed at {self.timestamp.strftime('%Y-%m-%d')} at {self.timestamp.strftime('%H:%M')}"
+        }

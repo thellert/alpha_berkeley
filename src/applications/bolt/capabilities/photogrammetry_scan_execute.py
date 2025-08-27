@@ -35,8 +35,6 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
     provides = ["PHOTOGRAMMETRY_SCAN"]
     requires = []
     
-<<<<<<< HEAD
-=======
     def extract_scan_params(query: str) -> dict:
         # Lowercase for consistency
         q = query.lower()
@@ -68,7 +66,6 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
             "num_projections": num_projections,
             "output_folder": output_folder
         }
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
     @staticmethod
     async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
         """Execute complete photogrammetry scan workflow."""
@@ -84,10 +81,7 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
             start_angle = None
             end_angle = None
             num_projections = None
-<<<<<<< HEAD
             save_folder = None
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             
             # Parse angle range (e.g., "from 0 to 180")
             match_range = re.search(r"from\s+(-?\d+\.?\d*)\s+to\s+(-?\d+\.?\d*)", query)
@@ -100,7 +94,6 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
             if match_proj:
                 num_projections = int(match_proj.group(1))
 
-<<<<<<< HEAD
             # Check if sentence contains save-related keywords
             if "save" in query.lower():
                 # First try to find quoted text (most reliable)
@@ -117,26 +110,16 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
             else:
                 save_folder = "Default"
             
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             # Set defaults if not specified
             start_angle = start_angle if start_angle is not None else 0
             end_angle = end_angle if end_angle is not None else 180
             num_projections = num_projections if num_projections is not None else 10
-<<<<<<< HEAD
             save_folder = save_folder if save_folder is not None else "Default"
             
             streamer.status(f"Starting photogrammetry scan: {start_angle}° to {end_angle}° with {num_projections} projections...")
             
             scan_data = bolt_api.run_photogrammetry_scan(start_angle, end_angle, num_projections, save_folder)
         
-=======
-            
-            streamer.status(f"Starting photogrammetry scan: {start_angle}° to {end_angle}° with {num_projections} projections...")
-            
-            scan_data = bolt_api.run_photogrammetry_scan()
-            
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             # Create context object
             context = CurrentRunScanContext(
                 condition=scan_data.condition,
@@ -165,41 +148,26 @@ class PhotogrammetryScanExecuteCapability(BaseCapability):
         if isinstance(exc, (ConnectionError, TimeoutError)):
             return ErrorClassification(
                 severity=ErrorSeverity.RETRIABLE,
-<<<<<<< HEAD
                 metadata={
                     "user_message": "Beamline communication timeout, retrying...",
                     "technical_details": str(exc)
                 }
-=======
-                user_message="Beamline communication timeout, retrying...",
-                technical_details=str(exc)
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         elif isinstance(exc, ValueError):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
-<<<<<<< HEAD
                 metadata={
                     "user_message": f"Invalid scan parameters: {str(exc)}",
                     "technical_details": str(exc)
                 }
-=======
-                user_message=f"Invalid scan parameters: {str(exc)}",
-                technical_details=str(exc)
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
             )
         
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
-<<<<<<< HEAD
             metadata={
                 "user_message": f"Photogrammetry scan error: {str(exc)}",
                 "technical_details": f"Error: {type(exc).__name__}"
             }
-=======
-            user_message=f"Photogrammetry scan error: {str(exc)}",
-            technical_details=f"Error: {type(exc).__name__}"
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         )
     
     @staticmethod

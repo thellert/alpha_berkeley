@@ -4,18 +4,12 @@ BOLT Beamline API Interface.
 Provides interface to BOLT imaging beamline hardware systems
 including motor control, detector imaging, and photogrammetry operations.
 """
-<<<<<<< HEAD
 import random
 import requests #added requests
 from datetime import datetime
 from dataclasses import dataclass
 import subprocess
-=======
-import random, requests #added requests
-from datetime import datetime
-from dataclasses import dataclass
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
-
+import time
 @dataclass
 class CurrentAngleReading:
     """Structured data model for motor angular position readings.
@@ -45,14 +39,17 @@ class CurrentRunScanReading:
     condition: str
     timestamp: datetime
 
-<<<<<<< HEAD
 @dataclass
 class CurrentReconstructObjectReading:
     """Structured data model for reconstruction from folder execution results."""
     condition: str
     timestamp: datetime
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
+
+@dataclass
+class CurrentPlyQualityReading:
+    """Structured data model for PLY quality assessment execution results."""
+    condition: str
+    timestamp: datetime
 
 class BoltAPI:
     """BOLT beamline hardware interface.
@@ -67,25 +64,14 @@ class BoltAPI:
     }
     """Motor configuration for BOLT beamline motors."""
 
-<<<<<<< HEAD
     #For WebUI Use
-    FASTAPI_URL = "host.docker.internal"
+    #FASTAPI_URL = "host.docker.internal"
 
-    #FASTAPI_URL = "localhost"
-
+    FASTAPI_URL = "localhost"
+    #Working with real data captured from tiled, with a delay to wait if the run is not complete
     def get_current_angle(self, motor: str) -> CurrentAngleReading:
         """Retrieve current angular position of the specified motor."""
         
-=======
-    FASTAPI_URL = "http://198.128.193.130:8000"
-
-    def get_current_angle(self, motor: str) -> CurrentAngleReading:
-        """Retrieve current angular position of the specified motor.
-        """
-        
-        get_angle_API = self.FASTAPI_URL + "/get_angle"
-
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         # Normalize motor name for consistent matching
         motor = motor.title()
         if motor not in self.MOTOR_DATA:
@@ -93,7 +79,6 @@ class BoltAPI:
             motor = "DMC01:A"
                 
         try:
-<<<<<<< HEAD
             """Get motor values"""
             import json
             
@@ -119,26 +104,75 @@ class BoltAPI:
                 }),
             ]
 
+            # Use requests.post() correctly
             result = subprocess.run(cmd, capture_output=True, text=True)
-            print("Return code:", result.returncode)
-            print("STDOUT:", result.stdout)
-            print("STDERR:", result.stderr)
+            product = json.loads(result.stdout)
             
-            angle_res = 0
-=======
-            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
-            response = requests.get(get_angle_API, timeout=5, proxies={"http": None, "https": None})
+            item_uid = (product["item"]["item_uid"])
 
-            data = response.text
-            angle_str = data.split()
-            angle_str = angle_str[-1][:-1]  #Remove last character from said string
+            try:
+                current_pos = 0
+                while(current_pos != "run_list"):
+                    # Test GET method for history
+                    queue_url = f"http://{self.FASTAPI_URL}:8003/api/re/runs/active"
+                    
+                    # Use GET method (not POST)
+                    cmd = [
+                        "curl",
+                        "-X", "GET",  # Changed from POST to GET
+                        queue_url,
+                        "-H", "accept: application/json",
+                        "-H", "Authorization: Apikey test"
+                    ]   
+
+                    result = subprocess.run(cmd, capture_output=True, text=True)
+                    history_data = json.loads(result.stdout)
+                    for item in history_data:
+                        current_pos = item
+                    time.sleep(1)
+            except Exception as e:
+                print(f"Error: {e}")
+
+            try:
+                # Test GET method for history
+                queue_url = f"http://{self.FASTAPI_URL}:8003/api/history/get"
+                
+                # Use GET method (not POST)
+                cmd = [
+                    "curl",
+                    "-X", "GET",  # Changed from POST to GET
+                    queue_url,
+                    "-H", "accept: application/json",
+                    "-H", "Authorization: Apikey test"
+                ]   
+
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                history_data = json.loads(result.stdout)
+
+                for item in history_data["items"]:
+                    if item["item_uid"] == item_uid:
+                        run_id = (item["result"]["run_uids"][0])
+                        break
+
+            except Exception as e:
+                print(f"Error: {e}")
             
-            angle_res = angle_str
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
+            from tiled.client import from_uri
+            tiled_server_url = "http://localhost:8000"
+            tiled_api_key = "ca6ae384c9f944e1465176b7e7274046b710dc7e2703dc33369f7c900d69bd64"
+            # Connect to the Tiled server
+            tiled_client = from_uri(
+                tiled_server_url,
+                api_key=tiled_api_key
+            )
+
+            run_data = tiled_client["cd3f4195-1132-4e0d-8cf4-cfb402fee720"]
+            angle = run_data.metadata['start']['angle_degrees']
+                        
             return CurrentAngleReading(
                 motor=motor,
-                angle=float(angle_res),
+                angle=float(angle),
                 condition="Remote Angle Reading",
                 timestamp=datetime.now()
             )
@@ -150,19 +184,10 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 
-<<<<<<< HEAD
     def move_motor(self, motor: str, move_amount: str) -> CurrentMoveMotorReading:
         """Move motor to specified position (absolute or relative based on flag).
         """
         move_motor_api = f"{self.FASTAPI_URL}/move_motor/{move_amount}/"
-=======
-    def move_motor(self, motor: str, move_amount: str, flag: int) -> CurrentMoveMotorReading:
-        """Move motor to specified position (absolute or relative based on flag).
-        """
-        print(move_amount)
-        move_motor_api = f"{self.FASTAPI_URL}/move_motor/{move_amount}/{flag}/"
-        print(move_motor_api)
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
         # Normalize motor name for consistent matching
         motor = motor.title()
         if motor not in self.MOTOR_DATA:
@@ -170,7 +195,6 @@ class BoltAPI:
             motor = "DMC01:A"
                 
         try:
-<<<<<<< HEAD
             import json
             
             # Use the configurable FASTAPI_URL
@@ -202,10 +226,6 @@ class BoltAPI:
             print("Return code:", result.returncode)
             print("STDOUT:", result.stdout)
             print("STDERR:", result.stderr)
-=======
-            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
-            response = requests.get(move_motor_api, timeout=5, proxies={"http": None, "https": None})
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             return CurrentMoveMotorReading(
                 motor=motor,
@@ -225,27 +245,49 @@ class BoltAPI:
     def take_capture(self) -> CurrentTakeCaptureReading:
         """Capture single image from detector.
         """
-        
-        take_capture_API = self.FASTAPI_URL + "/take_measurement"
-                
         try:
-            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
-            response = requests.get(take_capture_API, timeout=5, proxies={"http": None, "https": None})
+            import json
+            # Use the configurable FASTAPI_URL
+            queue_url = f"http://{self.FASTAPI_URL}:8003/api/queue/item/execute"
+        
+            cmd = [
+                "curl",
+                "-X", "POST",
+                queue_url,
+                "-H", "accept: application/json",
+                "-H", "Authorization: Apikey test",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps({
+                    "item": {
+                        "name": "camera_acquire",
+                        "args": [],
+                        "kwargs": {
+                            "camera": "camera",
+                            "motor": "rotation_motor",
+                        },
+                        "item_type": "plan",
+                        "user": "UNAUTHENTICATED_SINGLE_USER",
+                        "user_group": "primary"
+                    }
+                }),
+            ]
 
-            data = response.text
-            print(data)
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            print("Return code:", result.returncode)
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
 
             return CurrentTakeCaptureReading(
-                condition="Remote Capture taken",
+                condition="Remote Movement Succeeded",
                 timestamp=datetime.now()
             )
         except Exception as e:
+            print(str(e))
             return CurrentTakeCaptureReading(
                 condition=f"Error: {str(e)}",
                 timestamp=datetime.now()
             )
 
-<<<<<<< HEAD
     def run_photogrammetry_scan(self, start_angle: float, end_angle: float, num_projections: int, save_folder: str) -> CurrentRunScanReading:
         """Execute photogrammetry scan with multiple projections."""
         
@@ -282,19 +324,6 @@ class BoltAPI:
             #print("Return code:", result.returncode)
             #print("STDOUT:", result.stdout)
             #print("STDERR:", result.stderr)
-=======
-    def run_photogrammetry_scan(self) -> CurrentRunScanReading:
-        """Execute photogrammetry scan with multiple projections."""
-        
-        scan_API = self.FASTAPI_URL + "/run_scan"
-                
-        try:
-            #response = requests.get(str(self.FASTAPI_URL), timeout= 5)
-            response = requests.get(scan_API, timeout=5, proxies={"http": None, "https": None})
-
-            data = response.text
-            print(data)
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
 
             return CurrentRunScanReading(
                 condition="Remote Scan Completed",
@@ -305,8 +334,7 @@ class BoltAPI:
                 condition=f"Error: {str(e)}",
                 timestamp=datetime.now()
             )
-# Global API instance for BOLT beamline hardware access
-<<<<<<< HEAD
+
     def reconstruct_object(self, input_folder: str) -> CurrentReconstructObjectReading: 
         """Reconstruct object from folder."""
         try:
@@ -350,6 +378,47 @@ class BoltAPI:
                 timestamp=datetime.now()
             )
 
-=======
->>>>>>> c83bf20d4036189859a3421f360826da42cedb0a
+    def analyze_ply_quality(self, input_folder: str) -> CurrentPlyQualityReading: 
+        """PLY quality assessment."""
+        try:
+            import json
+            
+            # Use the configurable FASTAPI_URL
+            queue_url = f"http://{self.FASTAPI_URL}:8003/api/queue/item/execute"
+            cmd = [
+                "curl",
+                "-X", "POST",
+                queue_url,
+                "-H", "accept: application/json",
+                "-H", "Authorization: Apikey test",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps({
+                    "item": {
+                            "name": "analyze_ply_quality",
+                            "args": [],
+                            "kwargs": {
+                                "image_dir": "Banana"
+                            },
+                            "item_type": "plan",
+                            "user": "UNAUTHENTICATED_SINGLE_USER",
+                            "user_group": "primary"
+                        }
+                }),
+            ]   
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            print("Return code:", result.returncode)
+            print("STDOUT:", result.stdout)
+            print("STDERR:", result.stderr)
+
+            return CurrentPlyQualityReading(
+                condition="Remote PLY Quality Assessment Completed",
+                timestamp=datetime.now()
+            )
+        except Exception as e:
+            return CurrentPlyQualityReading(
+                condition=f"Error: {str(e)}",
+                timestamp=datetime.now()
+            )
+
 bolt_api = BoltAPI()
