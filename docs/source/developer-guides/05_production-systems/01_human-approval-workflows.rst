@@ -72,6 +72,17 @@ Configure your approval system in ``config.yml`` with global modes and capabilit
 - ``selective``: Use capability-specific settings (recommended for production)
 - ``all_capabilities``: Force approval for all operations (maximum security)
 
+.. note::
+   **Current Implementation Status**
+   
+   The human approval system is currently implemented for the following capabilities:
+   
+   - **Python Execution Capability**: Supports approval for all code execution or selective approval for EPICS write operations
+   - **Memory Capability**: Supports approval for memory operations and data persistence
+   
+   Additional capabilities will be equipped with approval workflows in future releases based on operational requirements and security assessments.
+
+
 **Python Execution Modes:**
 
 - ``disabled``: No approval required for Python code
