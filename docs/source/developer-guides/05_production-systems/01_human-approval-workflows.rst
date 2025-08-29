@@ -56,7 +56,7 @@ Configure your approval system in ``config.yml`` with global modes and capabilit
 
 .. code-block:: yaml
 
-   # Security-first approval configuration
+   # Global approval configuration
    approval:
      global_mode: "selective"  # disabled, selective, all_capabilities
      capabilities:
