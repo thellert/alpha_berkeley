@@ -233,6 +233,25 @@ For optimal performance and user experience, consider these additional configura
 
 .. tab-set::
 
+    .. tab-item:: Model Management
+
+        **Making Models Public:**
+
+        To use Ollama models for OpenWebUI features like chat tagging, title generation, and other automated tasks, you must configure them as public models:
+
+        1. Go to **Admin Panel** → **Settings** → **Models**
+        2. Find the Ollama model you want to use (e.g., ``mistral:7b``, ``llama3:8b``)
+        3. Click the **edit button** (pencil icon) next to the model
+        4. Ensure the model is **activated** (enabled)
+        5. Set the model visibility to **Public** (not Private)
+        6. Click **Save** to apply the changes
+
+        **Deactivating Unused Models:**
+
+        - Deactivate unused (Ollama-)models in **Admin Panel** → **Settings** → **Models** to reduce clutter
+        - This helps keep your model selection interface clean and focused on the models you actually use
+        - You can always reactivate models later if needed
+
     .. tab-item:: Chat Augmentation
 
         OpenWebUI automatically generates titles and tags for conversations, which can interfere with your main agent's processing. It's recommended to use a dedicated local model for this:
@@ -242,13 +261,7 @@ For optimal performance and user experience, consider these additional configura
         3. Change from **Current Model** to any local Ollama model (e.g., ``mistral:7b``, ``llama3:8b``)
         4. This prevents title generation from consuming your main agent's resources
 
-    .. tab-item:: Model Management
-
-        **Deactivating Unused Models:**
-
-        - Deactivate unused (Ollama-)models in **Admin Panel** → **Settings** → **Models** to reduce clutter
-        - This helps keep your model selection interface clean and focused on the models you actually use
-        - You can always reactivate models later if needed
+        Note that this model needs to be public as well (see `Model Management`_ section to the left).
 
     .. tab-item:: Buttons
 
