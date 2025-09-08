@@ -280,7 +280,8 @@ class CLI:
             "user_id": "cli_user",
             "thread_id": self.thread_id,
             "chat_id": "cli_chat", 
-            "session_id": self.thread_id
+            "session_id": self.thread_id,
+            "interface_context": "cli"
         })
         
         # Add recursion limit to runtime config

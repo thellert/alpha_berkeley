@@ -559,6 +559,11 @@ def get_session_info() -> Dict[str, Any]:
         "session_url": configurable.get("session_url"),
     }
 
+def get_interface_context() -> str:
+    """Get interface context with automatic detection."""
+    configurable = _get_configurable()
+    return configurable.get("interface_context", "unknown")
+
 
 def get_current_application() -> Optional[str]:
     """Get current application with automatic context detection."""

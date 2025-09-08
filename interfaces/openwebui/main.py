@@ -19,6 +19,8 @@ import threading
 import time
 import uuid
 from typing import Any, Dict, Generator, Iterator, List, Optional, Union
+from collections import deque
+import logging
 
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
@@ -34,6 +36,32 @@ from configs.config import get_full_configuration, get_current_application, get_
 
 logger = get_logger("interface", "pipeline")
 
+# Global log capture system
+_log_buffer = deque(maxlen=1000)  # Keep last 1000 log entries
+
+class LogCapture(logging.Handler):
+    """Custom logging handler to capture logs in memory for the /logs command"""
+    
+    def emit(self, record):
+        try:
+            # Format the log entry
+            log_entry = self.format(record)
+            timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(record.created))
+            formatted_entry = f"[{timestamp}] {record.levelname:8} {log_entry}"
+            
+            # Add to buffer
+            _log_buffer.append(formatted_entry)
+        except Exception:
+            # Don't let logging errors break the application
+            pass
+
+# Install the log capture handler
+_log_capture_handler = LogCapture()
+_log_capture_handler.setLevel(logging.INFO)
+
+# Add to root logger to capture all logs
+root_logger = logging.getLogger()
+root_logger.addHandler(_log_capture_handler)
 
 def execute_startup_hook(hook_function_path: str):
     """Execute application-specific startup hook functions during pipeline initialization.
@@ -284,6 +312,11 @@ class Pipeline:
             description="Enable verbose logging"
         )
         
+        log_viewer_enabled: bool = Field(
+            default=True,
+            description="Enable container log viewer commands"
+        )
+        
         # Checkpointing
         use_persistent_checkpointing: bool = Field(
             default=True,
@@ -366,6 +399,9 @@ class Pipeline:
         self._initialized = False
         
         logger.info(f"Pipeline '{self.name}' initialized with app: {self.valves.app_name}")
+        # Initialize log buffer with startup entries
+        _log_buffer.append(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] INFO     Pipeline initialized: {self.name}")
+        _log_buffer.append(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] INFO     Log capture active - buffer capacity: {_log_buffer.maxlen}")
 
     def _create_status_event(self, description: str, done: bool) -> dict:
         """Helper function to create a status event dictionary for dynamic UI updates."""
@@ -571,7 +607,8 @@ class Pipeline:
             "user_id": user_id,
             "thread_id": f"{user_id}_{chat_id}",
             "chat_id": chat_id, 
-            "session_id": session_id
+            "session_id": session_id,
+            "interface_context": "openwebui"
         })
         
         # Apply valve overrides to agent control defaults
@@ -757,7 +794,12 @@ class Pipeline:
             # Build configuration
             config = self._build_config_for_session(user_id, chat_id, session_id)
             
-            # Send initial status update
+            # Check for log viewer commands first (before showing processing status)
+            if self.valves.log_viewer_enabled and user_message.strip().startswith("/logs"):
+                yield from self._handle_log_command(user_message.strip())
+                return
+            
+            # Send initial status update for regular message processing
             yield self._create_status_event("Processing message...", False)
             
             # Execute async processing in sync context
@@ -765,6 +807,7 @@ class Pipeline:
             asyncio.set_event_loop(loop)
             
             try:
+                
                 # Gateway handles all preprocessing
                 result = loop.run_until_complete(
                     self._gateway.process_message(user_message, self._graph, config)
@@ -910,14 +953,241 @@ class Pipeline:
         return None
 
     def _extract_response_from_state(self, state: Dict[str, Any]) -> Optional[str]:
-        """Extract response from final state"""
+        """Extract response from final state and include any generated figures"""
         
         messages = state.get("messages", [])
+        text_response = None
+        
         if messages:
             # Get the latest AI message
             for msg in reversed(messages):
                 if hasattr(msg, 'content') and msg.content:
                     if not hasattr(msg, 'type') or msg.type != 'human':
-                        return msg.content
+                        text_response = msg.content
+                        break
         
-        return None 
+        # Check for generated figures from Python execution
+        figures_html = self._extract_figures_from_state(state)
+        
+        if text_response and figures_html:
+            # Combine text response with figures
+            return f"{text_response}\n\n{figures_html}"
+        elif figures_html:
+            # Only figures, no text response
+            return figures_html
+        else:
+            # Only text response or nothing
+            return text_response
+
+    def _extract_figures_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+        """
+        Extract figures from centralized registry and convert to base64 HTML.
+        
+        Works for any capability that registers figures through StateManager.register_figure().
+        Provides automatic path resolution and rich metadata display.
+        """
+        try:
+            # Get figures from centralized registry
+            ui_figures = state.get("ui_captured_figures", [])
+            
+            if not ui_figures:
+                logger.debug("No figures found in ui_captured_figures registry")
+                return None
+                
+            logger.info(f"Processing {len(ui_figures)} figures from centralized registry")
+            all_figures_html = []
+            
+            for i, figure_entry in enumerate(ui_figures, 1):
+                try:
+                    # Extract figure information
+                    capability = figure_entry.get("capability", "unknown")
+                    figure_path = figure_entry["figure_path"]
+                    display_name = figure_entry.get("display_name", f"Figure {i}")
+                    metadata = figure_entry.get("metadata", {})
+                    created_at = figure_entry.get("created_at", "unknown")
+                    
+                    logger.debug(f"Processing figure: {display_name} from {capability}")
+                    
+                    # Resolve figure path using capability-agnostic logic
+                    full_figure_path = self._resolve_figure_path(figure_path, metadata)
+                    
+                    # Convert figure to base64
+                    figure_html = self._convert_figure_to_base64_html(
+                        full_figure_path, i, capability, created_at
+                    )
+                    
+                    if figure_html:
+                        # Simple figure display with clean metadata at bottom
+                        all_figures_html.append(figure_html)
+                    else:
+                        # Fallback for failed figure conversion
+                        error_placeholder = f"*❌ Could not display figure from {capability} (Path: {figure_path})*"
+                        all_figures_html.append(error_placeholder)
+                        
+                except Exception as e:
+                    logger.warning(f"Failed to process figure entry {figure_entry}: {e}")
+                    # Continue processing other figures
+                    continue
+            
+            if all_figures_html:
+                # Simple figure display without extra headers
+                return '\n\n'.join(all_figures_html)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Critical error in figure extraction: {e}")
+            return f"*❌ Figure display error: {str(e)}*"
+
+    def _resolve_figure_path(self, figure_path: str, metadata: Dict[str, Any]) -> str:
+        """
+        Capability-agnostic figure path resolution.
+        
+        Handles different path resolution strategies based on available metadata
+        from different capability types.
+        """
+        from pathlib import Path
+        
+        # If already absolute path, use as-is
+        if Path(figure_path).is_absolute():
+            return figure_path
+        
+        # Try different resolution strategies based on available metadata
+        if "execution_folder" in metadata:
+            # Python/container-based execution
+            return str(Path(metadata["execution_folder"]) / figure_path)
+        elif "working_directory" in metadata:
+            # R or other script-based execution
+            return str(Path(metadata["working_directory"]) / figure_path)
+        elif "project_root" in metadata:
+            # Project-based execution
+            return str(Path(metadata["project_root"]) / figure_path)
+        else:
+            # Fallback: assume relative to current working directory
+            logger.warning(f"No path resolution metadata available for {figure_path}, using cwd")
+            return str(Path.cwd() / figure_path)
+
+    def _convert_figure_to_base64_html(self, figure_path: str, figure_number: int, capability: str, created_at: str) -> Optional[str]:
+        """Convert a figure file to base64-encoded HTML img tag"""
+        
+        try:
+            import base64
+            from pathlib import Path
+            
+            path = Path(figure_path)
+            if not path.exists():
+                logger.warning(f"Figure file not found: {figure_path}")
+                return None
+            
+            # Read the image file
+            with open(path, 'rb') as image_file:
+                image_data = image_file.read()
+            
+            # Encode to base64
+            base64_encoded = base64.b64encode(image_data).decode('utf-8')
+                        
+            # Validate base64 data (ensure it's not corrupted)
+            if len(base64_encoded) < 100:
+                logger.warning(f"Base64 data seems too short ({len(base64_encoded)} chars), possible corruption")
+                return f"**Figure {figure_number}**: Image data corrupted (size: {len(base64_encoded)} chars)"
+            
+            # Try simple markdown image syntax
+            markdown_image = f"![Figure {figure_number}](data:image/png;base64,{base64_encoded})"
+            
+            # Clean figure display with metadata at bottom
+            full_response = f"""
+{markdown_image}
+
+*Source: {capability} | Created: {created_at[:19]} | File: {Path(figure_path).name}*
+"""
+            
+            return full_response.strip()
+            
+        except Exception as e:
+            logger.error(f"Failed to convert figure {figure_path} to base64: {e}")
+            return None
+
+    def _handle_log_command(self, command: str) -> Iterator[Union[str, dict]]:
+        """Handle log viewer commands like /logs, /logs 50, /logs follow"""
+        
+        try:
+            parts = command.split()
+            cmd = parts[0]  # /logs
+            
+            yield self._create_status_event("Fetching container logs...", False)
+            # Add log entry directly to buffer for immediate feedback
+            _log_buffer.append(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] INFO     Log command requested: {command}")
+            
+            if len(parts) == 1:
+                # Default: /logs (last 100 lines)
+                logs = self._get_container_logs(100)
+                yield self._create_status_event("", True)
+                yield f"**Container Logs (last 100 lines):**\n\n```\n{logs}\n```"
+                
+            elif len(parts) == 2:
+                arg = parts[1]
+                
+                if arg.isdigit():
+                    # Specific number of lines
+                    lines = int(arg)
+                    logs = self._get_container_logs(lines)
+                    yield self._create_status_event("", True)
+                    yield f"**Container Logs (last {lines} lines):**\n\n```\n{logs}\n```"
+                    
+                else:
+                    yield self._create_status_event("", True)
+                    yield "**Log Commands:**\n\n" \
+                          "• `/logs` - Show last 100 lines\n" \
+                          "• `/logs 50` - Show last 50 lines\n" \
+                          "• `/logs help` - Show this help"
+            else:
+                yield self._create_status_event("", True)
+                yield "**Log Commands:**\n\n" \
+                      "• `/logs` - Show last 100 lines\n" \
+                      "• `/logs 50` - Show last 50 lines\n" \
+                      "• `/logs help` - Show this help"
+                      
+        except Exception as e:
+            logger.exception(f"Error handling log command: {e}")
+            yield self._create_status_event("", True)
+            yield f"❌ Error fetching logs: {str(e)}"
+
+    def _get_container_logs(self, lines: int = 100, container_name: str = "pipelines") -> str:
+        """Fetch application logs from our in-memory log capture system"""
+        
+        try:
+            # Get logs from our capture buffer
+            if not _log_buffer:
+                return "No logs captured yet. Log capture system is active and will collect logs as they are generated."
+            
+            # Get the requested number of recent log entries
+            recent_logs = list(_log_buffer)[-lines:] if len(_log_buffer) >= lines else list(_log_buffer)
+            
+            if not recent_logs:
+                return "No recent logs available."
+            
+            # Convert Rich markup to clean markdown format for OpenWebUI
+            import re
+            
+            cleaned_logs = []
+            for log_entry in recent_logs:
+                # Remove Rich markup tags
+                entry = re.sub(r'\[/?[^\]]+\]', '', log_entry)
+            
+                cleaned_logs.append(entry)
+            
+            log_output = "\n".join(cleaned_logs)
+            
+            return f"""## 📋 Application Logs (last {len(recent_logs)} entries)
+
+```log
+{log_output}
+```
+
+---
+
+**Buffer Info:** {len(_log_buffer)}/{_log_buffer.maxlen} entries | **Showing:** {len(recent_logs)} entries"""
+                    
+        except Exception as e:
+            logger.exception(f"Error fetching captured logs: {e}")
+            return f"Error fetching logs: {str(e)}"
