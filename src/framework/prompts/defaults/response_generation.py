@@ -144,7 +144,18 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
     def _get_guidelines_section(self, info) -> str:
         """Get contextually appropriate guidelines to avoid conflicts."""
         guidelines = ["Provide a clear, accurate response"]
-        
+                
+        # Interface-aware figure handling
+        if hasattr(info, 'figures_available') and info.figures_available > 0:
+            interface_context = getattr(info, 'interface_context', 'unknown')
+            
+            if interface_context == "openwebui":
+                guidelines.append(f"Note: {info.figures_available} generated visualization(s) will be displayed automatically below your response - acknowledge and refer to them appropriately")
+            elif interface_context == "cli":
+                guidelines.append(f"Note: {info.figures_available} visualization(s) have been saved to files in the execution folder - they can not be rendered in this terminal -mention the file locations")
+            else:
+                guidelines.append(f"Note: {info.figures_available} visualization(s) have been generated")
+                
         # Add current date context for temporal awareness
         if hasattr(info, 'current_date') and info.current_date:
             guidelines.append(f"Today's date is {info.current_date} - use this for temporal context and date references")

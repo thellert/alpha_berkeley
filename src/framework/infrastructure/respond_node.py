@@ -57,6 +57,10 @@ class ResponseContext:
     :type reclassification_count: int
     :param current_date: Current date for temporal context
     :type current_date: str
+    :param figures_available: Number of figures available for display
+    :type figures_available: int
+    :param interface_context: Interface type (openwebui, cli, etc.)
+    :type interface_context: str
     """
     current_task: str
     execution_history: List[Any]
@@ -68,6 +72,8 @@ class ResponseContext:
     execution_start_time: Optional[float]
     reclassification_count: int
     current_date: str
+    figures_available: int
+    interface_context: str
 
 
 # --- Convention-Based Capability Definition ---
@@ -209,6 +215,14 @@ def _gather_information(state: AgentState) -> ResponseContext:
         capabilities_overview = None
         logger.info(f"Using technical response mode (context type: {response_mode})")
     
+    # Get figure information from centralized registry
+    ui_figures = state.get("ui_captured_figures", [])
+    figures_available = len(ui_figures)
+    
+    # Get interface context from configurable
+    from configs.config import get_interface_context
+    interface_context = get_interface_context()
+    
     return ResponseContext(
         current_task=state.get("task_current_task", "General information request"),
         execution_history=execution_history,
@@ -219,7 +233,9 @@ def _gather_information(state: AgentState) -> ResponseContext:
         total_steps_executed=StateManager.get_current_step_index(state),
         execution_start_time=state.get("execution_start_time"),
         reclassification_count=state.get("control_reclassification_count", 0),
-        current_date=datetime.now().strftime("%Y-%m-%d")
+        current_date=datetime.now().strftime("%Y-%m-%d"),
+        figures_available=figures_available,
+        interface_context=interface_context
     )
 
 
