@@ -227,7 +227,9 @@ from .execution_control import (
 )
 from .services import (
     FileManager,
-    NotebookManager
+    NotebookManager,
+    make_json_serializable,
+    serialize_results_to_file
 )
 from .exceptions import (
     # Base
@@ -284,5 +286,9 @@ __all__ = [
     "CodeRuntimeError",
     "ExecutionTimeoutError",
     "MaxAttemptsExceededError",
-    "WorkflowError"
+    "WorkflowError",
+    
+    # Serialization utilities
+    "make_json_serializable",
+    "serialize_results_to_file"
 ] 

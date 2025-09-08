@@ -152,17 +152,26 @@ class LocalCodeExecutor:
                     metadata = json.load(f)
                 
                 # Check if execution was actually successful
-                if not metadata.get("success", False):
+                if metadata.get("results_save_error"):
+                    error_msg = f"Results serialization failed: {metadata.get('results_save_error')}"
+                    logger.error(f"Execution failed due to results serialization: {error_msg}")
+                    
+                    raise CodeRuntimeError(
+                        message=error_msg,
+                        traceback_info="Results could not be serialized to JSON",
+                        execution_attempt=1
+                    )
+                elif not metadata.get("success", False):
                     error_msg = metadata.get("error", "Python execution failed according to metadata")
                     traceback_info = metadata.get("traceback", "")
-                    
                     logger.error(f"Local execution failed according to metadata: {error_msg}")
-                    
+            
                     raise CodeRuntimeError(
                         message=f"Python execution error: {error_msg}",
                         traceback_info=traceback_info,
                         execution_attempt=1
                     )
+                
                 
                 # Load actual results if available
                 results_path = (execution_folder or Path.cwd()) / "results.json"

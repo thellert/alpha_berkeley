@@ -89,36 +89,6 @@ from io import StringIO
 from datetime import datetime, timedelta
 import pickle
 
-# Initialize registry for context loading
-print("🔧 [DEBUG] Starting registry initialization...", file=sys.stderr)
-try:
-    from framework.registry import initialize_registry, get_registry
-    print("🔧 [DEBUG] Imported registry functions", file=sys.stderr)
-    
-    initialize_registry(auto_export=False)  # Initialize without export for performance
-    print("🔧 [DEBUG] Registry initialization completed", file=sys.stderr)
-    
-    # Debug: Check if TIME_RANGE context class is properly registered
-    registry = get_registry()
-    print("🔧 [DEBUG] Got registry instance", file=sys.stderr)
-    
-    time_range_class = registry.get_context_class("TIME_RANGE")
-    if time_range_class:
-        print(f"✓ [DEBUG] TIME_RANGE context class registered: {time_range_class.__name__}", file=sys.stderr)
-    else:
-        print("❌ [DEBUG] TIME_RANGE context class NOT found in registry", file=sys.stderr)
-        # List all registered context classes for debugging
-        try:
-            all_contexts = registry._registries.get('contexts', {})
-            print(f"🔧 [DEBUG] All registered contexts: {list(all_contexts.keys())}", file=sys.stderr)
-        except Exception as debug_e:
-            print(f"🔧 [DEBUG] Failed to list contexts: {debug_e}", file=sys.stderr)
-        
-except Exception as e:
-    print(f"❌ [DEBUG] Registry initialization failed: {e}", file=sys.stderr)
-    print("Context loading may not work properly", file=sys.stderr)
-    import traceback
-    traceback.print_exc(file=sys.stderr)
 
 # Scientific libraries
 try:
@@ -179,6 +149,14 @@ if project_root:
         print(f"✅ Added framework path to sys.path: {{src_path}}")
 else:
     print("⚠️ Could not locate framework src directory")
+
+# Initialize registry for context loading (AFTER sys.path is configured)
+try:
+    from framework.registry import initialize_registry, get_registry
+    initialize_registry(auto_export=False)  # Initialize without export for performance
+except Exception as e:
+    print(f"Registry initialization failed: {{e}}", file=sys.stderr)
+    print("Context loading may not work properly", file=sys.stderr)
 """
             
             # Add directory change for local execution
@@ -230,7 +208,7 @@ print(f"Container working directory: {{Path.cwd()}}")
                 "traceback": None,
                 "stdout": "",
                 "stderr": "",
-                "error_type": "CODE_ERROR",  # Default to code error
+                "error_type": None,
                 "results_saved": False,
                 "figures_saved": [],
                 "figure_count": 0,
@@ -291,6 +269,7 @@ print(f"Container working directory: {{Path.cwd()}}")
     
     # Mark successful execution
     execution_metadata["success"] = True
+    execution_metadata["error_type"] = None
     execution_metadata["end_time"] = datetime.now().isoformat()
 """
     
@@ -354,27 +333,22 @@ print(f"Container working directory: {{Path.cwd()}}")
                 execution_metadata["end_time"] = datetime.now().isoformat()
         """).strip()
         
-        middle_section = textwrap.dedent("""
-                # Custom JSON encoder for datetime/numpy objects (defined once for reuse)
-                class DateTimeEncoder(json.JSONEncoder):
-                    def default(self, obj):
-                        if isinstance(obj, datetime):
-                            return obj.isoformat()
-                        elif hasattr(obj, 'item'):  # numpy scalars
-                            return obj.item()
-                        elif hasattr(obj, 'tolist'):  # numpy arrays
-                            return obj.tolist()
-                        return super().default(obj)
+        file_persistence_section = textwrap.dedent("""
+                # Import robust serialization function
+                from framework.services.python_executor.services import serialize_results_to_file
                 
                 # Save results dictionary if it exists
                 if 'results' in globals() and results is not None:
-                    try:
-                        with open('results.json', 'w', encoding='utf-8') as f:
-                            json.dump(results, f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
-                        execution_metadata["results_saved"] = True
-                    except Exception as e:
-                        execution_metadata["results_save_error"] = str(e)
-                
+                    # Use robust serialization function
+                    serialization_metadata = serialize_results_to_file(results, 'results.json')
+                    execution_metadata["results_saved"] = serialization_metadata["success"]
+                    
+                    if not serialization_metadata["success"]:
+                        # Serialization failed, capture detailed error info
+                        execution_metadata["results_save_error"] = serialization_metadata["error"]
+                        if "fallback_saved" in serialization_metadata:
+                            execution_metadata["fallback_results_saved"] = serialization_metadata["fallback_saved"]
+                                        
                 # Save matplotlib figures
                 try:
                     figure_nums = plt.get_fignums()
@@ -385,8 +359,8 @@ print(f"Container working directory: {{Path.cwd()}}")
                         for i, fig_num in enumerate(figure_nums):
                             try:
                                 fig = plt.figure(fig_num)
-                                figure_path = figures_dir / f'figure_{{i+1:02d}}.png'
-                                fig.savefig(figure_path, dpi=150, bbox_inches='tight', facecolor='white')
+                                figure_path = figures_dir / f'figure_{i+1:02d}.png'
+                                fig.savefig(figure_path, dpi=100, bbox_inches='tight', facecolor='white')
                                 execution_metadata["figures_saved"].append(str(figure_path))
                             except Exception as fig_error:
                                 if "figure_errors" not in execution_metadata:
@@ -399,9 +373,12 @@ print(f"Container working directory: {{Path.cwd()}}")
                 
                 # Save execution metadata for debugging
                 try:
+                    # Use serializer for execution metadata
+                    from framework.services.python_executor.services import make_json_serializable
+                    serializable_metadata = make_json_serializable(execution_metadata)
+                    
                     with open('execution_metadata.json', 'w', encoding='utf-8') as f:
-                        json.dump(execution_metadata, f, indent=2, ensure_ascii=False, cls=DateTimeEncoder)
-                    print(f"DEBUG: Successfully saved execution_metadata.json", file=sys.stderr)
+                        json.dump(serializable_metadata, f, indent=2, ensure_ascii=False)
                 except Exception as e:
         """).strip()
         
@@ -415,7 +392,7 @@ print(f"Container working directory: {{Path.cwd()}}")
                                             for line in host_output_section.split("\n"))
             parts.append(indented_host_section)
         
-        parts.append(middle_section)
+        parts.append(file_persistence_section)
         
         # Add proper indentation for metadata error handling
         if metadata_error_handling:
