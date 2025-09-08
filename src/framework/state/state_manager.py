@@ -560,6 +560,74 @@ class StateManager:
                 f"before routing to capabilities that need step extraction."
             )
 
+    @staticmethod
+    def register_figure(
+        state: AgentState,
+        capability: str,
+        figure_path: str,
+        display_name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """
+        Register a figure in the centralized UI registry.
+        
+        This is the single point of entry for all capabilities to register figures
+        for UI display. Provides a capability-agnostic interface that works for
+        Python, R, Julia, or any other figure-generating capability.
+        
+        Args:
+            state: Current agent state
+            capability: Capability identifier (e.g., "python_executor", "r_executor")
+            figure_path: Path to the figure file (absolute or relative)
+            display_name: Optional human-readable figure name
+            metadata: Optional capability-specific metadata dictionary
+            
+        Returns:
+            State update dictionary with ui_captured_figures update
+            
+        Examples:
+            Basic figure registration::
+            
+                >>> figure_update = StateManager.register_figure(
+                ...     state, "python_executor", "/path/to/plot.png"
+                ... )
+                >>> return {**other_updates, **figure_update}
+                
+            Rich figure registration::
+            
+                >>> figure_update = StateManager.register_figure(
+                ...     state, 
+                ...     capability="python_executor",
+                ...     figure_path="figures/analysis.png",
+                ...     display_name="Performance Analysis",
+                ...     metadata={
+                ...         "execution_folder": "/path/to/execution",
+                ...         "notebook_link": "http://jupyter/notebook.ipynb"
+                ...         "figure_type": "matplotlib_png"
+                ...     }
+                ... )
+        """
+        from datetime import datetime
+        
+        # Create figure entry with required fields
+        figure_entry = {
+            "capability": capability,
+            "figure_path": figure_path,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Add optional fields only if provided
+        if display_name:
+            figure_entry["display_name"] = display_name
+        if metadata:
+            figure_entry["metadata"] = metadata
+        
+        # Get current figures and append new one
+        current_figures = list(state.get("ui_captured_figures", []))
+        current_figures.append(figure_entry)
+        
+        return {"ui_captured_figures": current_figures}
+
 
 def get_execution_steps_summary(state: AgentState) -> List[str]:
     """Generate ordered execution steps summary for prompts and UI display.

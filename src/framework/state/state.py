@@ -304,8 +304,7 @@ class AgentState(MessagesState):
     
     # UI result fields
     ui_notebook_links: List[str]
-
-    ui_captured_figures: List[str]
+    ui_captured_figures: List[Dict[str, Any]]  # Centralized figure registry for displaying figures in the UI
     ui_agent_context: Optional[Dict[str, Any]]
     
     # Runtime metadata fields

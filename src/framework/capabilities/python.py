@@ -517,11 +517,32 @@ class PythonCapability(BaseCapability):
             results_context
         )
         
-        # Combine with approval cleanup (if approval case)
+        # Register figures in centralized UI registry
+        figure_updates = {}
+        if results_context.figure_paths:
+            # Register each figure individually - register_figure handles accumulation
+            for figure_path in results_context.figure_paths:
+                figure_update = StateManager.register_figure(
+                    state,
+                    capability="python_executor",
+                    figure_path=str(figure_path),
+                    display_name="Python Execution Figure",
+                    metadata={
+                        "execution_folder": results_context.folder_path,
+                        "notebook_link": results_context.notebook_link,
+                        "execution_time": results_context.execution_time,
+                        "context_key": step.get("context_key"),
+                        "code_length": len(results_context.code)
+                    }
+                )
+                # Use the final accumulated result (register_figure handles accumulation internally)
+                figure_updates = figure_update
+        
+        # Combine all updates
         if has_approval_resume:
-            return {**result_updates, **approval_cleanup}
+            return {**result_updates, **approval_cleanup, **figure_updates}
         else:
-            return result_updates
+            return {**result_updates, **figure_updates}
     
     @staticmethod
     def classify_error(exc: Exception, context: dict) -> ErrorClassification:
