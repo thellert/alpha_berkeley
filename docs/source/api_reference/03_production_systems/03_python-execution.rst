@@ -154,6 +154,15 @@ Utility Functions
 
 .. autofunction:: get_container_endpoint_config_from_configurable
 
+Serialization Utilities
+=======================
+
+.. currentmodule:: framework.services.python_executor.services
+
+.. autofunction:: make_json_serializable
+
+.. autofunction:: serialize_results_to_file
+
 .. seealso::
 
    :doc:`../../../developer-guides/05_production-systems/03_python-execution-service`

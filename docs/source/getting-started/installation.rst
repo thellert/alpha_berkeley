@@ -191,7 +191,7 @@ Once services are running, access the web interface at:
 OpenWebUI Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Large Language Models that provides a ChatGPT-like experience with extensive customization options.
+`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Language Models that provides a ChatGPT-like experience with extensive customization options. The framework's integration provides real-time progress tracking during agent execution, automatic display of :func:`registered <framework.state.StateManager.register_figure>` visualizations, and session continuity across conversations.
 
 .. _Ollama Connection:
 
@@ -225,6 +225,9 @@ The Alpha Berkeley framework provides a pipeline connection to the OpenWebUI ser
    - **API Key**: Found in ``services/framework/pipelines/docker-compose.yml.j2`` under ``PIPELINES_API_KEY`` (default ``0p3n-w3bu!``)
    
    **Note**: The URL uses ``pipelines:9099`` instead of ``localhost:9099`` because OpenWebUI runs inside a container and communicates with the pipelines service through the container network.
+
+
+
 
 
 **Additional OpenWebUI Configuration:**
@@ -293,6 +296,18 @@ For optimal performance and user experience, consider these additional configura
         3. **Refresh the page** - The button should appear on your OpenWebUI interface after refresh
 
         These buttons provide quick access to advanced agent capabilities and debugging tools.
+
+    .. tab-item:: Debugging
+
+        **Real-time Log Viewer:**
+
+        For debugging and monitoring, use the ``/logs`` command in chat to view application logs without accessing container logs directly:
+
+        - ``/logs`` - Show last 100 log entries
+        - ``/logs 50`` - Show last 50 log entries  
+        - ``/logs help`` - Show available options
+
+        This is particularly useful for troubleshooting when OpenWebUI provides minimal feedback by design.
 
     .. tab-item:: Default Prompts
 

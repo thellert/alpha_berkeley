@@ -51,6 +51,8 @@ Runtime Information
 
 .. autofunction:: get_session_info
 
+.. autofunction:: get_interface_context
+
 .. autofunction:: get_current_application
 
 .. autofunction:: get_execution_limits
