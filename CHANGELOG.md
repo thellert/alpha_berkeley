@@ -5,6 +5,27 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-09-09
+
+### Features
+- **Interface Context System**: Added runtime interface detection for multi-interface support (CLI, OpenWebUI)
+- **Centralized Figure Registry**: Implemented capability-agnostic figure registration system with rich metadata
+- **Enhanced Figure Display**: Added automatic base64 figure conversion for OpenWebUI with interface-aware rendering
+- **Real-time Log Viewer**: Added `/logs` command to OpenWebUI for in-memory log viewing and debugging
+- **Robust JSON Serialization**: Comprehensive serialization utilities for scientific objects (matplotlib, numpy, pandas)
+
+### Framework Enhancements
+- **Interface-Aware Response Generation**: Context-sensitive prompts and responses based on interface capabilities
+- **Python Executor Improvements**: Enhanced error handling and metadata serialization with fallback mechanisms
+- **State Management Updates**: Centralized figure registry with capability source tracking and timestamps
+- **Configuration System**: Added `get_interface_context()` for runtime interface detection
+
+### Technical Improvements
+- **Serialization Utilities**: Added `make_json_serializable()` and `serialize_results_to_file()` for robust data handling
+- **Path Resolution**: Capability-agnostic figure path resolution for different execution environments
+- **Error Handling**: Enhanced Python executor with detailed error reporting and serialization failure recovery
+- **UI Integration**: Seamless figure display with metadata and creation timestamps
+
 ## [0.2.2] - 2025-08-16
 
 ### Major Features

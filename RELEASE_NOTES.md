@@ -1,38 +1,42 @@
-# Alpha Berkeley Framework - Latest Release (v0.2.2)
+# Alpha Berkeley Framework - Latest Release (v0.3.0)
 
-🚀 **Major error handling enhancements and framework improvements** for the Alpha Berkeley Framework!
+🚀 **Major interface enhancements and figure display improvements** for the Alpha Berkeley Framework!
 
 ## What's New
 
-### 🔧 New RECLASSIFICATION Error Severity
-- **Smart Task-Capability Matching**: Capabilities can now request reclassification when they receive inappropriate tasks
-- **Improved Workflow**: Enhanced error classification system with configurable reclassification attempt limits
-- **Better Routing**: Router node now properly handles reclassification errors and prevents infinite loops
+### 🖥️ Interface Context System
+- **Multi-Interface Support**: Runtime detection for CLI, OpenWebUI, and other interfaces
+- **Context-Aware Responses**: Interface-specific behavior and response customization
+- **Smart Figure Handling**: Different figure display strategies based on interface capabilities
 
-### ⚠️ Breaking Changes (Backward Compatible)
-- **ErrorClassification Metadata Migration**: Unified error handling with enhanced metadata field
-- **Richer Error Context**: All error information now flows through a consistent metadata structure
-- **Enhanced LLM Integration**: Better error context for AI-driven recovery and analysis
+### 📊 Centralized Figure Registry
+- **Capability-Agnostic Registration**: Universal figure registration system for all execution types
+- **Rich Metadata**: Figure source, timestamps, and execution context tracking
+- **Automatic Display**: Seamless integration with OpenWebUI for base64 figure rendering
+
+### 🔧 Enhanced Python Executor
+- **Robust Serialization**: Comprehensive JSON serialization for scientific objects (matplotlib, numpy, pandas)
+- **Error Recovery**: Enhanced error handling with detailed reporting and fallback mechanisms
+- **Path Resolution**: Smart figure path resolution for different execution environments
+
+### 📝 Real-Time Log Viewer
+- **OpenWebUI Integration**: `/logs` command for viewing application logs in chat
+- **In-Memory Capture**: Live log streaming with configurable buffer size
+- **Debug Support**: Real-time monitoring and troubleshooting through chat interface
 
 ### 🏗️ Framework Enhancements
-- **Enhanced Classification Workflow**: Improved reclassification handling with proper failure context
-- **Router Node Improvements**: Added reclassification tracking and intelligent routing logic
-- **Configuration System**: New execution limits configuration for better control
-- **Error Node Enhancements**: Comprehensive error handling improvements
-
-### 📚 Documentation & Examples
-- **Major Documentation Cleanup**: Removed outdated files and enhanced RST documentation structure
-- **Enhanced Hello World Example**: Better classifier examples and improved context access patterns
-- **Complete Error Handling Docs**: Updated documentation for new reclassification workflow
-- **Developer Guide Improvements**: Enhanced infrastructure component documentation
+- **State Management**: Centralized figure registry with capability source tracking
+- **Configuration System**: Added `get_interface_context()` for runtime interface detection
+- **Response Generation**: Interface-aware prompts and context-sensitive responses
+- **UI Integration**: Enhanced figure display with metadata and creation timestamps
 
 ## Upgrade Notes
 
 This release maintains full backward compatibility. The main changes are:
-- New `RECLASSIFICATION` error severity level available for capability developers
-- ErrorClassification now uses unified metadata field (automatic migration handled)
-- Enhanced error handling workflow with better context for AI-driven recovery
-- Improved documentation structure and examples
+- New interface context system enables multi-interface awareness
+- Centralized figure registry provides consistent figure handling across capabilities
+- Enhanced OpenWebUI experience with automatic figure display and log viewer
+- Robust serialization utilities available for scientific computing workflows
 
 ## Get Started
 
@@ -47,24 +51,24 @@ This release maintains full backward compatibility. The main changes are:
 When creating the GitHub release:
 
 1. Go to GitHub repo → Releases → "Create a new release"
-2. **Tag**: `v0.2.2`
-3. **Title**: `Alpha Berkeley Framework v0.2.2 - Enhanced Error Handling & Framework Improvements`
-4. **Description**: Copy the content above (from "🚀 Major error handling" through "See the error handling guide")
+2. **Tag**: `v0.3.0`
+3. **Title**: `Alpha Berkeley Framework v0.3.0 - Interface Enhancements & Figure Display Improvements`
+4. **Description**: Copy the content above (from "🚀 Major interface enhancements" through "Get Started")
 
 ## Technical Details
 
-- New RECLASSIFICATION severity enables smart task-capability matching
-- Unified metadata approach provides richer context for error analysis and recovery
-- Enhanced classification workflow with configurable attempt limits prevents infinite loops
-- Framework-wide migration to new ErrorClassification metadata structure
-- Complete documentation restructuring with enhanced developer guides
-- Enhanced hello world weather example demonstrates best practices
+- Interface context system enables runtime interface detection and customization
+- Centralized figure registry provides capability-agnostic figure management
+- Enhanced Python executor with comprehensive serialization for scientific objects
+- Real-time log viewer with in-memory capture and chat interface integration
+- Interface-aware response generation with context-sensitive prompts
+- Robust error handling and recovery mechanisms for serialization failures
 
 ---
 
-*Current Release: v0.2.2 (August 2025)*  
-*Release Type: Error Handling Enhancements & Framework Improvements*  
-*Previous Release: v0.2.1 with stability improvements*
+*Current Release: v0.3.0 (January 2025)*  
+*Release Type: Interface Enhancements & Figure Display Improvements*  
+*Previous Release: v0.2.2 with error handling enhancements*
 
 ---
 
