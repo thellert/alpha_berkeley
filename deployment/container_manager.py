@@ -450,7 +450,21 @@ def setup_build_dir(template_path, config, container_cfg):
     build_dir = config.get('build_dir', './build')
     out_dir = os.path.join(build_dir, source_dir)
     if os.path.exists(out_dir):
-        shutil.rmtree(out_dir)
+        try:
+            shutil.rmtree(out_dir)
+        except OSError as e:
+            if "Device or resource busy" in str(e) or "nfs" in str(e).lower() or e.errno == 39:  # Directory not empty
+                print(f"Warning: Directory in use, attempting incremental update for {out_dir}")
+                import time
+                time.sleep(1)
+                try:
+                    shutil.rmtree(out_dir)
+                except OSError:
+                    print(f"Warning: Could not remove {out_dir}, using incremental update approach")
+                    # Use incremental update instead of full rebuild
+                    return _incremental_setup_build_dir(template_path, config, service_config, out_dir)
+            else:
+                raise
     os.makedirs(out_dir, exist_ok=True)
     
     # Create the docker compose file from the template
@@ -610,6 +624,106 @@ def parse_args():
 
     return args
 
+def _incremental_setup_build_dir(template_path, config, service_config, out_dir):
+    """Setup build directory using incremental updates when full cleanup fails.
+    
+    This fallback function handles cases where the build directory cannot be
+    completely removed due to file locks or NFS issues. It updates files
+    incrementally instead of doing a full rebuild.
+    
+    Args:
+        template_path (str): Path to the docker-compose template file
+        config (dict): Configuration dictionary
+        service_config (dict): Service-specific configuration
+        out_dir (str): Output directory path that couldn't be cleaned
+        
+    Returns:
+        str: Path to the rendered docker-compose.yml file
+    """
+    source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
+    
+    # Ensure output directory exists
+    os.makedirs(out_dir, exist_ok=True)
+    
+    # Create/update the docker compose file from the template
+    compose_filepath = render_template(template_path, config, out_dir)
+    
+    # Copy/update files from source directory (skip if top-level services dir)
+    if source_dir != SERVICES_DIR:
+        for file in os.listdir(source_dir):
+            src_path = os.path.join(source_dir, file)
+            dst_path = os.path.join(out_dir, file)
+            
+            # Skip template files
+            if file != TEMPLATE_FILENAME and not file.endswith('.j2'):
+                try:
+                    if os.path.isdir(src_path):
+                        # For directories, use copytree with dirs_exist_ok (Python 3.8+)
+                        if hasattr(shutil, 'copytree') and 'dirs_exist_ok' in shutil.copytree.__code__.co_varnames:
+                            shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+                        else:
+                            # Fallback for older Python versions
+                            if not os.path.exists(dst_path):
+                                shutil.copytree(src_path, dst_path)
+                    else:
+                        shutil.copy2(src_path, dst_path)
+                except (OSError, shutil.Error) as e:
+                    print(f"Warning: Could not update {dst_path}: {e}")
+    
+    # Handle source directory copying if needed
+    if service_config.get('copy_src', False):
+        src_dst_path = os.path.join(out_dir, OUT_SRC_DIR)
+        try:
+            if hasattr(shutil, 'copytree') and 'dirs_exist_ok' in shutil.copytree.__code__.co_varnames:
+                shutil.copytree(SRC_DIR, src_dst_path, dirs_exist_ok=True)
+            else:
+                if not os.path.exists(src_dst_path):
+                    shutil.copytree(SRC_DIR, src_dst_path)
+        except (OSError, shutil.Error) as e:
+            print(f"Warning: Could not update source directory {src_dst_path}: {e}")
+    
+    return compose_filepath
+
+def find_existing_compose_files(config, deployed_services):
+    """Find existing compose files without rebuilding directories.
+    
+    This function locates existing docker-compose.yml files in the build directory
+    for the specified services without triggering any rebuild operations.
+    
+    Args:
+        config (dict): Configuration dictionary containing build_dir
+        deployed_services (list): List of service names to find compose files for
+        
+    Returns:
+        list: List of paths to existing compose files
+        
+    Example:
+        compose_files = find_existing_compose_files(config, ['framework.jupyter'])
+        # Returns: ['./build/services/docker-compose.yml', 
+        #          './build/services/framework/jupyter/docker-compose.yml']
+    """
+    compose_files = []
+    build_dir = config.get('build_dir', './build')
+    
+    # Add top-level compose file if it exists
+    top_compose = os.path.join(build_dir, SERVICES_DIR, 'docker-compose.yml')
+    if os.path.exists(top_compose):
+        compose_files.append(top_compose)
+    
+    # Add service-specific compose files
+    for service_name in deployed_services:
+        service_config, template_path = find_service_config(config, service_name)
+        if template_path:
+            # Construct expected compose file path
+            source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
+            compose_path = os.path.join(build_dir, source_dir, 'docker-compose.yml')
+            if os.path.exists(compose_path):
+                compose_files.append(compose_path)
+            else:
+                print(f"Warning: Compose file not found for service '{service_name}' at {compose_path}")
+    
+    return compose_files
+
 def clean_deployment(compose_files):
     """Clean up containers, images, volumes, and networks for a fresh deployment.
     
@@ -708,26 +822,41 @@ if __name__ == "__main__":
 
     compose_files = []
 
-    # Create the top level compose file
-    top_template = os.path.join(SERVICES_DIR, TEMPLATE_FILENAME)
-    build_dir = config.get('build_dir', './build')
-    out_dir = os.path.join(build_dir, SERVICES_DIR)
-    top_template = render_template(top_template, config, out_dir)
-    compose_files.append(top_template)
-    
-    # Create the service build directory for deployed services only
-    for service_name in deployed_service_names:
-        service_config, template_path = find_service_config(config, service_name)
-        if service_config and template_path:
-            if not os.path.isfile(template_path):
-                print(f"Error: Template file {template_path} not found for service '{service_name}'")
-                sys.exit(1)
-            
-            out = setup_build_dir(template_path, config, service_config)
-            compose_files.append(out)
+    # For 'down' operations, try to use existing compose files instead of rebuilding
+    if hasattr(args, 'command') and args.command == 'down':
+        compose_files = find_existing_compose_files(config, deployed_service_names)
+        
+        # If no existing compose files found, fall back to rebuild
+        if not compose_files:
+            print("No existing compose files found, rebuilding...")
+            # Fall through to rebuild logic below
         else:
-            print(f"Error: Service '{service_name}' not found in configuration")
-            sys.exit(1)
+            print(f"Using existing compose files for 'down' operation:")
+            for f in compose_files:
+                print(f"  - {f}")
+    
+    # Build/rebuild compose files (for 'up', 'rebuild', or when no existing files for 'down')
+    if not compose_files:
+        # Create the top level compose file
+        top_template = os.path.join(SERVICES_DIR, TEMPLATE_FILENAME)
+        build_dir = config.get('build_dir', './build')
+        out_dir = os.path.join(build_dir, SERVICES_DIR)
+        top_template = render_template(top_template, config, out_dir)
+        compose_files.append(top_template)
+        
+        # Create the service build directory for deployed services only
+        for service_name in deployed_service_names:
+            service_config, template_path = find_service_config(config, service_name)
+            if service_config and template_path:
+                if not os.path.isfile(template_path):
+                    print(f"Error: Template file {template_path} not found for service '{service_name}'")
+                    sys.exit(1)
+                
+                out = setup_build_dir(template_path, config, service_config)
+                compose_files.append(out)
+            else:
+                print(f"Error: Service '{service_name}' not found in configuration")
+                sys.exit(1)
 
     if args.command:
         if args.command == "clean":
