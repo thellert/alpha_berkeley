@@ -5,6 +5,23 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-09-10
+
+### Enhancements
+- **Documentation Workflow Improvements**: Added manual trigger capability to GitHub Actions documentation workflow
+- **Tag-based Documentation Rebuilds**: Documentation now automatically rebuilds when version tags are created or moved
+- **Enhanced Build Controls**: Documentation workflow now supports both automatic (tag/push) and manual triggering
+
+### Bug Fixes  
+- **Documentation Version Sync**: Fixed issue where moving git tags didn't trigger documentation rebuilds, ensuring docs always reflect current version
+- **Gitignore Cleanup**: Added `.nfs*` pattern to gitignore and fixed malformed entries
+
+### Technical Details
+- Added `workflow_dispatch` trigger to `.github/workflows/docs.yml` for manual execution
+- Added `tags: ['v*']` trigger for automatic rebuilds on version tag changes  
+- Updated deployment conditions to support manual and tag-based triggers
+- Improved build artifact and deployment logic for consistent documentation updates
+
 ## [0.3.0] - 2025-09-09
 
 ### Features
