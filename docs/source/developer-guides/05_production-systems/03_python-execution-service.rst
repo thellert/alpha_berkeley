@@ -204,7 +204,7 @@ For advanced use cases, interact directly with the PythonExecutorService:
                    "thread_id": f"analysis_{analysis_request.get('session_id', 'default')}",
                    "configurable": {
                        "execution_mode": analysis_request.get("execution_mode", "readonly"),
-                       "max_execution_time": analysis_request.get("timeout", 300)
+                       "max_execution_time": analysis_request.get("timeout", 600)
                    }
                }
                

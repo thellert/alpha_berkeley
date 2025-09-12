@@ -241,6 +241,22 @@ Common Issues
 - First access reconstructs objects; subsequent access returns cached objects
 - Context objects are cached per ContextManager instance
 
+**Context Window Management:**
+- Use ``recursively_summarize_data()`` utility function for large nested data structures
+- Automatically truncates large lists and dictionaries to prevent LLM context window overflow
+- Available from ``framework.context.context_manager`` for use in ``get_human_summary()`` methods
+
+.. code-block:: python
+
+   from framework.context.context_manager import recursively_summarize_data
+   
+   def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+       """Human-readable summary with automatic data truncation."""
+       return {
+           "analysis_results": recursively_summarize_data(self.results),
+           "type": "Analysis Context"
+       }
+
 .. seealso::
    :doc:`01_state-management-architecture`
        State management and context integration patterns
