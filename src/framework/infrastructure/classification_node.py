@@ -15,6 +15,7 @@ from typing import Optional, TYPE_CHECKING, Dict, Any, List
 
 
 from framework.base.decorators import infrastructure_node
+from framework.base.errors import ReclassificationRequiredError
 from framework.state import AgentState
 from framework.state.state import create_status_update
 from framework.registry import get_registry
@@ -103,6 +104,14 @@ class ClassificationNode(BaseInfrastructureNode):
                 }
             )
         
+        # Handle reclassification requirement
+        if isinstance(exc, ReclassificationRequiredError):
+            return ErrorClassification(
+                severity=ErrorSeverity.RECLASSIFICATION,
+                user_message=f"Task needs reclassification: {str(exc)}",
+                metadata={"technical_details": str(exc)}
+            )
+        
         # Default: CRITICAL for unknown errors (fail safe principle)
         # Only explicitly known errors should be RETRIABLE
         return ErrorClassification(
@@ -156,10 +165,7 @@ class ClassificationNode(BaseInfrastructureNode):
         
         if not current_task:
             logger.error("No current task found in state")
-            return {
-                "control_needs_reclassification": True,
-                "control_reclassification_reason": "No current task found"
-            }
+            raise ReclassificationRequiredError("No current task found")
         
         # Define streaming helper here for step awareness
         streamer = get_streamer("framework", "classifier", state)
@@ -209,10 +215,9 @@ class ClassificationNode(BaseInfrastructureNode):
             "planning_current_step_index": 0
         }
         
-        # Always increment classification counter and clear reclassification flags
+        # Always increment classification counter and clear reclassification reason
         control_flow_update = {
             "control_reclassification_count": reclassification_count + 1,
-            "control_needs_reclassification": False,
             "control_reclassification_reason": None
         }
                 

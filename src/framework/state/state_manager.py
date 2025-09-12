@@ -311,7 +311,6 @@ class StateManager:
             approved_payload=None,
             
             # Control flow fields - reset to defaults
-            control_needs_reclassification=False,
             control_reclassification_reason=None,
             control_reclassification_count=0,
             control_plans_created_count=0,

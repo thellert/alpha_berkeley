@@ -389,3 +389,16 @@ class ConfigurationError(FrameworkError):
     or contain incompatible values that prevent proper system operation.
     """
     pass
+
+
+class ReclassificationRequiredError(FrameworkError):
+    """Exception for cases where task reclassification is needed.
+    
+    Raised when the current capability selection is insufficient for the task
+    and requires reclassification to select different or additional capabilities.
+    This typically occurs when:
+    - Orchestrator validation fails due to hallucinated capabilities
+    - No active capabilities are found for the task
+    - Task extraction fails to identify proper task requirements
+    """
+    pass

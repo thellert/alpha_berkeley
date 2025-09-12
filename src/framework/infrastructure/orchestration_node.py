@@ -14,7 +14,7 @@ from pathlib import Path
 import asyncio
 
 from framework.base.decorators import infrastructure_node
-from framework.base.errors import ErrorClassification, ErrorSeverity
+from framework.base.errors import ErrorClassification, ErrorSeverity, ReclassificationRequiredError
 from framework.base.nodes import BaseInfrastructureNode
 from framework.base.planning import ExecutionPlan, PlannedStep
 from framework.base import BaseCapability
@@ -40,7 +40,6 @@ from framework.approval.approval_system import (
 )
 
 if TYPE_CHECKING:
-    from framework.observability import ExecutionObserver
     from framework.base.errors import ErrorClassification
 
 logger = get_logger("framework", "orchestrator")
@@ -202,6 +201,14 @@ class OrchestrationNode(BaseInfrastructureNode):
             )
         
         # Default: CRITICAL for unknown errors (fail safe principle)
+        # Handle reclassification requirement
+        if isinstance(exc, ReclassificationRequiredError):
+            return ErrorClassification(
+                severity=ErrorSeverity.RECLASSIFICATION,
+                user_message=f"Task needs reclassification: {str(exc)}",
+                metadata={"technical_details": str(exc)}
+            )
+        
         # Only explicitly known errors should be RETRIABLE
         return ErrorClassification(
             severity=ErrorSeverity.CRITICAL,
@@ -309,10 +316,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         
         if not active_capability_names:
             logger.error("No active capabilities found in state")
-            return {
-                "control_needs_reclassification": True,
-                "control_reclassification_reason": "No active capabilities found"
-            }
+            raise ReclassificationRequiredError("No active capabilities found for task")
         
         # Get capability instances from registry using capability names
         active_capabilities = []
@@ -441,17 +445,13 @@ class OrchestrationNode(BaseInfrastructureNode):
             logger.success(f"Final execution plan ready with {len(execution_plan.get('steps', []))} steps")
             
         except ValueError as e:
-            # Orchestrator hallucinated non-existent capabilities - trigger re-planning
+            # Orchestrator hallucinated non-existent capabilities - trigger re-classification
             logger.error(f"Execution plan validation failed: {e}")
             logger.warning("Triggering re-classification due to hallucinated capabilities")
             streamer.status("Re-planning due to invalid capabilities...")
             
-            # Return state that triggers re-classification with re-planning severity
-            return {
-                "control_needs_reclassification": True,
-                "control_reclassification_reason": f"Orchestrator validation failed: {e}",
-                "control_reclassification_severity": "re_planning"  # This triggers full re-planning
-            }
+            # Raise exception to trigger reclassification through error system
+            raise ReclassificationRequiredError(f"Orchestrator validation failed: {e}")
         
         # =====================================================================
         # STEP 4: HANDLE RESULTING EXECUTION PLAN

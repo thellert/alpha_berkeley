@@ -233,7 +233,6 @@ class ControlFlowState(TypedDict, total=False):
     All fields are optional to support partial updates in LangGraph.
     
     Default values (when not provided):
-    - needs_reclassification: False
     - reclassification_reason: None
     - max_reclassifications: 1
     - reclassification_count: 0
@@ -250,7 +249,6 @@ class ControlFlowState(TypedDict, total=False):
     - validation_timestamp: None
     """
     # Reclassification control
-    needs_reclassification: bool                    # Whether the current task needs reclassification
     reclassification_reason: Optional[str]          # Reason for requesting reclassification
     max_reclassifications: int                      # Maximum number of reclassifications allowed
     reclassification_count: int                     # Current number of reclassifications performed

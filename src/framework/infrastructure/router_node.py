@@ -157,10 +157,9 @@ def router_conditional_edge(state: AgentState) -> str:
                 max_reclassifications = limits.get('max_reclassifications', 1)
                 
                 if current_reclassifications < max_reclassifications:
-                    # Set reclassification flag - classifier will increment counter
+                    # Set reclassification reason for classifier context and route to classifier
                     logger.error(f"Router: Reclassification error in {capability_name}, routing to classifier "
                                f"(attempt #{current_reclassifications + 1}/{max_reclassifications})")
-                    state['control_needs_reclassification'] = True
                     state['control_reclassification_reason'] = f"Capability {capability_name} requested reclassification: {error_classification.user_message}"
                     return "classifier"
                 else:
@@ -184,7 +183,7 @@ def router_conditional_edge(state: AgentState) -> str:
     if 'control_retry_count' in state:
         state['control_retry_count'] = 0
     
-    # Check if killed (using correct field name from state structure)
+    # Check if killed
     if state.get('control_is_killed', False):
         kill_reason = state.get('control_kill_reason', 'Unknown reason')
         logger.key_info(f"Execution terminated: {kill_reason}")
@@ -195,13 +194,6 @@ def router_conditional_edge(state: AgentState) -> str:
     if not current_task:
         logger.key_info("No current task extracted, routing to task extraction")
         return "task_extraction"
-            
-    # Check if needs reclassification (prefixed state structure)
-    if state.get('control_needs_reclassification', False):
-        reclassification_reason = state.get('control_reclassification_reason', 'Unknown reason')
-        logger.key_info(f"Reclassification needed - {reclassification_reason}")
-        # Note: The flag will be reset by the classifier's process_results
-        return "classifier"
 
     # Check if has active capabilities from prefixed state structure
     active_capabilities = state.get('planning_active_capabilities')
@@ -221,7 +213,7 @@ def router_conditional_edge(state: AgentState) -> str:
     # Type validation already done by StateManager.get_execution_plan()
     plan_steps = execution_plan.get('steps', [])
     if current_index >= len(plan_steps):
-        # This should NEVER happen now - orchestrator guarantees plans end with respond/clarify
+        # This should NEVER happen - orchestrator guarantees plans end with respond/clarify
         # If it does happen, it indicates a serious bug in the orchestrator validation
         raise RuntimeError(
             f"CRITICAL BUG: current_step_index {current_index} >= plan_steps length {len(plan_steps)}. "

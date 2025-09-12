@@ -285,7 +285,6 @@ class AgentState(MessagesState):
     approved_payload: Optional[Dict[str, Any]]  # Direct payload access
     
     # Control flow fields
-    control_needs_reclassification: bool
     control_reclassification_reason: Optional[str]
     control_reclassification_count: int
     control_plans_created_count: int           # Number of plans created by orchestrator for current task
