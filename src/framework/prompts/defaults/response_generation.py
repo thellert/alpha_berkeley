@@ -150,7 +150,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             interface_context = getattr(info, 'interface_context', 'unknown')
             
             if interface_context == "openwebui":
-                guidelines.append(f"Note: {info.figures_available} generated visualization(s) will be displayed automatically below your response - acknowledge and refer to them appropriately")
+                guidelines.append(f"Note: {info.figures_available} generated visualization(s) will be displayed automatically below your response - acknowledge and refer to them appropriately. Don't explain figure metadata unless explicitly requested")
             elif interface_context == "cli":
                 guidelines.append(f"Note: {info.figures_available} visualization(s) have been saved to files in the execution folder - they can not be rendered in this terminal -mention the file locations")
             else:
@@ -175,7 +175,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             guidelines.extend([
                 "Be very accurate but use reasonable judgment when rounding or abbreviating numerical data for readability",
                 "NEVER make up, estimate, or fabricate any data - only use what is actually retrieved",
-                "Explain any data limitations or warnings", 
+                "Explain data limitations or warnings, but note that truncation messages like '(truncated)' or 'Max depth reached' typically indicate successful data processing rather than limitations",
                 "Be specific about time ranges and data sources"
             ])
         

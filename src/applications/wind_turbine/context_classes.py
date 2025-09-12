@@ -9,6 +9,7 @@ from typing import Dict, Any, Optional, List, ClassVar
 from datetime import datetime
 from pydantic import Field
 from framework.context.base import CapabilityContext
+from framework.context.context_manager import recursively_summarize_data
 
 
 class TurbineDataContext(CapabilityContext):
@@ -123,14 +124,8 @@ class AnalysisResultsContext(CapabilityContext):
         # Extract all dynamic fields for user display
         user_data = {}
         for field_name, value in self.results.items():
-            # Convert large data structures to summaries
-            if isinstance(value, list) and len(value) > 10:
-                user_data[field_name] = f"List with {len(value)} items: {value[:3]}..."
-            elif isinstance(value, dict) and len(value) > 10:
-                keys = list(value.keys())[:3]
-                user_data[field_name] = f"Dict with {len(value)} keys: {keys}..."
-            else:
-                user_data[field_name] = value
+            # Use the shared framework recursive summarization
+            user_data[field_name] = recursively_summarize_data(value)
         
         return {
             "type": "Turbine Analysis Results",
