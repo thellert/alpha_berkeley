@@ -173,7 +173,19 @@ class OrchestrationNode(BaseInfrastructureNode):
                 metadata={"technical_details": str(exc)}
             )
         
-        # Don't retry planning/validation errors (logic issues)
+        # Retry Pydantic validation errors (LLM generation failures)
+        # These occur when the LLM fails to generate valid structured output
+        exc_str = str(exc).lower()
+        if isinstance(exc, ValueError) and any(indicator in exc_str for indicator in [
+            'validation error', 'field required', 'pydantic', 'json', 'parsing'
+        ]):
+            return ErrorClassification(
+                severity=ErrorSeverity.RETRIABLE,
+                user_message="LLM failed to generate valid execution plan format, retrying...",
+                metadata={"technical_details": str(exc)}
+            )
+        
+        # Don't retry true configuration/logic errors
         if isinstance(exc, (ValueError, TypeError)):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,

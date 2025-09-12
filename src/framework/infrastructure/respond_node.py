@@ -157,8 +157,30 @@ class RespondCapability(BaseCapability):
                 
         except Exception as e:
             logger.error(f"Error in response generation: {e}")
-            # Let the decorator handle error classification
-            raise
+            
+            # Since respond node goes directly to END (bypasses router error handling),
+            # we need to handle errors internally and provide a fallback response
+            error_message = str(e)
+            
+            # Generic error fallback - avoid hardcoding specific error codes or providers
+            fallback_response = (
+                "❌ **Response Generation Failed**\n\n"
+                "Your request may have been processed successfully, but the final "
+                "response could not be generated.\n\n"
+                "**Common causes:**\n"
+                "• Rate limits or high demand on the LLM provider (usually temporary)\n"
+                "• Network connectivity issues\n"
+                "• Service availability problems\n\n"
+                "**Next steps:**\n"
+                "• Please try your request again in a few minutes\n"
+                "• If the problem persists, please contact support\n\n"
+                f"**Technical details:** {error_message}"
+            )
+            
+            # Return the fallback response as an AIMessage instead of raising
+            return {
+                "messages": [AIMessage(content=fallback_response)]
+            }
 
     # Optional: Add error classification if needed
     @staticmethod
