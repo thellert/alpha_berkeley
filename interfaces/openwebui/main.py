@@ -855,7 +855,15 @@ class Pipeline:
                     # Normal completion - extract final response
                     response = self._extract_response_from_state(state.values)
                     if response:
-                        yield response
+                        # Handle large responses by chunking them for streaming
+                        if len(response) > 50000:  # 50KB threshold for chunking
+                            logger.info(f"Large response detected ({len(response)} chars), chunking for streaming...")
+                            chunk_size = 50000
+                            for i in range(0, len(response), chunk_size):
+                                chunk = response[i:i + chunk_size]
+                                yield chunk
+                        else:
+                            yield response
                     else:
                         yield "✅ Execution completed"
                         
@@ -1006,18 +1014,13 @@ class Pipeline:
                     metadata = figure_entry.get("metadata", {})
                     created_at = figure_entry.get("created_at", "unknown")
                     
-                    logger.debug(f"Processing figure: {display_name} from {capability}")
-                    
-                    # Resolve figure path using capability-agnostic logic
-                    full_figure_path = self._resolve_figure_path(figure_path, metadata)
-                    
-                    # Convert figure to base64
-                    figure_html = self._convert_figure_to_base64_html(
-                        full_figure_path, i, capability, created_at
+                    # Convert figure to static URL serving
+                    # All figures must be in agent directory by design
+                    figure_html = self._convert_figure_to_static_url(
+                        figure_path, i, capability, created_at
                     )
                     
                     if figure_html:
-                        # Simple figure display with clean metadata at bottom
                         all_figures_html.append(figure_html)
                     else:
                         # Fallback for failed figure conversion
@@ -1030,7 +1033,6 @@ class Pipeline:
                     continue
             
             if all_figures_html:
-                # Simple figure display without extra headers
                 return '\n\n'.join(all_figures_html)
             
             return None
@@ -1039,72 +1041,69 @@ class Pipeline:
             logger.error(f"Critical error in figure extraction: {e}")
             return f"*❌ Figure display error: {str(e)}*"
 
-    def _resolve_figure_path(self, figure_path: str, metadata: Dict[str, Any]) -> str:
-        """
-        Capability-agnostic figure path resolution.
-        
-        Handles different path resolution strategies based on available metadata
-        from different capability types.
-        """
-        from pathlib import Path
-        
-        # If already absolute path, use as-is
-        if Path(figure_path).is_absolute():
-            return figure_path
-        
-        # Try different resolution strategies based on available metadata
-        if "execution_folder" in metadata:
-            # Python/container-based execution
-            return str(Path(metadata["execution_folder"]) / figure_path)
-        elif "working_directory" in metadata:
-            # R or other script-based execution
-            return str(Path(metadata["working_directory"]) / figure_path)
-        elif "project_root" in metadata:
-            # Project-based execution
-            return str(Path(metadata["project_root"]) / figure_path)
-        else:
-            # Fallback: assume relative to current working directory
-            logger.warning(f"No path resolution metadata available for {figure_path}, using cwd")
-            return str(Path.cwd() / figure_path)
 
-    def _convert_figure_to_base64_html(self, figure_path: str, figure_number: int, capability: str, created_at: str) -> Optional[str]:
-        """Convert a figure file to base64-encoded HTML img tag"""
+    def _convert_figure_to_static_url(self, figure_path: str, figure_number: int, capability: str, created_at: str) -> Optional[str]:
+        """Convert agent directory figure to static URL - enforces our architectural constraint"""
         
         try:
-            import base64
             from pathlib import Path
             
-            path = Path(figure_path)
-            if not path.exists():
+            # Verify file exists
+            if not Path(figure_path).exists():
                 logger.warning(f"Figure file not found: {figure_path}")
                 return None
             
-            # Read the image file
-            with open(path, 'rb') as image_file:
-                image_data = image_file.read()
+            # Convert agent directory path to static URL using environment variables
+            # Our architecture constraint: all figures are in ${PROJECT_ROOT}/${agent_data_dir}/
+            import os
             
-            # Encode to base64
-            base64_encoded = base64.b64encode(image_data).decode('utf-8')
-                        
-            # Validate base64 data (ensure it's not corrupted)
-            if len(base64_encoded) < 100:
-                logger.warning(f"Base64 data seems too short ({len(base64_encoded)} chars), possible corruption")
-                return f"**Figure {figure_number}**: Image data corrupted (size: {len(base64_encoded)} chars)"
+            # Get environment variables with robust validation
+            project_root = os.getenv('PROJECT_ROOT')
+            agent_data_dir = os.getenv('AGENT_DATA_DIR')
             
-            # Try simple markdown image syntax
-            markdown_image = f"![Figure {figure_number}](data:image/png;base64,{base64_encoded})"
+            if not project_root:
+                logger.error("PROJECT_ROOT environment variable not set")
+                return f"*❌ Configuration error: PROJECT_ROOT not set*"
             
-            # Clean figure display with metadata at bottom
-            full_response = f"""
-{markdown_image}
-
-*Source: {capability} | Created: {created_at[:19]} | File: {Path(figure_path).name}*
-"""
+            if not agent_data_dir:
+                logger.error("AGENT_DATA_DIR environment variable not set")  
+                return f"*❌ Configuration error: AGENT_DATA_DIR not set*"
             
-            return full_response.strip()
+            # Construct expected paths
+            host_agent_prefix = f"{project_root}/{agent_data_dir}/"
+            container_agent_prefix = f"/app/{agent_data_dir}/"
+            
+            # Convert figure path to relative path within agent directory
+            if str(figure_path).startswith(host_agent_prefix):
+                # Host format (standard case)
+                relative_path = str(figure_path)[len(host_agent_prefix):]
+            elif str(figure_path).startswith(container_agent_prefix):
+                # Container format (edge case)
+                relative_path = str(figure_path)[len(container_agent_prefix):]
+            else:
+                # Architecture constraint violation
+                logger.error(f"ARCHITECTURE VIOLATION: Figure not in agent directory")
+                logger.error(f"Figure path: {figure_path}")
+                logger.error(f"Expected host prefix: {host_agent_prefix}")
+                logger.error(f"Expected container prefix: {container_agent_prefix}")
+                return f"*❌ Figure must be in agent directory: {Path(figure_path).name}*"
+            
+            # Validate relative path is not empty
+            if not relative_path:
+                logger.error(f"Empty relative path after prefix removal: {figure_path}")
+                return f"*❌ Invalid figure path: {Path(figure_path).name}*"
+            
+            # Create static URL (mounted at /static/agent_data/)
+            static_url = f"/static/agent_data/{relative_path}"
+            
+            # Create clean markdown display
+            markdown_image = f"![Figure {figure_number}]({static_url})"
+            created_at_str = str(created_at)[:19] if created_at else "unknown"
+            
+            return f"{markdown_image}\n\n*Source: {capability} | Created: {created_at_str} | File: {Path(figure_path).name}*"
             
         except Exception as e:
-            logger.error(f"Failed to convert figure {figure_path} to base64: {e}")
+            logger.error(f"Failed to convert figure to static URL: {e}")
             return None
 
     def _handle_log_command(self, command: str) -> Iterator[Union[str, dict]]:
