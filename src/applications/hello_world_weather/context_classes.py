@@ -142,7 +142,7 @@ class CurrentWeatherContext(CapabilityContext):
         
         Generates comprehensive access details that enable LLMs and templating systems
         to understand and utilize the weather context data effectively. This method
-        provides both human-readable summaries and programmatic access patterns for
+        provides both summaries and programmatic access patterns for
         integration with response generation and orchestration systems.
         
         The access details include formatted data summaries, template access patterns,
@@ -208,7 +208,7 @@ class CurrentWeatherContext(CapabilityContext):
                 Available fields: location, temperature, conditions, timestamp
         
         .. seealso::
-           :meth:`get_human_summary` : Human-readable summary generation
+           :meth:`get_summary` : Summary generation
            :class:`framework.state.StateManager` : Context storage and retrieval utilities
            :doc:`/developer-guides/response-generation` : Response templating guide
         """
@@ -224,10 +224,10 @@ class CurrentWeatherContext(CapabilityContext):
             "available_fields": ["location", "temperature", "conditions", "timestamp"]
         }
     
-    def get_human_summary(self, key: str) -> dict:
-        """Generate human-readable summary of weather context data.
+    def get_summary(self, key: str) -> dict:
+        """Generate summary of weather context data.
         
-        Creates a concise, human-friendly summary of the weather context suitable
+        Creates a concise summary of the weather context suitable
         for display in user interfaces, logging, debugging, and documentation.
         The summary provides essential weather information in a natural language
         format that can be directly presented to users or used in system outputs.
@@ -249,7 +249,7 @@ class CurrentWeatherContext(CapabilityContext):
             CapabilityContext interface and may be used for enhanced summaries
             in future versions.
         :type key: str
-        :return: Dictionary containing human-readable summary with the following structure:
+        :return: Dictionary containing summary with the following structure:
             - summary: Complete natural language description of weather conditions
         :rtype: dict
         
@@ -272,7 +272,7 @@ class CurrentWeatherContext(CapabilityContext):
                 ...     conditions="Rainy",
                 ...     timestamp=datetime(2024, 3, 15, 14, 30)
                 ... )
-                >>> summary = weather_context.get_human_summary("prague_current")
+                >>> summary = weather_context.get_summary("prague_current")
                 >>> print(summary["summary"])
                 Weather in Prague on 2024-03-15: 15.0°C, Rainy
             
@@ -280,13 +280,13 @@ class CurrentWeatherContext(CapabilityContext):
             
                 >>> context_summaries = []
                 >>> for key, weather_ctx in stored_weather_contexts.items():
-                ...     summary = weather_ctx.get_human_summary(key)
+                ...     summary = weather_ctx.get_summary(key)
                 ...     context_summaries.append(summary["summary"])
                 >>> print("\n".join(context_summaries))
             
             Integration with logging systems::
             
-                >>> summary_info = weather_context.get_human_summary("debug_weather")
+                >>> summary_info = weather_context.get_summary("debug_weather")
                 >>> logger.info(f"Retrieved weather data: {summary_info['summary']}")
         
         .. seealso::

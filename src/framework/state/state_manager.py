@@ -646,7 +646,7 @@ def get_execution_steps_summary(state: AgentState) -> List[str]:
     """Generate ordered execution steps summary for prompts and UI display.
     
     This utility function extracts and formats execution step information from the
-    agent state to provide a clean, human-readable summary of completed execution
+    agent state to provide a clean summary of completed execution
     steps. The function is designed for use in capability prompts, error summaries,
     UI displays, and debugging contexts where execution history is needed.
     

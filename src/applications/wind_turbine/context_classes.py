@@ -38,8 +38,8 @@ class TurbineDataContext(CapabilityContext):
             "unit_consistency": "All power values in MW - use directly with rated_capacity_mw from knowledge base",
         }
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Human-readable summary for UI/debugging."""
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Summary for UI/debugging."""
         unique_turbines = list(set(self.turbine_ids)) if self.turbine_ids else []
         avg_power = sum(self.power_outputs) / len(self.power_outputs) if self.power_outputs else 0
         
@@ -85,8 +85,8 @@ class WeatherDataContext(CapabilityContext):
             "available_fields": ["timestamps", "wind_speeds", "time_range"]
         }
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Human-readable summary for UI/debugging."""
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Summary for UI/debugging."""
         avg_wind_speed = sum(self.wind_speeds) / len(self.wind_speeds) if self.wind_speeds else 0
         max_wind_speed = max(self.wind_speeds) if self.wind_speeds else 0
         
@@ -119,8 +119,8 @@ class AnalysisResultsContext(CapabilityContext):
             "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.results['baseline_power'] for baseline power values"
         }
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Human-readable summary for UI/debugging."""
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Summary for UI/debugging."""
         # Extract all dynamic fields for user display
         user_data = {}
         for field_name, value in self.results.items():
@@ -159,8 +159,8 @@ class TurbineKnowledgeContext(CapabilityContext):
             "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.knowledge_data['{available_data_fields[0]}']" if available_data_fields else f"context.{self.CONTEXT_TYPE}.{key_ref}.knowledge_data['field_name']",
         }
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Human-readable summary for UI/debugging."""
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Summary for UI/debugging."""
         # Return the entire knowledge_data for response generation use
         return {
             "type": "Wind Farm Knowledge",

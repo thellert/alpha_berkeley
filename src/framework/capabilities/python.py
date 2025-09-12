@@ -158,8 +158,8 @@ class PythonResultsContext(CapabilityContext):
             "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.results gives the computed results dictionary"
         }
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Generate human-readable summary of Python execution for display and analysis.
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Generate summary of Python execution for display and analysis.
         
         Creates a comprehensive summary of the Python execution including both
         metadata (execution time, status, resource counts) and actual computed
@@ -170,7 +170,7 @@ class PythonResultsContext(CapabilityContext):
         
         :param key_name: Optional context key name for reference
         :type key_name: Optional[str]
-        :return: Dictionary containing human-readable execution summary with results
+        :return: Dictionary containing execution summary with results
         :rtype: Dict[str, Any]
         
         .. note::

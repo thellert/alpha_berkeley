@@ -185,13 +185,13 @@ Provides structured access information for LLM consumption. This method is used 
                 "available_fields": ["location", "temperature", "conditions", "timestamp"]
             }
 
-**Required Method 2: get_human_summary()**
+**Required Method 2: get_summary()**
 
 Provides human-readable summaries for user interfaces and debugging:
 
 .. code-block:: python
 
-        def get_human_summary(self, key: str) -> dict:
+        def get_summary(self, key: str) -> dict:
             """Get human-readable summary for this weather context."""
             return {
                 "summary": f"Weather in {self.location} on {self.timestamp.strftime('%Y-%m-%d')}: {self.temperature}°C, {self.conditions}",
@@ -249,7 +249,7 @@ Provides human-readable summaries for user interfaces and debugging:
                   "available_fields": ["location", "temperature", "conditions", "timestamp"]
               }
           
-          def get_human_summary(self, key: str) -> dict:
+          def get_summary(self, key: str) -> dict:
               """Get human-readable summary for this weather context."""
               return {
                   "summary": f"Weather in {self.location} on {self.timestamp.strftime('%Y-%m-%d')}: {self.temperature}°C, {self.conditions}",

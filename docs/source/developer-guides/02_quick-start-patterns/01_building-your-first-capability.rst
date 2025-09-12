@@ -61,7 +61,7 @@ Step 1: Create Context Class
                "key": key
            }
        
-       def get_human_summary(self, key: str) -> dict:
+       def get_summary(self, key: str) -> dict:
            return {
                "title": "Query Analysis Results",
                "content": f"Analyzed '{self.query}' - {self.word_count} words"

@@ -151,8 +151,8 @@ class TimeRangeContext(CapabilityContext):
         }
     
     
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Generate human-readable summary for UI display and debugging.
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Generate summary for UI display and debugging.
         
         Creates a formatted summary of the parsed time range suitable for display
         in user interfaces, debugging output, and development tools. Uses
@@ -160,7 +160,7 @@ class TimeRangeContext(CapabilityContext):
         
         :param key_name: Optional context key name for reference
         :type key_name: Optional[str]
-        :return: Dictionary containing human-readable time range summary
+        :return: Dictionary containing time range summary
         :rtype: Dict[str, Any]
         
         .. note::

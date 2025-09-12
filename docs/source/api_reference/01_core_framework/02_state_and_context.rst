@@ -105,7 +105,7 @@ ContextManager
    
    .. automethod:: ContextManager.get_context_access_description
    
-   .. automethod:: ContextManager.get_human_summaries
+   .. automethod:: ContextManager.get_summaries
    
    **Data Access and Persistence:**
    
@@ -126,7 +126,7 @@ CapabilityContext
    
    .. automethod:: CapabilityContext.get_access_details
    
-   .. automethod:: CapabilityContext.get_human_summary
+   .. automethod:: CapabilityContext.get_summary
    
    .. rubric:: Properties
    

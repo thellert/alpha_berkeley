@@ -183,7 +183,7 @@ def _generate_clarifying_questions(state, task_objective: str) -> ClarifyingQues
     # Get relevant context using ContextManager's proper method
     context_manager = ContextManager(state)
     current_step = StateManager.get_current_step(state)
-    relevant_context = context_manager.get_human_summaries(current_step)
+    relevant_context = context_manager.get_summaries(current_step)
     
     # Get question generation prompt from framework prompt builder
     prompt_provider = get_framework_prompts()

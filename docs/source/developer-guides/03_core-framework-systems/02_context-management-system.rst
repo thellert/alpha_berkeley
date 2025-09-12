@@ -84,7 +84,7 @@ Context classes define the structure of data shared between capabilities:
                "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.pvs",
            }
        
-       def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+       def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
            return {
                "type": "PV Addresses",
                "total_pvs": len(self.pvs),
@@ -96,7 +96,7 @@ Context classes define the structure of data shared between capabilities:
 
 1. Inherit from :class:`CapabilityContext`
 2. Define ``CONTEXT_TYPE`` and ``CONTEXT_CATEGORY`` class constants
-3. Implement ``get_access_details()`` and ``get_human_summary()`` methods
+3. Implement ``get_access_details()`` and ``get_summary()`` methods
 4. Use JSON-serializable field types only
 
 Storing Context Data
@@ -200,7 +200,7 @@ Best Practices
 **Context Class Design:**
 - Keep context classes simple with minimal fields
 - Use clear, descriptive field names and types
-- Implement meaningful ``get_access_details()`` and ``get_human_summary()`` methods
+- Implement meaningful ``get_access_details()`` and ``get_summary()`` methods
 - Use JSON-serializable types only
 
 **Storage Patterns:**
@@ -244,13 +244,13 @@ Common Issues
 **Context Window Management:**
 - Use ``recursively_summarize_data()`` utility function for large nested data structures
 - Automatically truncates large lists and dictionaries to prevent LLM context window overflow
-- Available from ``framework.context.context_manager`` for use in ``get_human_summary()`` methods
+- Available from ``framework.context.context_manager`` for use in ``get_summary()`` methods
 
 .. code-block:: python
 
    from framework.context.context_manager import recursively_summarize_data
    
-   def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+   def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
        """Human-readable summary with automatic data truncation."""
        return {
            "analysis_results": recursively_summarize_data(self.results),

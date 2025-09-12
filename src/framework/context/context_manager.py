@@ -36,7 +36,7 @@ def recursively_summarize_data(data, max_depth: int = 3, current_depth: int = 0)
     Recursively summarize data structures to prevent massive context overflow.
     
     This utility function is shared across all context classes to ensure consistent
-    behavior when creating human summaries of large nested data structures.
+    behavior when creating summaries of large nested data structures.
     
     Args:
         data: The data structure to summarize
@@ -320,15 +320,15 @@ class ContextManager:
         return "\n".join(description_parts)
 
     
-    def get_human_summaries(self, step: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Get human summaries for specific step contexts or all contexts.
+    def get_summaries(self, step: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Get summaries for specific step contexts or all contexts.
         
         Args:
             step: Optional step dict. If provided, extract contexts from step.inputs.
-                  If None, get human summaries for all available contexts.
+                  If None, get summaries for all available contexts.
         
         Returns:
-            Dict with flattened keys "context_type.key" -> human_summary_data
+            Dict with flattened keys "context_type.key" -> summary_data
         """
         # Step 1: Get contexts (filtered by step or all)
         if step is not None:
@@ -352,17 +352,17 @@ class ContextManager:
             # Get all contexts in flattened format
             contexts_dict = self.get_all()
         
-        # Step 2: Convert contexts to human summaries (single consolidated logic)
-        return self._contexts_to_human_summaries(contexts_dict)
+        # Step 2: Convert contexts to summaries (single consolidated logic)
+        return self._contexts_to_summaries(contexts_dict)
     
-    def _contexts_to_human_summaries(self, contexts_dict: Dict[str, 'CapabilityContext']) -> Dict[str, Any]:
-        """Convert flattened contexts dict to human summaries dict.
+    def _contexts_to_summaries(self, contexts_dict: Dict[str, 'CapabilityContext']) -> Dict[str, Any]:
+        """Convert flattened contexts dict to summaries dict.
         
         Args:
             contexts_dict: Dict with "context_type.key" -> context_object format
             
         Returns:
-            Dict with "context_type.key" -> human_summary_data format
+            Dict with "context_type.key" -> summary_data format
         """
         summaries = {}
         
@@ -373,10 +373,14 @@ class ContextManager:
             else:
                 context_type, key_name = flattened_key, flattened_key
             
-            if hasattr(context_object, 'get_human_summary'):
+            # Try get_summary first (new method), fall back to get_human_summary (deprecated)
+            if hasattr(context_object, 'get_summary'):
+                summaries[flattened_key] = context_object.get_summary(key_name)
+            elif hasattr(context_object, 'get_human_summary'):
+                # Legacy support - will trigger deprecation warning in base class
                 summaries[flattened_key] = context_object.get_human_summary(key_name)
             else:
-                # Fallback for context objects without human summary
+                # Fallback for context objects without summary method
                 summaries[flattened_key] = {
                     "type": context_type,
                     "raw_data": str(context_object)[:200] + "..." if len(str(context_object)) > 200 else str(context_object)

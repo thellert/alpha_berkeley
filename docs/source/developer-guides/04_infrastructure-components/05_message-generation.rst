@@ -105,7 +105,7 @@ System aggregates information using structured context:
    def _gather_information(state: AgentState) -> ResponseContext:
        context_manager = ContextManager(state)
        current_step = StateManager.get_current_step(state)
-       relevant_context = context_manager.get_human_summaries(current_step)
+       relevant_context = context_manager.get_summaries(current_step)
        
        response_mode = _determine_response_mode(state, current_step)
        

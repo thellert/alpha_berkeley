@@ -65,15 +65,32 @@ class CapabilityContext(BaseModel):
         """
         pass
 
-    @abstractmethod
-    def get_human_summary(self, key: str) -> dict:
+    def get_summary(self, key: str) -> dict:
         """
-        Get a human-readable summary of this context data.
+        Get a summary of this context data.
         
         Args:
             key: The context key this data is stored under
             
         Returns:
-            Dictionary with human-readable information about the context
+            Dictionary with information about the context
         """
-        pass 
+        # Check if subclass overrides get_human_summary (legacy support)
+        # We check __dict__ to see if the method is actually implemented in this class
+        if 'get_human_summary' in self.__class__.__dict__:
+            import warnings
+            warnings.warn(
+                f"get_human_summary() is deprecated in {self.__class__.__name__}. "
+                f"Please rename the method to get_summary(). "
+                f"This backwards compatibility will be removed in a future version.",
+                DeprecationWarning,
+                stacklevel=2
+            )
+            # Call the legacy method directly from the class to avoid recursion
+            return self.__class__.__dict__['get_human_summary'](self, key)
+        else:
+            # This should be implemented by subclasses
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must implement get_summary() method. "
+                f"If you have a get_human_summary() method, please rename it to get_summary()."
+            ) 

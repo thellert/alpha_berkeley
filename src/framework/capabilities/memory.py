@@ -144,8 +144,8 @@ class MemoryContext(CapabilityContext):
             "operation_result": self.operation_result
         }
 
-    def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-        """Generate human-readable summary for response generation and UI display.
+    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Generate summary for response generation and UI display.
         
         Creates a formatted summary of the memory operation results suitable for
         display in user interfaces and inclusion in agent responses. Returns raw
@@ -153,7 +153,7 @@ class MemoryContext(CapabilityContext):
         
         :param key_name: Optional context key name for reference
         :type key_name: Optional[str]
-        :return: Dictionary containing human-readable memory operation summary
+        :return: Dictionary containing memory operation summary
         :rtype: Dict[str, Any]
         
         .. note::
@@ -659,7 +659,7 @@ class MemoryOperationsCapability(BaseCapability):
                         logger.info(f"Memory save: Including context from {len(step_inputs)} previous steps")
                         try:
                             context_manager = ContextManager(state)
-                            context_summaries = context_manager.get_human_summaries(step)
+                            context_summaries = context_manager.get_summaries(step)
                             
                             if context_summaries:
                                 context_section = f"\n\nAVAILABLE CONTEXT FROM PREVIOUS STEPS:\n{context_summaries}\n"

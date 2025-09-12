@@ -226,7 +226,7 @@ Context classes provide type-safe data containers:
                "context_key": key
            }
        
-       def get_human_summary(self, key: str) -> dict:
+       def get_summary(self, key: str) -> dict:
            return {
                "title": "Weather Data",
                "content": f"Current weather in {self.location}: {self.temperature}°C, {self.conditions}",

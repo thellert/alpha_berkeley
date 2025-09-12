@@ -223,7 +223,7 @@ def _gather_information(state: AgentState) -> ResponseContext:
     # Extract context data and determine response mode
     context_manager = ContextManager(state)
     current_step = StateManager.get_current_step(state)
-    relevant_context = context_manager.get_human_summaries(current_step)
+    relevant_context = context_manager.get_summaries(current_step)
     
     # Determine response mode and prepare appropriate data
     response_mode = _determine_response_mode(state, current_step)
