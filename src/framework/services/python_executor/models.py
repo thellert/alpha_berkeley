@@ -781,6 +781,7 @@ class PythonExecutionState(TypedDict):
     generated_code: Optional[str]
     analysis_result: Optional[Any]
     analysis_failed: Optional[bool]
+    execution_failed: Optional[bool]
     execution_result: Optional[Any]
     execution_folder: Optional[Any]
     

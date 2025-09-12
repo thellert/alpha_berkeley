@@ -6,7 +6,7 @@ Transformed for LangGraph integration with TypedDict state management.
 """
 
 import asyncio
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import Optional, Dict, Any, TYPE_CHECKING, List
 from pathlib import Path
 
 from datetime import datetime
@@ -19,6 +19,7 @@ from .exceptions import (
 )
 from .models import PythonExecutionState, PythonExecutionSuccess
 from .services import FileManager, NotebookManager
+from .config import PythonExecutorConfig
 from framework.context.context_manager import ContextManager
 from configs.logger import get_logger
 
@@ -32,6 +33,7 @@ class LocalCodeExecutor:
     
     def __init__(self, configurable):
         self.configurable = configurable
+        self.executor_config = PythonExecutorConfig(configurable)
     
     async def execute_code(
         self,
@@ -89,7 +91,7 @@ class LocalCodeExecutor:
                 [python_path, temp_script],
                 capture_output=True,
                 text=True,
-                timeout=300,  # 5 minute timeout
+                timeout=self.executor_config.execution_timeout_seconds,
                 cwd=execution_folder or Path.cwd(),
                 env=env  # Pass environment with PYTHONPATH
             )
@@ -184,6 +186,9 @@ class LocalCodeExecutor:
                     except Exception as e:
                         logger.warning(f"Failed to load results.json: {e}")
                 
+                # Collect figure files from execution directory (same logic as container mode)
+                figure_paths = self._collect_figure_files(execution_folder or Path.cwd())
+                
                 return PythonExecutionSuccess(
                     results=results_data,
                     stdout=full_output,
@@ -191,7 +196,7 @@ class LocalCodeExecutor:
                     folder_path=execution_folder or Path.cwd(),
                     notebook_path=(execution_folder or Path.cwd()) / "execution_notebook.ipynb",
                     notebook_link="",
-                    figure_paths=metadata.get("figures_saved", [])
+                    figure_paths=figure_paths
                 )
                 
             except json.JSONDecodeError as e:
@@ -264,6 +269,42 @@ class LocalCodeExecutor:
                 
         return "unknown"
     
+    def _collect_figure_files(self, execution_folder: Path) -> List[Path]:
+        """Collect all figure files from execution directory and all subdirectories except attempts.
+        
+        Scans for image files in the main execution directory and all subdirectories,
+        excluding the 'attempts' folder which contains failed execution artifacts.
+        
+        Args:
+            execution_folder: Directory to scan for figure files
+            
+        Returns:
+            List of Path objects pointing to discovered figure files
+        """
+        figure_paths = []
+        
+        try:
+            # Common image file extensions (PNG is most common from matplotlib)
+            image_extensions = ['*.png', '*.jpg', '*.jpeg', '*.svg']
+            
+            # Scan main directory and all subdirectories except 'attempts'
+            for root_path in [execution_folder] + [d for d in execution_folder.iterdir() 
+                                                  if d.is_dir() and d.name != 'attempts']:
+                for extension in image_extensions:
+                    for figure_file in sorted(root_path.glob(extension)):
+                        if figure_file.is_file():
+                            figure_paths.append(figure_file)
+            
+            if figure_paths:
+                logger.info(f"LOCAL EXECUTION: Collected {len(figure_paths)} figure files")
+            else:
+                logger.debug("LOCAL EXECUTION: No figure files found")
+                
+            return figure_paths
+            
+        except Exception as e:
+            logger.error(f"LOCAL EXECUTION: Failed to collect figure files: {e}")
+            return figure_paths
 
 
 
@@ -272,6 +313,7 @@ class ContainerCodeExecutor:
     
     def __init__(self, configurable):
         self.configurable = configurable
+        self.executor_config = PythonExecutorConfig(configurable)
     
     async def execute_code(
         self,
@@ -296,7 +338,7 @@ class ContainerCodeExecutor:
                 code=code,
                 endpoint=endpoint,
                 execution_folder=execution_folder,
-                timeout=300
+                timeout=self.executor_config.execution_timeout_seconds
             )
             
             if not result.success:               
@@ -431,10 +473,15 @@ def create_executor_node():
         # Check if we have code to execute
         generated_code = state.get("generated_code")
         if not generated_code:
+            error_message = "Code execution failed: No code available for execution"
+            error_chain = state.get("error_chain", []) + [error_message]
+            
             return {
                 "is_successful": False,
+                "execution_failed": True,
                 "execution_error": "No code available for execution",
-                "current_stage": "failed"
+                "error_chain": error_chain,
+                "current_stage": "generation"
             }
         
         # Set up execution context - get config from LangGraph configurable
@@ -494,6 +541,7 @@ def create_executor_node():
             
             return {
                 "is_successful": True,
+                "execution_failed": False,
                 "execution_result": execution_result,
                 "final_notebook_path": final_notebook,
                 "current_stage": "complete"
@@ -529,11 +577,17 @@ def create_executor_node():
                 detailed_error_context
             )
             
+            # Add error to chain for generator feedback (EXACT SAME PATTERN AS ANALYZER)
+            error_message = f"Code execution failed: {str(e)}"
+            error_chain = state.get("error_chain", []) + [error_message]
+            
             return {
                 "is_successful": False,
+                "execution_failed": True,
                 "execution_error": str(e),
+                "error_chain": error_chain,
                 "error_notebook_path": error_notebook,
-                "current_stage": "failed"
+                "current_stage": "generation"
             }
     
     return executor_node

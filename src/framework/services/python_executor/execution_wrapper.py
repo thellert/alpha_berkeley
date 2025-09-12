@@ -86,7 +86,7 @@ import time
 import traceback
 from pathlib import Path
 from io import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime as _datetime, timedelta
 import pickle
 
 
@@ -202,7 +202,7 @@ print(f"Container working directory: {{Path.cwd()}}")
         return textwrap.dedent(f"""
             # Execution metadata
             execution_metadata = {{
-                "start_time": datetime.now().isoformat(),
+                "start_time": _datetime.now().isoformat(),
                 "success": True,
                 "error": None,
                 "traceback": None,
@@ -270,7 +270,7 @@ print(f"Container working directory: {{Path.cwd()}}")
     # Mark successful execution
     execution_metadata["success"] = True
     execution_metadata["error_type"] = None
-    execution_metadata["end_time"] = datetime.now().isoformat()
+    execution_metadata["end_time"] = _datetime.now().isoformat()
 """
     
     def _get_cleanup_and_export(self) -> str:
@@ -330,7 +330,7 @@ print(f"Container working directory: {{Path.cwd()}}")
                 
                 execution_metadata["stdout"] = stdout_capture.getvalue()
                 execution_metadata["stderr"] = stderr_capture.getvalue()
-                execution_metadata["end_time"] = datetime.now().isoformat()
+                execution_metadata["end_time"] = _datetime.now().isoformat()
         """).strip()
         
         file_persistence_section = textwrap.dedent("""

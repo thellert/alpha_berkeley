@@ -10,6 +10,7 @@ from langgraph.graph import StateGraph
 from langgraph.types import Command
 
 from .models import PythonExecutionState, PythonExecutionRequest, PythonServiceResult
+from .config import PythonExecutorConfig
 from .generator_node import create_generator_node
 from .analyzer_node import create_analyzer_node
 from .executor_node import create_executor_node
@@ -20,6 +21,8 @@ from configs.config import get_full_configuration
 from configs.logger import get_logger
 
 logger = get_logger("framework", "python")
+
+
 
 class PythonExecutorService:
     """Advanced Python execution service with flexible deployment and human oversight capabilities.
@@ -145,6 +148,7 @@ class PythonExecutorService:
     
     def __init__(self):
         self.config = self._load_config()
+        self.executor_config = PythonExecutorConfig(self.config)
         self._compiled_graph = None
     
     def get_compiled_graph(self):
@@ -258,7 +262,7 @@ class PythonExecutorService:
             compiled_graph = self.get_compiled_graph()
             result = await compiled_graph.ainvoke(internal_state, config)
             
-            # **CRITICAL FIX**: Check for execution failure and raise exception
+            # Check for execution failure and raise exception
             if not result.get("is_successful", False):
                 failure_reason = result.get("failure_reason") or result.get("execution_error", "Code execution failed")
                 logger.error(f"Python execution failed: {failure_reason}")
@@ -319,7 +323,14 @@ class PythonExecutorService:
                 "retry": "python_code_generator"
             }
         )
-        workflow.add_edge("python_code_executor", "__end__")
+        workflow.add_conditional_edges(
+            "python_code_executor",
+            self._executor_conditional_edge,
+            {
+                "retry": "python_code_generator",
+                "__end__": "__end__"
+            }
+        )
         
         # Compile with checkpointer for interrupt support - use same pattern as main graph
         checkpointer = self._create_checkpointer()
@@ -356,6 +367,7 @@ class PythonExecutorService:
             generated_code=None,
             analysis_result=None,
             analysis_failed=None,
+            execution_failed=None,
             execution_result=None,
             execution_folder=None,
             
@@ -372,7 +384,7 @@ class PythonExecutorService:
         elif state.get("analysis_failed", False):
             # Check retry limit to prevent infinite loops
             generation_attempt = state.get("generation_attempt", 0)
-            max_retries = 3  # Configurable limit
+            max_retries = self.executor_config.max_generation_retries
             
             if generation_attempt >= max_retries:
                 logger.error(f"Max retries ({max_retries}) exceeded for code generation")
@@ -394,6 +406,25 @@ class PythonExecutorService:
             return "approved"
         else:
             return "rejected"
+    
+    def _executor_conditional_edge(self, state: PythonExecutionState) -> str:
+        """Route after code execution."""
+        if state.get("execution_failed", False):
+            # Check retry limit to prevent infinite loops
+            generation_attempt = state.get("generation_attempt", 0)
+            max_retries = self.executor_config.max_execution_retries
+            
+            if generation_attempt >= max_retries:
+                logger.error(f"Max retries ({max_retries}) exceeded for code execution")
+                # Force permanent failure instead of infinite retries
+                state["is_failed"] = True
+                state["failure_reason"] = f"Code execution failed after {max_retries} attempts"
+                return "__end__"
+            else:
+                logger.warning(f"⚠️ Retrying code generation due to execution failure (attempt {generation_attempt + 1}/{max_retries})")
+                return "retry"
+        else:
+            return "__end__"  # Success or unknown state - end either way
     
     def _create_checkpointer(self):
         """Create checkpointer using same logic as main graph."""

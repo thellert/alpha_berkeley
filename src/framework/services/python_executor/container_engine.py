@@ -675,29 +675,34 @@ class FileBasedResultCollector:
             return None
     
     async def _collect_figure_files(self) -> List[Path]:
-        """Collect all figure files from the figures subdirectory"""
+        """Collect all figure files from execution directory and all subdirectories except attempts"""
         figure_paths = []
         
         if not self.execution_folder:
             logger.warning("No execution folder configured - cannot collect figures")
             return figure_paths
         
-        figures_dir = self.execution_folder / "figures"
-        
         try:
-            if not figures_dir.exists():
-                logger.debug("No figures directory found")
-                return figure_paths
+            # Common image file extensions (PNG is most common from matplotlib)
+            image_extensions = ['*.png', '*.jpg', '*.jpeg', '*.svg']
             
-            # Collect all PNG files in the figures directory
-            for figure_file in sorted(figures_dir.glob("*.png")):
-                figure_paths.append(figure_file)
+            # Scan main directory and all subdirectories except 'attempts'
+            for root_path in [self.execution_folder] + [d for d in self.execution_folder.iterdir() 
+                                                       if d.is_dir() and d.name != 'attempts']:
+                for extension in image_extensions:
+                    for figure_file in sorted(root_path.glob(extension)):
+                        if figure_file.is_file():
+                            figure_paths.append(figure_file)
             
-            logger.info(f"Collected {len(figure_paths)} figure files")
+            if figure_paths:
+                logger.info(f"CONTAINER EXECUTION: Collected {len(figure_paths)} figure files")
+            else:
+                logger.debug("CONTAINER EXECUTION: No figure files found")
+                
             return figure_paths
             
         except Exception as e:
-            logger.error(f"Failed to collect figure files: {e}")
+            logger.error(f"CONTAINER EXECUTION: Failed to collect figure files: {e}")
             return figure_paths
 
 
