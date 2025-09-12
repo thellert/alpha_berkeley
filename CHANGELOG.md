@@ -5,6 +5,40 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-09-12
+
+### Major Features
+- **Context Memory Optimization**: Added recursive data summarization with `recursively_summarize_data()` utility to prevent context window overflow
+- **Configurable Python Executor**: Complete Python executor configuration system with `PythonExecutorConfig` class for centralized settings
+- **Enhanced Figure Registration**: Added batch figure registration support with accumulation for improved performance
+- **OpenWebUI Performance Optimizations**: Response chunking for large outputs (>50KB) and static URL serving for figures
+
+### Fixed
+- **Critical Infinite Loop Bug**: Fixed infinite reclassification loop when orchestrator hallucinated non-existent capabilities
+- **Reclassification Limit Enforcement**: Router now properly enforces `max_reclassifications` limit for all reclassification paths
+- **Dependency Issues**: Fixed OpenTelemetry version constraints to resolve compatibility issues
+- **Error Handling**: Enhanced retry logic and error classification in infrastructure nodes
+
+### Changed
+- **Unified Error Handling**: Consolidated reclassification system to use single error-based path instead of dual state/error approaches
+- **Context Method Naming**: Renamed `get_human_summary()` to `get_summary()` across all context classes with backwards compatibility
+- **Infrastructure Node Improvements**: Infrastructure nodes now raise `ReclassificationRequiredError` exceptions instead of directly manipulating state
+- **State Cleanup**: Removed obsolete `control_needs_reclassification` field from agent state
+
+### Enhanced
+- **Python Executor Improvements**: Configurable execution timeouts, better error handling, and improved figure collection in both local and container modes
+- **Context Window Management**: Automatic truncation of large execution results and code outputs to manage LLM context limits
+- **Deployment Configuration**: Updated for static file serving with proper environment variable support
+- **Error Classification**: Better distinction between retriable LLM failures and configuration errors
+
+### Technical Details
+- Added `ReclassificationRequiredError` exception to framework error system
+- Enhanced router error handling to enforce limits consistently across all reclassification triggers
+- Updated orchestrator and classifier to use proper exception-based error handling
+- Improved architecture with cleaner separation between error handling and state management
+- Added python_executor configuration section with sensible defaults
+- Implemented graceful fallback for legacy method names with deprecation warnings
+
 ## [0.3.1] - 2025-09-10
 
 ### Enhancements
