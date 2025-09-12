@@ -19,7 +19,7 @@ services:
       - USER_MEMORY_DIR=/app/{{file_paths.user_memory_dir}}
     volumes:
       - open-webui:/app/backend/data
-      - {{project_root}}/{{file_paths.agent_data_dir}}:/app/{{file_paths.agent_data_dir}}
+      - {{project_root}}/{{file_paths.agent_data_dir}}:/app/backend/open_webui/static/agent_data:ro
       - ./framework/open-webui/custom.css:/app/backend/static/custom.css
       - {{project_root}}/config.yml:/app/config.yml:ro
       - {{project_root}}/src:/app/src:ro
