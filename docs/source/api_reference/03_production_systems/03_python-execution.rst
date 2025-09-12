@@ -21,6 +21,7 @@ Core Components
    PythonExecutionSuccess
    PythonExecutionState
    PythonExecutionContext
+   PythonExecutorConfig
    ExecutionModeConfig
    ExecutionControlConfig
    ContainerEndpointConfig
@@ -81,6 +82,11 @@ State Management
 
 Configuration Models
 ====================
+
+.. autoclass:: PythonExecutorConfig
+   :members:
+   :show-inheritance:
+   :no-index:
 
 .. autoclass:: ExecutionModeConfig
    :members:

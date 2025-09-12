@@ -51,6 +51,12 @@ Configure your Python execution system with environment settings and approval po
 
    # config.yml - Python Execution Configuration
    framework:
+     # Python Executor Service Configuration
+     python_executor:
+       max_generation_retries: 3      # Maximum retries for code generation failures
+       max_execution_retries: 3       # Maximum retries for execution failures
+       execution_timeout_seconds: 600 # Execution timeout in seconds (default: 10 minutes)
+     
      execution:
        execution_method: "container"  # or "local"
        modes:
@@ -67,12 +73,10 @@ Configure your Python execution system with environment settings and approval po
        container:
          jupyter_host: "localhost"
          jupyter_port: 8888
-         execution_timeout: 300
          
        # Local execution settings  
        local:
          python_env_path: "${LOCAL_PYTHON_VENV}"
-         execution_timeout: 120
 
    # Approval configuration for Python execution
    approval:
@@ -83,6 +87,12 @@ Configure your Python execution system with environment settings and approval po
          mode: "epics_writes"  # disabled, all_code, epics_writes
 
 **Configuration Options:**
+
+- **python_executor**: Service-level configuration for retry behavior and timeouts
+  
+  - **max_generation_retries**: Maximum attempts for code generation failures (default: 3)
+  - **max_execution_retries**: Maximum attempts for code execution failures (default: 3)  
+  - **execution_timeout_seconds**: Maximum time allowed for code execution (default: 600 seconds)
 
 - **execution_method**: "container" for secure isolation, "local" for direct host execution
 - **modes**: Different execution environments with specific approval requirements

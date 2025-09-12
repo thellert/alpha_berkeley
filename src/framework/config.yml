@@ -92,7 +92,7 @@ framework:
     python_env_path: ${LOCAL_PYTHON_VENV}  # Path to Python executable with required dependencies
                                            # Example: "/path/to/venv/bin/python" or "~/jupyter-env/bin/python"
                                            # If null, uses current system Python (may miss dependencies)
-    
+
     # EPICS Infrastructure - Technical connection details
     epics:
       timeout: 5.0
@@ -103,8 +103,6 @@ framework:
         write_access:
           address: cagw-alsdmz.als.lbl.gov
           port: 5084
-    
-
     
     # Python/Jupyter Execution Modes - Technical kernel configurations
     modes:
@@ -124,6 +122,15 @@ framework:
         environment:
           EPICS_CA_AUTO_ADDR_LIST: "NO"
           EPICS_EXECUTION_MODE: "write_access"
+
+  # Python executor service configuration
+  python_executor:
+    # Retry limits for different failure types
+    max_generation_retries: 3    # How many times to retry code generation after analysis failures
+    max_execution_retries: 3     # How many times to retry code generation after execution failures
+    
+    # Timeout settings
+    execution_timeout_seconds: 600  # 10 minutes - how long to wait for code execution
 
 
   # Default Framework Pipeline Configuration
