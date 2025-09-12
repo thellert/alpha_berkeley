@@ -566,7 +566,8 @@ class StateManager:
         capability: str,
         figure_path: str,
         display_name: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
+        current_figures: Optional[List[Dict[str, Any]]] = None
     ) -> Dict[str, Any]:
         """
         Register a figure in the centralized UI registry.
@@ -581,6 +582,7 @@ class StateManager:
             figure_path: Path to the figure file (absolute or relative)
             display_name: Optional human-readable figure name
             metadata: Optional capability-specific metadata dictionary
+            current_figures: Optional list of current figures to accumulate (otherwise get from state)
             
         Returns:
             State update dictionary with ui_captured_figures update
@@ -608,6 +610,9 @@ class StateManager:
                 ... )
         """
         from datetime import datetime
+        from configs.logger import get_logger
+        
+        logger = get_logger("framework", "base")
         
         # Create figure entry with required fields
         figure_entry = {
@@ -622,11 +627,19 @@ class StateManager:
         if metadata:
             figure_entry["metadata"] = metadata
         
-        # Get current figures and append new one
-        current_figures = list(state.get("ui_captured_figures", []))
-        current_figures.append(figure_entry)
+        # Use provided current_figures or get from state
+        if current_figures is not None:
+            # Use the accumulating list (for multiple registrations within same node)
+            figures_list = current_figures
+        else:
+            # Start from state (for single registration)
+            figures_list = list(state.get("ui_captured_figures", []))
         
-        return {"ui_captured_figures": current_figures}
+        figures_list.append(figure_entry)
+        
+        logger.info(f"StateManager: prepared figure registration for {capability}: {figure_path}")
+        
+        return {"ui_captured_figures": figures_list}
 
 
 def get_execution_steps_summary(state: AgentState) -> List[str]:
