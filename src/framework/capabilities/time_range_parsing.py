@@ -150,30 +150,6 @@ class TimeRangeContext(CapabilityContext):
             "datetime_features": "Direct arithmetic: end_date - start_date, comparison: start_date > other_date, formatting: start_date.strftime(format)"
         }
     
-    def get_llm_summary(self) -> Dict[str, Any]:
-        """Generate structured summary for LLM consumption and response generation.
-        
-        Creates a comprehensive summary of the parsed time range in multiple formats
-        suitable for LLM processing and human response generation. Includes both
-        ISO format timestamps and calculated duration metrics.
-        
-        :return: Dictionary containing time range data in multiple formats for LLM use
-        :rtype: Dict[str, Any]
-        
-        .. note::
-           Provides duration in both human-readable string format and precise
-           hour calculations for flexible usage in responses and analysis.
-        """
-        duration = self.end_date - self.start_date
-        return {
-            "time_range": {
-                "start": self.start_date.isoformat(),
-                "end": self.end_date.isoformat(),
-                "duration": str(duration),
-                "duration_hours": round(duration.total_seconds() / 3600, 2),
-                "type": "parsed_time_range"
-            }
-        }
     
     def get_human_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
         """Generate human-readable summary for UI display and debugging.

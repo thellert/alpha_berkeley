@@ -27,6 +27,70 @@ if TYPE_CHECKING:
 logger = get_logger("framework", "base")
 
 
+# ===================================================================
+# ==================== SHARED UTILITY FUNCTIONS ==================
+# ===================================================================
+
+def recursively_summarize_data(data, max_depth: int = 3, current_depth: int = 0):
+    """
+    Recursively summarize data structures to prevent massive context overflow.
+    
+    This utility function is shared across all context classes to ensure consistent
+    behavior when creating human summaries of large nested data structures.
+    
+    Args:
+        data: The data structure to summarize
+        max_depth: Maximum recursion depth to prevent infinite loops
+        current_depth: Current recursion depth
+        
+    Returns:
+        Summarized version of the data structure
+    """
+    # Configuration constants - clearly visible "knobs" for tuning behavior
+    LARGE_LIST_THRESHOLD = 10     # Lists larger than this will be truncated
+    LARGE_DICT_THRESHOLD = 10     # Dicts larger than this will be truncated
+    LONG_STRING_THRESHOLD = 200   # Strings longer than this will be truncated
+    LIST_SAMPLE_SIZE = 3          # Number of items to show from large lists
+    DICT_SAMPLE_SIZE = 3          # Number of keys to show from large dicts
+    STRING_PREVIEW_SIZE = 100     # Number of characters to show from long strings
+    
+    # Prevent infinite recursion
+    if current_depth >= max_depth:
+        return f"<Max depth {max_depth} reached: {type(data).__name__}>"
+    
+    # Handle lists
+    if isinstance(data, list):
+        if len(data) > LARGE_LIST_THRESHOLD:
+            # For large lists, show count and first few items
+            sample_items = [recursively_summarize_data(item, max_depth, current_depth + 1) 
+                           for item in data[:LIST_SAMPLE_SIZE]]
+            return f"List with {len(data):,} items: {sample_items}... (truncated)"
+        else:
+            # For small lists, recursively summarize each item
+            return [recursively_summarize_data(item, max_depth, current_depth + 1) for item in data]
+    
+    # Handle dictionaries
+    elif isinstance(data, dict):
+        if len(data) > LARGE_DICT_THRESHOLD:
+            # For large dicts, show count and first few keys
+            keys = list(data.keys())[:DICT_SAMPLE_SIZE]
+            sample_data = {k: recursively_summarize_data(data[k], max_depth, current_depth + 1) for k in keys}
+            return f"Dict with {len(data)} keys: {sample_data}... (showing first {DICT_SAMPLE_SIZE} keys only)"
+        else:
+            # For small dicts, recursively summarize each value
+            return {k: recursively_summarize_data(v, max_depth, current_depth + 1) for k, v in data.items()}
+    
+    # Handle strings
+    elif isinstance(data, str):
+        if len(data) > LONG_STRING_THRESHOLD:
+            return f"{data[:STRING_PREVIEW_SIZE]}... (truncated from {len(data)} chars)"
+        else:
+            return data
+    
+    # Handle other types (int, float, bool, None, etc.)
+    else:
+        return data
+
 
 class ContextManager:
     """Simplified LangGraph-native context manager using Pydantic serialization.

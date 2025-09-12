@@ -37,19 +37,17 @@ including streaming, configuration management, error handling, and checkpoint su
    :class:`framework.approval.ApprovalManager` : Code execution approval workflows  
 """
 
-import asyncio
 from typing import Dict, Any, Optional, ClassVar
-from dataclasses import dataclass
+from langgraph.types import Command
 
 from framework.base.decorators import capability_node
 from framework.base.capability import BaseCapability
 from framework.context.base import CapabilityContext
-from framework.context.context_manager import ContextManager
+from framework.context.context_manager import ContextManager, recursively_summarize_data
 from framework.base.errors import ErrorClassification, ErrorSeverity
 from framework.state import AgentState, StateManager
 from framework.registry import get_registry
-from framework.base.examples import OrchestratorGuide, TaskClassifierGuide, ClassifierExample
-from framework.services.python_executor.exceptions import CodeRuntimeError
+from framework.base.examples import OrchestratorGuide, TaskClassifierGuide
 from framework.services.python_executor import PythonServiceResult
 from framework.services.python_executor.models import PythonExecutionRequest
 from framework.approval import get_approval_resume_data, clear_approval_state, create_approval_type, handle_service_with_interrupts
@@ -57,8 +55,6 @@ from configs.logger import get_logger
 from configs.streaming import get_streamer
 from configs.config import get_full_configuration
 from framework.prompts.loader import get_framework_prompts
-from langgraph.types import Command, interrupt
-from langgraph.errors import GraphInterrupt
 
 logger = get_logger("framework", "python")
 
@@ -190,15 +186,27 @@ class PythonResultsContext(CapabilityContext):
             "status": "Failed" if self.error else "Success"
         }
         
-        # Include actual execution results for LLM consumption
+        # Include summarized execution data to prevent context overflow
         if self.results:
-            summary["results"] = self.results  # Include computed results dictionary
+            summary["results"] = recursively_summarize_data(self.results)
         if self.output:
-            summary["output"] = self.output
+            # Truncate large output logs
+            if len(self.output) > 1000:
+                summary["output"] = f"{self.output[:500]}... (truncated from {len(self.output)} chars)"
+            else:
+                summary["output"] = self.output
         if self.error:
-            summary["error"] = self.error
+            summary["error"] = self.error  # Errors are usually short
         if self.code:
-            summary["code"] = self.code
+            # Truncate large code blocks
+            if len(self.code) > 2000:
+                lines = self.code.split('\n')
+                if len(lines) > 50:
+                    summary["code"] = f"{chr(10).join(lines[:25])}... (truncated from {len(lines)} lines)"
+                else:
+                    summary["code"] = f"{self.code[:1000]}... (truncated from {len(self.code)} chars)"
+            else:
+                summary["code"] = self.code
             
         return summary
 
@@ -520,7 +528,9 @@ class PythonCapability(BaseCapability):
         # Register figures in centralized UI registry
         figure_updates = {}
         if results_context.figure_paths:
-            # Register each figure individually - register_figure handles accumulation
+            # Register figures using StateManager with proper accumulation
+            accumulating_figures = None  # Start with None for first registration
+            
             for figure_path in results_context.figure_paths:
                 figure_update = StateManager.register_figure(
                     state,
@@ -532,11 +542,14 @@ class PythonCapability(BaseCapability):
                         "notebook_link": results_context.notebook_link,
                         "execution_time": results_context.execution_time,
                         "context_key": step.get("context_key"),
-                        "code_length": len(results_context.code)
-                    }
+                    },
+                    current_figures=accumulating_figures  # Pass accumulating list
                 )
-                # Use the final accumulated result (register_figure handles accumulation internally)
-                figure_updates = figure_update
+                # Get the updated list for next iteration
+                accumulating_figures = figure_update["ui_captured_figures"]
+            
+            # Final state update with all accumulated figures
+            figure_updates = figure_update  # Last update contains all figures
         
         # Combine all updates
         if has_approval_resume:
