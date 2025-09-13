@@ -328,8 +328,7 @@ class StateManager:
             control_validation_timestamp=None,
             
             # UI result fields - reset to defaults
-            ui_notebook_links=[],
-    
+            ui_captured_notebooks=[],
             ui_captured_figures=[],
             ui_agent_context=None,
             
@@ -639,6 +638,88 @@ class StateManager:
         logger.info(f"StateManager: prepared figure registration for {capability}: {figure_path}")
         
         return {"ui_captured_figures": figures_list}
+
+    @staticmethod
+    def register_notebook(
+        state: AgentState,
+        capability: str,
+        notebook_path: str,
+        notebook_link: str,
+        display_name: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        current_notebooks: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
+        """
+        Register a Jupyter notebook in the centralized UI registry.
+        
+        This is the single point of entry for all capabilities to register notebooks
+        for UI display. Provides a capability-agnostic interface that works for
+        Python, R, Julia, or any other notebook-generating capability.
+        
+        Args:
+            state: Current agent state
+            capability: Capability identifier (e.g., "python_executor", "data_visualization")
+            notebook_path: Path to the notebook file (absolute or relative)
+            notebook_link: Jupyter-accessible URL for the notebook
+            display_name: Optional human-readable notebook name
+            metadata: Optional capability-specific metadata dictionary
+            current_notebooks: Optional list of current notebooks to accumulate (otherwise get from state)
+            
+        Returns:
+            State update dictionary with ui_captured_notebooks update
+            
+        Examples:
+            Basic notebook registration::
+            
+                >>> notebook_update = StateManager.register_notebook(
+                ...     state, "python_executor", "/path/to/notebook.ipynb", 
+                ...     "http://localhost:8088/lab/tree/notebook.ipynb"
+                ... )
+                >>> return {**other_updates, **notebook_update}
+                
+            Rich notebook registration::
+            
+                >>> notebook_update = StateManager.register_notebook(
+                ...     state, 
+                ...     capability="data_visualization",
+                ...     notebook_path="execution/analysis.ipynb",
+                ...     notebook_link="http://localhost:8088/lab/tree/analysis.ipynb",
+                ...     display_name="Data Analysis Notebook",
+                ...     metadata={
+                ...         "execution_time": 2.5,
+                ...         "context_key": "analysis_results"
+                ...     }
+                ... )
+        """
+        from datetime import datetime
+        
+        # Create notebook entry with required fields
+        notebook_entry = {
+            "capability": capability,
+            "notebook_path": notebook_path,
+            "notebook_link": notebook_link,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Add optional fields only if provided
+        if display_name:
+            notebook_entry["display_name"] = display_name
+        if metadata:
+            notebook_entry["metadata"] = metadata
+        
+        # Use provided current_notebooks or get from state
+        if current_notebooks is not None:
+            # Use the accumulating list (for multiple registrations within same node)
+            notebooks_list = current_notebooks
+        else:
+            # Start from state (for single registration)
+            notebooks_list = list(state.get("ui_captured_notebooks", []))
+        
+        notebooks_list.append(notebook_entry)
+        
+        logger.info(f"StateManager: prepared notebook registration for {capability}: {notebook_path}")
+        
+        return {"ui_captured_notebooks": notebooks_list}
 
 
 def get_execution_steps_summary(state: AgentState) -> List[str]:
