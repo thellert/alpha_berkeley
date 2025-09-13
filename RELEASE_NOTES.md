@@ -1,44 +1,31 @@
-# Alpha Berkeley Framework - Latest Release (v0.4.0)
+# Alpha Berkeley Framework - Latest Release (v0.4.1)
 
-🚀 **Major feature release with critical bug fixes** - a comprehensive update to the Alpha Berkeley Framework.
+🔧 **Notebook registry enhancement** - improved notebook management with structured metadata support.
 
 ## What's New
 
-### 🎯 Major New Features
-- **Context Memory Optimization**: Intelligent data summarization with `recursively_summarize_data()` to prevent context window overflow
-- **Configurable Python Executor**: Complete configuration system with `PythonExecutorConfig` for centralized timeout and retry settings
-- **Enhanced Figure Registration**: Batch figure registration support for improved performance
-- **OpenWebUI Performance**: Response chunking for large outputs and static URL serving for figures
+### 🏗️ Notebook Registry Enhancements
+- **Centralized Notebook Registry**: Added structured notebook registry system replacing simple link list with rich metadata support
+- **StateManager Integration**: New `register_notebook()` method for capability-agnostic notebook registration with timestamps and metadata
+- **Response Context Tracking**: Enhanced ResponseContext to track notebook availability for improved user guidance
 
-### 🐛 Critical Bug Fixes
-- **Infinite Loop Fix**: Resolved critical infinite reclassification loop that occurred when orchestrator hallucinated non-existent capabilities
-- **Limit Enforcement**: Router now properly enforces `max_reclassifications` limit across all reclassification paths
-- **Dependency Issues**: Fixed OpenTelemetry version constraints and compatibility issues
-
-### 🏗️ Architecture Improvements
-- **Unified Error System**: Consolidated dual reclassification paths into single, consistent error-based approach
-- **Exception-Based Design**: Infrastructure nodes now use proper `ReclassificationRequiredError` exceptions
-- **Context Method Refactoring**: Renamed `get_human_summary()` to `get_summary()` with backwards compatibility
-- **State Cleanup**: Removed obsolete `control_needs_reclassification` field for cleaner state management
-
-### ⚡ Performance & Usability
-- **Python Executor Enhancements**: Configurable timeouts, better error handling, improved figure collection
-- **Context Window Management**: Automatic truncation of large results to manage LLM context limits
-- **Enhanced Error Classification**: Better distinction between retriable and configuration errors
+### 🔧 Technical Improvements
+- **Structured Data Management**: Replaced `ui_notebook_links` with `ui_captured_notebooks` registry in agent state
+- **Metadata Support**: Notebook registration now supports display names, capability tracking, and automatic timestamp generation
+- **State Management**: Updated state reset logic to use new registry format for better notebook lifecycle management
 
 ## Upgrade Notes
 
-This is a major release with significant new features and critical bug fixes:
+This is a patch release with notebook registry enhancements:
 
-- **Critical Bug Fix**: Resolves infinite loop during task classification
-- **New Configuration**: Python executor now supports configurable timeouts and retry limits
-- **API Changes**: Context classes now use `get_summary()` instead of `get_human_summary()` (backwards compatible)
-- **Performance**: Improved memory usage and response times for large outputs
-- **Backwards Compatibility**: All changes maintain backwards compatibility with deprecation warnings
+- **Registry Migration**: Existing notebook links will be automatically converted to new structured format
+- **API Enhancement**: New `StateManager.register_notebook()` method available for capabilities
+- **Response Context**: Response generation now has access to notebook availability information
+- **Backwards Compatibility**: All changes maintain backwards compatibility
 
 ## Get Started
 
-1. Update to v0.4.0 for critical bug fixes and improved stability
+1. Update to v0.4.1 for enhanced notebook registry and improved metadata support
 2. View the [complete documentation](https://thellert.github.io/alpha_berkeley/)
 3. Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
 
@@ -66,9 +53,9 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.4.0 (September 2025)*  
-*Release Type: Major Feature Release*  
-*Previous Release: v0.3.1 with documentation workflow improvements*
+*Current Release: v0.4.1 (September 2025)*  
+*Release Type: Patch Release*  
+*Previous Release: v0.4.0 with major feature enhancements and critical bug fixes*
 
 ---
 

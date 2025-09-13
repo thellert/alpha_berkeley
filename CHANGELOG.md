@@ -5,6 +5,18 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-09-13
+
+### Enhanced
+- **Centralized Notebook Registry**: Added structured notebook registry system replacing simple link list with rich metadata support
+- **StateManager Enhancements**: Added `register_notebook()` method for capability-agnostic notebook registration with timestamps and metadata
+- **Response Context Tracking**: Enhanced ResponseContext to track notebook availability for improved user guidance
+
+### Technical Details
+- Replaced `ui_notebook_links` with structured `ui_captured_notebooks` registry in agent state
+- Added notebook registration method supporting display names, metadata, and automatic timestamp generation
+- Updated state reset logic to use new registry format for better notebook management
+
 ## [0.4.0] - 2025-09-12
 
 ### Major Features

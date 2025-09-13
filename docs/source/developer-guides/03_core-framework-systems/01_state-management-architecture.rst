@@ -142,6 +142,36 @@ StateManager provides the primary interface for state creation and management th
            state, "PV_ADDRESSES", step.get('context_key'), pv_context
        )
 
+**UI Registration (Figures and Notebooks):**
+
+.. code-block:: python
+
+   # Register figures for UI display
+   figure_update = StateManager.register_figure(
+       state, 
+       capability="python_executor", 
+       figure_path="/path/to/analysis_plot.png",
+       display_name="Analysis Results",
+       metadata={"plot_type": "scatter", "data_points": 150}
+   )
+   
+   # Register notebooks for UI display
+   notebook_update = StateManager.register_notebook(
+       state,
+       capability="python_executor", 
+       notebook_path="/path/to/analysis.ipynb",
+       notebook_link="http://localhost:8088/lab/tree/analysis.ipynb",
+       display_name="Data Analysis Notebook",
+       metadata={"execution_time": 2.5, "cell_count": 12}
+   )
+   
+   # Combine with other state updates
+   return {
+       **context_updates,
+       **figure_update,
+       **notebook_update
+   }
+
 **Direct State Updates:**
 
 .. code-block:: python

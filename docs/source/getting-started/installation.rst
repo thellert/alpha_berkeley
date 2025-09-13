@@ -191,7 +191,7 @@ Once services are running, access the web interface at:
 OpenWebUI Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Language Models that provides a ChatGPT-like experience with extensive customization options. The framework's integration provides real-time progress tracking during agent execution, automatic display of :func:`registered <framework.state.StateManager.register_figure>` visualizations, and session continuity across conversations.
+`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Language Models that provides a ChatGPT-like experience with extensive customization options. The framework's integration provides real-time progress tracking during agent execution, automatic display of :func:`registered figures <framework.state.StateManager.register_figure>` and :func:`notebooks <framework.state.StateManager.register_notebook>`, and session continuity across conversations.
 
 .. _Ollama Connection:
 

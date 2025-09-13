@@ -69,6 +69,10 @@ StateManager
    .. automethod:: StateManager.get_current_step
    
    .. automethod:: StateManager.get_execution_plan
+   
+   .. automethod:: StateManager.register_figure
+   
+   .. automethod:: StateManager.register_notebook
 
 Context Management System
 =========================
