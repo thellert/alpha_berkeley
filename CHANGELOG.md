@@ -5,6 +5,18 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2025-09-13
+
+### Enhanced
+- **Python Execution Integration**: Python capability now registers notebooks using centralized StateManager.register_notebook() with rich metadata
+- **Notebook Link Generation**: Improved notebook URL generation in both local and container execution modes with FileManager integration
+- **Notebook Structure**: Enhanced notebook cell organization with separate markdown headers and executable code blocks
+
+### Technical Details
+- Added notebook registration with execution time, context key, and code metrics to Python capability
+- Standardized notebook naming to 'notebook.ipynb' across execution modes
+- Improved notebook generation with cleaner separation of results documentation and executable code
+
 ## [0.4.1] - 2025-09-13
 
 ### Enhanced

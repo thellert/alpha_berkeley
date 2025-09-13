@@ -1,31 +1,31 @@
-# Alpha Berkeley Framework - Latest Release (v0.4.1)
+# Alpha Berkeley Framework - Latest Release (v0.4.2)
 
-🔧 **Notebook registry enhancement** - improved notebook management with structured metadata support.
+⚡ **Python execution enhancements** - improved notebook generation and integration with centralized registry.
 
 ## What's New
 
-### 🏗️ Notebook Registry Enhancements
-- **Centralized Notebook Registry**: Added structured notebook registry system replacing simple link list with rich metadata support
-- **StateManager Integration**: New `register_notebook()` method for capability-agnostic notebook registration with timestamps and metadata
-- **Response Context Tracking**: Enhanced ResponseContext to track notebook availability for improved user guidance
+### ⚡ Python Execution Enhancements
+- **Registry Integration**: Python capability now uses centralized StateManager.register_notebook() with rich execution metadata
+- **Improved Notebook Links**: Enhanced URL generation in both local and container execution modes with proper FileManager integration
+- **Better Notebook Structure**: Cleaner notebook organization with separate markdown documentation and executable code blocks
 
 ### 🔧 Technical Improvements
-- **Structured Data Management**: Replaced `ui_notebook_links` with `ui_captured_notebooks` registry in agent state
-- **Metadata Support**: Notebook registration now supports display names, capability tracking, and automatic timestamp generation
-- **State Management**: Updated state reset logic to use new registry format for better notebook lifecycle management
+- **Execution Metadata**: Notebook registration includes execution time, context keys, and code metrics for better tracking
+- **Standardized Naming**: Unified notebook naming to 'notebook.ipynb' across all execution modes
+- **Enhanced Generation**: Improved notebook cell structure with proper separation of results and executable code
 
 ## Upgrade Notes
 
-This is a patch release with notebook registry enhancements:
+This is a patch release with Python execution enhancements:
 
-- **Registry Migration**: Existing notebook links will be automatically converted to new structured format
-- **API Enhancement**: New `StateManager.register_notebook()` method available for capabilities
-- **Response Context**: Response generation now has access to notebook availability information
+- **Enhanced Integration**: Python execution now fully integrated with centralized notebook registry
+- **Improved Links**: Better notebook URL generation across all execution environments
+- **Cleaner Notebooks**: Improved notebook structure with better organization of content
 - **Backwards Compatibility**: All changes maintain backwards compatibility
 
 ## Get Started
 
-1. Update to v0.4.1 for enhanced notebook registry and improved metadata support
+1. Update to v0.4.2 for enhanced Python execution and improved notebook generation
 2. View the [complete documentation](https://thellert.github.io/alpha_berkeley/)
 3. Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
 
@@ -53,9 +53,9 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.4.1 (September 2025)*  
+*Current Release: v0.4.2 (September 2025)*  
 *Release Type: Patch Release*  
-*Previous Release: v0.4.0 with major feature enhancements and critical bug fixes*
+*Previous Release: v0.4.1 with centralized notebook registry system*
 
 ---
 
