@@ -6,6 +6,7 @@ and educational clarity.
 """
 
 from typing import Optional
+import textwrap
 
 from framework.prompts.defaults.response_generation import DefaultResponseGenerationPromptBuilder
 from framework.base import OrchestratorGuide, OrchestratorExample, PlannedStep, TaskClassifierGuide
@@ -19,58 +20,38 @@ class WindTurbineResponseGenerationPromptBuilder(DefaultResponseGenerationPrompt
         """Get the wind turbine-specific role definition."""
         return "You are an expert wind turbine performance analyst providing detailed technical analysis and maintenance recommendations."
     
-    def _get_guidelines_section(self, info) -> str:
-        """Get wind turbine-specific response guidelines."""
-        guidelines = ["Provide a clear, accurate response"]
-        
-        if not hasattr(info, 'execution_history') or not info.execution_history:
-            # Conversational response
-            guidelines.extend([
-                "Be professional and knowledgeable about wind turbine operations",
-                "Answer general questions about turbine monitoring and performance analysis",
-                "Provide helpful context about industry standards and best practices",
-            ])
-        elif hasattr(info, 'relevant_context') and info.relevant_context:
-            # Technical response with relevant context - WIND TURBINE SPECIFIC
-            guidelines.extend([
-                "ALWAYS present turbine performance data in well-formatted tables for clarity",
-                "Include capacity factor percentages rounded to 1 decimal place for readability", 
-                "Reference specific industry standards from knowledge base when available",
-                "Clearly identify turbines requiring maintenance with priority ranking",
-                "NEVER make up, estimate, or fabricate any performance data - only use retrieved results",
-                "Use proper turbine industry terminology (capacity factor, efficiency ratio, etc.)",
-                "Structure analysis with clear headings: Performance Overview, Rankings, Maintenance Recommendations"
-            ])
-        
-        return "GUIDELINES:\n" + "\n".join(f"{i+1}. {g}" for i, g in enumerate(guidelines))
+    def _get_conversational_guidelines(self) -> list[str]:
+        """Wind turbine-specific conversational guidelines."""
+        return [
+            "Be warm, professional, and knowledgeable about wind turbine operations",
+            "Answer general questions about turbine monitoring and performance analysis naturally",
+            "Respond to greetings and social interactions professionally", 
+            "Ask clarifying questions to better understand user needs when appropriate",
+            "Provide helpful context about industry standards and best practices when relevant",
+            "Be encouraging about the technical assistance available"
+        ]
     
-    def get_system_instructions(self, current_task: str = "", info=None, **kwargs) -> str:
-        """Get wind turbine-specific system instructions with enhanced formatting requirements."""
-        base_instructions = super().get_system_instructions(current_task=current_task, info=info, **kwargs)
-        
-        # Add wind turbine specific formatting requirements
-        wind_turbine_enhancements = """
+    def get_instructions(self) -> str:
+        """Get wind turbine-specific instructions with enhanced formatting requirements."""
+        return textwrap.dedent("""
+            WIND TURBINE ANALYSIS FORMATTING REQUIREMENTS:
 
-WIND TURBINE ANALYSIS FORMATTING REQUIREMENTS:
+            **Data Presentation:**
+            - Use well-formatted tables for turbine performance comparisons and rankings
+            - Include clear column headers for metrics like capacity factor, efficiency ratio, power output
+            - Round numerical values appropriately for readability (e.g., 1 decimal place for percentages)
 
-**Data Presentation:**
-- Use well-formatted tables for turbine performance comparisons and rankings
-- Include clear column headers for metrics like capacity factor, efficiency ratio, power output
-- Round numerical values appropriately for readability (e.g., 1 decimal place for percentages)
+            **Industry Standards Reference:**
+            - When industry thresholds are available in context, reference them explicitly
+            - Use retrieved knowledge base values rather than making assumptions
+            - Categorize turbine performance relative to actual standards when available
 
-**Industry Standards Reference:**
-- When industry thresholds are available in context, reference them explicitly
-- Use retrieved knowledge base values rather than making assumptions
-- Categorize turbine performance relative to actual standards when available
-
-**Structure for Technical Analysis:**
-- Organize with clear headings (Performance Overview, Rankings, Recommendations)
-- Specify time periods and data scope
-- Prioritize maintenance recommendations with clear reasoning
-- Include any data limitations or warnings
-"""
-        
-        return base_instructions + wind_turbine_enhancements
+            **Structure for Technical Analysis:**
+            - Organize with clear headings (Performance Overview, Rankings, Recommendations)
+            - Specify time periods and data scope
+            - Prioritize maintenance recommendations with clear reasoning
+            - Include any data limitations or warnings
+            """).strip()
     
     def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
         """Create wind turbine-specific orchestrator guidance for response capability."""
