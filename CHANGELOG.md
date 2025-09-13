@@ -5,6 +5,23 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.3] - 2025-09-13
+
+### Enhanced
+- **OpenWebUI Interface**: Added notebook link display functionality with comprehensive response integration
+- **Response Generation**: Enhanced prompts with notebook awareness and interface-specific guidance for better user experience
+- **Context Loading**: Improved logging and registry initialization for better debugging and error handling
+
+### Improved
+- **Wind Turbine Application**: Refactored response generation guidelines with streamlined structure and cleaner code organization
+- **User Experience**: Better integration of text responses, figures, and clickable notebook links in OpenWebUI
+- **Debugging**: Replaced print statements with proper logging throughout context loading system
+
+### Technical Details
+- Added notebook link extraction and display in OpenWebUI response pipeline
+- Enhanced response prompts with conversational guidelines and notebook availability context
+- Improved context loader with registry initialization for proper context reconstruction
+
 ## [0.4.2] - 2025-09-13
 
 ### Enhanced

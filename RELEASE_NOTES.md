@@ -1,31 +1,31 @@
-# Alpha Berkeley Framework - Latest Release (v0.4.2)
+# Alpha Berkeley Framework - Latest Release (v0.4.3)
 
-⚡ **Python execution enhancements** - improved notebook generation and integration with centralized registry.
+🎨 **UI and response improvements** - enhanced user experience with notebook-aware interfaces and better response generation.
 
 ## What's New
 
-### ⚡ Python Execution Enhancements
-- **Registry Integration**: Python capability now uses centralized StateManager.register_notebook() with rich execution metadata
-- **Improved Notebook Links**: Enhanced URL generation in both local and container execution modes with proper FileManager integration
-- **Better Notebook Structure**: Cleaner notebook organization with separate markdown documentation and executable code blocks
+### 🎨 UI and Interface Enhancements
+- **OpenWebUI Integration**: Added comprehensive notebook link display with seamless integration of text, figures, and clickable notebook links
+- **Response Generation**: Enhanced prompts with notebook awareness and interface-specific user guidance
+- **Context Loading**: Improved logging and registry initialization for better debugging and error handling
 
-### 🔧 Technical Improvements
-- **Execution Metadata**: Notebook registration includes execution time, context keys, and code metrics for better tracking
-- **Standardized Naming**: Unified notebook naming to 'notebook.ipynb' across all execution modes
-- **Enhanced Generation**: Improved notebook cell structure with proper separation of results and executable code
+### 🔧 User Experience Improvements
+- **Wind Turbine Application**: Refactored response generation with streamlined guidelines and cleaner code organization
+- **Comprehensive Responses**: Better integration of execution results, visualizations, and notebook access in user interfaces
+- **Enhanced Debugging**: Replaced print statements with proper logging throughout the system
 
 ## Upgrade Notes
 
-This is a patch release with Python execution enhancements:
+This is a patch release with UI and response improvements:
 
-- **Enhanced Integration**: Python execution now fully integrated with centralized notebook registry
-- **Improved Links**: Better notebook URL generation across all execution environments
-- **Cleaner Notebooks**: Improved notebook structure with better organization of content
+- **Enhanced User Experience**: Comprehensive notebook integration across interfaces with better user guidance
+- **Improved Response Quality**: Context-aware response generation with interface-specific capabilities
+- **Better Debugging**: Enhanced logging and error handling throughout the system
 - **Backwards Compatibility**: All changes maintain backwards compatibility
 
 ## Get Started
 
-1. Update to v0.4.2 for enhanced Python execution and improved notebook generation
+1. Update to v0.4.3 for enhanced UI experience and improved response generation
 2. View the [complete documentation](https://thellert.github.io/alpha_berkeley/)
 3. Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
 
@@ -53,9 +53,9 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.4.2 (September 2025)*  
+*Current Release: v0.4.3 (September 2025)*  
 *Release Type: Patch Release*  
-*Previous Release: v0.4.1 with centralized notebook registry system*
+*Previous Release: v0.4.2 with Python execution enhancements*
 
 ---
 
