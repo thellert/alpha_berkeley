@@ -59,6 +59,8 @@ class ResponseContext:
     :type current_date: str
     :param figures_available: Number of figures available for display
     :type figures_available: int
+    :param notebooks_available: Number of notebook links available for display
+    :type notebooks_available: int
     :param interface_context: Interface type (openwebui, cli, etc.)
     :type interface_context: str
     """
@@ -73,6 +75,7 @@ class ResponseContext:
     reclassification_count: int
     current_date: str
     figures_available: int
+    notebooks_available: int
     interface_context: str
 
 
@@ -241,6 +244,10 @@ def _gather_information(state: AgentState) -> ResponseContext:
     ui_figures = state.get("ui_captured_figures", [])
     figures_available = len(ui_figures)
     
+    # Get notebook information from centralized notebook registry
+    ui_notebooks = state.get("ui_captured_notebooks", [])
+    notebooks_available = len(ui_notebooks)
+    
     # Get interface context from configurable
     from configs.config import get_interface_context
     interface_context = get_interface_context()
@@ -257,6 +264,7 @@ def _gather_information(state: AgentState) -> ResponseContext:
         reclassification_count=state.get("control_reclassification_count", 0),
         current_date=datetime.now().strftime("%Y-%m-%d"),
         figures_available=figures_available,
+        notebooks_available=notebooks_available,
         interface_context=interface_context
     )
 
