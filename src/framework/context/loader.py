@@ -41,13 +41,26 @@ def load_context(context_file: str = "context.json") -> Optional[ContextManager]
         
         if not context_path.exists():
             logger.warning(f"Context file not found: {context_path}")
-            print(f"⚠️  Context file not found: {context_path}")
-            print("Make sure you're running this from a directory with a context.json file")
+            logger.info(f"⚠️  Context file not found: {context_path}")
+            logger.info("Make sure you're running this from a directory with a context.json file")
             return None
         
         # Load JSON data
         with open(context_path, 'r', encoding='utf-8') as f:
             context_data = json.load(f)
+        
+        # Ensure registry is initialized before creating ContextManager
+        # This is required for context reconstruction to work properly
+        try:
+            from framework.registry import initialize_registry, get_registry
+            registry = get_registry()
+            if not getattr(registry, '_initialized', False):
+                logger.debug("Registry not initialized, initializing now...")
+                initialize_registry(auto_export=False)
+                logger.debug("Registry initialization completed")
+        except Exception as e:
+            logger.warning(f"Failed to initialize registry: {e}")
+            logger.info("Context loading may not work properly")
         
         # Create ContextManager with the loaded data
         # The data structure should be: {context_type: {context_key: {field: value}}}
@@ -58,20 +71,16 @@ def load_context(context_file: str = "context.json") -> Optional[ContextManager]
         # Validate that we have properly structured data
         if context_data:
             logger.info("✓ Agent context loaded successfully!")
-            print("✓ Agent context loaded successfully!")
-            print(f"Context available with {len(context_data)} context categories")
-            print(f"Available context types: {list(context_data.keys())}")
+            logger.info(f"Context available with {len(context_data)} context categories")
+            logger.info(f"Available context types: {list(context_data.keys())}")
             return context_manager
         else:
             logger.warning("Context loaded but no data found")
-            print("⚠️  Context loaded but no data found")
             return None
             
     except json.JSONDecodeError as e:
         logger.error(f"Invalid JSON in context file: {e}")
-        print(f"⚠️  Invalid JSON in context file: {e}")
         return None
     except Exception as e:
         logger.error(f"Error loading context: {e}")
-        print(f"⚠️  Error loading context: {e}")
         return None
