@@ -21,6 +21,7 @@ import uuid
 from typing import Any, Dict, Generator, Iterator, List, Optional, Union
 from collections import deque
 import logging
+from pathlib import Path
 
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
@@ -945,23 +946,8 @@ class Pipeline:
             yield self._create_status_event("", True)
             yield f"❌ Execution error: {exception_holder[0]}"
 
-    def _extract_response_from_event(self, event: Dict[str, Any]) -> Optional[str]:
-        """Extract response from a streaming event"""
-        
-        for node_name, node_data in event.items():
-            if node_name in ["respond", "clarify"] and "messages" in node_data:
-                messages = node_data["messages"]
-                if messages:
-                    # Get the latest AI message
-                    for msg in reversed(messages):
-                        if hasattr(msg, 'content') and msg.content:
-                            if not hasattr(msg, 'type') or msg.type != 'human':
-                                return msg.content
-        
-        return None
-
     def _extract_response_from_state(self, state: Dict[str, Any]) -> Optional[str]:
-        """Extract response from final state and include any generated figures"""
+        """Extract response from final state and include any generated figures and notebook links"""
         
         messages = state.get("messages", [])
         text_response = None
@@ -977,14 +963,16 @@ class Pipeline:
         # Check for generated figures from Python execution
         figures_html = self._extract_figures_from_state(state)
         
-        if text_response and figures_html:
-            # Combine text response with figures
-            return f"{text_response}\n\n{figures_html}"
-        elif figures_html:
-            # Only figures, no text response
-            return figures_html
+        # Check for notebook links from Python execution
+        notebook_links_html = self._extract_notebook_links_from_state(state)
+        
+        # Combine all components
+        components = [text_response, figures_html, notebook_links_html]
+        non_empty_components = [comp for comp in components if comp]
+        
+        if non_empty_components:
+            return "\n\n".join(non_empty_components)
         else:
-            # Only text response or nothing
             return text_response
 
     def _extract_figures_from_state(self, state: Dict[str, Any]) -> Optional[str]:
@@ -1010,8 +998,6 @@ class Pipeline:
                     # Extract figure information
                     capability = figure_entry.get("capability", "unknown")
                     figure_path = figure_entry["figure_path"]
-                    display_name = figure_entry.get("display_name", f"Figure {i}")
-                    metadata = figure_entry.get("metadata", {})
                     created_at = figure_entry.get("created_at", "unknown")
                     
                     # Convert figure to static URL serving
@@ -1046,16 +1032,13 @@ class Pipeline:
         """Convert agent directory figure to static URL - enforces our architectural constraint"""
         
         try:
-            from pathlib import Path
-            
             # Verify file exists
             if not Path(figure_path).exists():
                 logger.warning(f"Figure file not found: {figure_path}")
                 return None
             
             # Convert agent directory path to static URL using environment variables
-            # Our architecture constraint: all figures are in ${PROJECT_ROOT}/${agent_data_dir}/
-            import os
+            # Our architecture constraint: all figures are in ${PROJECT_ROOT}/${AGENT_DATA_DIR}/
             
             # Get environment variables with robust validation
             project_root = os.getenv('PROJECT_ROOT')
@@ -1105,6 +1088,53 @@ class Pipeline:
         except Exception as e:
             logger.error(f"Failed to convert figure to static URL: {e}")
             return None
+
+    def _extract_notebook_links_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+        """
+        Extract Jupyter notebook links from centralized notebook registry and format for display.
+        
+        Uses the new centralized ui_captured_notebooks registry to find all notebook links
+        regardless of whether figures were generated or not.
+        """
+        try:
+            # Get notebooks from centralized registry
+            ui_notebooks = state.get("ui_captured_notebooks", [])
+            
+            if not ui_notebooks:
+                logger.debug("No notebooks found in ui_captured_notebooks registry")
+                return None
+            
+            logger.info(f"Processing {len(ui_notebooks)} notebooks from centralized registry")
+            notebook_html_parts = []
+            
+            for i, notebook_entry in enumerate(ui_notebooks, 1):
+                try:
+                    # Extract notebook information
+                    capability = notebook_entry.get("capability", "unknown")
+                    notebook_link = notebook_entry["notebook_link"]
+                    
+                    # Create clean, simple link format
+                    capability_name = capability.replace('_', ' ').title()
+                    
+                    if len(ui_notebooks) == 1:
+                        link_text = f"[Open Jupyter Notebook]({notebook_link}) (generated by: {capability_name})"
+                    else:
+                        link_text = f"[Jupyter Notebook {i}]({notebook_link}) (generated by: {capability_name})"
+                    
+                    notebook_html_parts.append(link_text)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to process notebook entry {notebook_entry}: {e}")
+                    continue
+            
+            if notebook_html_parts:
+                return "\n\n".join(notebook_html_parts)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Critical error in notebook link extraction: {e}")
+            return f"*❌ Notebook link display error: {str(e)}*"
 
     def _handle_log_command(self, command: str) -> Iterator[Union[str, dict]]:
         """Handle log viewer commands like /logs, /logs 50, /logs follow"""
