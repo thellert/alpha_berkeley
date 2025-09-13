@@ -27,7 +27,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
         sections = []
         
         # Base role with current task
-        sections.append(f"You are an expert assistant for workflow automation and data analysis.\n\nCURRENT TASK: {current_task}")
+        sections.append(f"CURRENT TASK: {current_task}")
         
         if info:
             # Context prioritization: Show specific context if available, otherwise show all execution context
@@ -46,6 +46,17 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             sections.append(self._get_guidelines_section(info))
         
         return "\n\n".join(sections)
+    
+    def _get_conversational_guidelines(self) -> list[str]:
+        """Get conversational response guidelines - override in subclasses for domain-specific content."""
+        return [
+            "Be warm, professional, and genuine while staying focused on providing assistance",
+            "Answer general questions about the system and your capabilities naturally",
+            "Respond to greetings and social interactions professionally",
+            "Ask clarifying questions to better understand user needs when appropriate",
+            "Provide helpful context about system operations when relevant",
+            "Be encouraging about the technical assistance available"
+        ]
     
     def _get_execution_section(self, info) -> str:
         """Get execution summary - keep concise but informative."""
@@ -155,22 +166,27 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
                 guidelines.append(f"Note: {info.figures_available} visualization(s) have been saved to files in the execution folder - they can not be rendered in this terminal -mention the file locations")
             else:
                 guidelines.append(f"Note: {info.figures_available} visualization(s) have been generated")
+        
+        # Interface-aware notebook link handling
+        if hasattr(info, 'notebooks_available') and info.notebooks_available > 0:
+            interface_context = getattr(info, 'interface_context', 'unknown')
+            
+            if interface_context == "openwebui":
+                guidelines.append(f"Note: {info.notebooks_available} Jupyter notebook(s) with the complete execution code, results, and analysis will be displayed as clickable link(s) below your response - you can reference these for users who want to see the detailed implementation")
+            elif interface_context == "cli":
+                guidelines.append(f"Note: {info.notebooks_available} Jupyter notebook(s) with the complete execution code and results have been created in execution folder(s) - mention these for users who want to review the detailed implementation")
+            else:
+                guidelines.append(f"Note: {info.notebooks_available} Jupyter notebook(s) with the complete execution details have been generated")
                 
         # Add current date context for temporal awareness
         if hasattr(info, 'current_date') and info.current_date:
             guidelines.append(f"Today's date is {info.current_date} - use this for temporal context and date references")
         
         if not hasattr(info, 'execution_history') or not info.execution_history:
-            # Conversational response
-            guidelines.extend([
-                "Be warm, professional, and genuine while staying focused on providing assistance",
-                "Answer general questions about the system and your capabilities naturally",
-                "Respond to greetings and social interactions professionally",
-                "Ask clarifying questions to better understand user needs when appropriate",
-                "Provide helpful context about system operations when relevant",
-                "Be encouraging about the technical assistance available"
-            ])
-        elif hasattr(info, 'relevant_context') and info.relevant_context:
+            # Conversational response - use overridable method for domain customization
+            guidelines.extend(self._get_conversational_guidelines())
+        
+        if hasattr(info, 'relevant_context') and info.relevant_context:
             # Technical response with relevant context
             guidelines.extend([
                 "Be very accurate but use reasonable judgment when rounding or abbreviating numerical data for readability",
@@ -189,7 +205,8 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
                 "Offer to help with a modified or simpler version of the request",
                 "NEVER make up or fabricate any results that weren't actually obtained"
             ])
-        elif hasattr(info, 'execution_history') and info.execution_history and (not hasattr(info, 'relevant_context') or not info.relevant_context):
+        
+        if hasattr(info, 'execution_history') and info.execution_history and (not hasattr(info, 'relevant_context') or not info.relevant_context):
             # Technical response with no relevant context
             guidelines.extend([
                 "Explain what was accomplished during execution",
