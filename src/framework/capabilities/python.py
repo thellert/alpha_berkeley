@@ -551,11 +551,28 @@ class PythonCapability(BaseCapability):
             # Final state update with all accumulated figures
             figure_updates = figure_update  # Last update contains all figures
         
+        # Register notebook in centralized UI registry
+        notebook_updates = {}
+        if results_context.notebook_link:
+            notebook_updates = StateManager.register_notebook(
+                state,
+                capability="python_executor",
+                notebook_path=str(results_context.notebook_path),
+                notebook_link=results_context.notebook_link,
+                display_name="Python Execution Notebook",
+                metadata={
+                    "execution_folder": results_context.folder_path,
+                    "execution_time": results_context.execution_time,
+                    "context_key": step.get("context_key"),
+                    "code_lines": len(results_context.code.split('\n')) if results_context.code else 0,
+                }
+            )
+        
         # Combine all updates
         if has_approval_resume:
-            return {**result_updates, **approval_cleanup, **figure_updates}
+            return {**result_updates, **approval_cleanup, **figure_updates, **notebook_updates}
         else:
-            return {**result_updates, **figure_updates}
+            return {**result_updates, **figure_updates, **notebook_updates}
     
     @staticmethod
     def classify_error(exc: Exception, context: dict) -> ErrorClassification:
