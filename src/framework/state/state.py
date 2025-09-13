@@ -302,7 +302,7 @@ class AgentState(MessagesState):
     control_validation_timestamp: Optional[float]
     
     # UI result fields
-    ui_notebook_links: List[str]
+    ui_captured_notebooks: List[Dict[str, Any]]  # Centralized notebook registry for displaying notebooks in the UI
     ui_captured_figures: List[Dict[str, Any]]  # Centralized figure registry for displaying figures in the UI
     ui_agent_context: Optional[Dict[str, Any]]
     
