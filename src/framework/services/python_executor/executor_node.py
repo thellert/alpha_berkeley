@@ -34,6 +34,7 @@ class LocalCodeExecutor:
     def __init__(self, configurable):
         self.configurable = configurable
         self.executor_config = PythonExecutorConfig(configurable)
+        self.file_manager = FileManager(configurable)
     
     async def execute_code(
         self,
@@ -189,13 +190,17 @@ class LocalCodeExecutor:
                 # Collect figure files from execution directory (same logic as container mode)
                 figure_paths = self._collect_figure_files(execution_folder or Path.cwd())
                 
+                # Generate proper notebook link (use final notebook name)
+                notebook_path = (execution_folder or Path.cwd()) / "notebook.ipynb"
+                notebook_link = self.file_manager._create_jupyter_url(notebook_path)
+                
                 return PythonExecutionSuccess(
                     results=results_data,
                     stdout=full_output,
                     execution_time=execution_time,
                     folder_path=execution_folder or Path.cwd(),
-                    notebook_path=(execution_folder or Path.cwd()) / "execution_notebook.ipynb",
-                    notebook_link="",
+                    notebook_path=notebook_path,
+                    notebook_link=notebook_link,
                     figure_paths=figure_paths
                 )
                 
@@ -314,6 +319,7 @@ class ContainerCodeExecutor:
     def __init__(self, configurable):
         self.configurable = configurable
         self.executor_config = PythonExecutorConfig(configurable)
+        self.file_manager = FileManager(configurable)
     
     async def execute_code(
         self,
@@ -363,14 +369,17 @@ class ContainerCodeExecutor:
                         execution_attempt=1
                     )
             
-            # Success - convert to success result
+            # Success - convert to success result with proper notebook link
+            notebook_path = execution_folder / "notebook.ipynb" if execution_folder else Path("notebook.ipynb")
+            notebook_link = self.file_manager._create_jupyter_url(notebook_path)
+            
             return PythonExecutionSuccess(
                 results=result.result_dict or {},
                 stdout=result.stdout or "",
                 execution_time=result.execution_time_seconds or 0.0,
                 folder_path=execution_folder or Path.cwd(),
-                notebook_path=execution_folder / "notebook.ipynb" if execution_folder else Path("notebook.ipynb"),
-                notebook_link="",  # Will be set by file manager
+                notebook_path=notebook_path,
+                notebook_link=notebook_link,
                 figure_paths=result.captured_figures or []
             )
             
