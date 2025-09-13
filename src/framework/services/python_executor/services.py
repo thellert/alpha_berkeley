@@ -756,9 +756,16 @@ class NotebookManager:
         
         # Results section if available
         if results:
-            results_md = "## Execution Results\n\nResults saved to `results.json`\n\n"
-            results_md += "```python\nimport json\nwith open('results.json', 'r') as f:\n    results = json.load(f)\nprint(results)\n```"
+            # Add markdown header for results section
+            results_md = "## Execution Results\n\nResults saved to `results.json`"
             cells.append(nbformat.v4.new_markdown_cell(results_md))
+            
+            # Add executable Python code cell to load and display results
+            results_code = """import json
+with open('results.json', 'r') as f:
+    results = json.load(f)
+print(results)"""
+            cells.append(nbformat.v4.new_code_cell(results_code))
         
         # Figures section if available
         if figure_paths and execution_folder:
