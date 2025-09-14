@@ -123,7 +123,5 @@ _autosummary/
 
 # Development services and applications (keep locally but not in git)
 services/framework/mem0/
-services/applications/als_expert/
-src/applications/als_expert/
 _CLAUDE
 _openwebui
