@@ -215,6 +215,7 @@ def get_chat_completion(
     enable_thinking: bool = False,
     output_model: Optional[Type[BaseModel]] = None,
     base_url: Optional[str] = None, # currently used only for ollama
+    provider_config: Optional[dict] = None,
 ) -> Union[str, BaseModel, list]:
     """Execute direct chat completion requests across multiple AI providers.
     
@@ -254,6 +255,8 @@ def get_chat_completion(
     :type output_model: Type[BaseModel], optional
     :param base_url: Custom API endpoint, required for Ollama and CBORG providers
     :type base_url: str, optional
+    :param provider_config: Optional provider configuration dict with api_key, base_url, etc.
+    :type provider_config: dict, optional
     :raises ValueError: If required provider, model_id, api_key, or base_url are missing
     :raises ValueError: If budget_tokens >= max_tokens or other invalid parameter combinations
     :raises pydantic.ValidationError: If output_model validation fails for structured outputs
@@ -346,15 +349,18 @@ def get_chat_completion(
         provider = model_config.get("provider", provider)
         model_id = model_config.get("model_id", model_id)
         max_tokens = model_config.get("max_tokens", max_tokens)
-        # Get provider config after provider is determined
-        provider_config = get_provider_config(provider) if provider else {}
+        # Get provider config after provider is determined, but prefer provided provider_config
+        if provider_config is None:
+            provider_config = get_provider_config(provider) if provider else {}
         base_url = provider_config.get("base_url", base_url)
         api_key = provider_config.get("api_key")
     else:
         # Set defaults when model_config is not provided
         if not provider:
             raise ValueError("Provider must be specified either directly or via model_config")
-        provider_config = get_provider_config(provider)
+        # Use provided provider_config or get from global config
+        if provider_config is None:
+            provider_config = get_provider_config(provider)
         if not model_id:
             model_id = provider_config.get("default_model_id")
         if base_url is None:

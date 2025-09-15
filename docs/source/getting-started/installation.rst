@@ -85,7 +85,7 @@ Configuration
 
 Modify the following settings in ``config.yml``:
 
-1. **Agent Data Root Path**: Update ``agent_data_root_path`` to your actual cloned repository path. You can use ``pwd`` to see the current folder path.
+1. **Project Root Path**: Update ``project_root`` in ``config.yml`` to your repository path. Either set ``PROJECT_ROOT`` in your ``.env`` file (recommended for multiple machines) or hard-code the path directly in the YAML file.
 
 2. **Ollama Base URL**: Set the base URL for `Ollama <https://ollama.com/>`_
    
