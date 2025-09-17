@@ -11,7 +11,7 @@ Convention-based LangGraph-native implementation with built-in error handling an
 from __future__ import annotations
 import asyncio
 
-from typing import Optional, TYPE_CHECKING, Dict, Any, List
+from typing import Optional, Dict, Any, List
 
 
 from framework.base.decorators import infrastructure_node
@@ -22,7 +22,7 @@ from framework.registry import get_registry
 from framework.base import BaseCapability, ClassifierExample, CapabilityMatch
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from configs.config import get_full_configuration, get_model_config
+from configs.config import get_model_config
 from configs.logger import get_logger
 from configs.streaming import get_streamer
 from framework.base.errors import ErrorClassification, ErrorSeverity
@@ -316,7 +316,7 @@ async def _classify_capability(capability: BaseCapability, task: str, state: Age
         raise Exception(f"Capability '{capability.name}' classifier failed: {e}") from e
         
     capability_instructions = classifier.instructions
-    examples_string = ClassifierExample.format_examples_for_prompt(classifier.examples)
+    examples_string = ClassifierExample.join(classifier.examples, randomize=True)
     
     # Get classification prompt directly
     prompt_provider = get_framework_prompts()

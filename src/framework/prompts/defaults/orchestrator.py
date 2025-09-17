@@ -4,7 +4,7 @@ import textwrap
 from typing import Optional, List
 from framework.prompts.base import FrameworkPromptBuilder
 from framework.context import ContextManager
-from framework.base import BaseCapability, OrchestratorGuide, OrchestratorExample
+from framework.base import BaseCapability, OrchestratorExample
 
 
 class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
@@ -235,7 +235,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
                 
                 # Add formatted examples if they exist
                 if orchestrator_guide.examples:
-                    examples_text = OrchestratorExample.format_examples_for_prompt(orchestrator_guide.examples)
+                    examples_text = OrchestratorExample.join(orchestrator_guide.examples, add_numbering=True)
                     section_text += examples_text
                 
                 sections.append(section_text)

@@ -177,10 +177,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
     
     def _format_examples(self, examples: List[MemoryExtractionExample]) -> str:
         """Format multiple MemoryExtractionExample objects for inclusion in prompts."""
-        examples_formatted = ""
-        for i, example in enumerate(examples, 1):
-            examples_formatted += f"\n**Example {i}:**\n{example.format_for_prompt()}\n"
-        return examples_formatted.strip()
+        return MemoryExtractionExample.join(examples, add_numbering=True)
     
     def _get_dynamic_context(self, **kwargs) -> str:
         """Build the response format section."""

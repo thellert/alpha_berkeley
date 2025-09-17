@@ -135,6 +135,78 @@ class BaseExample(ABC):
            in few-shot learning scenarios.
         """
         pass
+    
+    @staticmethod
+    def join(
+        examples: List['BaseExample'], 
+        separator: str = "\n",
+        max_examples: Optional[int] = None,
+        randomize: bool = False,
+        add_numbering: bool = False
+    ) -> str:
+        """Join multiple examples into a formatted string for prompt inclusion.
+        
+        This method combines a list of examples into a single formatted string
+        suitable for LLM consumption. It provides flexible formatting options
+        while maintaining consistency across all example types.
+        
+        Args:
+            examples: List of example objects to format
+            separator: String to join examples (default: "\n")
+            max_examples: Optional limit on number of examples to include
+            randomize: Whether to randomize order (prevents positional bias)
+            add_numbering: Whether to add numbered headers to each example
+            
+        Returns:
+            Formatted string ready for prompt inclusion, empty string if no examples
+            
+        Examples:
+            Basic usage::
+            
+                examples = [ex1, ex2, ex3]
+                formatted = BaseExample.join(examples)
+                # Returns: "ex1_content\nex2_content\nex3_content"
+            
+            With numbering and spacing::
+            
+                formatted = BaseExample.join(examples, separator="\n\n", add_numbering=True)
+                # Returns: "**Example 1:**\nex1_content\n\n**Example 2:**\nex2_content..."
+            
+            With randomization (for bias prevention)::
+            
+                formatted = BaseExample.join(examples, randomize=True)
+                # Returns examples in random order
+        
+        .. note::
+           This method provides a unified interface for formatting example collections.
+           All customization is handled through parameters.
+        
+        .. seealso::
+           :meth:`format_for_prompt` : Individual example formatting method
+        """
+        if not examples:
+            return ""
+        
+        # Apply max_examples limit
+        examples_to_use = examples[:max_examples] if max_examples else examples
+        
+        # Apply randomization if requested
+        if randomize:
+            import random
+            examples_to_use = examples_to_use.copy()
+            random.shuffle(examples_to_use)
+        
+        # Format examples
+        formatted = []
+        for i, ex in enumerate(examples_to_use):
+            content = ex.format_for_prompt()
+            
+            if add_numbering:
+                content = f"**Example {i+1}:**\n{content}"
+                
+            formatted.append(content)
+        
+        return separator.join(formatted)
 
 
 @dataclass
@@ -287,51 +359,6 @@ class OrchestratorExample(BaseExample):
         else:
             return repr(value)
     
-    @staticmethod
-    def format_examples_for_prompt(examples: List['OrchestratorExample']) -> str:
-        """Format multiple orchestrator examples for LLM prompt inclusion with consistent structure.
-        
-        This method transforms a collection of OrchestratorExample objects into a
-        formatted string suitable for inclusion in LLM prompts. It provides numbered
-        examples with consistent spacing and section headers to ensure reliable
-        consumption by orchestration systems.
-        
-        The formatting follows established patterns for orchestration guidance:
-        1. **Section Header**: Clear identification of example content
-        2. **Numbered Examples**: Sequential numbering for easy reference
-        3. **Consistent Spacing**: Uniform formatting for reliable parsing
-        4. **Complete Context**: Full example details including scenarios and requirements
-        
-        :param examples: List of orchestrator examples to format for prompt inclusion
-        :type examples: List[OrchestratorExample]
-        :return: Formatted string with numbered examples and section headers
-        :rtype: str
-        
-        .. note::
-           Returns empty string if no examples are provided. The formatting preserves
-           all example details including scenario descriptions, context requirements,
-           and additional notes for comprehensive orchestration guidance.
-        
-        Examples:
-            Formatting orchestrator examples::
-            
-                examples = [example1, example2, example3]
-                formatted = OrchestratorExample.format_examples_for_prompt(examples)
-                # Returns: "\n\n**Example Step Planning:**\n\n1. **Scenario...**\n..."
-        
-        .. seealso::
-           :func:`format_for_prompt` : Individual example formatting method
-        """
-        if not examples:
-            return ""
-        
-        formatted_text = "\n\n**Example Step Planning:**\n"
-        
-        for i, example in enumerate(examples, 1):
-            example_formatted = example.format_for_prompt()
-            formatted_text += f"\n{i}. {example_formatted}"
-        
-        return formatted_text
 
 
 @dataclass
@@ -386,57 +413,10 @@ class ClassifierExample(BaseExample):
                 # Returns: 'User Query: "What\'s the weather like?" -> Expected Output: True -> Reason: Direct weather information request'
         
         .. seealso::
-           :func:`format_examples_for_prompt` : Batch formatting with bias prevention
+           :func:`join` : Batch formatting (with randomization)
         """
         return f'User Query: "{self.query}" -> Expected Output: {self.result} -> Reason: {self.reason}'
     
-    @staticmethod
-    def format_examples_for_prompt(examples: List['ClassifierExample']) -> str:
-        """Format multiple classifier examples with randomization for bias-free few-shot learning.
-        
-        This method transforms a collection of ClassifierExample objects into a
-        formatted string optimized for few-shot learning in classification tasks.
-        It includes automatic randomization to prevent positional bias, ensuring
-        that classifiers learn from content rather than example ordering patterns.
-        
-        The formatting implements bias prevention strategies:
-        1. **Automatic Randomization**: Examples are shuffled to prevent position-based learning
-        2. **Consistent Format**: Uniform query/result/reason structure for reliable learning
-        3. **Complete Context**: Full reasoning provided for each classification decision
-        4. **Optimal Presentation**: Format optimized for LLM few-shot learning performance
-        
-        :param examples: List of classifier examples to format with bias prevention
-        :type examples: List[ClassifierExample]
-        :return: Formatted string with randomized examples for reliable classification learning
-        :rtype: str
-        
-        .. note::
-           The randomization creates a shallow copy of the input list, leaving the
-           original list unchanged. This ensures thread safety and prevents side
-           effects in concurrent usage scenarios.
-        
-        .. warning::
-           The randomization is applied each time this method is called. For
-           deterministic behavior in testing, consider using a fixed seed or
-           pre-shuffled examples.
-        
-        Example::
-        
-            examples = [example1, example2, example3]
-            formatted = ClassifierExample.format_examples_for_prompt(examples)
-            # Returns randomized examples like:
-            # "  - User Query: \"...\" -> Expected Output: True -> Reason: ...\n"
-        
-        
-        .. seealso::
-           :func:`format_for_prompt` : Individual example formatting method
-           :mod:`random` : Randomization implementation for bias prevention
-        """
-        # Create a copy and randomize to prevent bias
-        randomized_examples = examples.copy()
-        random.shuffle(randomized_examples)
-        
-        return "\n".join(f"  - {ex.format_for_prompt()}" for ex in randomized_examples)
 
 
 class ClassifierActions(BaseModel):
