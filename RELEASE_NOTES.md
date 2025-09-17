@@ -1,31 +1,33 @@
-# Alpha Berkeley Framework - Latest Release (v0.4.3)
+# Alpha Berkeley Framework - Latest Release (v0.4.4)
 
-🎨 **UI and response improvements** - enhanced user experience with notebook-aware interfaces and better response generation.
+🔧 **Code refactoring and API improvements** - consolidated example formatting system with unified interface and reduced code duplication.
 
 ## What's New
 
-### 🎨 UI and Interface Enhancements
-- **OpenWebUI Integration**: Added comprehensive notebook link display with seamless integration of text, figures, and clickable notebook links
-- **Response Generation**: Enhanced prompts with notebook awareness and interface-specific user guidance
-- **Context Loading**: Improved logging and registry initialization for better debugging and error handling
+### 🔧 Code Refactoring and API Improvements
+- **Unified Example Formatting**: Consolidated example formatting with new `BaseExample.join()` static method
+- **Code Deduplication**: Removed duplicate formatting methods from subclasses, reducing codebase by 23+ lines
+- **Flexible Formatting Options**: Added support for separators, numbering, randomization, and example limits
+- **Bias Prevention**: Maintained randomization for classifier examples to prevent positional bias in few-shot learning
+- **API Consistency**: Unified formatting interface across all example types for better maintainability
 
-### 🔧 User Experience Improvements
-- **Wind Turbine Application**: Refactored response generation with streamlined guidelines and cleaner code organization
-- **Comprehensive Responses**: Better integration of execution results, visualizations, and notebook access in user interfaces
-- **Enhanced Debugging**: Replaced print statements with proper logging throughout the system
+### 🎯 Developer Experience
+- **Cleaner Codebase**: Eliminated duplicate `format_examples_for_prompt()` methods across example subclasses
+- **Better Maintainability**: Centralized formatting logic reduces maintenance burden for future example types
+- **Consistent Interface**: All example formatting now uses the same unified API with flexible options
 
 ## Upgrade Notes
 
-This is a patch release with UI and response improvements:
+This is a patch release with code refactoring and API improvements:
 
-- **Enhanced User Experience**: Comprehensive notebook integration across interfaces with better user guidance
-- **Improved Response Quality**: Context-aware response generation with interface-specific capabilities
-- **Better Debugging**: Enhanced logging and error handling throughout the system
-- **Backwards Compatibility**: All changes maintain backwards compatibility
+- **API Changes**: Deprecated `format_examples_for_prompt()` methods - use `BaseExample.join()` instead
+- **Backwards Compatibility**: All existing functionality is preserved with the new unified interface
+- **Performance**: Slight performance improvement due to reduced code duplication
+- **Maintainability**: Future example types will benefit from the unified formatting system
 
 ## Get Started
 
-1. Update to v0.4.3 for enhanced UI experience and improved response generation
+1. Update to v0.4.4 for improved code organization and unified example formatting
 2. View the [complete documentation](https://thellert.github.io/alpha_berkeley/)
 3. Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
 
@@ -53,9 +55,9 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.4.3 (September 2025)*  
+*Current Release: v0.4.4 (September 2025)*  
 *Release Type: Patch Release*  
-*Previous Release: v0.4.2 with Python execution enhancements*
+*Previous Release: v0.4.3 with UI and response improvements*
 
 ---
 

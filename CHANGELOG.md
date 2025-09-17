@@ -5,6 +5,21 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4] - 2025-09-17
+
+### Refactored
+- **Example Formatting System**: Consolidated example formatting with unified `BaseExample.join()` static method
+- **Code Deduplication**: Removed duplicate `format_examples_for_prompt()` methods from `OrchestratorExample` and `ClassifierExample` subclasses
+- **Flexible Formatting Options**: Added configurable formatting with support for separators, numbering, randomization, and example limits
+- **Bias Prevention**: Maintained randomization for classifier examples to prevent positional bias in few-shot learning
+- **API Consistency**: Unified formatting interface reduces maintenance burden for future example types
+
+### Technical Details
+- Added `BaseExample.join()` with parameters: `separator`, `max_examples`, `randomize`, `add_numbering`
+- Updated `classification_node.py` to use `join()` with randomization for bias prevention
+- Updated prompt builders (`memory_extraction.py`, `orchestrator.py`) to use `join()` with numbering
+- Maintains all existing formatting behavior while reducing code duplication by 23 lines
+
 ## [0.4.3] - 2025-09-13
 
 ### Enhanced
