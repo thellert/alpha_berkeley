@@ -80,18 +80,11 @@ file_paths:
 
 deployed_services:
   # Framework services (essential for framework operation, see also src/framework/config.yml)
-  - framework.jupyter          # Python execution environment with EPICS support
-  - framework.open_webui       # Primary user interface frontend  
+  # - framework.jupyter          # Python execution environment with EPICS support
+  # - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
   # - framework.langfuse         # Observability and tracing infrastructure
-  
-  # ALS Expert application services (domain-specific) - MOVED HERE FROM src/applications/als_expert/config.yml as CONVENIENCE
-  # - applications.als_expert.mongo        # Primary database for ALS Expert data
-  # - applications.als_expert.neo4j        # Graph database for relationship mapping
-  # - applications.als_expert.qdrant       # Vector database for semantic search
-  # - applications.als_expert.logbook      # ALS electronic logbook integration
-  # - applications.als_expert.pv_finder    # Process Variable discovery for EPICS
-  
+ 
 
 # Development Configuration
 development:

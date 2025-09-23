@@ -571,12 +571,13 @@ def get_current_application() -> Optional[str]:
     return configurable.get("current_application")
 
 
-def get_agent_dir(sub_dir: str) -> str:
+def get_agent_dir(sub_dir: str, host_path: bool = False) -> str:
     """
     Get the target directory path within the agent data directory using absolute paths.
     
     Args:
         sub_dir: Subdirectory name (e.g., 'user_memory_dir', 'execution_plans_dir')
+        host_path: If True, force return of host filesystem path even when running in container
         
     Returns:
         Absolute path to the target directory
@@ -585,42 +586,66 @@ def get_agent_dir(sub_dir: str) -> str:
     
     # Get project root and file paths configuration
     project_root = config.get("project_root")
-    file_paths = config.get("file_paths", {})
-    agent_data_dir = file_paths.get("agent_data_dir", "_agent_data")
+    main_file_paths = config.get("file_paths", {})
+    agent_data_dir = main_file_paths.get("agent_data_dir", "_agent_data")
     
-    # Get the specific subdirectory path, fallback to the sub_dir name itself
-    sub_dir_path = file_paths.get(sub_dir, sub_dir)
+    # Check both main config and current application config for file paths
+    current_app = get_current_application()
+    sub_dir_path = None
+    
+    # First check main config file_paths
+    if sub_dir in main_file_paths:
+        sub_dir_path = main_file_paths[sub_dir]
+        logger.debug(f"Found {sub_dir} in main file_paths: {sub_dir_path}")
+    
+    # Then check current application's file_paths (takes precedence)
+    if current_app:
+        app_file_paths = config.get(f"applications.{current_app}.file_paths", {})
+        if sub_dir in app_file_paths:
+            sub_dir_path = app_file_paths[sub_dir]
+            logger.debug(f"Found {sub_dir} in {current_app} file_paths: {sub_dir_path}")
+    
+    # Fallback to the sub_dir name itself if not found anywhere
+    if sub_dir_path is None:
+        sub_dir_path = sub_dir
+        logger.debug(f"Using fallback path for {sub_dir}: {sub_dir_path}")
     
     # Construct absolute path with explicit validation
     
     if project_root:
         project_root_path = Path(project_root)
         
-        # Container-aware path resolution
-        if not project_root_path.exists():
-            # Detect if we're running in a container environment
-            container_project_roots = ["/app", "/pipelines", "/jupyter"]
-            detected_container_root = None
-            
-            for container_root in container_project_roots:
-                container_path = Path(container_root)
-                if container_path.exists() and (container_path / agent_data_dir).exists():
-                    detected_container_root = container_path
-                    break
-            
-            if detected_container_root:
-                # Container environment detected - use container project root
-                logger.debug(f"Container environment detected: using {detected_container_root} instead of {project_root}")
-                path = detected_container_root / agent_data_dir / sub_dir_path
-            else:
-                # Not in a known container environment - fall back to relative paths
-                logger.warning(f"Configured project root does not exist: {project_root}")
-                logger.warning("Falling back to relative path resolution")
-                path = Path(agent_data_dir) / sub_dir_path
-                path = path.resolve()
-        else:
-            # Host environment - use configured project root
+        # Handle host_path override
+        if host_path:
+            # Force host path regardless of current environment
+            logger.debug(f"Forcing host path resolution for: {sub_dir}")
             path = project_root_path / agent_data_dir / sub_dir_path
+        else:
+            # Container-aware path resolution
+            if not project_root_path.exists():
+                # Detect if we're running in a container environment
+                container_project_roots = ["/app", "/pipelines", "/jupyter"]
+                detected_container_root = None
+                
+                for container_root in container_project_roots:
+                    container_path = Path(container_root)
+                    if container_path.exists() and (container_path / agent_data_dir).exists():
+                        detected_container_root = container_path
+                        break
+                
+                if detected_container_root:
+                    # Container environment detected - use container project root
+                    logger.debug(f"Container environment detected: using {detected_container_root} instead of {project_root}")
+                    path = detected_container_root / agent_data_dir / sub_dir_path
+                else:
+                    # Not in a known container environment - fall back to relative paths
+                    logger.warning(f"Configured project root does not exist: {project_root}")
+                    logger.warning("Falling back to relative path resolution")
+                    path = Path(agent_data_dir) / sub_dir_path
+                    path = path.resolve()
+            else:
+                # Host environment - use configured project root
+                path = project_root_path / agent_data_dir / sub_dir_path
     else:
         # Support development environments without explicit project root configuration
         logger.warning("No project root configured, using relative path for agent data directory")

@@ -58,6 +58,9 @@ pyepics>=3.5.0
 # Database
 pymongo
 
+# MCP
+fastmcp
+
 # Development and utility packages
 nltk>=3.8.1
 unique-namer>=0.1.0
