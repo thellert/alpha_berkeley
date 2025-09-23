@@ -23,7 +23,7 @@ The framework addresses common challenges in agentic system development: :doc:`t
 Core Architecture
 ------------------
 
-.. figure:: workflow_overview.pdf
+.. figure:: _static/resources/workflow_overview.pdf
    :alt: Alpha Berkeley Framework Architecture
    :align: center
    :width: 100%
