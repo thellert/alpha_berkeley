@@ -5,6 +5,32 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.5] - 2025-09-23
+
+### Added
+- **Centralized Launchable Commands System**: New infrastructure for registering and displaying executable commands (web apps, desktop tools) through both CLI and OpenWebUI interfaces
+- **Enhanced UI Result Display**: Comprehensive display system for figures, commands, and notebooks with rich formatting and metadata
+- **MCP Protocol Support**: Added `fastmcp` dependency for Model Context Protocol integrations
+
+### Enhanced
+- **CLI Interface**: Added comprehensive result display methods with formatted output for figures, commands, and notebooks
+- **OpenWebUI Interface**: Refactored result extraction with improved command and notebook handling
+- **Configuration Management**: Enhanced path resolution with host/container awareness and application-specific file paths
+- **State Management**: New `ui_launchable_commands` registry and `StateManager.register_command()` method
+- **Response Generation**: Updated prompts to handle command display with interface-aware formatting
+
+### Improved
+- **Documentation**: Reorganized static resources following Sphinx best practices
+- **Service Configuration**: Streamlined deployed services configuration with better maintainability
+- **Error Handling**: Enhanced logging and fallback mechanisms throughout UI components
+
+### Technical Details
+- Added `ui_launchable_commands` field to AgentState for centralized command registry
+- Implemented command registration system for capability-agnostic command handling  
+- Enhanced `get_agent_dir()` with `host_path` parameter for container/host path control
+- Updated response context with `commands_available` field for UI awareness
+- Improved container environment detection and path resolution
+
 ## [0.4.4] - 2025-09-17
 
 ### Refactored
