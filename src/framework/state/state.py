@@ -304,6 +304,7 @@ class AgentState(MessagesState):
     # UI result fields
     ui_captured_notebooks: List[Dict[str, Any]]  # Centralized notebook registry for displaying notebooks in the UI
     ui_captured_figures: List[Dict[str, Any]]  # Centralized figure registry for displaying figures in the UI
+    ui_launchable_commands: List[Dict[str, Any]]  # Centralized command registry for displaying launchable commands in the UI
     ui_agent_context: Optional[Dict[str, Any]]
     
     # Runtime metadata fields

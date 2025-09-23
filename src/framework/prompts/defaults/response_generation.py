@@ -65,10 +65,10 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             partial_results = []
             for record in info.execution_history:
                 if record.get("success", False):
-                    task_objective = record.get("step", {}).get("task_objective", "Unknown task")
+                    task_objective = record.get("task_objective", "Unknown task")
                     partial_results.append(f"✓ {task_objective}")
                 else:
-                    task_objective = record.get("step", {}).get("task_objective", "Unknown task")
+                    task_objective = record.get("task_objective", "Unknown task")
                     error_msg = record.get("result_summary", "Unknown error")
                     partial_results.append(f"✗ {task_objective}: {error_msg}")
             
@@ -91,10 +91,10 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             summary_parts = []
             for i, record in enumerate(info.execution_history, 1):
                 if record.get("success", False):
-                    task_objective = record.get("step", {}).get("task_objective", "Unknown task")
+                    task_objective = record.get("task_objective", "Unknown task")
                     summary_parts.append(f"Step {i}: {task_objective} - Completed")
                 else:
-                    task_objective = record.get("step", {}).get("task_objective", "Unknown task")
+                    task_objective = record.get("task_objective", "Unknown task")
                     error_msg = record.get("result_summary", "Unknown error")
                     summary_parts.append(f"Step {i}: {task_objective} - Failed: {error_msg}")
             
@@ -177,6 +177,17 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
                 guidelines.append(f"Note: {info.notebooks_available} Jupyter notebook(s) with the complete execution code and results have been created in execution folder(s) - mention these for users who want to review the detailed implementation")
             else:
                 guidelines.append(f"Note: {info.notebooks_available} Jupyter notebook(s) with the complete execution details have been generated")
+        
+        # Interface-aware executable command handling
+        if hasattr(info, 'commands_available') and info.commands_available > 0:
+            interface_context = getattr(info, 'interface_context', 'unknown')
+            
+            if interface_context == "openwebui":
+                guidelines.append(f"Note: {info.commands_available} executable command(s) have been registered and will be displayed as clickable launch button(s) below your response - acknowledge these and explain what they will do when launched")
+            elif interface_context == "cli":
+                guidelines.append(f"Note: {info.commands_available} executable command(s) have been prepared for launch - explain what applications or tools these commands will open and how users can access them")
+            else:
+                guidelines.append(f"Note: {info.commands_available} executable command(s) have been registered for launch")
                 
         # Add current date context for temporal awareness
         if hasattr(info, 'current_date') and info.current_date:

@@ -51,7 +51,6 @@ and capabilities, providing consistent patterns for state operations.
 """
 
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
-import logging
 
 from .state import AgentState, StateUpdate
 from .messages import MessageUtils
@@ -59,6 +58,7 @@ from framework.base.planning import ExecutionPlan, PlannedStep
 from framework.context.base import CapabilityContext
 from framework.context.context_manager import ContextManager
 from configs.config import get_agent_control_defaults as _get_agent_control_defaults
+from configs.logger import get_logger
 
 # LangGraph native imports
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -66,7 +66,7 @@ from langchain_core.messages import BaseMessage, HumanMessage
 if TYPE_CHECKING:
     from framework.context.context_manager import ContextManager
 
-logger = logging.getLogger(__name__)
+logger = get_logger(name="StateManager", color="white")
 
 
 def get_agent_control_defaults() -> Dict[str, Any]:
@@ -328,8 +328,10 @@ class StateManager:
             control_validation_timestamp=None,
             
             # UI result fields - reset to defaults
-            ui_captured_notebooks=[],
+            ui_notebook_links=[],
+    
             ui_captured_figures=[],
+            ui_launchable_commands=[],
             ui_agent_context=None,
             
             # Runtime metadata fields - reset to defaults
@@ -608,9 +610,6 @@ class StateManager:
                 ... )
         """
         from datetime import datetime
-        from configs.logger import get_logger
-        
-        logger = get_logger("framework", "base")
         
         # Create figure entry with required fields
         figure_entry = {
@@ -640,86 +639,124 @@ class StateManager:
         return {"ui_captured_figures": figures_list}
 
     @staticmethod
+    def register_command(
+        state: AgentState,
+        capability: str,
+        launch_uri: str,
+        display_name: Optional[str] = None,
+        command_type: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        current_commands: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
+        """
+        Register a launchable command in the centralized UI registry.
+        
+        This method allows capabilities to register commands that users can execute
+        through the UI. Commands are typically external applications, web interfaces,
+        or desktop tools that can be launched via URIs.
+                 
+        Args:
+            state: Current agent state
+            capability: Name of the capability that generated this command
+            launch_uri: URI that can be used to launch the command (e.g., http://, file://, custom://)
+            display_name: Optional human-readable name for the command
+            command_type: Optional type of command (e.g., 'web_app', 'desktop_app', 'viewer')
+            metadata: Optional capability-specific metadata dictionary
+            current_commands: Optional list of current commands to accumulate (otherwise get from state)
+            
+        Returns:
+            State update dictionary with ui_launchable_commands update
+            
+        Examples:
+            Basic command registration::
+            
+                >>> command_update = StateManager.register_command(
+                ...     state, "file_processor", "file:///path/to/results.html"
+                ... )
+                >>> return {**other_updates, **command_update}
+                
+            Rich command registration::
+            
+                >>> command_update = StateManager.register_command(
+                ...     state,
+                ...     capability="data_visualizer",
+                ...     launch_uri="http://localhost:8080/dashboard",
+                ...     display_name="Interactive Dashboard",
+                ...     command_type="web_app",
+                ...     metadata={
+                ...         "port": 8080,
+                ...         "data_source": "analysis_results",
+                ...         "chart_count": 3
+                ...     }
+                ... )
+        """
+        from datetime import datetime
+        
+        # Create command entry with required fields (following register_figure pattern)
+        command_entry = {
+            "capability": capability,
+            "launch_uri": launch_uri,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        # Add optional fields only if provided
+        if display_name:
+            command_entry["display_name"] = display_name
+        if command_type:
+            command_entry["command_type"] = command_type
+        if metadata:
+            command_entry["metadata"] = metadata
+        
+        # Use provided current_commands or get from state
+        if current_commands is not None:
+            # Use the accumulating list (for multiple registrations within same node)
+            commands_list = current_commands
+        else:
+            # Start from state (for single registration)
+            commands_list = list(state.get("ui_launchable_commands", []))
+        
+        commands_list.append(command_entry)
+        
+        logger.info(f"StateManager: prepared command registration for {capability}: {display_name or launch_uri}")
+        
+        return {"ui_launchable_commands": commands_list}
+
+    @staticmethod
     def register_notebook(
         state: AgentState,
         capability: str,
         notebook_path: str,
         notebook_link: str,
         display_name: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        current_notebooks: Optional[List[Dict[str, Any]]] = None
+        metadata: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Register a Jupyter notebook in the centralized UI registry.
+        Register a notebook in the centralized UI registry.
         
-        This is the single point of entry for all capabilities to register notebooks
-        for UI display. Provides a capability-agnostic interface that works for
-        Python, R, Julia, or any other notebook-generating capability.
+        This method provides notebook registration functionality that was being called
+        but didn't exist. It follows the same pattern as figure registration.
         
         Args:
             state: Current agent state
-            capability: Capability identifier (e.g., "python_executor", "data_visualization")
-            notebook_path: Path to the notebook file (absolute or relative)
-            notebook_link: Jupyter-accessible URL for the notebook
+            capability: Capability identifier (e.g., "python_executor", "data_analysis")
+            notebook_path: Path to the notebook file
+            notebook_link: Link to access the notebook
             display_name: Optional human-readable notebook name
             metadata: Optional capability-specific metadata dictionary
-            current_notebooks: Optional list of current notebooks to accumulate (otherwise get from state)
             
         Returns:
-            State update dictionary with ui_captured_notebooks update
-            
-        Examples:
-            Basic notebook registration::
-            
-                >>> notebook_update = StateManager.register_notebook(
-                ...     state, "python_executor", "/path/to/notebook.ipynb", 
-                ...     "http://localhost:8088/lab/tree/notebook.ipynb"
-                ... )
-                >>> return {**other_updates, **notebook_update}
-                
-            Rich notebook registration::
-            
-                >>> notebook_update = StateManager.register_notebook(
-                ...     state, 
-                ...     capability="data_visualization",
-                ...     notebook_path="execution/analysis.ipynb",
-                ...     notebook_link="http://localhost:8088/lab/tree/analysis.ipynb",
-                ...     display_name="Data Analysis Notebook",
-                ...     metadata={
-                ...         "execution_time": 2.5,
-                ...         "context_key": "analysis_results"
-                ...     }
-                ... )
+            State update dictionary with ui_notebook_links update
         """
         from datetime import datetime
         
-        # Create notebook entry with required fields
-        notebook_entry = {
-            "capability": capability,
-            "notebook_path": notebook_path,
-            "notebook_link": notebook_link,
-            "created_at": datetime.now().isoformat()
-        }
+        # For now, maintain backward compatibility with simple notebook links
+        # In the future, this could be enhanced to store structured notebook objects
+        notebook_links = list(state.get("ui_notebook_links", []))
+        notebook_links.append(notebook_link)
         
-        # Add optional fields only if provided
-        if display_name:
-            notebook_entry["display_name"] = display_name
-        if metadata:
-            notebook_entry["metadata"] = metadata
+        logger.info(f"StateManager: prepared notebook registration for {capability}: {display_name or notebook_path}")
         
-        # Use provided current_notebooks or get from state
-        if current_notebooks is not None:
-            # Use the accumulating list (for multiple registrations within same node)
-            notebooks_list = current_notebooks
-        else:
-            # Start from state (for single registration)
-            notebooks_list = list(state.get("ui_captured_notebooks", []))
-        
-        notebooks_list.append(notebook_entry)
-        
-        logger.info(f"StateManager: prepared notebook registration for {capability}: {notebook_path}")
-        
-        return {"ui_captured_notebooks": notebooks_list}
+        return {"ui_notebook_links": notebook_links}
 
 
 def get_execution_steps_summary(state: AgentState) -> List[str]:
