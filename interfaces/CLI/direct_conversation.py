@@ -15,7 +15,7 @@ import asyncio
 import sys
 import os
 import uuid
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 # Load environment variables before any other imports
 from dotenv import load_dotenv
@@ -608,18 +608,22 @@ class CLI:
             logger.exception("Error during graph execution")
     
     async def _show_final_result(self, result: Dict[str, Any]):
-        """Display the final result from agent graph execution.
+        """Display the final result from agent graph execution with figures, commands, and notebooks.
         
         Extracts and displays the final response from the completed agent
-        execution, handling message extraction from the LangGraph state and
-        providing debug information about execution metadata.
+        execution, including any generated figures, executable commands, and
+        notebook links. This provides comprehensive result display similar
+        to the OpenWebUI interface but adapted for terminal usage.
         
         Result Processing:
         1. Extract execution step results for debugging information
         2. Search messages list for the latest AI response
         3. Filter out human messages to find agent responses
         4. Display formatted response or fallback completion message
-        5. Show execution statistics for debugging
+        5. Extract and display generated figures with file paths
+        6. Extract and display executable commands with launch instructions
+        7. Extract and display notebook links for detailed analysis
+        8. Show execution statistics for debugging
         
         The method searches through the messages in reverse order to find the
         most recent assistant message, ensuring the latest response is displayed
@@ -637,14 +641,22 @@ class CLI:
            completion message rather than failing silently.
         
         Examples:
-            Display agent response::
+            Display agent response with additional content::
             
                 >>> await cli._show_final_result({
                 ...     "messages": [user_msg, assistant_msg],
-                ...     "execution_step_results": {"step1": "data"}
+                ...     "execution_step_results": {"step1": "data"},
+                ...     "ui_captured_figures": [{"figure_path": "/path/to/plot.png"}],
+                ...     "ui_launchable_commands": [{"launch_uri": "http://localhost:8080"}]
                 ... })
                 📊 Execution completed (execution_step_results: 1 records)
                 🤖 Here's the analysis you requested...
+                
+                📊 Generated Figures:
+                • /path/to/plot.png (created by python_executor)
+                
+                🚀 Executable Commands:
+                • Launch Application: http://localhost:8080
             
             Handle empty response::
             
@@ -655,24 +667,46 @@ class CLI:
         .. seealso::
            :class:`langchain_core.messages.BaseMessage` : Message type handling
            :class:`rich.console.Console` : Console output formatting
+           :meth:`_extract_figures_for_cli` : Figure extraction for terminal display
+           :meth:`_extract_commands_for_cli` : Command extraction for terminal display
+           :meth:`_extract_notebooks_for_cli` : Notebook extraction for terminal display
         """
         
         # Debug: Show execution step results count after execution
         step_results = result.get("execution_step_results", {})
         self.console.print(f"📊 Execution completed (execution_step_results: {len(step_results)} records)", style="cyan")
         
-        # Extract response from messages
+        # Extract and display the main text response
+        text_response = None
         messages = result.get("messages", [])
         if messages:
             # Get the latest AI message
             for msg in reversed(messages):
                 if hasattr(msg, 'content') and msg.content:
                     if not hasattr(msg, 'type') or msg.type != 'human':
+                        text_response = msg.content
                         self.console.print(f"🤖 {msg.content}", style="green")
-                        return
+                        break
         
-        # Fallback if no messages found
-        self.console.print("✅ Execution completed", style="green")
+        if not text_response:
+            # Fallback if no messages found
+            self.console.print("✅ Execution completed", style="green")
+        
+        # Extract and display additional content
+        figures_output = self._extract_figures_for_cli(result)
+        if figures_output:
+            self.console.print()  # Add spacing
+            self.console.print(figures_output, style="cyan")
+        
+        commands_output = self._extract_commands_for_cli(result)
+        if commands_output:
+            self.console.print()  # Add spacing
+            self.console.print(commands_output, style="yellow")
+        
+        notebooks_output = self._extract_notebooks_for_cli(result)
+        if notebooks_output:
+            self.console.print()  # Add spacing
+            self.console.print(notebooks_output, style="magenta")
     
     async def _handle_stream_event(self, event: Dict[str, Any]):
         """Handle and display streaming events from LangGraph execution.
@@ -739,6 +773,163 @@ class CLI:
         
         # If no response found, show completion
         self.console.print("✅ Execution completed", style="green")
+
+    def _extract_figures_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+        """Extract figures from centralized registry and format for CLI display.
+        
+        Extracts generated figures from the state and formats them for terminal
+        display with file paths and metadata. Unlike the OpenWebUI version that
+        converts to base64 images, this provides file paths that users can
+        access directly from their terminal.
+        
+        :param state: Complete agent state containing figure registry
+        :type state: Dict[str, Any]
+        :return: Formatted string with figure information or None if no figures
+        :rtype: Optional[str]
+        
+        Examples:
+            Display figures in terminal::
+            
+                📊 Generated Figures:
+                • /path/to/analysis_plot.png (created by python_executor at 2024-01-01 12:00:00)
+                • /path/to/data_visualization.jpg (created by data_analysis at 2024-01-01 12:01:00)
+        """
+        try:
+            # Get figures from centralized registry
+            ui_figures = state.get("ui_captured_figures", [])
+            
+            if not ui_figures:
+                logger.debug("No figures found in ui_captured_figures registry")
+                return None
+                
+            logger.info(f"Processing {len(ui_figures)} figures from centralized registry for CLI display")
+            figure_lines = ["📊 Generated Figures:"]
+            
+            for i, figure_entry in enumerate(ui_figures, 1):
+                try:
+                    # Extract figure information
+                    capability = figure_entry.get("capability", "unknown")
+                    figure_path = figure_entry["figure_path"]
+                    created_at = figure_entry.get("created_at", "unknown")
+                    
+                    # Format created_at if it's available
+                    created_at_str = str(created_at)[:19] if created_at and created_at != "unknown" else "unknown time"
+                    
+                    # Create CLI-friendly display
+                    figure_line = f"• {figure_path} (created by {capability} at {created_at_str})"
+                    figure_lines.append(figure_line)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to process figure entry {figure_entry}: {e}")
+                    # Continue processing other figures
+                    continue
+            
+            if len(figure_lines) > 1:  # More than just the header
+                return '\n'.join(figure_lines)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Critical error in CLI figure extraction: {e}")
+            return f"❌ Figure display error: {str(e)}"
+
+    def _extract_commands_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+        """Extract launchable commands from centralized registry and format for CLI display.
+        
+        Extracts registered commands from the state and formats them for terminal
+        display with launch URIs and descriptions. Provides clickable links for
+        terminal emulators that support them, or copy-paste URLs for others.
+        
+        :param state: Complete agent state containing command registry
+        :type state: Dict[str, Any]
+        :return: Formatted string with command information or None if no commands
+        :rtype: Optional[str]
+        
+        Examples:
+            Display commands in terminal::
+            
+                🚀 Executable Commands:
+                • Launch Jupyter Lab: http://localhost:8888/lab
+                • Open Dashboard: http://localhost:3000/dashboard
+        """
+        try:
+            # Get commands from centralized registry
+            ui_commands = state.get("ui_launchable_commands", [])
+            
+            if not ui_commands:
+                logger.debug("No commands found in ui_launchable_commands registry")
+                return None
+                
+            logger.info(f"Processing {len(ui_commands)} commands from centralized registry for CLI display")
+            command_lines = ["🚀 Executable Commands:"]
+            
+            for i, command_entry in enumerate(ui_commands, 1):
+                try:
+                    # Extract command information
+                    launch_uri = command_entry["launch_uri"]
+                    display_name = command_entry.get("display_name", f"Launch Command {i}")
+                    
+                    # Create CLI-friendly display
+                    command_line = f"• {display_name}: {launch_uri}"
+                    command_lines.append(command_line)
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to process command entry {command_entry}: {e}")
+                    # Continue processing other commands
+                    continue
+            
+            if len(command_lines) > 1:  # More than just the header
+                return '\n'.join(command_lines)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Critical error in CLI command extraction: {e}")
+            return f"❌ Command display error: {str(e)}"
+
+    def _extract_notebooks_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+        """Extract notebook links from centralized registry and format for CLI display.
+        
+        Extracts registered notebook links from the state and formats them for
+        terminal display. Provides direct URLs that users can copy-paste or
+        click in terminal emulators that support link clicking.
+        
+        :param state: Complete agent state containing notebook registry
+        :type state: Dict[str, Any]
+        :return: Formatted string with notebook information or None if no notebooks
+        :rtype: Optional[str]
+        
+        Examples:
+            Display notebooks in terminal::
+            
+                📓 Generated Notebooks:
+                • Jupyter Notebook 1: http://localhost:8888/notebooks/analysis.ipynb
+                • Jupyter Notebook 2: http://localhost:8888/notebooks/results.ipynb
+        """
+        try:
+            # Get notebook links from centralized registry
+            ui_notebooks = state.get("ui_notebook_links", [])
+            
+            if not ui_notebooks:
+                logger.debug("No notebook links found in ui_notebook_links registry")
+                return None
+                
+            logger.info(f"Processing {len(ui_notebooks)} notebook links from centralized registry for CLI display")
+            notebook_lines = ["📓 Generated Notebooks:"]
+            
+            for i, notebook_link in enumerate(ui_notebooks, 1):
+                # Create CLI-friendly display
+                notebook_line = f"• Jupyter Notebook {i}: {notebook_link}"
+                notebook_lines.append(notebook_line)
+            
+            if len(notebook_lines) > 1:  # More than just the header
+                return '\n'.join(notebook_lines)
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Critical error in CLI notebook extraction: {e}")
+            return f"❌ Notebook display error: {str(e)}"
 
 
 async def main():
