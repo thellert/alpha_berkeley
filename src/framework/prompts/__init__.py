@@ -49,14 +49,14 @@ Examples:
     
         # In application initialization
         from framework.prompts.loader import register_framework_prompt_provider
-        from applications.als_expert.framework_prompts import ALSPromptProvider
+        from applications.als_assistant.framework_prompts import ALSPromptProvider
         
-        register_framework_prompt_provider("als_expert", ALSPromptProvider())
+        register_framework_prompt_provider("als_assistant", ALSPromptProvider())
 
 .. seealso::
    :doc:`/developer-guides/03_core-framework-systems/04_prompt-customization` : Complete guide for customizing prompts
    :class:`framework.prompts.defaults.DefaultPromptProvider` : Framework default implementations
-   :class:`applications.als_expert.framework_prompts.ALSPromptProvider` : Example application customization
+   :class:`applications.als_assistant.framework_prompts.ALSPromptProvider` : Example application customization
 """
 
 from .base import FrameworkPromptBuilder

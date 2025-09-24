@@ -318,7 +318,7 @@ Available Data Sources
 
 The following data sources are available in specific applications:
 
-- **experiment_database** (ALS Expert): Experimental data and maintenance logs
+- **experiment_database** (ALS Assistant): Experimental data and maintenance logs
 - **wind_farm_knowledge** (Wind Turbine): Wind farm domain knowledge
 
 Working Example: Simple Data Integration

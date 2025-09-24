@@ -103,21 +103,21 @@ Application services are configured in ``src/applications/{app}/config.yml``:
 
 .. code-block:: yaml
 
-   # ALS Expert service deployment control
+   # ALS Assistant service deployment control
    deployed_services:
-     - applications.als_expert.mongo
-     - applications.als_expert.pv_finder
+     - applications.als_assistant.mongo
+     - applications.als_assistant.pv_finder
 
    services:
      mongo:
        name: mongo
-       path: ./services/applications/als_expert/mongo
+       path: ./services/applications/als_assistant/mongo
        port_host: 27017
        port_container: 27017
        copy_src: true
 
      pv_finder:
-       path: ./services/applications/als_expert/pv_finder
+       path: ./services/applications/als_assistant/pv_finder
        name: pv-finder
        port_host: 8051
        port_container: 8051
@@ -146,8 +146,8 @@ Control which services are deployed using the ``deployed_services`` configuratio
      - framework.pipelines
      
      # Application services  
-     - applications.als_expert.mongo
-     - applications.als_expert.pv_finder
+     - applications.als_assistant.mongo
+     - applications.als_assistant.pv_finder
 
 **Service Naming Patterns:**
 
@@ -192,7 +192,7 @@ For production deployment:
         - framework.jupyter
         - framework.open-webui
         - framework.pipelines
-        - applications.als_expert.mongo
+        - applications.als_assistant.mongo
 
 2. **Start all services in detached mode**:
 
@@ -287,7 +287,7 @@ The container manager follows this workflow:
    │       ├── repo_src/                                    # Copied source code
    │       └── config.yml                                   # Flattened configuration
    └── applications/
-       └── als_expert/
+       └── als_assistant/
            └── mongo/
                ├── docker-compose.yml                       # MongoDB service
                └── repo_src/                                # Copied source code
@@ -425,9 +425,9 @@ Configure and deploy application stack:
 
    # config.yml  
    deployed_services:
-     - applications.als_expert.mongo
-     - applications.als_expert.pv_finder
-     - applications.als_expert.qdrant
+     - applications.als_assistant.mongo
+     - applications.als_assistant.pv_finder
+     - applications.als_assistant.qdrant
 
 .. code-block:: bash
 

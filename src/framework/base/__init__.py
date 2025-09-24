@@ -1,6 +1,6 @@
 """Framework Base Module - Core Components and Architecture
 
-This module provides the foundational components for the ALS Expert framework's
+This module provides the foundational components for the Alpha Berkeley Framework's
 LangGraph-native architecture. It implements a convention-based system where
 capabilities and infrastructure components define standard interfaces for
 automatic discovery and integration.

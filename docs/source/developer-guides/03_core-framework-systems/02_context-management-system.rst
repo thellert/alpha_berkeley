@@ -180,16 +180,16 @@ Context classes are automatically discovered through the registry system:
 
 .. code-block:: python
 
-   # In applications/als_expert/registry.py
+   # In applications/als_assistant/registry.py
    context_classes=[
        ContextClassRegistration(
            context_type="PV_ADDRESSES",
-           module_path="applications.als_expert.context_classes",
+           module_path="applications.als_assistant.context_classes",
            class_name="PVAddresses"
        ),
        ContextClassRegistration(
            context_type="PV_VALUES",
-           module_path="applications.als_expert.context_classes",
+           module_path="applications.als_assistant.context_classes",
            class_name="PVValues"
        )
    ]

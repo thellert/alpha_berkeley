@@ -723,7 +723,7 @@ class TimeRangeParsingCapability(BaseCapability):
            from previous frameworks while integrating with the new architecture.
         
         .. seealso::
-           :mod:`applications.als_expert.framework_prompts.time_range_parsing` : Application prompts
+           :mod:`applications.als_assistant.framework_prompts.time_range_parsing` : Application prompts
         """
         prompt_provider = get_framework_prompts()
         time_range_builder = prompt_provider.get_time_range_parsing_prompt_builder()
@@ -749,7 +749,7 @@ class TimeRangeParsingCapability(BaseCapability):
            examples and instructions preserved from previous framework versions.
         
         .. seealso::
-           :mod:`applications.als_expert.framework_prompts.time_range_parsing` : Application prompts
+           :mod:`applications.als_assistant.framework_prompts.time_range_parsing` : Application prompts
         """
         prompt_provider = get_framework_prompts()
         time_range_builder = prompt_provider.get_time_range_parsing_prompt_builder()

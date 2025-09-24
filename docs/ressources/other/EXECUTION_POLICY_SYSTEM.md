@@ -80,8 +80,8 @@ The Execution Policy Analyzer system provides a clean, configurable approach to 
 
 #### 1. Custom Domain Analyzer
 ```python
-# src/applications/als_expert/domain_analysis.py
-class ALSExpertDomainAnalyzer(DomainAnalyzer):
+# src/applications/als_assistant/domain_analysis.py
+class ALSAssistantDomainAnalyzer(DomainAnalyzer):
     def get_priority(self) -> int:
         return 10  # Higher priority than default
     
@@ -102,8 +102,8 @@ class ALSExpertDomainAnalyzer(DomainAnalyzer):
 
 #### 2. Custom Policy Analyzer  
 ```python
-# src/applications/als_expert/execution_policy.py
-class ALSExpertExecutionPolicyAnalyzer(ExecutionPolicyAnalyzer):
+# src/applications/als_assistant/execution_policy.py
+class ALSAssistantExecutionPolicyAnalyzer(ExecutionPolicyAnalyzer):
     def get_priority(self) -> int:
         return 10  # Higher priority than default
     
@@ -121,23 +121,23 @@ class ALSExpertExecutionPolicyAnalyzer(ExecutionPolicyAnalyzer):
 
 #### 3. Register Both in Application
 ```python
-# src/applications/als_expert/registry.py
+# src/applications/als_assistant/registry.py
 domain_analyzers=[
     DomainAnalyzerRegistration(
-        name="als_expert_domain",
-        module_path="applications.als_expert.domain_analysis",
-        class_name="ALSExpertDomainAnalyzer",
-        description="ALS Expert domain pattern detection",
+        name="als_assistant_domain",
+        module_path="applications.als_assistant.domain_analysis",
+        class_name="ALSAssistantDomainAnalyzer",
+        description="ALS Assistant domain pattern detection",
         priority=10
     )
 ],
 
 execution_policy_analyzers=[
     ExecutionPolicyAnalyzerRegistration(
-        name="als_expert_policy",
-        module_path="applications.als_expert.execution_policy",
-        class_name="ALSExpertExecutionPolicyAnalyzer",
-        description="ALS Expert execution policies",
+        name="als_assistant_policy",
+        module_path="applications.als_assistant.execution_policy",
+        class_name="ALSAssistantExecutionPolicyAnalyzer",
+        description="ALS Assistant execution policies",
         priority=10
     )
 ]

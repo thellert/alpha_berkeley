@@ -1,7 +1,7 @@
 """Result Type Hierarchy - Execution Tracking and Data Management
 
 This module provides the complete type hierarchy for tracking execution results,
-records, and data throughout the ALS Expert framework. The result system enables
+records, and data throughout the Alpha Berkeley Framework. The result system enables
 comprehensive execution monitoring, error tracking, and state management with
 type safety and consistent structure across all framework components.
 

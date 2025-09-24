@@ -85,7 +85,7 @@ When ``show_all: true`` is set, all generated prompts are displayed in the conso
    ================================================================================
    🔍 DEBUG PROMPT: orchestrator_system (DefaultOrchestratorPromptBuilder)
    ================================================================================
-   You are an intelligent orchestration agent for the ALS Expert system...
+   You are an intelligent orchestration agent for the ALS Assistant system...
    ================================================================================
 
 File Persistence
@@ -373,7 +373,7 @@ For deployments with multiple applications, you can access specific providers:
    from framework.prompts import get_framework_prompts
    
    # Access specific application's prompts
-   als_provider = get_framework_prompts("als_expert")
+   als_provider = get_framework_prompts("als_assistant")
    wind_provider = get_framework_prompts("wind_turbine")
    
    # Use default provider (first registered)

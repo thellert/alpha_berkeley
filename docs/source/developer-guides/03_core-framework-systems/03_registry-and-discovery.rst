@@ -107,7 +107,7 @@ Component Registration
    # Registration in registry.py
    CapabilityRegistration(
        name="pv_address_finding",
-       module_path="applications.als_expert.capabilities.pv_address_finding",
+       module_path="applications.als_assistant.capabilities.pv_address_finding",
        class_name="PVAddressFindingCapability",
        description="Find Process Variable addresses",
        provides=["PV_ADDRESSES"],
@@ -132,7 +132,7 @@ Component Registration
    # Registration
    ContextClassRegistration(
        context_type="PV_ADDRESSES",
-       module_path="applications.als_expert.context_classes",
+       module_path="applications.als_assistant.context_classes",
        class_name="PVAddresses"
    )
 
@@ -150,7 +150,7 @@ Component Registration
 
    DataSourceRegistration(
        name="experiment_database",
-       module_path="applications.als_expert.database.experiment_database",
+       module_path="applications.als_assistant.database.experiment_database",
        class_name="ExperimentDatabaseProvider",
        description="Experiment database access",
        health_check_required=True

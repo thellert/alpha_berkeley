@@ -1,5 +1,5 @@
 """
-ALS Expert Agent - Classification Node
+Alpha Berkeley Agentic Framework - Classification Node
 
 Task classification and capability selection with sophisticated analysis.
 Combines LangGraph infrastructure with core classification logic.

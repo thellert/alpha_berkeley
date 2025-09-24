@@ -111,20 +111,20 @@ Each application provides a registry configuration:
 
 .. code-block:: python
 
-   # File: applications/als_expert/registry.py
+   # File: applications/als_assistant/registry.py
    from framework.registry import (
        CapabilityRegistration, 
        RegistryConfig,
        RegistryConfigProvider
    )
 
-   class ALSExpertRegistryProvider(RegistryConfigProvider):
+   class ALSAssistantRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
            return RegistryConfig(
                capabilities=[
                    CapabilityRegistration(
                        name="pv_address_finding",
-                       module_path="applications.als_expert.capabilities.pv_address_finding",
+                       module_path="applications.als_assistant.capabilities.pv_address_finding",
                        class_name="PVAddressFindingCapability",
                        description="Find EPICS PV addresses",
                        provides=["PV_ADDRESSES"],
@@ -132,7 +132,7 @@ Each application provides a registry configuration:
                    ),
                    CapabilityRegistration(
                        name="data_analysis", 
-                       module_path="applications.als_expert.capabilities.data_analysis",
+                       module_path="applications.als_assistant.capabilities.data_analysis",
                        class_name="DataAnalysisCapability",
                        description="Analyze scientific data",
                        provides=["ANALYSIS_RESULTS"],
@@ -353,7 +353,7 @@ Component logging follows the structured API pattern used throughout the framewo
    
    # Application components (matches registry declarations)
    logger = get_logger("hello_world_weather", "current_weather")
-   logger = get_logger("als_expert", "data_analysis")
+   logger = get_logger("als_assistant", "data_analysis")
    
    # Rich message hierarchy for development
    logger.key_info("Starting capability execution")
@@ -399,7 +399,7 @@ Streaming events integrate with LangGraph's native streaming and follow the same
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
            # Follows same naming pattern as get_logger
-           streamer = get_streamer("als_expert", "my_capability", state)
+           streamer = get_streamer("als_assistant", "my_capability", state)
            
            streamer.status("Processing data...")
            result = await process_data()

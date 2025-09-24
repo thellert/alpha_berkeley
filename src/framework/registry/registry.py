@@ -3,7 +3,7 @@
 This module contains the framework's registry provider implementation,
 following the same RegistryConfigProvider interface pattern used by all
 applications. It defines the core infrastructure components that form
-the foundation of the ALS Expert Agent framework.
+the foundation of the Alpha Berkeley Agentic Framework.
 
 The framework registry provides essential components that all applications
 can build upon:

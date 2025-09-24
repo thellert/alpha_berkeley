@@ -1,7 +1,7 @@
 """Error Classification Framework - Comprehensive Error Handling System
 
 This module provides the complete error classification and handling infrastructure
-for the ALS Expert framework. It implements a sophisticated error management system
+for the Alpha Berkeley Framework. It implements a sophisticated error management system
 that enables intelligent error classification, recovery strategy selection, and
 comprehensive error tracking throughout the entire framework ecosystem.
 
@@ -52,8 +52,8 @@ class ErrorSeverity(Enum):
     """Enumeration of error severity levels with comprehensive recovery strategies.
     
     This enum defines the complete spectrum of error severity classifications
-    and their corresponding recovery strategies used throughout the ALS Expert
-    framework. Each severity level triggers specific recovery behavior designed
+    and their corresponding recovery strategies used throughout the Alpha Berkeley
+    Framework. Each severity level triggers specific recovery behavior designed
     to maintain robust system operation while enabling intelligent error handling
     and graceful degradation.
     
@@ -367,7 +367,7 @@ class FrameworkError(Exception):
     """Base exception for all framework-related errors.
     
     This is the root exception class for all custom exceptions within the
-    ALS Expert framework. It provides a common base for framework-specific
+    Alpha Berkeley Framework. It provides a common base for framework-specific
     error handling and categorization.
     """
     pass

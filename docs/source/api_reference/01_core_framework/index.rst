@@ -192,7 +192,7 @@ These systems work together to provide a unified development experience:
          from framework.state import AgentState, StateManager
          from framework.context import ContextManager
          from configs.config import get_model_config
-         from applications.als_expert.context_classes import AnalysisResultsContext
+         from applications.als_assistant.context_classes import AnalysisResultsContext
          
          @capability_node
          class DataAnalysisCapability(BaseCapability):

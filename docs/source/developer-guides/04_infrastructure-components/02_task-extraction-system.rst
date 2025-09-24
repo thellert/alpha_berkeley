@@ -193,7 +193,7 @@ Task extraction uses configuration:
    task_extraction_config = get_model_config("framework", "task_extraction")
    
    # Application-specific overrides
-   als_config = get_model_config("als_expert", "task_extraction")
+   als_config = get_model_config("als_assistant", "task_extraction")
 
 Troubleshooting
 ---------------

@@ -1,5 +1,5 @@
 """
-ALS Expert Agent - Task Extraction Node
+Alpha Berkeley Agentic Framework - Task Extraction Node
 
 Converts chat conversation history into focused, actionable tasks.
 Implemented using convention-based class architecture for LangGraph compatibility.

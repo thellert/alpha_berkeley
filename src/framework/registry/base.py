@@ -142,7 +142,7 @@ class CapabilityRegistration:
 
     """
     name: str  # Unique name like "pv_address_finding"
-    module_path: str  # Like "applications.als_expert.capabilities.pv_address_finding"
+    module_path: str  # Like "applications.als_assistant.capabilities.pv_address_finding"
     class_name: str  # Like "PVAddressFindingCapability"
     description: str  # Human-readable description
     provides: List[str]  # Context types this capability produces
@@ -166,7 +166,7 @@ class ContextClassRegistration:
     :type class_name: str
     """
     context_type: str  # String constant like "PV_ADDRESSES"
-    module_path: str  # Like "applications.als_expert.context_classes"
+    module_path: str  # Like "applications.als_assistant.context_classes"
     class_name: str  # Like "PVAddresses"
 
 @dataclass
@@ -250,7 +250,7 @@ class FrameworkPromptProviderRegistration:
     specific components" - applications only declare what they want to customize,
     everything else uses framework defaults.
     
-    :param application_name: Application identifier (e.g., 'als_expert')
+    :param application_name: Application identifier (e.g., 'als_assistant')
     :type application_name: str
     :param module_path: Python module path for lazy import
     :type module_path: str
@@ -263,8 +263,8 @@ class FrameworkPromptProviderRegistration:
         Basic application override::
         
             FrameworkPromptProviderRegistration(
-                application_name="als_expert",
-                module_path="applications.als_expert.framework_prompts",
+                application_name="als_assistant",
+                module_path="applications.als_assistant.framework_prompts",
                 description="ALS-specific prompt customizations",
                 prompt_builders={
                     "orchestrator": "ALSOrchestratorPromptBuilder",
@@ -273,8 +273,8 @@ class FrameworkPromptProviderRegistration:
                 }
             )
     """
-    application_name: str  # Application identifier (e.g., "als_expert")
-    module_path: str      # Module path for lazy loading (e.g., "applications.als_expert.framework_prompts")
+    application_name: str  # Application identifier (e.g., "als_assistant")
+    module_path: str      # Module path for lazy loading (e.g., "applications.als_assistant.framework_prompts")
     description: str
     prompt_builders: Dict[str, str] = field(default_factory=dict)  # prompt_type -> class_name mapping
 

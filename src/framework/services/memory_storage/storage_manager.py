@@ -2,7 +2,7 @@
 Memory Storage Manager
 
 Simple file-based memory manager for user memory storage.
-Extracted from services.ALS_expert.utils.memory_manager
+Extracted from services.als_assistant.utils.memory_manager
 """
 
 import os

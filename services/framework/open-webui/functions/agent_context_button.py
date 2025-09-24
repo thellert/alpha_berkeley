@@ -1,10 +1,10 @@
 """
-title: ALS Expert Agent Context
-author: ALS Expert Team
+title: ALS Assistant Agent Context
+author: ALS Assistant Team
 version: 0.1.0
 required_open_webui_version: 0.5.0
 icon_url: data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyUzYuNDggMjIgMTIgMjJTMjIgMTcuNTIgMjIgMTJTMTcuNTIgMiAxMiAyWk0xMiAyMEM3LjU5IDIwIDQgMTYuNDEgNCAxMlM3LjU5IDQgMTIgNFMyMCA3LjU5IDIwIDEyUzE2LjQxIDIwIDEyIDIwWiIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxwYXRoIGQ9Ik0xMiA2VjhNMTIgMTZWMThNMTAgMTJIMTRNOCAxMkg2TTE4IDEySDE2IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+
-Description: View current ALS Expert Agent context data and available information
+Description: View current ALS Assistant Agent context data and available information
 """
 
 import json
@@ -50,12 +50,12 @@ class Action:
                         logger.debug(f"Message {i} info keys: {info_keys}")
                         
                         # Check for context summary (check both old and new key names for compatibility)
-                        if "als_expert_agent_context" in message["info"]:
-                            context_data = message["info"]["als_expert_agent_context"]
+                        if "als_assistant_agent_context" in message["info"]:
+                            context_data = message["info"]["als_assistant_agent_context"]
                             logger.info(f"Found agent context with {context_data.get('total_context_items', 0)} items")
                             return context_data
-                        elif "als_expert_context_summary" in message["info"]:
-                            context_data = message["info"]["als_expert_context_summary"]
+                        elif "als_assistant_context_summary" in message["info"]:
+                            context_data = message["info"]["als_assistant_context_summary"]
                             logger.info(f"Found agent context with {len(context_data.get('context_details', {}))} categories")
                             return context_data
                             
@@ -78,13 +78,13 @@ class Action:
         context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
         
         if not context_summary or not context_data:
-            return "# 🧠 ALS Expert Agent Context\n\n> No context data available. The agent has not yet collected or processed any data."
+            return "# 🧠 ALS Assistant Agent Context\n\n> No context data available. The agent has not yet collected or processed any data."
         
         # Header with overview - handle both new and old formats
         total_categories = context_summary.get("context_types_count") or len(context_data)
         total_items = context_summary.get("total_context_items", 0)
         
-        markdown = "# 🧠 ALS Expert Agent Context\n\n"
+        markdown = "# 🧠 ALS Assistant Agent Context\n\n"
         markdown += f"📊 **Available Context Categories:** {total_categories}\n"
         markdown += f"📋 **Total Context Items:** {total_items}\n\n"
         
@@ -287,7 +287,7 @@ class Action:
         __event_call__=None,
     ) -> Optional[dict]:
         """Display formatted agent context using a popup modal."""
-        logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Expert agent context")
+        logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Assistant agent context")
 
         user_valves = __user__.get("valves")
         if not user_valves:
@@ -352,14 +352,14 @@ class Action:
                     
                     popup.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
-                            <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Expert Agent Context</h2>
+                            <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Assistant Agent Context</h2>
                             <button id="context-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                         </div>
                         
                         <div style="text-align: center; padding: 40px 20px; color: #6b7280; font-size: 16px; line-height: 1.6;">
                             <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
                             <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px; font-weight: 600;">No Agent Context Available</h3>
-                            <p style="margin: 0; color: #6b7280;">No ALS Expert agent context found in recent messages. The agent context is populated when:</p>
+                            <p style="margin: 0; color: #6b7280;">No ALS Assistant agent context found in recent messages. The agent context is populated when:</p>
                             <ul style="text-align: left; margin: 20px 0; color: #6b7280; line-height: 1.8;">
                                 <li><strong>PV addresses</strong> are found</li>
                                 <li><strong>Time ranges</strong> are parsed</li>
@@ -367,7 +367,7 @@ class Action:
                                 <li><strong>Analysis</strong> is performed</li>
                                 <li><strong>Operations</strong> are executed</li>
                             </ul>
-                            <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Expert query that involves data collection or analysis to populate the agent context.</p>
+                            <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Assistant query that involves data collection or analysis to populate the agent context.</p>
                         </div>
                     `;
                     
@@ -462,7 +462,7 @@ class Action:
                 
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
-                        <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Expert Agent Context</h2>
+                        <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Assistant Agent Context</h2>
                         <button id="context-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
                     
@@ -926,9 +926,9 @@ class Action:
 # Action registration - required for OpenWebUI to recognize this as an action button
 actions = [
     {
-        "id": "als_expert_agent_context",
+        "id": "als_assistant_agent_context",
         "name": "Agent Context", 
-        "description": "View current ALS Expert agent context data and available information",
+        "description": "View current ALS Assistant agent context data and available information",
         "icon_url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyUzYuNDggMjIgMTIgMjJTMjIgMTcuNTIgMjIgMTJTMTcuNTIgMiAxMiAyWk0xMiAyMEM3LjU5IDIwIDQgMTYuNDEgNCAxMlM3LjU5IDQgMTIgNFMyMCA3LjU5IDIwIDEyUzE2LjQxIDIwIDEyIDIwWiIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxwYXRoIGQ9Ik0xMiA2VjhNMTIgMTZWMThNMTAgMTJIMTRNOCAxMkg2TTE4IDEySDE2IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+"
     }
 ] 

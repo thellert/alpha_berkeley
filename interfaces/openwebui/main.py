@@ -102,7 +102,7 @@ def execute_startup_hook(hook_function_path: str):
     Examples:
         Execute NLTK resource setup::\n        
             >>> execute_startup_hook("initialization.setup_nltk_resources")
-            # Calls applications.als_expert.initialization.setup_nltk_resources()
+            # Calls applications.als_assistant.initialization.setup_nltk_resources()
         
         Execute database initialization::\n        
             >>> execute_startup_hook("database.initialize_connections")
@@ -267,8 +267,8 @@ class Pipeline:
         
         # Application settings
         app_name: str = Field(
-            default="als_expert",
-            description="Name of the application to run (als_expert, wind_turbine, etc.)"
+            default="als_assistant",
+            description="Name of the application to run (als_assistant, wind_turbine, etc.)"
         )
         
         # Agent behavior settings

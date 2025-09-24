@@ -76,8 +76,8 @@ class FrameworkPromptProvider:
         
             framework_prompt_providers=[
                 FrameworkPromptProviderRegistration(
-                    application_name="als_expert",
-                    module_path="applications.als_expert.framework_prompts",
+                    application_name="als_assistant",
+                    module_path="applications.als_assistant.framework_prompts",
                     description="ALS-specific framework prompt provider",
                     prompt_builders={
                         "orchestrator": "ALSOrchestratorPromptBuilder",
@@ -333,7 +333,7 @@ class FrameworkPromptLoader:
         Typical usage through module functions::
         
             # Registration (usually in application initialization)
-            register_framework_prompt_provider("als_expert", ALSPromptProvider())
+            register_framework_prompt_provider("als_assistant", ALSPromptProvider())
             
             # Access (from framework infrastructure)
             provider = get_framework_prompts()
@@ -380,14 +380,14 @@ class FrameworkPromptLoader:
         Examples:
             Basic registration::
             
-                loader.register_provider("als_expert", ALSPromptProvider())
-                # als_expert becomes default if first registration
+                loader.register_provider("als_assistant", ALSPromptProvider())
+                # als_assistant becomes default if first registration
             
             Multiple application registration::
             
-                loader.register_provider("als_expert", ALSPromptProvider())
+                loader.register_provider("als_assistant", ALSPromptProvider())
                 loader.register_provider("wind_turbine", WindTurbinePromptProvider())
-                # als_expert remains default
+                # als_assistant remains default
         
         .. seealso::
            :meth:`set_default_provider` : Explicit default provider selection
@@ -411,10 +411,10 @@ class FrameworkPromptLoader:
         Examples:
             Setting default after multiple registrations::
             
-                loader.register_provider("als_expert", ALSPromptProvider())
+                loader.register_provider("als_assistant", ALSPromptProvider())
                 loader.register_provider("wind_turbine", WindTurbinePromptProvider())
                 loader.set_default_provider("wind_turbine")
-                # wind_turbine is now default instead of als_expert
+                # wind_turbine is now default instead of als_assistant
         
         .. seealso::
            :meth:`register_provider` : Provider registration with auto-default
@@ -450,7 +450,7 @@ class FrameworkPromptLoader:
             
             Using specific provider::
             
-                provider = loader.get_provider("als_expert")
+                provider = loader.get_provider("als_assistant")
                 task_extractor = provider.get_task_extraction_prompt_builder()
             
             Error handling::
@@ -520,7 +520,7 @@ def get_framework_prompts(application_name: Optional[str] = None) -> FrameworkPr
         Multi-application deployment::
         
             # Use specific application's prompts
-            als_provider = get_framework_prompts("als_expert")
+            als_provider = get_framework_prompts("als_assistant")
             wind_provider = get_framework_prompts("wind_turbine")
         
         Error handling pattern::
@@ -568,19 +568,19 @@ def register_framework_prompt_provider(application_name: str, provider: Framewor
     Examples:
         Application initialization::
         
-            # In als_expert/__init__.py or registry setup
-            from applications.als_expert.framework_prompts import ALSPromptProvider
+            # In als_assistant/__init__.py or registry setup
+            from applications.als_assistant.framework_prompts import ALSPromptProvider
             
             register_framework_prompt_provider(
-                "als_expert", 
+                "als_assistant", 
                 ALSPromptProvider()
             )
         
         Multiple application setup::
         
-            register_framework_prompt_provider("als_expert", ALSPromptProvider())
+            register_framework_prompt_provider("als_assistant", ALSPromptProvider())
             register_framework_prompt_provider("wind_turbine", WindTurbinePromptProvider())
-            # First registration (als_expert) becomes default
+            # First registration (als_assistant) becomes default
         
         Testing setup::
         
@@ -620,10 +620,10 @@ def set_default_framework_prompt_provider(application_name: str):
         Changing default in multi-application setup::
         
             # Register multiple providers
-            register_framework_prompt_provider("als_expert", ALSPromptProvider())
+            register_framework_prompt_provider("als_assistant", ALSPromptProvider())
             register_framework_prompt_provider("wind_turbine", WindTurbinePromptProvider())
             
-            # als_expert is default (first registered)
+            # als_assistant is default (first registered)
             # Change to wind_turbine as default
             set_default_framework_prompt_provider("wind_turbine")
             
@@ -635,7 +635,7 @@ def set_default_framework_prompt_provider(application_name: str):
             if config.get("primary_application") == "wind_turbine":
                 set_default_framework_prompt_provider("wind_turbine")
             else:
-                set_default_framework_prompt_provider("als_expert")
+                set_default_framework_prompt_provider("als_assistant")
     
     .. seealso::
        :func:`register_framework_prompt_provider` : Provider registration

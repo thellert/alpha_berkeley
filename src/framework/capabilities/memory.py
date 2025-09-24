@@ -298,7 +298,7 @@ class MemoryExtractionExample(BaseExample):
             """).strip()
 
 # Examples are provided by the application layer through the prompt builder system
-# See: applications/als_expert/framework_prompts/memory_extraction.py
+# See: applications/als_assistant/framework_prompts/memory_extraction.py
 
 def _get_memory_extraction_system_instructions() -> str:
     """Create system instructions for LLM-based memory content extraction.
@@ -315,7 +315,7 @@ def _get_memory_extraction_system_instructions() -> str:
        builder system, enabling domain-specific memory extraction guidance.
     
     .. seealso::
-       :mod:`applications.als_expert.framework_prompts.memory_extraction` : Application prompts
+       :mod:`applications.als_assistant.framework_prompts.memory_extraction` : Application prompts
     """
     
     prompt_provider = get_framework_prompts()

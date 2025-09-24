@@ -1,10 +1,10 @@
 """
-title: ALS Expert Execution History
-author: ALS Expert Team
+title: ALS Assistant Execution History
+author: ALS Assistant Team
 version: 0.1.0
 required_open_webui_version: 0.5.0
 icon_url: data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+
-Description: View ALS Expert Agent execution history for the last response
+Description: View ALS Assistant Agent execution history for the last response
 """
 
 import json
@@ -41,8 +41,8 @@ class Action:
         for message in reversed(messages):
             if message.get("role") == "assistant" and message.get("info"):
                 # Check for execution history (OpenWebUI always serializes to JSON)
-                if "als_expert_execution_history_raw" in message["info"]:
-                    execution_data = message["info"]["als_expert_execution_history_raw"]
+                if "als_assistant_execution_history_raw" in message["info"]:
+                    execution_data = message["info"]["als_assistant_execution_history_raw"]
                     logger.info(f"Found execution history: {len(execution_data)} records")
                     return execution_data
         
@@ -239,7 +239,7 @@ class Action:
         __event_call__=None,
     ) -> Optional[dict]:
         """Display formatted execution history using a popup modal."""
-        logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Expert execution history")
+        logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Assistant execution history")
 
         user_valves = __user__.get("valves")
         if not user_valves:
@@ -304,14 +304,14 @@ class Action:
                     
                     popup.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
-                            <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Expert Execution History</h2>
+                            <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Assistant Execution History</h2>
                             <button id="history-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                         </div>
                         
                         <div style="text-align: center; padding: 40px 20px; color: #6b7280; font-size: 16px; line-height: 1.6;">
                             <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
                             <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px; font-weight: 600;">No Execution History Available</h3>
-                            <p style="margin: 0; color: #6b7280;">No ALS Expert execution history found in recent messages. The execution history tracks:</p>
+                            <p style="margin: 0; color: #6b7280;">No ALS Assistant execution history found in recent messages. The execution history tracks:</p>
                             <ul style="text-align: left; margin: 20px 0; color: #6b7280; line-height: 1.8;">
                                 <li><strong>Step execution details</strong></li>
                                 <li><strong>Success/failure status</strong></li>
@@ -319,7 +319,7 @@ class Action:
                                 <li><strong>Parameters and results</strong></li>
                                 <li><strong>Error messages</strong></li>
                             </ul>
-                            <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Expert query to generate execution history.</p>
+                            <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Assistant query to generate execution history.</p>
                         </div>
                     `;
                     
@@ -414,7 +414,7 @@ class Action:
                 
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
-                        <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Expert Execution History</h2>
+                        <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Assistant Execution History</h2>
                         <button id="history-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
                     
@@ -556,9 +556,9 @@ class Action:
 # Action registration - required for OpenWebUI to recognize this as an action button
 actions = [
     {
-        "id": "als_expert_execution_history",
+        "id": "als_assistant_execution_history",
         "name": "Execution History", 
-        "description": "View ALS Expert execution history for the last response",
+        "description": "View ALS Assistant execution history for the last response",
         "icon_url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+"
     }
 ] 

@@ -39,7 +39,7 @@ class StreamWriter:
         Initialize stream writer with component context.
         
         Args:
-            source: Source type (e.g., "framework", "als_expert")
+            source: Source type (e.g., "framework", "als_assistant")
             component: Component name (e.g., "orchestrator", "python_executor")
             state: Optional AgentState for extracting execution context
         """
@@ -130,7 +130,7 @@ def get_streamer(source: str, component: str, state: Optional[Any] = None) -> St
     Parallels the get_logger() pattern for familiar usage.
     
     Args:
-        source: Source type (e.g., "framework", "als_expert") 
+        source: Source type (e.g., "framework", "als_assistant") 
         component: Component name (e.g., "orchestrator", "python_executor")
         state: Optional AgentState for extracting execution context
         

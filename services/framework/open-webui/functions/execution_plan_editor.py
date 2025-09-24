@@ -1,10 +1,10 @@
 """
 title: Execution Plan Editor
-author: ALS Expert Team
+author: ALS Assistant Team
 version: 1.0.0
 required_open_webui_version: 0.5.0
 icon_url: data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkgNWgxdjE0SDlWNXptMy0yaC0xdjJoMVYzem0yIDBIOXYyaDVWM3ptMi0zSDlWMkg5djE0aDJWNmgxdjEwaDJWNmgxdjEwaDJWNmgxdjEwaDJWNmgxdjEwaDJWNmgxdjEwaDJWNiIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxwYXRoIGQ9Ik0xMS41IDEyLjVsMyAzIDcuNS03LjUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0ibm9uZSIvPgo8L3N2Zz4K
-Description: Interactive execution plan editor for ALS Expert Agent. Create, modify, and validate multi-step execution plans with visual dependency management and real-time validation.
+Description: Interactive execution plan editor for ALS Assistant Agent. Create, modify, and validate multi-step execution plans with visual dependency management and real-time validation.
 """
 
 import json
@@ -166,12 +166,12 @@ class Action:
                         logger.debug(f"Message {i} info keys: {info_keys}")
                         
                         # Check for context summary (check both old and new key names for compatibility)
-                        if "als_expert_agent_context" in message["info"]:
-                            context_data = message["info"]["als_expert_agent_context"]
+                        if "als_assistant_agent_context" in message["info"]:
+                            context_data = message["info"]["als_assistant_agent_context"]
                             logger.info(f"Found agent context with {context_data.get('total_context_items', 0)} items")
                             return context_data
-                        elif "als_expert_context_summary" in message["info"]:
-                            context_data = message["info"]["als_expert_context_summary"]
+                        elif "als_assistant_context_summary" in message["info"]:
+                            context_data = message["info"]["als_assistant_context_summary"]
                             logger.info(f"Found agent context with {len(context_data.get('context_details', {}))} categories")
                             return context_data
                             
@@ -499,12 +499,12 @@ Error: {escaped_error}
 🔧 Troubleshooting Steps:
 
 1. Check Registry System
-   • Ensure the ALS Expert agent is running
+   • Ensure the ALS Assistant agent is running
    • Verify capabilities are properly registered
    • Check that registry initialization is working
 
 2. Export Registry Data  
-   • Send a message to the ALS Expert agent to trigger registry export
+   • Send a message to the ALS Assistant agent to trigger registry export
    • Registry data is exported every time the agent processes a message
 
 3. Check File Paths

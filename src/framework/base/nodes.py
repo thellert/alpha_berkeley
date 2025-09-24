@@ -1,7 +1,7 @@
 """Base Infrastructure Classes - System Component Architecture
 
 This module provides the BaseInfrastructureNode class and supporting components
-for building infrastructure nodes in the ALS Expert framework. Infrastructure
+for building infrastructure nodes in the Alpha Berkeley Framework. Infrastructure
 nodes handle system-level operations like orchestration, classification, routing,
 and monitoring that are essential for agent operation but distinct from business
 logic capabilities.
@@ -54,7 +54,7 @@ class BaseInfrastructureNode(ABC):
     """Base class for infrastructure nodes in the LangGraph-native architecture.
     
     This class provides the foundation for all infrastructure components in the
-    ALS Expert framework. Infrastructure nodes handle system-level operations
+    Alpha Berkeley Framework. Infrastructure nodes handle system-level operations
     that orchestrate, route, classify, and monitor agent execution. Unlike
     capabilities which contain business logic, infrastructure nodes focus on
     system coordination and management.

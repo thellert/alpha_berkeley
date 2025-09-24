@@ -26,7 +26,7 @@ Architecture:
        web interfaces, and development tools (jupyter, open-webui, pipelines)
     
     2. Application Services: Domain-specific services tied to particular
-       applications (als_expert.mongo, als_expert.pv_finder)
+       applications (als_assistant.mongo, als_assistant.pv_finder)
 
 Examples:
     Basic service deployment::
@@ -43,7 +43,7 @@ Examples:
         deployed_services: ["framework.jupyter", "framework.pipelines"]
         
         # Application service (full path required)
-        deployed_services: ["applications.als_expert.mongo"]
+        deployed_services: ["applications.als_assistant.mongo"]
         
     Template rendering workflow::
     
@@ -119,9 +119,9 @@ def find_service_config(config, service_name):
             
         Application service discovery::
         
-            >>> config = {'applications': {'als_expert': {'services': {'mongo': {'path': 'services/applications/als_expert/mongo'}}}}}
-            >>> service_config, template_path = find_service_config(config, 'applications.als_expert.mongo')
-            >>> print(template_path)  # 'services/applications/als_expert/mongo/docker-compose.yml.j2'
+            >>> config = {'applications': {'als_assistant': {'services': {'mongo': {'path': 'services/applications/als_assistant/mongo'}}}}}
+            >>> service_config, template_path = find_service_config(config, 'applications.als_assistant.mongo')
+            >>> print(template_path)  # 'services/applications/als_assistant/mongo/docker-compose.yml.j2'
             
         Legacy service discovery::
         
@@ -138,7 +138,7 @@ def find_service_config(config, service_name):
        :func:`get_templates` : Uses this function to build template lists
        :func:`setup_build_dir` : Processes discovered services for deployment
     """
-    # Handle full path notation (framework.jupyter, applications.als_expert.mongo)
+    # Handle full path notation (framework.jupyter, applications.als_assistant.mongo)
     if '.' in service_name:
         parts = service_name.split('.')
         
@@ -191,15 +191,15 @@ def get_templates(config):
         Template collection for mixed services::
         
             >>> config = {
-            ...     'deployed_services': ['framework.jupyter', 'applications.als_expert.mongo'],
+            ...     'deployed_services': ['framework.jupyter', 'applications.als_assistant.mongo'],
             ...     'framework': {'services': {'jupyter': {'path': 'services/framework/jupyter'}}},
-            ...     'applications': {'als_expert': {'services': {'mongo': {'path': 'services/applications/als_expert/mongo'}}}}
+            ...     'applications': {'als_assistant': {'services': {'mongo': {'path': 'services/applications/als_assistant/mongo'}}}}
             ... }
             >>> templates = get_templates(config)
             >>> print(templates)
             ['services/docker-compose.yml.j2',
              'services/framework/jupyter/docker-compose.yml.j2',
-             'services/applications/als_expert/mongo/docker-compose.yml.j2']
+             'services/applications/als_assistant/mongo/docker-compose.yml.j2']
     
     .. warning::
        If deployed_services is not configured or empty, only the root services
@@ -785,15 +785,15 @@ if __name__ == "__main__":
         Successful deployment workflow::
         
             $ python container_manager.py config.yml up -d
-            Deployed services: framework.jupyter, applications.als_expert.mongo
+            Deployed services: framework.jupyter, applications.als_assistant.mongo
             Generated compose files:
              - build/services/docker-compose.yml
              - build/services/framework/jupyter/docker-compose.yml
-             - build/services/applications/als_expert/mongo/docker-compose.yml
+             - build/services/applications/als_assistant/mongo/docker-compose.yml
             Running command:
                 podman compose -f build/services/docker-compose.yml \
                                -f build/services/framework/jupyter/docker-compose.yml \
-                               -f build/services/applications/als_expert/mongo/docker-compose.yml \
+                               -f build/services/applications/als_assistant/mongo/docker-compose.yml \
                                --env-file .env up -d
     
     .. seealso::

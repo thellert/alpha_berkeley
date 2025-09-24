@@ -215,7 +215,7 @@ def get_logger(source: str = None,
     Get a colored logger for any component with support for both structured and explicit APIs.
     
     Structured API (recommended):
-        source: Source type - either 'framework' or an application name (e.g., 'als_expert')
+        source: Source type - either 'framework' or an application name (e.g., 'als_assistant')
         component_name: Name of the component (e.g., 'data_analysis', 'router', 'pv_finder')
         level: Logging level
         
@@ -230,7 +230,7 @@ def get_logger(source: str = None,
     Examples:
         # Structured API (recommended for framework/application components)
         logger = get_logger("framework", "orchestrator")
-        logger = get_logger("als_expert", "pv_finder")
+        logger = get_logger("als_assistant", "pv_finder")
         
         # Explicit API (for custom loggers or tests)
         logger = get_logger(name="test_graph_execution", color="white")

@@ -243,7 +243,7 @@ Specialized Registration
    .. attribute:: application_name
       :type: str
       
-      Application identifier (e.g., 'als_expert').
+      Application identifier (e.g., 'als_assistant').
    
    .. attribute:: prompt_builders
       :type: Dict[str, str]

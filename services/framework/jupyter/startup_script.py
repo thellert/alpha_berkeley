@@ -88,7 +88,7 @@ except ImportError as e:
 # Initialize NLTK packages to avoid download messages in notebooks
 # TODO: cleanly seperate from framework startup!
 try:
-    from services.pv_finder.util import initialize_nltk_resources
+    from src.applications.als_assistant.services.pv_finder.util import initialize_nltk_resources
     initialize_nltk_resources()
     print("✓ NLTK packages initialized")
 except ImportError as e:
@@ -97,8 +97,8 @@ except Exception as e:
     print(f"⚠️  NLTK initialization failed: {e}")
     # Continue anyway - not critical for core functionality
 
-# Setup EPICS with user-friendly error handling
-def setup_epics_with_user_friendly_errors():
+# Setup EPICS
+def setup_epics():
     """Setup EPICS with improved error messages based on kernel mode."""
     try:
         import epics
@@ -158,7 +158,7 @@ def setup_epics_with_user_friendly_errors():
     except Exception as e:
         print(f"⚠️ Failed to setup EPICS error handling: {e}")
 
-setup_epics_with_user_friendly_errors()
+setup_epics()
 
 # Add utility functions for users
 def kernel_info():
@@ -242,30 +242,6 @@ try:
             logger.error(f"Detailed traceback for nbformat import error: {traceback.format_exc()}")
             logger.error("Please ensure 'nbformat' is listed in requirements_jupiter.txt and installed.")
         
-        logger.info("Attempting to import 'get_archiver_data' from 'src.applications.als_expert.capabilities.get_archiver_data'.")
-        # Import from the new capability-based structure
-        from applications.als_expert_old.capabilities.get_archiver_data import get_archiver_data
-        
-        # Make get_archiver_data globally available in the kernel
-        # IPython startup scripts run in a temporary namespace, then globals are copied.
-        # To be certain, we can try to inject it into the user_ns if available, or just rely on standard import behavior.
-        # For now, relying on standard import behavior: if the import succeeds, it should be usable.
-        logger.info("Successfully imported 'get_archiver_data'. It should now be available in the kernel's global namespace.")
-        logger.info("You can now use get_archiver_data(pv_list, start_date, end_date) in your notebooks.")
-        
-        # Also make it available in the global namespace explicitly
-        globals()['get_archiver_data'] = get_archiver_data
-        
-        # Print success message to stdout so users can see it
-        print("✓ Custom imports loaded successfully!")
-        print("  - get_archiver_data is now available")
-
-        archiver_url = os.getenv('ARCHIVER_URL')
-        if archiver_url:
-            logger.info(f"ARCHIVER_URL environment variable is set to: {archiver_url}")
-        else:
-            logger.warning("ARCHIVER_URL environment variable is NOT set. 'get_archiver_data' may not function correctly.")
-
 except ImportError as e:
     logger.error(f"ImportError during startup: {e}")
     logger.error(f"Detailed traceback: {traceback.format_exc()}")

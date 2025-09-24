@@ -177,7 +177,7 @@ These systems work together to provide comprehensive production capabilities:
          deployed_services:
            - framework.jupyter              # Secure execution environment
            - framework.pipelines            # Processing pipeline infrastructure
-           - applications.als_expert.logbook  # Application data
+           - applications.als_assistant.pv_finder  # Application data
 
          framework:
            execution:

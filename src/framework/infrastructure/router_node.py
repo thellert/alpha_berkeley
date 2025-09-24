@@ -1,5 +1,5 @@
 """
-ALS Expert Agent - Dynamic Router for LangGraph
+Alpha Berkeley Agentic Framework - Dynamic Router for LangGraph
 
 This module contains the router node and conditional edge function for routing decisions.
 The router is the central decision-making authority that determines what happens next.

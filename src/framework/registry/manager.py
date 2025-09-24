@@ -1,7 +1,7 @@
-"""Registry Manager for ALS Expert Agent Components.
+"""Registry Manager for Alpha Berkeley Agentic Framework Components.
 
-This module provides the centralized registry management system for the ALS Expert
-Agent framework, serving as the single point of access for all framework components
+This module provides the centralized registry management system for the Alpha Berkeley
+framework, serving as the single point of access for all framework components
 including capabilities, nodes, context classes, data sources, and services.
 
 The registry manager implements a sophisticated component management system that:
@@ -127,7 +127,7 @@ if TYPE_CHECKING:
 logger = get_logger(name='REGISTRY', color='sky_blue2')
 
 class RegistryManager:
-    """Centralized registry for all ALS Expert Agent components.
+    """Centralized registry for all Alpha Berkeley Agentic Framework components.
     
     This class provides the single point of access for capabilities, nodes, context classes,
     and data sources throughout the framework. It replaces the fragmented registry system
@@ -194,7 +194,7 @@ class RegistryManager:
         Examples:
             Create registry with specific applications::
             
-                >>> manager = RegistryManager(["als_expert", "wind_turbine"])
+                >>> manager = RegistryManager(["als_assistant", "wind_turbine"])
                 >>> manager.initialize()  # Load components
                 >>> capability = manager.get_capability("pv_address_finding")
             
@@ -523,7 +523,7 @@ class RegistryManager:
         Examples:
             Basic initialization::
             
-                >>> registry = RegistryManager(["als_expert"])
+                >>> registry = RegistryManager(["als_assistant"])
                 >>> registry.initialize()  # Load all components
                 >>> print(registry.get_stats())  # Check what was loaded
                 
@@ -1619,7 +1619,7 @@ def _create_registry_from_config() -> RegistryManager:
     
     Expects simple application list in the format:
     applications:
-      - als_expert
+      - als_assistant
       - wind_turbine
     
     Uses conventions:

@@ -1,7 +1,7 @@
 """Example Framework - Few-Shot Learning and Prompt Engineering System
 
 This module provides the comprehensive example and prompt engineering system
-for the ALS Expert framework. It implements sophisticated few-shot learning
+for the Alpha Berkeley Framework. It implements sophisticated few-shot learning
 patterns, orchestration guidance, and classification training examples that
 enable intelligent LLM-based components throughout the framework.
 
@@ -63,7 +63,7 @@ class BaseExample(ABC):
     """Abstract base class for all few-shot examples with consistent formatting interface.
     
     This abstract base class establishes the foundational interface for all example
-    types used in few-shot learning and prompt engineering throughout the ALS Expert
+    types used in few-shot learning and prompt engineering throughout the Alpha Berkeley
     framework. It enforces consistent formatting patterns that ensure reliable LLM
     consumption and predictable behavior across all example implementations.
     

@@ -1,6 +1,6 @@
 """Registry System for Framework Components.
 
-This module provides the complete registry system for the ALS Expert Agent framework,
+This module provides the complete registry system for the Alpha Berkeley Agentic Framework,
 enabling centralized management of all system components including capabilities, nodes,
 context classes, data sources, and services. The registry system eliminates circular
 imports through lazy loading and provides dependency-ordered initialization.

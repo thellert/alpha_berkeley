@@ -2,7 +2,7 @@
 Data Source Abstraction Layer
 
 This module provides the base abstractions for integrating external data sources
-into the ALS Expert Agent. Data sources can include user memory, knowledge graphs,
+into the Alpha Berkeley Agentic Framework. Data sources can include user memory, knowledge graphs,
 databases, APIs, and custom user-defined sources.
 """
 

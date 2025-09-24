@@ -1,6 +1,6 @@
 """Execution Planning Framework - Agent Orchestration and Step Management
 
-This module provides the comprehensive execution planning system for the ALS Expert
+This module provides the comprehensive execution planning system for the Alpha Berkeley
 framework. It implements TypedDict-based execution planning that enables sophisticated
 orchestration, step sequencing, and capability coordination while maintaining full
 compatibility with LangGraph's checkpointing and serialization systems.

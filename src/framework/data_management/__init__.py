@@ -1,5 +1,5 @@
 """
-ALS Expert Agent Framework - Data Sources
+Alpha Berkeley Agent Framework - Data Sources
 
 Unified data source management system supporting both core data sources
 (always available) and application-specific data sources (domain-specific).

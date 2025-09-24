@@ -24,7 +24,7 @@ from .examples import TaskClassifierGuide
 class BaseCapability(ABC):
     """Base class for framework capabilities using convention-based configuration.
     
-    This class provides the foundation for all capabilities in the ALS Expert framework.
+    This class provides the foundation for all capabilities in the Alpha Berkeley Agent framework.
     Capabilities are self-contained business logic components that perform specific tasks
     and integrate seamlessly with the LangGraph execution model through convention-based
     patterns and automatic discovery.
