@@ -182,7 +182,6 @@ autodoc_mock_imports = [
     'langgraph.checkpoint.postgres',
     
     # Specialized infrastructure - interfaces documented, implementations mocked
-    'langfuse',
     'pydantic_ai',
     'langgraph', 
     'langchain',

@@ -80,10 +80,9 @@ file_paths:
 
 deployed_services:
   # Framework services (essential for framework operation, see also src/framework/config.yml)
-  # - framework.jupyter          # Python execution environment with EPICS support
-  # - framework.open_webui       # Primary user interface frontend  
+  - framework.jupyter          # Python execution environment with EPICS support
+  - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
-  # - framework.langfuse         # Observability and tracing infrastructure
  
 
 # Development Configuration
@@ -113,12 +112,6 @@ logging:
   show_traceback_locals: false       # Show local variables in tracebacks
   show_full_paths: false             # Show full file paths in tracebacks (vs relative paths)
 
-# Langfuse Configuration (can be used by any application)
-langfuse:
-  enabled: true
-  host: http://langfuse-web:3000
-  secret_key: ${LANGFUSE_SECRET_KEY}
-  public_key: ${LANGFUSE_PUBLIC_KEY}
 
 # Global API Provider Configuration (shared across all applications)
 api:

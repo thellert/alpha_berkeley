@@ -186,8 +186,7 @@ Production Integration Patterns
          # Deploy services by configuring them in deployed_services list
          deployed_services = [
              "framework.pipelines",
-             "framework.jupyter", 
-             "framework.langfuse"
+             "framework.jupyter"
          ]
          
          # Services are deployed through container_manager.py script

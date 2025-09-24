@@ -43,7 +43,6 @@ The container management system supports two service categories:
    - ``jupyter``: Python execution environment with EPICS support
    - ``open-webui``: Web interface for agent interaction  
    - ``pipelines``: Processing pipeline infrastructure
-   - ``langfuse``: Observability and tracing
 
 **Application Services**
    Domain-specific services defined in ``src/applications/{app}/config.yml``:

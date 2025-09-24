@@ -64,8 +64,6 @@ Development Utilities
 
 .. autofunction:: get_logging_color
 
-.. autofunction:: get_langfuse_enabled
-
 .. autofunction:: get_pipeline_config
 
 Internal Implementation

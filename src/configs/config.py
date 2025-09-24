@@ -276,9 +276,6 @@ class ConfigBuilder:
             # Essential for absolute path resolution across deployment environments
             "project_root": self.get('project_root'),
             
-            # ===== RUNTIME CONTEXT =====
-            "langfuse_enabled": self.get('langfuse.enabled', False),
-            
             # ===== APPLICATION CONTEXT =====
             "applications": self.get('applications', []),
             "current_application": self._get_current_application(),
@@ -519,12 +516,6 @@ def get_pipeline_config(app_name: str = None) -> Dict[str, Any]:
     # Fall back to framework pipeline config
     framework = configurable.get("framework", {})
     return framework.get("pipeline", {})
-
-
-def get_langfuse_enabled() -> bool:
-    """Get Langfuse configuration with automatic context detection."""
-    configurable = _get_configurable()
-    return configurable.get("langfuse_enabled", False)
 
 
 def get_execution_limits() -> Dict[str, Any]:

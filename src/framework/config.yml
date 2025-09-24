@@ -9,7 +9,6 @@ deployed_services:
   - framework.jupyter          # Python execution environment with EPICS support
   - framework.open_webui       # Primary user interface frontend  
   - framework.pipelines        # Processing pipeline infrastructure
-  # - framework.langfuse         # Observability and tracing infrastructure
 
 framework:
   # Framework Services - Essential for framework operation
@@ -38,8 +37,6 @@ framework:
       port_host: 8080
       port_container: 8080
 
-    langfuse:
-      path: ./services/framework/langfuse
 
     pipelines:
       path: ./services/framework/pipelines
