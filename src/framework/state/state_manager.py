@@ -328,8 +328,7 @@ class StateManager:
             control_validation_timestamp=None,
             
             # UI result fields - reset to defaults
-            ui_notebook_links=[],
-    
+            ui_captured_notebooks=[],
             ui_captured_figures=[],
             ui_launchable_commands=[],
             ui_agent_context=None,
@@ -745,18 +744,18 @@ class StateManager:
             metadata: Optional capability-specific metadata dictionary
             
         Returns:
-            State update dictionary with ui_notebook_links update
+            State update dictionary with ui_captured_notebooks update
         """
         from datetime import datetime
         
         # For now, maintain backward compatibility with simple notebook links
         # In the future, this could be enhanced to store structured notebook objects
-        notebook_links = list(state.get("ui_notebook_links", []))
+        notebook_links = list(state.get("ui_captured_notebooks", []))
         notebook_links.append(notebook_link)
         
         logger.info(f"StateManager: prepared notebook registration for {capability}: {display_name or notebook_path}")
         
-        return {"ui_notebook_links": notebook_links}
+        return {"ui_captured_notebooks": notebook_links}
 
 
 def get_execution_steps_summary(state: AgentState) -> List[str]:

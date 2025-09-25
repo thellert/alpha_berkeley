@@ -252,8 +252,11 @@ def _gather_information(state: AgentState) -> ResponseContext:
     commands_available = len(ui_commands)
     
     # Get notebook information from centralized registry
-    ui_notebooks = state.get("ui_notebook_links", [])
+    ui_notebooks = state.get("ui_captured_notebooks", [])
     notebooks_available = len(ui_notebooks)
+    
+    # Log notebook availability for debugging
+    logger.debug(f"Respond node found {len(ui_notebooks)} notebook links")
     
     # Get interface context from configurable
     from configs.config import get_interface_context

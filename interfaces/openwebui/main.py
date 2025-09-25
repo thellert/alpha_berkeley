@@ -1186,10 +1186,13 @@ class Pipeline:
         """
         try:
             # Get notebook links from centralized registry
-            ui_notebooks = state.get("ui_notebook_links", [])
+            ui_notebooks = state.get("ui_captured_notebooks", [])
+            
+            # Log notebook extraction for debugging
+            logger.debug(f"Extracting notebooks from state with {len(ui_notebooks)} notebook links")
             
             if not ui_notebooks:
-                logger.debug("No notebook links found in ui_notebook_links registry")
+                logger.debug("No notebook links found in ui_captured_notebooks registry")
                 return None
                 
             logger.info(f"Processing {len(ui_notebooks)} notebook links from centralized registry")
@@ -1203,7 +1206,7 @@ class Pipeline:
             
             if notebook_links:
                 notebooks_section = "\n\n".join(notebook_links)
-                return f"**📓 Generated Notebooks:**\n\n{notebooks_section}"
+                return f"{notebooks_section}"
             
             return None
             
