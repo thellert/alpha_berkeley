@@ -34,7 +34,12 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - CBORG_API_KEY=${CBORG_API_KEY}
-      # SQUID proxy
+      # Langfuse observability configuration
+      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST}
+      # SQUID proxy (required for firewalled environments like ALS)
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - http_proxy=${http_proxy}
