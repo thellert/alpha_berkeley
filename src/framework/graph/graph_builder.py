@@ -175,7 +175,7 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
     """
     Create async PostgreSQL checkpointer for production use.
     
-    This is the default production checkpointer. No fallbacks - either works or fails cleanly.
+    This is the default production checkpointer.
     
     Args:
         db_uri: PostgreSQL connection URI. If None, attempts to get from environment

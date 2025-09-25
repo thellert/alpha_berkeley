@@ -10,16 +10,15 @@ Python Execution
 
    **Key Concepts:**
    
-   - Using :class:`PythonExecutorService` and :class:`PythonExecutionRequest` for code execution
-   - Implementing :class:`PythonCapability` integration patterns in capabilities
-   - Configuring container vs local execution with ``execution_method`` settings
-   - Managing multi-stage analysis pipelines with checkpoint resumption
-   - Exception handling with :exc:`CodeRuntimeError` and execution flow control
+   - Using registry-based :class:`PythonExecutorService` access for code execution
+   - Creating :class:`PythonExecutionRequest` with structured ``capability_prompts``
+   - Implementing approval handling with ``handle_service_with_interrupts()``
+   - Managing approval resume/clear state with ``get_approval_resume_data()`` and ``clear_approval_state()``
+   - Proper service configuration with ``thread_id`` and ``checkpoint_ns``
+   - Container vs local execution through ``config.yml`` settings
 
    **Prerequisites:** Understanding of :doc:`01_human-approval-workflows` and :doc:`../03_core-framework-systems/05_message-and-execution-flow`
    
-   **Time Investment:** 60-90 minutes for complete understanding
-
 Overview
 ========
 
@@ -100,165 +99,201 @@ Configure your Python execution system with environment settings and approval po
 - **Local settings**: Python environment path for direct execution
 
 Integration Patterns
-=====================
+====================
 
 Using Python Execution in Capabilities
 ---------------------------------------
 
-Use the Python execution service in your capabilities through the PythonCapability interface:
+Use the Python execution service directly in your capabilities with proper approval handling:
 
 .. code-block:: python
 
    from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
-   from framework.context import ContextManager
-   from framework.capabilities.python import PythonCapability
+   from framework.state import AgentState, StateManager
+   from framework.registry import get_registry
+   from framework.services.python_executor import PythonExecutionRequest
+   from framework.approval import (
+       create_approval_type,
+       get_approval_resume_data,
+       clear_approval_state,
+       handle_service_with_interrupts
+   )
+   from configs.config import get_full_configuration
+   from langgraph.types import Command
 
    @capability_node
    class DataAnalysisCapability(BaseCapability):
        """Data analysis capability using Python execution service."""
        
-       async def execute(self, state: AgentState, context: ContextManager) -> dict:
-           try:
-               # Extract analysis requirements from context
-               data_context = context.get_capability_context_data("analysis_data")
-               analysis_objective = context.get_capability_context_data("task_objective") 
-               
-               # Prepare context data for Python execution
-               execution_context = {
-                   "task_objective": f"Analyze data and generate insights: {analysis_objective}",
-                   "data_available": data_context is not None,
-                   "analysis_requirements": [
-                       "Generate statistical summary",
-                       "Create visualizations", 
-                       "Identify trends and patterns"
-                   ],
-                   "expected_results": "Statistical analysis with plots and insights"
-               }
-               
-               # Set execution context for Python capability
-               context.set_capability_context_data("python_context", execution_context)
-               
-               # Execute Python code generation and execution
-               python_result = await PythonCapability().execute(state, context)
-               
-               if python_result.get("is_successful", False):
-                   python_results = python_result["PYTHON_RESULTS"]
-                   
-                   return {
-                       "success": True,
-                       "analysis_completed": True,
-                       "generated_code": python_results.code,
-                       "execution_output": python_results.output,
-                       "analysis_results": python_results.results,
-                       "visualizations": python_results.figure_paths,
-                       "notebook_link": python_results.notebook_link,
-                       "execution_time": python_results.execution_time
-                   }
-               else:
-                   error_message = python_result.get("error", "Python execution failed")
-                   return {
-                       "success": False,
-                       "analysis_completed": False,
-                       "error": error_message
-                   }
-                   
-           except Exception as e:
-               return {
-                   "success": False,
-                   "error": f"Analysis capability error: {str(e)}"
-               }
-
-Direct Service Usage
---------------------
-
-For advanced use cases, interact directly with the PythonExecutorService:
-
-.. code-block:: python
-
-   from framework.services.python_executor import PythonExecutorService, PythonExecutionRequest
-   from framework.services.python_executor.exceptions import CodeRuntimeError
-   from langgraph.types import Command
-
-   class AdvancedPythonIntegration:
-       """Advanced integration with Python executor service."""
-       
-       def __init__(self):
-           self.service = PythonExecutorService()
-       
-       async def execute_analysis_workflow(self, analysis_request: dict) -> dict:
-           """Execute analysis workflow with direct service control."""
+       async def execute(state: AgentState, **kwargs) -> dict:
+           # Get current step and registry
+           step = StateManager.get_current_step(state)
+           registry = get_registry()
            
-           try:
-               # Create structured execution request
+           # Get Python executor service from registry
+           python_service = registry.get_service("python_executor")
+           if not python_service:
+               raise RuntimeError("Python executor service not available")
+           
+           # Create service configuration
+           main_configurable = get_full_configuration()
+           service_config = {
+               "configurable": {
+                   **main_configurable,
+                   "thread_id": f"data_analysis_{step.get('context_key', 'default')}",
+                   "checkpoint_ns": "python_executor"
+               }
+           }
+           
+           # Check for approval resume first
+           has_approval_resume, approved_payload = get_approval_resume_data(
+               state, create_approval_type("data_analysis")
+           )
+           
+           if has_approval_resume:
+               # Handle approval resume
+               if approved_payload:
+                   resume_response = {"approved": True, **approved_payload}
+               else:
+                   resume_response = {"approved": False}
+               
+               service_result = await python_service.ainvoke(
+                   Command(resume=resume_response), config=service_config
+               )
+               approval_cleanup = clear_approval_state()
+           else:
+               # Normal execution flow
+               # Create structured prompts for Python generation
+               capability_prompts = [
+                   "**ANALYSIS REQUIREMENTS:**",
+                   "- Generate statistical summary of the data",
+                   "- Create visualizations to identify trends",
+                   "- Identify patterns and anomalies",
+                   
+                   "**EXPECTED OUTPUT:**",
+                   "Create a results dictionary with:",
+                   "- statistics: Statistical summary metrics",
+                   "- trends: Identified trends and patterns",
+                   "- visualizations: List of generated plots"
+               ]
+               
+               # Create execution request
                execution_request = PythonExecutionRequest(
-                   user_query=analysis_request["user_query"],
-                   task_objective=analysis_request["task_objective"],
-                   expected_results=analysis_request.get("expected_results", "Analysis results"),
-                   execution_folder_name=analysis_request.get("folder_name", "analysis"),
-                   capability_context_data=analysis_request.get("context_data", {})
+                   user_query=state.get("input_output", {}).get("user_query", ""),
+                   task_objective=step.get("task_objective", "Analyze data"),
+                   capability_prompts=capability_prompts,
+                   expected_results={
+                       "statistics": "dict",
+                       "trends": "list",
+                       "visualizations": "list"
+                   },
+                   execution_folder_name="data_analysis",
+                   capability_context_data=state.get('capability_context_data', {}),
+                   retries=3
                )
                
-               # Configure service execution
-               service_config = {
-                   "thread_id": f"analysis_{analysis_request.get('session_id', 'default')}",
-                   "configurable": {
-                       "execution_mode": analysis_request.get("execution_mode", "readonly"),
-                       "max_execution_time": analysis_request.get("timeout", 600)
-                   }
-               }
-               
-               # Execute with comprehensive error handling
-               result = await self.service.ainvoke(execution_request, service_config)
-               
-               return await self._process_service_result(result)
-               
-           except CodeRuntimeError as e:
-               return await self._handle_code_error(e, analysis_request)
-               
-           except Exception as e:
-               return {
-                   "success": False,
-                   "error": f"Service execution failed: {str(e)}",
-                   "error_type": "service_error"
-               }
+               # Use centralized interrupt handler
+               service_result = await handle_service_with_interrupts(
+                   service=python_service,
+                   request=execution_request,
+                   config=service_config,
+                   logger=logger,
+                   capability_name="DataAnalysis"
+               )
+               approval_cleanup = None
+           
+           # Process results (both paths converge here)
+           execution_result = service_result.execution_result
+           
+           # Store context using StateManager
+           context_updates = StateManager.store_context(
+               state,
+               registry.context_types.ANALYSIS_RESULTS,
+               step.get("context_key"),
+               analysis_context
+           )
+           
+           # Return with optional approval cleanup
+           if approval_cleanup:
+               return {**context_updates, **approval_cleanup}
+           else:
+               return context_updates
 
 Execution Environment Management
 ================================
 
 Container vs Local Execution
------------------------------
+----------------------------
 
-Switch between execution environments seamlessly:
+The Python execution service supports both container and local execution environments. The execution method is primarily configured through the config system, but you can also implement dynamic selection logic if needed.
+
+**Configuration-Based Execution Method:**
+
+The execution method is typically set in your ``config.yml``:
+
+.. code-block:: yaml
+
+   framework:
+     execution:
+       execution_method: "container"  # or "local"
+       container:
+         jupyter_host: "localhost"
+         jupyter_port: 8888
+       local:
+         python_env_path: "${LOCAL_PYTHON_VENV}"
+
+**Example: Dynamic Environment Selection (Advanced Use Case):**
+
+For advanced scenarios where you need to dynamically choose execution environments based on request characteristics, here's an example pattern:
 
 .. code-block:: python
 
    class FlexiblePythonExecution:
-       """Demonstrate flexible execution environment switching."""
+       """Example: Dynamic execution environment selection.
+       
+       Note: This is an advanced pattern. Most use cases should rely on 
+       the standard config.yml execution_method setting.
+       """
        
        def _select_execution_environment(self, code_request: dict) -> str:
-           """Select optimal execution environment based on request characteristics."""
+           """Example: Select execution environment based on request characteristics.
+           
+           This would be used to override the default config.yml setting
+           for specific requests that have special requirements.
+           """
            
            requires_isolation = code_request.get("requires_isolation", False)
            has_dependencies = code_request.get("has_special_dependencies", False)
            is_long_running = code_request.get("estimated_time", 0) > 300
            security_level = code_request.get("security_level", "medium")
            
-           # Decision logic for environment selection
+           # Example decision logic for environment selection
            if security_level == "high" or requires_isolation:
                return "container"
            elif has_dependencies or is_long_running:
                return "container"
            else:
                return "local"  # Faster for simple operations
-
-Environment Selection Strategies
---------------------------------
-
-- **Security-based**: High-security operations use container isolation
-- **Performance-based**: Simple operations use local execution for speed
-- **Dependency-based**: Complex dependencies require containerized environments
-- **Resource-based**: Long-running operations benefit from container resource management
+       
+       async def execute_with_dynamic_environment(self, state, request_data):
+           """Example: Override execution method in service config."""
+           
+           # Get the dynamic execution method
+           execution_method = self._select_execution_environment(request_data)
+           
+           # Override the config setting for this specific request
+           main_configurable = get_full_configuration()
+           service_config = {
+               "configurable": {
+                   **main_configurable,
+                   "execution_method": execution_method,  # Override config.yml setting
+                   "thread_id": f"dynamic_{execution_method}",
+                   "checkpoint_ns": "python_executor"
+               }
+           }
+           
+           # Use the service with the dynamic configuration
+           # ... rest of service call ...
 
 Advanced Patterns
 =================
@@ -266,33 +301,89 @@ Advanced Patterns
 Multi-Stage Analysis Pipeline
 -----------------------------
 
-Chain multiple Python executions for complex analysis workflows:
+Chain multiple Python executions for complex analysis workflows with proper approval handling:
 
 .. code-block:: python
 
-   async def multi_stage_analysis(self, data_context: dict) -> dict:
-       """Execute multi-stage analysis pipeline."""
+   async def multi_stage_analysis(self, state: AgentState, data_context: dict) -> dict:
+       """Execute multi-stage analysis pipeline with approval handling."""
+       
+       registry = get_registry()
+       python_service = registry.get_service("python_executor")
+       main_configurable = get_full_configuration()
+       logger = logging.getLogger(__name__)
        
        # Stage 1: Data preprocessing
+       stage1_config = {
+           "configurable": {
+               **main_configurable,
+               "thread_id": "stage1_preprocessing",
+               "checkpoint_ns": "python_executor"
+           }
+       }
+       
+       preprocessing_prompts = [
+           "**PREPROCESSING STAGE:**",
+           "- Clean and validate the input data",
+           "- Handle missing values and outliers", 
+           "- Prepare data for statistical analysis"
+       ]
+       
        preprocessing_request = PythonExecutionRequest(
            user_query="Data preprocessing stage",
            task_objective="Clean and prepare data for analysis",
-           execution_folder_name="stage1_preprocessing"
+           capability_prompts=preprocessing_prompts,
+           expected_results={"cleaned_data": "pandas.DataFrame", "summary": "dict"},
+           execution_folder_name="stage1_preprocessing",
+           capability_context_data=data_context
        )
        
-       stage1_result = await self.python_service.ainvoke(preprocessing_request, config)
+       stage1_result = await handle_service_with_interrupts(
+           service=python_service,
+           request=preprocessing_request,
+           config=stage1_config,
+           logger=logger,
+           capability_name="PreprocessingStage"
+       )
        
        # Stage 2: Statistical analysis (using results from stage 1)
+       stage2_config = {
+           "configurable": {
+               **main_configurable,
+               "thread_id": "stage2_analysis",
+               "checkpoint_ns": "python_executor"
+           }
+       }
+       
+       analysis_prompts = [
+           "**STATISTICAL ANALYSIS STAGE:**",
+           "- Use the cleaned data from preprocessing stage",
+           "- Perform comprehensive statistical analysis",
+           "- Generate summary statistics and insights"
+       ]
+       
+       # Combine original context with preprocessing results
+       stage2_context = {
+           **data_context,
+           "preprocessing_results": stage1_result.execution_result.results
+       }
+       
        analysis_request = PythonExecutionRequest(
            user_query="Statistical analysis stage",
            task_objective="Perform statistical analysis on preprocessed data",
+           capability_prompts=analysis_prompts,
+           expected_results={"statistics": "dict", "insights": "list"},
            execution_folder_name="stage2_analysis",
-           capability_context_data={
-               "preprocessing_results": stage1_result.execution_result.results
-           }
+           capability_context_data=stage2_context
        )
        
-       stage2_result = await self.python_service.ainvoke(analysis_request, config)
+       stage2_result = await handle_service_with_interrupts(
+           service=python_service,
+           request=analysis_request,
+           config=stage2_config,
+           logger=logger,
+           capability_name="AnalysisStage"
+       )
        
        return {
            "pipeline_completed": True,
@@ -302,103 +393,6 @@ Chain multiple Python executions for complex analysis workflows:
            }
        }
 
-Adaptive Execution Strategy
----------------------------
-
-Adapt execution strategy based on data quality assessment:
-
-.. code-block:: python
-
-   async def adaptive_execution(self, data_context: dict) -> dict:
-       """Adapt execution strategy based on data quality."""
-       
-       # Assess data quality first
-       quality_score = self._assess_data_quality(data_context)
-       
-       if quality_score > 0.8:
-           execution_mode = "advanced_analysis"
-           task_objective = "Perform comprehensive advanced statistical analysis"
-       elif quality_score > 0.5:
-           execution_mode = "standard_with_preprocessing" 
-           task_objective = "Preprocess data and perform standard analysis"
-       else:
-           execution_mode = "basic_with_cleaning"
-           task_objective = "Extensive data cleaning and basic analysis"
-       
-       request = PythonExecutionRequest(
-           user_query=f"Adaptive analysis: {execution_mode}",
-           task_objective=task_objective,
-           execution_folder_name=f"adaptive_{execution_mode}",
-           capability_context_data={
-               "data_quality_score": quality_score,
-               "execution_mode": execution_mode
-           }
-       )
-       
-       return await self.python_service.ainvoke(request, config)
-
-Testing and Validation
-======================
-
-Test your Python execution integration with various scenarios:
-
-.. code-block:: python
-
-   async def test_python_execution_integration():
-       """Test Python execution service integration."""
-       
-       # Test 1: Container execution
-       container_request = PythonExecutionRequest(
-           user_query="Test container execution",
-           task_objective="Generate simple plot and statistical analysis",
-           execution_folder_name="test_container"
-       )
-       
-       container_config = {
-           "thread_id": "test_container",
-           "configurable": {"execution_method": "container"}
-       }
-       
-       service = PythonExecutorService()
-       container_result = await service.ainvoke(container_request, container_config)
-       
-       assert hasattr(container_result, 'execution_result')
-       assert container_result.execution_result.success
-       
-       # Test 2: Local execution
-       local_request = PythonExecutionRequest(
-           user_query="Test local execution",
-           task_objective="Simple mathematical calculation",
-           execution_folder_name="test_local"
-       )
-       
-       local_config = {
-           "thread_id": "test_local", 
-           "configurable": {"execution_method": "local"}
-       }
-       
-       local_result = await service.ainvoke(local_request, local_config)
-       
-       # Test 3: Error handling
-       try:
-           error_request = PythonExecutionRequest(
-               user_query="Test error handling",
-               task_objective="Generate code with intentional error",
-               execution_folder_name="test_error"
-           )
-           error_result = await service.ainvoke(error_request, {"thread_id": "test_error"})
-       except CodeRuntimeError as e:
-           print(f"Properly caught CodeRuntimeError: {e.message}")
-
-**Production Deployment Checklist:**
-
-- [ ] Container endpoints configured and accessible
-- [ ] Python execution environments properly set up
-- [ ] Approval policies configured for your security requirements
-- [ ] Error handling covers all execution failure scenarios
-- [ ] Resource management (timeouts, memory limits) configured
-- [ ] Notebook generation and access working correctly
-
 Troubleshooting
 ===============
 
@@ -406,38 +400,28 @@ Troubleshooting
 
 **Issue**: Python execution service not available
    - **Cause**: Service not registered in framework registry
-   - **Solution**: Verify PythonExecutorService is registered in registry configuration
+   - **Solution**: Verify PythonExecutorService is registered in registry configuration using ``registry.get_service("python_executor")``
+
+**Issue**: GraphInterrupt not being handled properly
+   - **Cause**: Using direct service.ainvoke() instead of handle_service_with_interrupts()
+   - **Solution**: Always use handle_service_with_interrupts() for service calls that may require approval
+
+**Issue**: Approval resume not working
+   - **Cause**: Missing approval resume check or incorrect Command usage
+   - **Solution**: Check for approval resume with get_approval_resume_data() and use Command(resume=response) for resumption
+
+**Issue**: Service configuration errors
+   - **Cause**: Missing thread_id, checkpoint_ns, or incorrect configurable structure
+   - **Solution**: Use get_full_configuration() and include proper thread_id and checkpoint_ns in service config
 
 **Issue**: Container execution failing with connection errors
    - **Cause**: Jupyter container not accessible or misconfigured
    - **Solution**: Check container endpoints and ensure Jupyter is running
 
-**Issue**: Approval workflows not triggering
-   - **Cause**: Approval configuration not properly set
-   - **Solution**: Verify approval policies in config.yml and ApprovalManager setup
-
 **Issue**: Generated notebooks not accessible
    - **Cause**: File path or URL generation issues
    - **Solution**: Check execution folder configuration and notebook link generation
 
-**Debugging Python Execution Issues:**
-
-.. code-block:: python
-
-   # Enable detailed Python execution logging
-   import logging
-   logging.getLogger("framework.services.python_executor").setLevel(logging.DEBUG)
-   
-   # Test service availability
-   from framework.services.python_executor import PythonExecutorService
-   service = PythonExecutorService()
-   print(f"Service initialized: {service is not None}")
-   
-   # Verify approval configuration
-   from framework.approval import get_approval_manager
-   manager = get_approval_manager()
-   python_config = manager.get_python_execution_config()
-   print(f"Python approval enabled: {python_config.enabled}")
 
 Next Steps
 ==========
@@ -446,6 +430,7 @@ After implementing Python execution service integration:
 
 - :doc:`04_memory-storage-service` - Integrate memory storage with Python execution
 - :doc:`05_container-and-deployment` - Advanced container orchestration
+- :doc:`01_human-approval-workflows` - Understanding the approval system integration
 
 **Related API Reference:**
 

@@ -106,15 +106,26 @@ The framework's state extends LangGraph's MessagesState with selective persisten
        planning_current_step_index: int
 
 **State management features:**
+
 - **Native Messages**: LangGraph handles message history automatically
+
 - **Selective Persistence**: Only `capability_context_data` persists across conversations
+
 - **Custom Reducer**: Framework provides specialized context merging
+
 - **Type Safety**: Full TypedDict definitions with proper annotations
 
 Checkpoint-Based Persistence
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 LangGraph's checkpointer system provides automatic state persistence:
+
+.. admonition:: Checkpoint Implementation Options
+   :class: note
+
+   **Recommended Default**: The framework uses LangGraph's **in-memory checkpointer** (`MemorySaver`) as the recommended default for most use cases, providing fast performance and simple setup.
+
+   **PostgreSQL Support**: PostgreSQL checkpointing is available through `use_postgres=True` for scenarios requiring long-term state persistence across system restarts and container lifecycles.
 
 .. code-block:: python
 
@@ -261,8 +272,8 @@ The framework provides real-time status updates through LangGraph's streaming:
        if chunk.get("event_type") == "status":
            print(f"Status: {chunk['message']}")
 
-Production Configuration
-========================
+Configuration Options
+=====================
 
 PostgreSQL Checkpointer Setup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -283,16 +294,17 @@ PostgreSQL Checkpointer Setup
        use_postgres=True  # Automatically uses PostgreSQL
    )
 
-Development vs Production
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Checkpointer Options
+~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
-   # Development: Fast iteration with memory checkpointer
-   dev_graph = create_graph(registry, use_postgres=False)
+   # Recommended default: In-memory checkpointer (fast, simple setup)
+   default_graph = create_graph(registry, use_postgres=False)
 
-   # Production: Full persistence with PostgreSQL
-   prod_graph = create_graph(registry, use_postgres=True) 
+   # Long-term persistence: PostgreSQL (requires database setup)
+   # Note: Available but not extensively production-tested
+   persistent_graph = create_graph(registry, use_postgres=True) 
 
    # Testing: No persistence for isolated tests
    test_graph = create_graph(registry, checkpointer=None)
