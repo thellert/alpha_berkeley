@@ -1,0 +1,45 @@
+volumes:
+  mongo:
+
+services:
+  # Generic Database
+  mongo:
+    container_name: {{applications.als_assistant.services.mongo.name}}
+    image: docker.io/mongo:latest
+    restart: unless-stopped
+    ports:
+      - "{{applications.als_assistant.services.mongo.port_host}}:{{applications.als_assistant.services.mongo.port_container}}" 
+    environment:
+      - TZ=America/Los_Angeles
+      - NO_PROXY=${NO_PROXY}
+    volumes:
+      - mongo:/data/mongo
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:{{applications.als_assistant.services.mongo.port_container}}/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - alpha-berkeley-network
+
+  # DBs Initializer (ao and logbook)
+  db-init:
+    container_name: db-init
+    build:
+      context: ./applications/als_assistant/mongo
+      dockerfile: Dockerfile.db-init
+    working_dir: /app
+    volumes:
+      - ./applications/als_assistant/mongo/repo_src/:/repo_src
+    environment:
+      - AO_DB_HOST={{applications.als_assistant.services.mongo.name}}
+      - AO_DB_PORT={{applications.als_assistant.services.mongo.port_host}}
+      - PYTHONPATH=/repo_src
+      - TZ=America/Los_Angeles
+      - NO_PROXY=${NO_PROXY}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - alpha-berkeley-network

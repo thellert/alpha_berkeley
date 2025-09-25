@@ -1,0 +1,460 @@
+[
+    {
+           "user_query": "What's the frontend shutter status in sector 2?",
+           "targeted_pv": ["BL020:PSS101:IsOpen", "BL020:PSS111:IsOpen"]
+    },
+    {
+           "user_query": "What's the mods readback values?",
+           "targeted_pv": ["LNRF:MOD1-CCPS:Voltage","LNRF:MOD2-CCPS:Voltage"]
+    },
+    {
+           "user_query": "What's the RBV for the second SHD in sector 4?",
+           "targeted_pv": ["SR04C___SHD2___AM00"]
+    },
+    {
+           "user_query": "Check if the harmonic defocusing sextupoles in sector 11 are ready",
+           "targeted_pv": ["SR11C___SHD1___BM01", "SR11C___SHD2___BM01"]
+    },
+    {
+           "user_query": "List the sector 3 ion gauge values",
+           "targeted_pv": ["SR03S___IG1____AM01", "SR03S___IG3____AM05", "SR03C___IG2____AM00"]
+    },
+    {
+           "user_query": "List the sector 11 ion pump pressure",
+           "targeted_pv": ["SR11C___IP1____AM00", "SR11C___IP2____AM00", "SR11C___IP3____AM00", "SR11C___IP4____AM00", "SR11C___IP5____AM00", "SR11C___IP6____AM00"]
+    },    
+    {
+           "user_query": "Check if the first LTB BEND is ready",
+           "targeted_pv": ["LTB:BS:Ready"]
+    },
+    {
+           "user_query": "What is the 1h average L2 booster gamma dose rate?",
+           "targeted_pv": ["BRL2:Gamma:DoseRateAvg:1Hour"]
+    },
+    {
+           "user_query": "give me all 1-hour dose measurements of gamma radiation monitors in the booster",
+           "targeted_pv": ["BRL1:Gamma:Dose:1Hour", "BRL2:Gamma:Dose:1Hour", "BRL5:Gamma:Dose:1Hour", "BRL6:Gamma:Dose:1Hour", "BRL7:Gamma:Dose:1Hour"]
+    },
+    {
+           "user_query": "What's the beam current?",
+           "targeted_pv": ["SR:DCCT"]
+    },
+    {
+           "user_query": "What's the vertical beam size?",
+           "targeted_pv": ["beamline31:YRMSAve"]
+    },
+    {
+           "user_query": "What's the vertical beam size at 31?",
+           "targeted_pv": ["beamline31:YRMSAve"]
+    },
+    {
+           "user_query": "What's the beam size?",
+           "targeted_pv": ["beamline31:YRMSAve", "beamline31:XRMSAve"]
+    },
+    {
+           "user_query": "Give me the horizontal beamsize at 7.2",
+           "targeted_pv": ["bl72:XRMSAve"]
+    },
+    {
+           "user_query": "Master Phase control",
+           "targeted_pv": ["LN______MASTPH_AC00"]
+    },
+    {
+           "user_query": "AS2 phase setpoint",
+           "targeted_pv": ["LN______AS2_PH_AC00"]
+    },
+    {
+           "user_query": "SHB1 Phase monitor",
+           "targeted_pv": ["GTL:SHB1-LLRF:PhaseSPRBV"]
+    },
+    {
+           "user_query": "SHB2 Phase setpoint value",
+           "targeted_pv": ["GTL:SHB2-LLRF:PhaseRemoteSP"]
+    },
+    {
+           "user_query": "E Gun Phase Control",
+           "targeted_pv": ["EG______PHASE__AC02"]
+    },
+    {
+           "user_query": "E Gun Bias SP",
+           "targeted_pv": ["EG______BIAS___AC01"]
+    },
+    {
+           "user_query": "SHB1 HV control",
+           "targeted_pv": ["GTL_____SHB1_HVAC01"]
+    },
+    {
+           "user_query": "SHB2 HV monitor",
+           "targeted_pv": ["GTL_____SHB2_HVAM01"]
+    },
+    {
+           "user_query": "Linac quadrupole 1.1 setpoint",
+           "targeted_pv": ["LN:Q1_1:Setpoint"]
+    },
+    {
+           "user_query": "LTB quadrupole 1.1 current setpoint",
+           "targeted_pv": ["LTB:Q1_1:Setpoint"]
+    },
+    {
+           "user_query": "What are the 3 last LTB vertical correctors setpoints?",
+           "targeted_pv": ["LTB:VCM5:Setpoint", "LTB:VCM6:Setpoint", "LTB:VCM7:Setpoint"]
+    },
+    {
+           "user_query": "What are the LTB Bends setpoints?",
+           "targeted_pv": ["LTB:BS:CurrSetpt", "LTB:B1:CurrSetpt", "LTB:B2:CurrSetpt", "LTB:B3:Setpoint"]
+    },
+    {
+           "user_query": "What are the LTB quadrupoles setpoints?",
+           "targeted_pv": ["LTB:Q1_1:Setpoint", "LTB:Q1_2:Setpoint", "LTB:Q1_1:Setpoint", "LTB:Q2:Setpoint  ", "LTB:Q3_1:Setpoint", "LTB:Q3_2:Setpoint", "LTB:Q4_1:Setpoint", "LTB:Q4_2:Setpoint", "LTB:Q5:Setpoint", "LTB:Q6:Setpoint"]
+    },
+    {
+           "user_query": "All vertical BPMs in the LTB",
+           "targeted_pv": ["LTB:BPM1:SA:Y", "LTB:BPM2:SA:Y", "LTB:BPM4:SA:Y", "LTB:BPM5:SA:Y", "LTB:BPM6:SA:Y", "LTB:BPM7:SA:Y"]
+    },
+    {
+           "user_query": "Wants the PV to move the first LTB TV screen in?",
+           "targeted_pv": ["LTB_____TV1____BC16"]
+    },
+    {
+           "user_query": "What is BR injection kicker RBV?",
+           "targeted_pv": ["BR1_____KI_____AM00"]
+    },
+    {
+           "user_query": "Br Bend Offset SP",
+           "targeted_pv": ["BR1_____B__PSOFAC00"]
+    },
+    {
+           "user_query": "Br QF Offset Control",
+           "targeted_pv": ["BR1_____QF_PSOFAC00"]
+    },
+    {
+           "user_query": "Br QD Offset Setpoint",
+           "targeted_pv": ["BR1_____QD_PSOFAC00"]
+    },
+    {
+           "user_query": "Br QD gain value SP",
+           "targeted_pv": ["BR1_____QD_PSGNAC00"]
+    },
+    {
+           "user_query": "Br QF gain value Setpoint",
+           "targeted_pv": ["BR1_____QF_PSGNAC00"]
+    },
+    {
+           "user_query": "Br Bend gain control",
+           "targeted_pv": ["BR1_____B__PSGNAC00"]
+    },
+    {
+           "user_query": "Set points of the horizontal corrector magnets in sector 2 of the booster.",
+           "targeted_pv": ["irm:112:DAC2", "irm:116:DAC3", "irm:116:DAC0", "irm:116:DAC1"]
+    },
+    {
+           "user_query": "Booster ring RF cavity tuner position.",
+           "targeted_pv": ["BR4_____TUNPOS_AM00"]
+    },
+    {
+           "user_query": "GTL vertical correctors setpoint",
+           "targeted_pv": ["GTL:VCM1:Setpoint", "GTL:VCM2:Setpoint", "GTL:VCM3:Setpoint", "GTL:VCM4:Setpoint"]
+    },
+    {
+           "user_query": "Third horizontal GTL corrector SP",
+           "targeted_pv": ["GTL:HCM3:Setpoint"]
+    },
+    {
+           "user_query": "Give me all BTS camera images (raw data)",
+           "targeted_pv": ["BTS1:image1:ArrayData", "BTS2:image1:ArrayData", "BTS3:image1:ArrayData", "BTS4:image1:ArrayData", "BTS5:image1:ArrayData", "BTS6:image1:ArrayData"]
+    },
+    {
+           "user_query": "What's the linac solenoid golden values?",
+           "targeted_pv": ["LN:SOL1:Setpoint:Golden", "LN:SOL2:Setpoint:Golden", "LN:SOL3:Setpoint:Golden", "LN:SOL4:Setpoint:Golden"]
+    },
+    {
+           "user_query": "What are the horizontal and vertical tune PVs?",
+           "targeted_pv": ["IGPF:TFBX:SRAM:PEAKTUNE1", "IGPF:TFBY:SRAM:PEAKTUNE1"]
+    },
+    {
+           "user_query": "Give me the lower EPBI thermocouples in Sector 11",
+           "targeted_pv": ["SR11S___TCDN0__AM", "SR11S___TCDN1__AM", "SR11S___TCDN2__AM", "SR11S___TCDN3__AM", "SR11S___TCDN4__AM", "SR11S___TCDN5__AM", "SR11S___TCDN6__AM", "SR11S___TCDN7__AM", "SR11S___TCDN8__AM", "SR11S___TCDN9__AM"]
+    },
+    {
+           "user_query": "What are the SR tunnel air temperature PVs? These are sometimes also referred to Zone Temperatures.",
+           "targeted_pv": ["SR07C___T______AM00", "SR01C___T______AM00", "SR03C___T______AM00", "SR04C___T______AM00", "SR08C___T______AM00", "SR09C___T______AM00", "SR06C___T______AM00", "SR11C___T______AM00", "SR12C___T______AM00"]
+    },
+    {
+           "user_query": "What's EPU 11-1 gap readback value?",
+           "targeted_pv": ["SR11U___GDS1PS_AM00"]
+    },
+    {
+           "user_query": "List all relevant EPBI thermocouples in Sector 11",
+           "targeted_pv": ["SR11S___TCUP0__AM", "SR11S___TCUP1__AM", "SR11S___TCUP2__AM", "SR11S___TCUP3__AM", "SR11S___TCUP4__AM", "SR11S___TCUP5__AM", "SR11S___TCUP6__AM", "SR11S___TCUP7__AM", "SR11S___TCUP8__AM", "SR11S___TCUP9__AM", "SR11S___TCDN0__AM", "SR11S___TCDN1__AM", "SR11S___TCDN2__AM", "SR11S___TCDN3__AM", "SR11S___TCDN4__AM", "SR11S___TCDN5__AM", "SR11S___TCDN6__AM", "SR11S___TCDN7__AM", "SR11S___TCDN8__AM", "SR11S___TCDN9__AM"]
+    },
+    {
+           "user_query": "Give me all vertical BPMs in the BTS",
+           "targeted_pv": ["BTS:BPM1:SA:Y", "BTS:BPM2:SA:Y", "BTS:BPM3:SA:Y","BTS:BPM4:SA:Y", "BTS:BPM5:SA:Y", "BTS:BPM6:SA:Y"]
+    },
+    {
+           "user_query": "PV to move BTS TV3 in.",
+           "targeted_pv": ["BTS_____TV3____BC18"]
+    },
+    {
+           "user_query": "What's the BTS BEND3 power supply RBV?",
+           "targeted_pv": ["BTS_____B3_____AM00"]
+    },
+    {
+           "user_query": "What's the first linac solenoid golden value?",
+           "targeted_pv": ["LN:SOL1:Setpoint:Golden"]
+    },
+    {
+           "user_query": "What's the EPU 11-2 offset RBV?",
+           "targeted_pv": ["SR11U___ODS2PS_AM00"]
+    },
+    {
+           "user_query": "Give me all ID gap setpoints",
+           "targeted_pv": ["SR02U___GDS1PS_AC00", "SR04U___GDS1PS_AC00", "SR04U___GDS2PS_AC00", "SR05W___GDS1PS_AC00", "SR06U___GDS1PS_AC00", "SR06U___GDS2PS_AC00", "SR07U___GDS1PS_AC00", "SR07U___GDS2PS_AC00", "SR08U___GDS1PS_AC00", "SR09U___GDS1PS_AC00", "SR10U___GDS1PS_AC00", "SR11U___GDS1PS_AC00", "SR11U___GDS2PS_AC00", "SR12U___GDS1PS_AC00"]
+    },
+    {
+           "user_query": "What is the pressure in sector 7?",
+           "targeted_pv": ["SR07U___IG1___AM00", "SR07U___IG2___AM00"]
+    },
+    {   
+           "user_query": "Is user beam available?",
+           "targeted_pv": ["sr:user_beam"]
+    },
+    {
+           "user_query": "What is linac master phase?",
+           "targeted_pv":[ "LN______MASTPH_AC00"]
+    },
+    {
+           "user_query": "What is linac RF master phase?",
+           "targeted_pv": ["LN______MASTPH_AC00"]
+    },
+    {
+           "user_query": "What is the longitudinal phase of each bunch in the storage-ring beam?",
+           "targeted_pv": ["SR:BCM:BunchPhase"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the average longitudinal phase of all bunches in the storage-ring beam?",
+           "targeted_pv": ["SR:BCM:AvgPhase"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the individual bunch current in the storage-ring beam?",
+           "targeted_pv": ["SR:BCM:BunchCurrent"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 focusing chromatic sextupole magnet set-point current? ",
+           "targeted_pv": ["SR01C___SF_____AC00"],
+           "details" : "Marco, SF in Sector 1"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 SF magnet set-point current?",
+           "targeted_pv": ["SR01C___SF_____AC00"],
+           "details" : "Marco : same as above, but say SF instead of focusing chromatic sextupole"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 SF magnet power supply set-point current?",
+           "targeted_pv": ["SR01C___SF_____AC00"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 SF magnet actual current?",
+           "targeted_pv": ["SR01C___SF_____AM00"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 SF magnet read-back current? ",
+           "targeted_pv": ["SR01C___SF_____AM00"],
+           "details" : "Marco, same as above, but say read-back instead of actual"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 1 SF magnet power-supply on-off status signal?",
+           "targeted_pv": ["SR01C___SF___HWBC22"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 12 first focusing quadrupole magnet set-point current? ",
+           "targeted_pv": ["SR12C___QF1____AC02"],
+           "details" : "Marco, QF1 in Sector 12"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 12 QF1 magnet set-point current? ",
+           "targeted_pv": ["SR12C___QF1____AC02"],
+           "details" : "Marco, same as above, but say QF1 instead of first focusing quadrupole"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 12 QF1 magnet actual current? ",
+           "targeted_pv": ["SR12C___QF1____AM02"],
+           "details" : "Marco"
+    },
+    {
+           "user_query": "What is the storage-ring Sector 12 QF1 magnet read-back current? ",
+           "targeted_pv": ["SR12C___QF1____AM02"],
+           "details" : "Marco, same as above, but say read-back instead of actual"
+    },
+    {
+           "user_query": "What is the SR-SEK monitor?",
+           "targeted_pv": ["SR01S___SEK____AM02"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "What SR SEN read-back value?",
+           "targeted_pv": ["SR01S___SEN____AM00"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "What are the BTS vertical corrector setpoints?",
+           "targeted_pv": ["BTS:VCM1:Setpoint", "BTS:VCM2:Setpoint", "BTS:VCM3:Setpoint", "BTS:VCM4:Setpoint","BTS:VCM5:Setpoint","BTS:VCM6:Setpoint","BTS:VCM7:Setpoint","BTS:VCM8:Setpoint","BTS:VCM9:Setpoint"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "What are the BTS horizontal corrector setpoints?",
+           "targeted_pv": ["BTS:HCM1:Setpoint", "BTS:HCM2:Setpoint", "BTS:HCM3:Setpoint", "BTS:HCM4:Setpoint", "BTS:HCM5:Setpoint", "BTS:HCM6:Setpoint", "BTS:HCM7:Setpoint", "BTS:HCM8:Setpoint", "BTS:HCM9:Setpoint"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "BTS Bend setpoints",
+           "targeted_pv": ["BTS_____B1_____AC00", "BTS_____B2_____AC00", "BTS_____B3_____AC00","BTS_____B4_____AC00"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "Booster SEK septum setpoint",
+           "targeted_pv": ["BR2_____SEK____AC01"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "Booster SEN septum setpoint",
+           "targeted_pv": ["BR2_____SEN____AC00"],
+           "details" : "Chit"
+    },
+    {
+           "user_query": "Storage ring injection efficiency",
+           "targeted_pv": ["SR:Injection:Efficiency"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "injection charge into the storage ring",
+           "targeted_pv": ["SR:Injection:Charge"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "BTS injection efficiency",
+           "targeted_pv": ["BTS:Transfer:Efficiency"],
+           "details" : "Simon"
+    },
+    {
+       "user_query": "BR extraction efficiency",
+       "targeted_pv": ["BR:Extraction:Efficiency"],
+       "details" : "Simon"
+    },
+    {
+       "user_query": "BR injection efficiency",
+       "targeted_pv": ["BR:Injection:Efficiency"],
+       "details" : "Simon"
+    },
+    {
+           "user_query": "What is the charge at the start of the booster ramp?",
+           "targeted_pv": ["BR:ICT:Charge:Start"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "What is the charge in the middle of the booster ramp?",
+           "targeted_pv": ["BR:ICT:Charge:Middle"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "What is the charge at the end of the booster ramp?",
+           "targeted_pv": ["BR:ICT:Charge:End"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "Beam size at diagnostic beamline 31",
+           "targeted_pv": ["beamline31:XRMSave", "beamline31:YRMSave"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "The main radio frequency readback?",
+           "targeted_pv": ["MOCounter:FREQUENCY"]
+    },
+    {
+           "user_query": "The main radio frequency measurement?",
+           "targeted_pv": ["MOCounter:FREQUENCY"]
+    },
+    {
+           "user_query": "Current in the cam bunch (shaft bunch)?",
+           "targeted_pv": ["SR:BCM:Cam2:Current"]
+    },
+    {
+           "user_query": "Beam lifetime (slow average)",
+           "targeted_pv": ["Topoff_lifetime_AM"],
+           "details" : "Updates every second"
+    },
+    {
+           "user_query": "Forward output power of klystron 2",
+           "targeted_pv": ["SRRF:RFMON1:Kly2OutFwd:Pwr"]
+    },
+    {  
+           "user_query": "Phase setpoint for RF",
+           "targeted_pv": ["SRRF:LLRF1:Loop1:PhsSetpRBV"],
+           "details" : "Phase Klystron relative to master oscillator. Run by feedback"
+    },
+    {
+           "user_query": "How much the feedback has had to adjust (tune feedbacks)",
+           "targeted_pv": ["SR:Tune:FB:dNuX","SR:Tune:FB:dNuY"] 
+    },
+    {
+           "user_query": "Harmonic cavities power monitor values.",
+           "targeted_pv": ["SR02C___C1PWR__AM00","SR02C___C2PWR__AM00", "SR02C___C3PWR__AM00"],
+           "details" : "Diagnostics that the cavities are running well"
+    },
+    {
+           "user_query": "Body return temperature of the harmonic cavities.",
+           "targeted_pv": ["SR02C___C1BRTP_AM00", "SR02C___C2BRTP_AM00", "SR02C___C3BRTP_AM00"],
+           "details" : "Diagnostics that the cavities are running well"
+    },
+    {
+           "user_query": "Temperature zone of air handling unit in Sector 7",
+           "targeted_pv": ["SR07C___T______AM00"],
+           "details" : "We want the temperature to be constant."
+    },
+    {
+           "user_query": "Setting of chilled water valve (CWV) of air handler in sector 1",
+           "targeted_pv": ["SR01C___AH6WV__AM00"],
+           "details" : "Perceptage, this is how much of chilled water we give in, indicates a problem with temperature (it is always regulated)"
+    },
+    {
+           "user_query": "Chilled water temperature as it leaves building 34",
+           "targeted_pv": ["34______CHWS___AM00"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "What is the water flow of tower water?",
+           "targeted_pv": ["B37_CW_FLWT____AM00"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "beam current",
+           "targeted_pv": ["SR:DCCT"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "ALS storage ring beam current",
+           "targeted_pv": ["SR:DCCT"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "SR current",
+           "targeted_pv": ["SR:DCCT"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "What are the thermal interlock PVs for third harmonic cavity 2?",
+           "targeted_pv": ["SR02C___C2TEMP_BM00", "SR02C___C2TEMP_BM01", "SR02C___C2TEMP_BM02", "SR02C___C2TEMP_BM03"],
+           "details" : "Simon"
+    },
+    {
+           "user_query": "Give me the GTL solenoid RBVs.",
+           "targeted_pv": ["GTL_____SOL1___AM00", "GTL_____SOL2___AM01", "GTL_____SOL3___AM02"],
+           "details" : "Simon"
+    }
+   ]

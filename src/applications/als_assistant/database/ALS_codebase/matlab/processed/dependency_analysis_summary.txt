@@ -1,0 +1,52 @@
+MATLAB Dependency Analysis Summary
+================================================================================
+
+Total files analyzed: 50
+Total functions/scripts found: 50
+Total dependencies (edges in graph): 42
+
+Top 10 Most Called Functions/Scripts (by in-degree):
+----------------------------------------
+setpvonline: 4 calls
+bpminit: 3 calls
+at2bts: 2 calls
+bts2at: 2 calls
+btscontrol: 2 calls
+btscycle: 2 calls
+getbpmlist: 2 calls
+mml2edm_mps: 2 calls
+mml2edm_pulsedmagnets: 2 calls
+setoperationalmode: 2 calls
+
+Top 10 Functions/Scripts with Most Dependencies (by out-degree):
+----------------------------------------
+btsinit: 9 dependencies
+btscontrol: 8 dependencies
+setoperationalmode: 4 dependencies
+buildedmapps: 2 dependencies
+hwinit: 2 dependencies
+setmachineconfig_bts: 2 dependencies
+aoinit: 1 dependencies
+at2bts: 1 dependencies
+bpm_adc_plot1: 1 dependencies
+bpm_waterfall: 1 dependencies
+
+Isolated Functions/Scripts (no incoming or outgoing dependencies):
+----------------------------------------
+aaplot_bts
+arplot_bts
+bendstep
+bpm_getsa_all
+cfinit
+getbpmaverages
+magstep
+meas_trans_bts_loop
+measramprate
+mml2edm_onoff
+quadcenterinit
+resetudferrors
+setbts
+setpathals_bts
+stepenergy
+topoff_bts_bpm_attn_switch
+updateatindex

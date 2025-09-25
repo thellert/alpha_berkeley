@@ -1,0 +1,55 @@
+# List of MATLAB (.m) files for ALS system: BTS
+# Paths listed below are relative to /home/als
+# Files were sourced from definitions: 'BTS', 'BTSOpsData'
+# (applied relative to base: /home/als/physbase/mmlt/machine/ALS, or used as specified in map)
+
+physbase/mmlt/machine/ALS/BTS/aaplot_bts.m
+physbase/mmlt/machine/ALS/BTS/aoinit.m
+physbase/mmlt/machine/ALS/BTS/arplot_bts.m
+physbase/mmlt/machine/ALS/BTS/at2bts.m
+physbase/mmlt/machine/ALS/BTS/bend2gev.m
+physbase/mmlt/machine/ALS/BTS/bendstep.m
+physbase/mmlt/machine/ALS/BTS/bpm_adc_plot1.m
+physbase/mmlt/machine/ALS/BTS/bpm_getsa_all.m
+physbase/mmlt/machine/ALS/BTS/bpm_waterfall.m
+physbase/mmlt/machine/ALS/BTS/bpminit.m
+physbase/mmlt/machine/ALS/BTS/bts2at.m
+physbase/mmlt/machine/ALS/BTS/bts_trajectory_feedback.m
+physbase/mmlt/machine/ALS/BTS/btscontrol.m
+physbase/mmlt/machine/ALS/BTS/btscycle.m
+physbase/mmlt/machine/ALS/BTS/btsinit.m
+physbase/mmlt/machine/ALS/BTS/btslattice.m
+physbase/mmlt/machine/ALS/BTS/buildedmapps.m
+physbase/mmlt/machine/ALS/BTS/cc_bts.m
+physbase/mmlt/machine/ALS/BTS/cfinit.m
+physbase/mmlt/machine/ALS/BTS/epicsdatabasechanges.m
+physbase/mmlt/machine/ALS/BTS/getbpm_bts.m
+physbase/mmlt/machine/ALS/BTS/getbpmaverages.m
+physbase/mmlt/machine/ALS/BTS/getbpmlist.m
+physbase/mmlt/machine/ALS/BTS/getcmlist.m
+physbase/mmlt/machine/ALS/BTS/getname_bts.m
+physbase/mmlt/machine/ALS/BTS/getramprate_bts.m
+physbase/mmlt/machine/ALS/BTS/goldenpage.m
+physbase/mmlt/machine/ALS/BTS/hwinit.m
+physbase/mmlt/machine/ALS/BTS/magstep.m
+physbase/mmlt/machine/ALS/BTS/meas_trans_bts_loop.m
+physbase/mmlt/machine/ALS/BTS/measamlinearity.m
+physbase/mmlt/machine/ALS/BTS/measramprate.m
+physbase/mmlt/machine/ALS/BTS/mml2edm_bpm.m
+physbase/mmlt/machine/ALS/BTS/mml2edm_mps.m
+physbase/mmlt/machine/ALS/BTS/mml2edm_onoff.m
+physbase/mmlt/machine/ALS/BTS/mml2edm_pulsedmagnets.m
+physbase/mmlt/machine/ALS/BTS/plotfamilystartup.m
+physbase/mmlt/machine/ALS/BTS/quadcenterinit.m
+physbase/mmlt/machine/ALS/BTS/resetudferrors.m
+physbase/mmlt/machine/ALS/BTS/setbts.m
+physbase/mmlt/machine/ALS/BTS/setmachineconfig_bts.m
+physbase/mmlt/machine/ALS/BTS/setoperationalmode.m
+physbase/mmlt/machine/ALS/BTS/setpathals_bts.m
+physbase/mmlt/machine/ALS/BTS/setpvonline_DoubleWrites.m
+physbase/mmlt/machine/ALS/BTS/setramprate_bts.m
+physbase/mmlt/machine/ALS/BTS/stepenergy.m
+physbase/mmlt/machine/ALS/BTS/topoff_bts_bpm_attn_switch.m
+physbase/mmlt/machine/ALS/BTS/turnoffmps.m
+physbase/mmlt/machine/ALS/BTS/turnonmps.m
+physbase/mmlt/machine/ALS/BTS/updateatindex.m

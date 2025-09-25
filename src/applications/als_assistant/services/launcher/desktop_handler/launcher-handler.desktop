@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Launcher Protocol Handler
+Comment=Handler for launcher:// and myapp:// URI schemes
+Exec=/home/als3/acct/thellert/projects/alpha_berkeley/src/applications/als_assistant/services/launcher/desktop_handler/launch_tool.sh %u
+Type=Application
+NoDisplay=true
+MimeType=x-scheme-handler/myapp;
+Categories=System;
+
+# Installation instructions:
+# 1. Update the Exec path to point to the actual location of launch_tool.sh
+# 2. Make launch_tool.sh executable: chmod +x launch_tool.sh
+# 3. Copy this file to ~/.local/share/applications/
+# 4. Register the handler: xdg-mime default launcher-handler.desktop x-scheme-handler/myapp
+# 5. Update desktop database: update-desktop-database ~/.local/share/applications/

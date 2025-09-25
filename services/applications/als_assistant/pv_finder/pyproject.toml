@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "pv-finder"
+version = "0.1.0"
+description = "MCP server for the Advanced Light Source (ALS) control system PV finder"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mcp-server = "^0.1.0"
+python-dotenv = "^0.19.0"
+logfire = "^0.1.0"
+pydantic = "^1.9.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api" 

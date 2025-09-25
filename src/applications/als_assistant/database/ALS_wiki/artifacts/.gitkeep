@@ -1,0 +1,5 @@
+# This directory contains generated artifacts from the WIKI pipeline
+# Files created here:
+# - canonical_topics.json: Finalized canonical topics after deduplication
+# - tree.json: Initial tree structure from canonical topics  
+# - pruned_tree.json: Final tree with priorities and pruning applied
