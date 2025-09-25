@@ -343,9 +343,11 @@ class JupyterSessionManager:
                     kernel_info = response.json()
                     state = kernel_info.get("execution_state")
                     
-                    if state in ["idle", "starting"]:
+                    if state == "idle":
                         logger.debug(f"Kernel ready in state: {state}")
                         return
+                    elif state == "starting":
+                        logger.debug(f"Kernel still starting (attempt {attempt + 1}/{max_attempts})")
                     else:
                         logger.debug(f"Kernel not ready, state: {state} (attempt {attempt + 1}/{max_attempts})")
                 else:
@@ -376,7 +378,8 @@ class CodeExecutionEngine:
         
         try:
             logger.debug(f"Creating WebSocket connection to {ws_url}")
-            ws = websocket.create_connection(ws_url, timeout=10)
+            # Disable proxy to avoid "failed CONNECT via proxy status: 403" errors
+            ws = websocket.create_connection(ws_url, timeout=10, http_proxy_host=None, http_proxy_port=None)
         except websocket.WebSocketTimeoutException as e:
             raise ContainerConnectivityError(
                 f"WebSocket connection timeout: {e}",
@@ -441,7 +444,7 @@ class CodeExecutionEngine:
         last_error = None
         
         # Set WebSocket timeout for recv operations
-        ws.settimeout(1.0)  # 1 second timeout for each recv
+        ws.settimeout(5.0)  # 5 second timeout for each recv
         
         logger.debug(f"Waiting for completion of msg_id: {expected_msg_id}")
         
@@ -502,6 +505,9 @@ class CodeExecutionEngine:
             except socket.timeout:
                 # Timeout on recv - continue waiting
                 continue
+            except websocket.WebSocketException as e:
+                logger.warning(f"WebSocket message error: {e}")
+                continue
             except Exception as e:
                 if "Code execution failed:" in str(e):
                     raise
@@ -511,6 +517,7 @@ class CodeExecutionEngine:
         
         if not execution_complete:
             if last_error:
+                # Keep session alive for potential reuse on retry
                 raise ContainerConnectivityError(
                     f"WebSocket execution failed: {last_error}",
                     host=self.endpoint.host,
@@ -518,6 +525,7 @@ class CodeExecutionEngine:
                     technical_details={"websocket_error": str(last_error)}
                 )
             else:
+                # Keep session alive for potential reuse on retry
                 raise ExecutionTimeoutError(
                     timeout_seconds=self.timeout,
                     technical_details={
