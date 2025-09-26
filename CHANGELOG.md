@@ -5,6 +5,33 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-09-26
+
+### Added
+- **ALS Assistant Application**: Complete domain-specific application for Advanced Light Source operations
+- **PV Finder Service**: Intelligent EPICS process variable discovery with MCP integration
+- **Application Launcher Service**: Desktop integration with MCP protocol support
+- **Comprehensive Knowledge Base**: ALS accelerator objects database, PV naming structures, and MATLAB codebase analysis
+- **Observability Integration**: Langfuse support with Docker containerization
+- **Data Analysis Capabilities**: 7 new capability modules for accelerator physics operations
+- **Infrastructure Services**: MongoDB database service, container orchestration for specialized services
+
+### Enhanced
+- **Container Execution**: Improved WebSocket connectivity, proxy handling, and error recovery
+- **UI State Management**: Renamed `ui_notebook_links` to `ui_captured_notebooks` for clarity
+- **Documentation**: Complete RST documentation with architectural diagrams and setup guides
+- **Benchmarking Suite**: Performance analysis tools and model comparison frameworks
+
+### Technical Details
+- Added 144 new files with 430,647 lines of code
+- Integrated MCP (Model Context Protocol) for external service communication
+- Enhanced Docker compose templates with Langfuse environment variables
+- Added comprehensive test coverage for core ALS services
+- Implemented specialized databases for accelerator operations (11k+ PVs, AO structures)
+- Enhanced framework capabilities with domain-specific prompt engineering
+
+This release represents the framework's first complete domain-specific application, demonstrating the capability-based architecture's effectiveness for specialized scientific computing environments.
+
 ## [0.4.5] - 2025-09-23
 
 ### Added

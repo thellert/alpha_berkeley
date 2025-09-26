@@ -1,38 +1,44 @@
-# Alpha Berkeley Framework - Latest Release (v0.4.5)
+# Alpha Berkeley Framework - Latest Release (v0.5.0)
 
-🚀 **Enhanced UI capabilities and infrastructure improvements** - new launchable commands system, enhanced result display, and improved configuration management.
+🚀 **Major Release: ALS Assistant Application** - Complete domain-specific application for Advanced Light Source operations with intelligent PV finding, data analysis, and scientific computing capabilities.
 
 ## What's New
 
-### 🚀 New Features & Capabilities
-- **Launchable Commands System**: New centralized infrastructure for registering and displaying executable commands (web apps, desktop tools, viewers) directly through both CLI and OpenWebUI interfaces
-- **Enhanced UI Result Display**: Comprehensive system for displaying figures, commands, and notebooks with rich formatting, metadata, and user-friendly presentation
-- **MCP Protocol Support**: Added Model Context Protocol integration capabilities with `fastmcp` dependency
+### 🔬 ALS Assistant Application
+- **Complete Scientific Application**: First fully-featured domain-specific application for accelerator physics operations at Lawrence Berkeley National Laboratory's Advanced Light Source
+- **PV Finder Service**: Intelligent EPICS process variable discovery using natural language queries with MCP (Model Context Protocol) integration
+- **Application Launcher**: Desktop integration service with MCP protocol support for seamless tool launching
+- **Comprehensive Knowledge Base**: 11,000+ process variables, accelerator objects database, and MATLAB codebase analysis
 
-### 🎯 Interface Improvements
-- **CLI Enhancement**: Added comprehensive result display methods with formatted output for figures, commands, and notebooks including file paths and launch instructions
-- **OpenWebUI Improvements**: Refactored result extraction system with improved command handling, notebook links, and error handling
-- **Unified Display System**: Consistent presentation of generated content across both CLI and web interfaces
+### 🧠 Advanced Capabilities
+- **Data Analysis**: 7 specialized capability modules for accelerator physics operations including live monitoring, machine operations, and archiver data access
+- **Data Visualization**: Advanced plotting and analysis tools specifically designed for accelerator operations
+- **Machine Operations**: Direct control and monitoring capabilities for accelerator systems
+- **Historical Data Access**: Integration with ALS archiver systems for historical analysis
 
-### ⚙️ Infrastructure Enhancements
-- **Configuration Management**: Enhanced path resolution with host/container environment awareness and application-specific file paths support
-- **State Management**: New `ui_launchable_commands` registry and `StateManager.register_command()` method for capability-agnostic command registration
-- **Response Generation**: Updated prompt system to handle command display with interface-aware formatting and user guidance
+### 🏗️ Infrastructure & Services
+- **MongoDB Integration**: Database service with Docker containerization for data persistence
+- **Langfuse Observability**: Enhanced monitoring and tracing with containerized Langfuse deployment
+- **Container Orchestration**: Specialized Docker services for PV finder, database, and observability
+- **Benchmarking Suite**: Performance analysis tools and model comparison frameworks
 
 ## Upgrade Notes
 
-This is a patch release with enhanced UI capabilities and infrastructure improvements:
+This is a **major feature release** introducing the first complete domain-specific application:
 
-- **New Dependencies**: Added `fastmcp` for Model Context Protocol support - run `pip install -r requirements.txt` to update
-- **Backwards Compatibility**: All existing functionality is preserved with enhanced capabilities
-- **Enhanced Interfaces**: Both CLI and OpenWebUI now provide richer result display with figures, commands, and notebooks
-- **Configuration**: New path resolution options available but existing configurations continue to work
+- **New Application Structure**: ALS Assistant application added under `src/applications/als_assistant/`
+- **New Services**: MongoDB, Langfuse, and PV Finder services with Docker containerization
+- **Enhanced Dependencies**: Added MCP protocol support, enhanced container execution capabilities
+- **Backwards Compatibility**: All existing framework functionality is preserved and enhanced
+- **Documentation**: Complete RST documentation with setup guides and architectural diagrams
 
-## Get Started
+## Get Started with ALS Assistant
 
-1. Update to v0.4.5 for enhanced UI capabilities and improved infrastructure
-2. View the [complete documentation](https://thellert.github.io/alpha_berkeley/)
-3. Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
+1. **Framework Setup**: Update to v0.5.0 for the complete ALS Assistant application
+2. **Service Deployment**: Use Docker compose templates for MongoDB, Langfuse, and PV Finder services
+3. **Configuration**: Configure ALS-specific settings in `src/applications/als_assistant/config.yml`
+4. **Documentation**: View the [ALS Assistant guide](https://thellert.github.io/alpha_berkeley/example-applications/als-assistant.html)
+5. **Issues**: Report any issues on [GitHub Issues](https://github.com/thellert/alpha_berkeley/issues)
 
 ---
 
@@ -41,26 +47,26 @@ This is a patch release with enhanced UI capabilities and infrastructure improve
 When creating the GitHub release:
 
 1. Go to GitHub repo → Releases → "Create a new release"
-2. **Tag**: `v0.4.0`
-3. **Title**: `Alpha Berkeley Framework v0.4.0 - Major Feature Release`
-4. **Description**: Copy the content above (from "🚀 Major feature release" through "Get Started")
+2. **Tag**: `v0.5.0`
+3. **Title**: `Alpha Berkeley Framework v0.5.0 - ALS Assistant Application`
+4. **Description**: Copy the content above (from "🚀 Major Release: ALS Assistant Application" through "Get Started with ALS Assistant")
 
 ## Technical Details
 
-- Added `ReclassificationRequiredError` exception to framework error system
-- Enhanced router error handling with consistent reclassification limit enforcement
-- Unified reclassification system eliminating dual state/error paths
-- Removed obsolete `control_needs_reclassification` agent state field
-- Added `PythonExecutorConfig` class for centralized Python execution settings
-- Implemented `recursively_summarize_data()` utility for context window management
-- Enhanced figure registration with batch processing capabilities
-- Added response chunking for large outputs in OpenWebUI interface
+- **Massive Integration**: Added 144 new files with 430,647 lines of code
+- **MCP Protocol**: Model Context Protocol integration for external service communication
+- **Container Execution**: Enhanced WebSocket connectivity, proxy handling, and error recovery
+- **Database Integration**: MongoDB service with comprehensive ALS accelerator data
+- **Knowledge Base**: 11,000+ EPICS process variables, accelerator objects database
+- **Service Architecture**: PV Finder service, launcher service with desktop integration
+- **Documentation**: Complete RST documentation with architectural diagrams
+- **Benchmarking**: Performance analysis tools and model comparison frameworks
 
 ---
 
-*Current Release: v0.4.5 (September 2025)*  
-*Release Type: Patch Release*  
-*Previous Release: v0.4.4 with example formatting system improvements*
+*Current Release: v0.5.0 (September 2025)*  
+*Release Type: Major Feature Release*  
+*Previous Release: v0.4.5 with enhanced UI capabilities and infrastructure improvements*
 
 ---
 
