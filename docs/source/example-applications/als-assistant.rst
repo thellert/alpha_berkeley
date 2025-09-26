@@ -9,13 +9,13 @@ ALS Accelerator Assistant
 Production Deployment in High-Stakes Scientific Environments
 ------------------------------------------------------------
 
-The ALS Accelerator Assistant demonstrates production-grade patterns for deploying agentic AI in scientific facilities. Operating at the `Advanced Light Source <https://als.lbl.gov>`_ at Lawrence Berkeley National Laboratory, this system integrates with EPICS control systems managing 230,000+ process variables and serving 40+ beamlines. It demonstrates safe operation in safety-critical environments where beam interruptions can impact dozens of concurrent experiments, providing practical patterns for integrating agentic AI into large-scale scientific facilities.
+The ALS Accelerator Assistant demonstrates production-grade patterns for deploying agentic AI in scientific facilities. Operating at the `Advanced Light Source <https://als.lbl.gov>`_ at Lawrence Berkeley National Laboratory, this system integrates with EPICS control systems managing 230,000+ process variables (PVs) and serving 40+ beamlines. It demonstrates safe operation in safety-critical environments where beam interruptions can impact dozens of concurrent experiments, providing practical patterns for integrating agentic AI into large-scale scientific facilities.
 
 Particle accelerator facilities like the Advanced Light Source present unique challenges for AI deployment. The operational environment demands both high availability and strict safety constraints:
 
 **Operational Complexity:**
 
-* **Scale**: Over 230,000 process variables across all accelerator subsystems require management
+* **Scale**: Over 230,000 PVs across all accelerator subsystems require management
 * **Distributed Expertise**: Subsystem knowledge spans accelerator physics, RF systems, magnets, vacuum, diagnostics, and controls
 * **Time Pressure**: Troubleshooting unexpected faults lacks predefined solutions, forcing operators to identify relevant channels and assemble analysis under pressure
 * **Multi-User Impact**: Any beam interruption typically imposes downtime of at least 30 minutes, immediately affecting dozens of concurrent experiments across 40+ beamlines
@@ -27,11 +27,11 @@ To address these demanding operational requirements, the ALS Accelerator Assista
 * **External Service Integration**: Microservices architecture with MongoDB and specialized PV discovery services
 * **Complex Data Orchestration**: 7 interconnected capabilities managing real-time and historical scientific data
 * **Sophisticated Context Management**: Rich Pydantic models providing LLM-optimized access patterns and human-readable summaries for complex scientific data
-* **PV Discovery & Access**: Natural language queries to find and retrieve accelerator control system addresses
+* **PV Discovery & Access**: Natural language queries to identify and retrieve accelerator control system addresses, a process that can otherwise demand significant experience, especially where naming conventions are complex or have evolved over time.
 * **Historical Data Analysis**: Statistical analysis of beam performance and operational trends
 * **Operational Support**: Diagnostic assistance and performance monitoring for accelerator systems
 
-This production deployment demonstrates advanced patterns for scientific facility integration, validating that agentic AI can operate safely and effectively in demanding scientific facilities while maintaining the transparency and reliability required for production use.
+This production deployment demonstrates our proposed architecture for advanced agentic AI systems, validating that they can operate safely and effectively in demanding scientific facilities while maintaining the transparency and reliability required for production use.
 
 .. dropdown:: 🌐 Transferability to Other Scientific Facilities
    :class-container: sd-border-0 sd-shadow-sm
@@ -87,13 +87,13 @@ Such procedures present several operational challenges:
 
 * **Custom Scripting Required**: Each experiment is unique, requiring bespoke code combining data retrieval, analysis, and machine control
 
-* **Distributed Expertise**: Operators often need to consult domain specialists for advanced procedures, creating bottlenecks
+* **Distributed Expertise**: Operators often need to discuss with domain specialists for advanced procedures, creating bottlenecks
 
 * **Time-Critical Preparation**: Under operational pressure, assembling the necessary scripts, PV addresses, and analysis workflows can take hours
 
 * **Safety Coordination**: Machine interaction requires careful coordination with safety systems and approval workflows
 
-**Operator Request:**
+**Operator Request: Insertion Device (ID) Impact Study:**
 
 .. code-block:: text
 
@@ -120,7 +120,7 @@ Such procedures present several operational challenges:
 .. figure:: /_static/resources/als_assistant/fig_ALS_experiment.png
    :alt: ALS Accelerator Assistant Multi-Stage Physics Experiment Results
    :align: center
-   :width: 80%
+   :width: 90%
    
    **Automated Physics Experiment Results**: Hysteresis plots showing beam size variations across insertion device gap ranges, demonstrating the framework's ability to orchestrate complex multi-stage physics experiments from natural language instructions.
 
@@ -136,7 +136,7 @@ The ALS Accelerator Assistant demonstrates a production-grade architecture for s
    :align: center
    :width: 90%
    
-   **System Architecture**: Control room and remote users access the system via web interface (Open WebUI) or command line. The agent orchestrates connections to the PV database, archive data, and execution environments. Model inference uses either local Ollama or cloud providers via CBorg gateway, with EPICS integration ensuring safe hardware interaction.
+   **System Architecture**: Multiple users can access the same system simultaneously either remotely or from the control room via web interface (Open WebUI) or command line interface (CLI). The agent orchestrates connections to the PV database, archive data, and execution environments. Model inference uses either local Ollama or cloud providers via `CBorg <https://cborg.lbl.gov>`_ gateway, with EPICS integration ensuring safe hardware interaction.
 
 **Key Architectural Components:**
 
