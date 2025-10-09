@@ -23,12 +23,23 @@ The framework addresses common challenges in agentic system development: :doc:`t
 Core Architecture
 ------------------
 
+Our framework provides a domain-agnostic architecture for safety-critical systems, turning natural-language requests into reliable action through a four-stage pipeline—Task Extraction, Classification, Orchestration, and Execution with checkpointing and artifact tracking:
+
+1. **Task Extraction** → Convert conversational context into structured, actionable objectives
+
+2. **Classification** → Dynamically select relevant capabilities from your domain-specific toolkit 
+
+3. **Orchestration** → Generate complete execution plans with explicit dependencies and human oversight
+
+4. **Execution** → Execute capabilities with checkpointing, artifact management, and safety controls
+
+
 .. figure:: _static/resources/workflow_overview.pdf
    :alt: Alpha Berkeley Framework Architecture
    :align: center
    :width: 100%
    
-   The framework architecture illustrates the process flow from natural language input to orchestrated execution, encompassing: **Task Extraction** → **Classification** → **Orchestration** → **Execution**.
+   **Production Deployment Example**: This diagram illustrates the framework architecture using capabilities from the :doc:`ALS Accelerator Assistant <example-applications/als-assistant>` - our production deployment at Lawrence Berkeley National Laboratory's Advanced Light Source particle accelerator.
 
 The framework provides:
 

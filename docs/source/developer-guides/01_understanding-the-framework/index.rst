@@ -13,12 +13,13 @@ Understanding the Framework
 
 The Alpha Berkeley Framework is a production-ready conversational agentic system built on LangGraph's StateGraph foundation. Its distinctive architecture centers on **Classification and Orchestration** - capability selection followed by upfront execution planning - providing reliable, scalable multi-step operations with human oversight that scales well to a large number of domain specific tools.
 
-.. image:: ../../workflow_overview.png
+.. image:: ../../_static/resources/workflow_overview.pdf
    :alt: Alpha Berkeley Framework Workflow Overview
    :align: center
    :width: 100%
 
-|
+|  **Production Deployment Example**: This diagram illustrates the framework architecture using capabilities from the :doc:`ALS Accelerator Assistant <example-applications/als-assistant>` - our production deployment at Lawrence Berkeley National Laboratory's Advanced Light Source particle accelerator.
+
 
 Framework Architecture Overview
 ===============================

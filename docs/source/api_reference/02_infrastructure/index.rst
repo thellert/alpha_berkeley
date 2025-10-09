@@ -36,9 +36,9 @@ The infrastructure layer implements the **Orchestrator-First Architecture** that
 .. currentmodule:: framework.infrastructure
 
 Architecture Overview
-======================
+=====================
 
-The Alpha Berkeley Framework infrastructure implements a **Gateway-Centric, Six-Component Pipeline** that eliminates the unpredictability of traditional reactive agentic systems:
+The Alpha Berkeley Framework infrastructure implements a **Orchestrator-First** pipeline that eliminates the unpredictability of traditional reactive agentic systems:
 
 **Traditional Reactive Approach:**
 
@@ -54,7 +54,7 @@ The Alpha Berkeley Framework infrastructure implements a **Gateway-Centric, Six-
    User → Complete Plan Creation → Human Approval → Execute All Steps → Response
    (Single planning phase, full context, deterministic execution)
 
-**Benefits:** ~70% fewer LLM calls, complete transparency, natural human oversight, scalable execution.
+**Benefits:** fewer LLM calls, complete transparency, natural human oversight, scalable execution.
 
 Core Pipeline Components
 ========================

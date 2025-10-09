@@ -445,6 +445,9 @@ The model factory integrates with the configuration system following the same pr
    # Provider configuration (in main config.yml)
    api:
      providers:
+       cborg:
+         api_key: "${CBORG_API_KEY}"
+         base_url: "https://api.cborg.lbl.gov/v1"     # LBNL internal service
        anthropic:
          api_key: "${ANTHROPIC_API_KEY}"
          base_url: "https://api.anthropic.com"
@@ -454,6 +457,12 @@ The model factory integrates with the configuration system following the same pr
        ollama:
          base_url: "http://localhost:11434"     # Required for Ollama
          # No api_key needed for local models
+
+.. dropdown:: Need Support for Additional Providers?
+    :color: info
+    :icon: people   
+
+    The framework's provider system is designed for extensibility. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. We're happy to work with you to implement native support for your institution's internal AI services or other providers you need. Contact us to discuss integration requirements.
 
 **Enterprise Integration**: HTTP proxy configuration follows environment variable conventions with automatic detection and validation.
 

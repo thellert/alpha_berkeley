@@ -95,18 +95,24 @@ Modify the following settings in ``config.yml``:
 
 3. **Deployed Services**: In the deployed services section, ensure the following are uncommented:
    
-   - ``framework-jupyter`` - this environment is intended to give users the capability to edit and run the alpha-berkeley generated codes
+   - ``framework.jupyter`` - this environment is intended to give users the capability to edit and run the alpha-berkeley generated codes
    - ``framework.open_webui`` - this is the entry point for the user, where you communicate interactively through `OpenWebUI <https://openwebui.com/>`_, a convenient web-based chat interface for LLMs
-   - ``framework.pipelines`` - this is the core environment
+   - ``framework.pipelines`` - this is the core environment in which the agent is running
 
-4. **API URL**: If you are using `CBORG <https://cborg.lbl.gov/>`_ as your model provider (LBNL internal only), set the CBORG API URL to either:
+4. **API URL**: If you are using `CBorg <https://cborg.lbl.gov/>`_ as your model provider (LBNL internal only), set the CBorg API URL to either:
    
    - Global API URL: ``https://api.cborg.lbl.gov/v1``
    - Local API URL: ``https://api-local.cborg.lbl.gov/v1`` (requires local network connection)
    
    In ``./config.yml``, update: ``api: providers:cborg:base_url: https://api-local.cborg.lbl.gov/v1``
 
-5. **For External Users (Non-LBNL)**: If you don't have access to CBORG, you'll need to configure alternative model providers in ``config.yml`` and ``src/framework/config.yml``. Update the ``provider`` fields under the ``models`` section to use providers like ``openai``, ``anthropic``, ``ollama``, or others you have access to. Ensure corresponding API keys are set in your ``.env`` file.
+5. **For External Users (Non-LBNL)**: If you don't have access to CBorg, you'll need to configure alternative model providers in ``config.yml`` and ``src/framework/config.yml``. Update the ``provider`` fields under the ``models`` section to use providers like ``openai``, ``anthropic``, ``ollama``, or others you have access to. Ensure corresponding API keys are set in your ``.env`` file.
+
+   .. dropdown:: Need Support for Additional Providers?
+      :color: info
+      :icon: people   
+         
+      We're happy to implement support for additional model providers beyond those currently supported. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. If you need integration with your institution's internal AI services or other providers, please reach out to us. We can work with you to add native support for your preferred provider.
 
 **Environment Variables**
 

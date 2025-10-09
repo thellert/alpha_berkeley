@@ -23,11 +23,6 @@ from framework.registry import get_registry
 from configs.logger import get_logger
 from configs.config import get_execution_limits
 
-if TYPE_CHECKING:
-    from framework.observability import ExecutionObserver
-
-
-
 @infrastructure_node(quiet=True)
 class RouterNode(BaseInfrastructureNode):
     """Central routing decision node for the Alpha Berkeley Agent Framework.

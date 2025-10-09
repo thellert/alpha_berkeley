@@ -39,6 +39,12 @@ Model and Provider Access
 
 .. autofunction:: get_provider_config
 
+.. dropdown:: Need Support for Additional Providers?
+    :color: info
+    :icon: people   
+
+    The framework's provider system is designed for extensibility. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. We're happy to work with you to implement native support for your institution's internal AI services or other providers you need. Contact us to discuss integration requirements.
+
 Service Configuration
 ---------------------
 

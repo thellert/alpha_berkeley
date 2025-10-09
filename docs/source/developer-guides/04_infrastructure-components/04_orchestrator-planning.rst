@@ -29,7 +29,7 @@ Orchestrator creates complete execution plans upfront, enabling validation, appr
 **Orchestrator-First Approach:**
    ``User Query → Complete Plan Creation → Execute All Steps → Response``
 
-**Benefits:** Single planning phase, full context utilization, human oversight integration, ~70% fewer LLM calls.
+**Benefits:** Single planning phase, full context utilization, human oversight integration, fewer LLM calls.
 
 Architecture
 ------------

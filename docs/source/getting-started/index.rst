@@ -23,19 +23,19 @@ By following this comprehensive learning path, you'll have:
 * Framework mastery through essential development patterns
 * Complete API reference for daily development
 
-**Before You Begin**
---------------------
+.. details:: **Prerequisites**
+   :class: dropdown
+   
+   * Python 3.11 installed
 
-**Prerequisites:**
-* Python 3.11 installed
-* Basic Python knowledge
-* Terminal/command line familiarity
-* Text editor or IDE
+   * Basic Python knowledge
+
+   * Terminal/command line familiarity
+   
+   * Text editor or IDE
 
 **Your Learning Path**
 ----------------------
-
-Follow this comprehensive approach to master the Alpha Berkeley Framework:
 
 .. grid:: 1 1 3 3
    :gutter: 3
