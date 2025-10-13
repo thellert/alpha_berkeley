@@ -262,7 +262,27 @@ Core requirements:
         # Add data source context if available
         data_context = ""
         if retrieval_result and retrieval_result.has_data:
-            data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
+            # Get the actual retrieved content formatted for LLM consumption
+            try:
+                formatted_contexts = []
+                for source_name, context in retrieval_result.context_data.items():
+                    try:
+                        formatted_content = context.format_for_prompt()
+                        if formatted_content and formatted_content.strip():
+                            formatted_contexts.append(f"**{source_name}:**\n{formatted_content}")
+                    except Exception as e:
+                        # Log error but continue with other sources
+                        pass
+                
+                if formatted_contexts:
+                    data_context = f"\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
+                else:
+                    # Fallback to summary if no content could be formatted
+                    data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
+                    
+            except Exception:
+                # Fallback to summary on any error
+                data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
         
         return f"""
 You are a task extraction system that analyzes chat history and user memory to extract actionable tasks.
