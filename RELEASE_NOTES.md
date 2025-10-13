@@ -1,8 +1,15 @@
-# Alpha Berkeley Framework - Latest Release (v0.5.0)
+# Alpha Berkeley Framework - Latest Release (v0.5.1)
 
-🚀 **Major Release: ALS Assistant Application** - Complete domain-specific application for Advanced Light Source operations with intelligent PV finding, data analysis, and scientific computing capabilities.
+🔧 **Bug Fix Release** - Enhanced task extraction data integration for improved LLM context quality and better agent performance.
 
-## What's New
+## What's Fixed
+
+### 🔧 Task Extraction Improvements
+- **Enhanced Data Integration**: Task extraction now properly formats retrieved data content from external sources
+- **Improved LLM Context**: Better quality context provided to language models for more accurate task understanding
+- **Robust Error Handling**: Added fallback mechanisms for data source content formatting
+
+## Previous Release (v0.5.0)
 
 ### 🔬 ALS Assistant Application
 - **Complete Scientific Application**: First fully-featured domain-specific application for accelerator physics operations at Lawrence Berkeley National Laboratory's Advanced Light Source
@@ -34,7 +41,7 @@ This is a **major feature release** introducing the first complete domain-specif
 
 ## Get Started with ALS Assistant
 
-1. **Framework Setup**: Update to v0.5.0 for the complete ALS Assistant application
+1. **Framework Setup**: Update to v0.5.1 for enhanced task extraction capabilities
 2. **Service Deployment**: Use Docker compose templates for MongoDB, Langfuse, and PV Finder services
 3. **Configuration**: Configure ALS-specific settings in `src/applications/als_assistant/config.yml`
 4. **Documentation**: View the [ALS Assistant guide](https://thellert.github.io/alpha_berkeley/example-applications/als-assistant.html)
@@ -47,8 +54,8 @@ This is a **major feature release** introducing the first complete domain-specif
 When creating the GitHub release:
 
 1. Go to GitHub repo → Releases → "Create a new release"
-2. **Tag**: `v0.5.0`
-3. **Title**: `Alpha Berkeley Framework v0.5.0 - ALS Assistant Application`
+2. **Tag**: `v0.5.1`
+3. **Title**: `Alpha Berkeley Framework v0.5.1 - Task Extraction Improvements`
 4. **Description**: Copy the content above (from "🚀 Major Release: ALS Assistant Application" through "Get Started with ALS Assistant")
 
 ## Technical Details
@@ -64,7 +71,7 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.5.0 (September 2025)*  
+*Current Release: v0.5.1 (October 2025)*  
 *Release Type: Major Feature Release*  
 *Previous Release: v0.4.5 with enhanced UI capabilities and infrastructure improvements*
 
