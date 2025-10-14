@@ -5,6 +5,32 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-10-14
+
+### Added
+- **Performance Optimization System**: Configurable bypass modes for task extraction and capability selection
+- **Task Extraction Bypass**: Skip LLM-based task extraction and use full conversation context for downstream processing
+- **Capability Selection Bypass**: Skip LLM-based classification and activate all registered capabilities
+- **Runtime Slash Commands**: Added `/task:off`, `/task:on`, `/caps:off`, `/caps:on` for dynamic performance control
+- **Configuration Support**: New `agent_control` section in config.yml with bypass settings and system-wide defaults
+- **Comprehensive Documentation**: Added bypass mode documentation with use cases, tradeoffs, and real CLI examples
+
+### Enhanced
+- **Gateway**: Parse and apply new performance bypass slash commands with readable command formatting
+- **Task Extraction Node**: Implement bypass logic that formats full chat history and data sources without LLM processing
+- **Classification Node**: Implement bypass logic that activates all capabilities without LLM analysis
+- **State Manager**: Add bypass configuration defaults to agent_control state
+- **Documentation**: Cross-referenced gateway, task extraction, and classification docs with performance configuration section
+
+### Fixed
+- **Data Source Request Creation**: Fixed user_id extraction to properly use session info instead of non-existent state field
+
+### Performance Benefits
+- Reduced LLM call overhead in preprocessing pipeline (1-2 fewer LLM calls per request)
+- Flexible performance tuning for R&D, debugging, and high-throughput scenarios
+- Trade orchestration complexity for extraction/classification speed based on use case
+- Configurable via both system defaults and runtime slash commands
+
 ## [0.5.1] - 2025-10-13
 
 ### Fixed

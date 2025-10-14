@@ -1,13 +1,28 @@
-# Alpha Berkeley Framework - Latest Release (v0.5.1)
+# Alpha Berkeley Framework - Latest Release (v0.6.0)
 
-🔧 **Bug Fix Release** - Enhanced task extraction data integration for improved LLM context quality and better agent performance.
+⚡ **Performance Optimization Release** - Configurable bypass modes for task extraction and capability selection enabling flexible performance tuning.
 
-## What's Fixed
+## What's New
 
-### 🔧 Task Extraction Improvements
-- **Enhanced Data Integration**: Task extraction now properly formats retrieved data content from external sources
-- **Improved LLM Context**: Better quality context provided to language models for more accurate task understanding
-- **Robust Error Handling**: Added fallback mechanisms for data source content formatting
+### ⚡ Performance Optimization System
+- **Task Extraction Bypass**: Skip LLM-based task extraction and use full conversation context directly in downstream processing
+- **Capability Selection Bypass**: Skip LLM-based classification and activate all registered capabilities automatically
+- **Runtime Control**: New slash commands (`/task:off`, `/task:on`, `/caps:off`, `/caps:on`) for dynamic performance adjustment during conversations
+- **Configuration Support**: System-wide defaults via `agent_control` section in config.yml
+
+### 🎯 When to Use Bypass Modes
+- **Task Bypass**: Code R&D scenarios, short conversations, minimal external data, high-throughput applications
+- **Capability Bypass**: Exploratory R&D, small capability registries, uncertain capability requirements
+- **Performance Trade-offs**: Faster upstream pipeline (1-2 fewer LLM calls) vs. longer orchestrator processing
+
+### 📚 Documentation Enhancements
+- Comprehensive bypass mode documentation with real CLI session examples
+- Performance comparison tables showing LLM call reduction
+- Use case guidance and trade-off analysis
+- Cross-referenced documentation across gateway, task extraction, and classification
+
+### 🔧 Bug Fix
+- **Data Source Request Creation**: Fixed user_id extraction to properly use session info instead of accessing non-existent state field
 
 ## Previous Release (v0.5.0)
 
@@ -41,7 +56,7 @@ This is a **major feature release** introducing the first complete domain-specif
 
 ## Get Started with ALS Assistant
 
-1. **Framework Setup**: Update to v0.5.1 for enhanced task extraction capabilities
+1. **Framework Setup**: Update to v0.6.0 for performance optimization and bypass modes
 2. **Service Deployment**: Use Docker compose templates for MongoDB, Langfuse, and PV Finder services
 3. **Configuration**: Configure ALS-specific settings in `src/applications/als_assistant/config.yml`
 4. **Documentation**: View the [ALS Assistant guide](https://thellert.github.io/alpha_berkeley/example-applications/als-assistant.html)
@@ -54,9 +69,9 @@ This is a **major feature release** introducing the first complete domain-specif
 When creating the GitHub release:
 
 1. Go to GitHub repo → Releases → "Create a new release"
-2. **Tag**: `v0.5.1`
-3. **Title**: `Alpha Berkeley Framework v0.5.1 - Task Extraction Improvements`
-4. **Description**: Copy the content above (from "🚀 Major Release: ALS Assistant Application" through "Get Started with ALS Assistant")
+2. **Tag**: `v0.6.0`
+3. **Title**: `Alpha Berkeley Framework v0.6.0 - Performance Optimization`
+4. **Description**: Copy the content above (from "⚡ Performance Optimization Release" through "Bug Fix")
 
 ## Technical Details
 
@@ -71,9 +86,9 @@ When creating the GitHub release:
 
 ---
 
-*Current Release: v0.5.1 (October 2025)*  
-*Release Type: Major Feature Release*  
-*Previous Release: v0.4.5 with enhanced UI capabilities and infrastructure improvements*
+*Current Release: v0.6.0 (October 2025)*  
+*Release Type: Minor Feature Release - Performance Optimization*  
+*Previous Release: v0.5.1 with task extraction improvements*
 
 ---
 
