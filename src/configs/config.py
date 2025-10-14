@@ -359,6 +359,10 @@ class ConfigBuilder:
             "python_execution_approval_mode": self._require_config('approval.capabilities.python_execution.mode', 'all_code'),
             "memory_approval_enabled": self._require_config('approval.capabilities.memory.enabled', True),
             
+            # Performance bypass configuration (configurable via YAML)
+            "task_extraction_bypass_enabled": self._require_config('execution_control.agent_control.task_extraction_bypass_enabled', False),
+            "capability_selection_bypass_enabled": self._require_config('execution_control.agent_control.capability_selection_bypass_enabled', False),
+            
             # Note: Execution limits (max_reclassifications, max_planning_attempts, etc.) 
             # are now centralized in get_execution_limits() utility function
         }

@@ -43,7 +43,65 @@ registry = get_registry()
 # PROMPT BUILDING HELPER FUNCTIONS
 # =============================================================================
 
-def build_task_extraction_prompt(messages: List[BaseMessage], retrieval_result) -> str:
+def _format_task_context(messages: List[BaseMessage], retrieval_result, logger) -> ExtractedTask:
+    """Format task context for bypass mode without LLM processing.
+    
+    Creates an ExtractedTask using the same context formatting as normal extraction
+    but without LLM analysis. Returns the formatted context directly as the task.
+    This combines chat history and data sources in the same way as normal extraction.
+    
+    :param messages: The native LangGraph messages
+    :param retrieval_result: DataRetrievalResult containing data from all available sources
+    :param logger: Logger instance
+    :return: ExtractedTask with formatted context as task
+    :rtype: ExtractedTask
+    """
+    from framework.state.messages import ChatHistoryFormatter
+    
+    if retrieval_result and retrieval_result.has_data:
+        logger.debug(f"Bypass mode: including data sources: {retrieval_result.get_summary()}")
+    
+    logger.info("Bypass mode: skipping LLM, using formatted context as task")
+    
+    # Format the chat history using native message formatter
+    chat_formatted = ChatHistoryFormatter.format_for_llm(messages)
+    
+    # Add data source context if available
+    data_context = ""
+    if retrieval_result and retrieval_result.has_data:
+        # Get the actual retrieved content formatted for LLM consumption
+        try:
+            formatted_contexts = []
+            for source_name, context in retrieval_result.context_data.items():
+                try:
+                    formatted_content = context.format_for_prompt()
+                    if formatted_content and formatted_content.strip():
+                        formatted_contexts.append(f"**{source_name}:**\n{formatted_content}")
+                except Exception as e:
+                    logger.warning(f"Could not format content from source {source_name}: {e}")
+            
+            if formatted_contexts:
+                data_context = f"\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
+            else:
+                # Fallback to summary if no content could be formatted
+                data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
+                
+        except Exception as e:
+            logger.warning(f"Could not process retrieval result: {e}")
+            # Fallback to summary
+            data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
+    
+    formatted_context = f"{data_context}\n\nChat history:\n{chat_formatted}"
+    
+    # Return formatted context as the extracted task
+    return ExtractedTask(
+        task=formatted_context,
+        depends_on_chat_history=True,  # Always true in bypass mode
+        depends_on_user_memory=True,   # Always true in bypass mode
+    )
+
+
+def _build_task_extraction_prompt(messages: List[BaseMessage], retrieval_result) -> str:
     """Build the system prompt with examples, current chat, and integrated data sources context.
     
     :param messages: The native LangGraph messages to extract task from
@@ -77,7 +135,7 @@ def _extract_task(messages: List[BaseMessage], retrieval_result, logger) -> Extr
     if retrieval_result and retrieval_result.has_data:
         logger.debug(f"Injecting data sources into task extraction: {retrieval_result.get_summary()}")
     
-    prompt = build_task_extraction_prompt(messages, retrieval_result)
+    prompt = _build_task_extraction_prompt(messages, retrieval_result)
     
     # Use structured LLM generation for task extraction
     task_extraction_config = get_model_config("framework", "task_extraction")
@@ -178,11 +236,14 @@ class TaskExtractionNode(BaseInfrastructureNode):
         state: AgentState, 
         **kwargs
     ) -> Dict[str, Any]:
-        """Main task extraction logic with sophisticated error handling and fallback.
+        """Main task extraction logic with bypass support and error handling.
         
         Converts conversational exchanges into clear, actionable task descriptions.
         Analyzes native LangGraph messages and external data sources to extract the user's
         actual intent and dependencies on previous conversation context.
+        
+        Supports bypass mode where full chat history is passed directly as the task,
+        skipping LLM-based extraction for performance optimization.
         
         :param state: Current agent state (TypedDict)
         :type state: AgentState
@@ -200,9 +261,15 @@ class TaskExtractionNode(BaseInfrastructureNode):
         # Get native LangGraph messages from flat state structure (move outside try block)
         messages = state["messages"]
         
-        try:
+        # Check if task extraction bypass is enabled
+        bypass_enabled = state.get("agent_control", {}).get("task_extraction_bypass_enabled", False)
+        
+        if bypass_enabled:
+            logger.info("Task extraction bypass enabled - using full context with data sources")
+            streamer.status("Bypassing task extraction - retrieving data and formatting full context")
+        else:
             streamer.status("Extracting actionable task from conversation")
-            
+        try:
             # Attempt to retrieve context from data sources if available
             retrieval_result = None
             try:
@@ -216,17 +283,27 @@ class TaskExtractionNode(BaseInfrastructureNode):
             except Exception as e:
                 logger.warning(f"Data source retrieval failed, proceeding without external context: {e}")
                         
-            # Extract task using LLM with or without integrated data sources
+            # Extract task using LLM or bypass mode with integrated data sources
             # Run sync function in thread pool to avoid blocking event loop for streaming
-            processed_task = await asyncio.to_thread(
-                _extract_task, messages, retrieval_result, logger
-            )
+            if bypass_enabled:
+                processed_task = await asyncio.to_thread(
+                    _format_task_context, messages, retrieval_result, logger
+                )
+            else:
+                processed_task = await asyncio.to_thread(
+                    _extract_task, messages, retrieval_result, logger
+                )
             
-            logger.info(f" * Extracted: '{processed_task.task}...'")
-            logger.info(f" * Builds on previous context: {processed_task.depends_on_chat_history}")
-            logger.info(f" * Uses memory context: {processed_task.depends_on_user_memory}")
-            
-            streamer.status("Task extraction completed")
+            if bypass_enabled:
+                logger.info(f" * Bypass mode: formatted context ({len(processed_task.task)} characters)")
+                logger.info(f" * Builds on previous context: {processed_task.depends_on_chat_history}")
+                logger.info(f" * Uses memory context: {processed_task.depends_on_user_memory}")
+                streamer.status("Task extraction bypassed - full context ready")
+            else:
+                logger.info(f" * Extracted: '{processed_task.task[:100]}...'")
+                logger.info(f" * Builds on previous context: {processed_task.depends_on_chat_history}")
+                logger.info(f" * Uses memory context: {processed_task.depends_on_user_memory}")
+                streamer.status("Task extraction completed")
             
             # Create direct state update with correct field names
             return {

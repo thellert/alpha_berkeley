@@ -231,19 +231,26 @@ class Gateway:
         
         # Apply slash commands if any
         if slash_commands:
-            self.logger.info(f"Processing slash commands: {list(slash_commands.keys())}")
+            # Create readable command list with options
+            command_list = [f"/{cmd}:{opt}" if opt else f"/{cmd}" for cmd, opt in slash_commands.items()]
+            self.logger.info(f"Processing slash commands: {command_list}")
             agent_control_updates = self._apply_slash_commands(slash_commands)
             fresh_state['agent_control'].update(agent_control_updates)
-            self.logger.info(f"Applied slash commands {list(slash_commands.keys())} to agent_control")
+            self.logger.info(f"Applied slash commands {command_list} to agent_control")
         
         # Add execution metadata
         fresh_state["execution_start_time"] = time.time()
         
         self.logger.info("Created fresh state for new conversation turn")
         
+        # Create readable command list for user feedback
+        processed_commands = []
+        if slash_commands:
+            processed_commands = [f"/{cmd}:{opt}" if opt else f"/{cmd}" for cmd, opt in slash_commands.items()]
+        
         return GatewayResult(
             agent_state=fresh_state,
-            slash_commands_processed=list(slash_commands.keys()) if slash_commands else []
+            slash_commands_processed=processed_commands
         )
     
     def _has_pending_interrupts(self, compiled_graph: Any, config: Optional[Dict[str, Any]]) -> bool:
@@ -451,6 +458,28 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 elif option in ["off", "disabled", "false"]:
                     agent_control_changes["debug_mode"] = False
                     self.logger.info("Disabled debug mode via slash command")
+            
+            # Task extraction bypass control
+            elif command == "task":
+                if option in ["off", "disabled", "false"]:
+                    agent_control_changes["task_extraction_bypass_enabled"] = True
+                    self.logger.info("Enabled task extraction bypass via slash command")
+                elif option in ["on", "enabled", "true"]:
+                    agent_control_changes["task_extraction_bypass_enabled"] = False
+                    self.logger.info("Disabled task extraction bypass via slash command")
+                else:
+                    self.logger.warning(f"Invalid option for /task command: '{option}'. Use 'on' or 'off'")
+            
+            # Capability selection bypass control
+            elif command == "caps":
+                if option in ["off", "disabled", "false"]:
+                    agent_control_changes["capability_selection_bypass_enabled"] = True
+                    self.logger.info("Enabled capability selection bypass via slash command")
+                elif option in ["on", "enabled", "true"]:
+                    agent_control_changes["capability_selection_bypass_enabled"] = False
+                    self.logger.info("Disabled capability selection bypass via slash command")
+                else:
+                    self.logger.warning(f"Invalid option for /caps command: '{option}'. Use 'on' or 'off'")
             
             else:
                 self.logger.warning(f"Unknown slash command: /{command}")

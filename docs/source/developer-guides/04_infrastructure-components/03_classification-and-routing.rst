@@ -24,8 +24,8 @@ Core Concept
 Classification determines which capabilities are needed for extracted tasks using intelligent analysis and registry configuration.
 
 **Two-Phase Selection:**
-1. **Always-Active Capabilities** - Registry-configured capabilities selected automatically (e.g., "respond")
-2. **LLM Classification** - Remaining capabilities analyzed using few-shot examples
+    1. **Always-Active Capabilities** - Registry-configured capabilities selected automatically (e.g., "respond")
+    2. **LLM Classification** - Remaining capabilities analyzed using few-shot examples
 
 **Routing** provides centralized execution flow control based on agent state.
 
@@ -94,6 +94,33 @@ Capability Selection Process
        
        if response.is_match:
            active_capabilities.append(capability.name)
+
+.. dropdown:: Bypass LLM-based Capability Selection
+   :color: secondary
+
+   Capability selection supports a configurable bypass mode to streamline execution. By default, bypass mode can be enabled via the :ref:`configuration system <performance-configuration-section>`, allowing the system to skip LLM-based classification and activate all registered capabilities automatically. Additionally, users can dynamically toggle capability selection at runtime using the ``/caps:off`` :ref:`slash command <slash-commands-section>`, providing flexibility for development, testing, or high-throughput scenarios.
+
+   **Bypass Behavior:**
+    - Skips LLM-based capability classification entirely  
+    - Activates all available capabilities from the registry
+    - Provides orchestrator with complete capability access
+    - Maintains always-active capability handling
+
+   **When to Use Bypass Mode:**
+    - Exploratory R&D scenarios where capability requirements are uncertain
+    - Small capability registries where classification overhead exceeds benefits
+    - High-throughput applications requiring reduced LLM call latency (trades orchestrator processing cost for classification speed)
+   
+   **Advantages:**
+    - Faster upstream pipeline (skips LLM-based capability selection)
+    - No risk of missing relevant capabilities
+   
+   **Disadvantages:**
+    - Longer orchestrator prompts (all capabilities included)
+    - Slower plan generation (more tokens to process)
+    - Potential for confusing or brittle execution plans
+    - Orchestrator may struggle with too many capability options
+   
 
 Few-Shot Classification Examples
 --------------------------------

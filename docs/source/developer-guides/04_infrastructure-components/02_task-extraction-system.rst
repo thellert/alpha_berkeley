@@ -23,12 +23,9 @@ Core Problem
 
 **Challenge:** Agentic systems need conversational awareness without requiring every component to process entire chat histories.
 
-**Traditional Approaches (Flawed):**
-- Full history processing at every step (slow, expensive)
-- Generic summarization (loses task-relevant details)
-- No context (loses conversational awareness)
+**Traditional Approaches (Flawed):** Traditional methods often require processing the entire conversation history at every step, which can be slow and expensive. Some approaches use generic chat history summarization, but this often causes important task-relevant details to be lost. Other approaches provide no contextual information at all, leading to a loss of conversational awareness.
 
-**Framework Solution:** Single-point context compression that extracts only task-relevant conversational context.
+**Framework Solution:** The framework implements a single-point context compression approach that extracts only task-relevant conversational context, enabling the Task Extraction system to efficiently convert human conversations into structured, actionable inputs for seamless processing.
 
 Architecture
 ------------
@@ -51,9 +48,9 @@ Task extraction operates as the first pipeline step, converting raw conversation
    )
 
 **Key Benefits:**
-- Downstream components receive compressed, actionable tasks
-- Conversational references are resolved ("that data" → specific context)
-- Dependencies are clearly identified for capability selection
+    - Downstream components receive compressed, actionable tasks
+    - Conversational references are resolved ("that data" → specific context)
+    - Dependencies are clearly identified for capability selection
 
 Implementation
 --------------
@@ -84,6 +81,36 @@ Implementation
                "task_depends_on_user_memory": extracted_task.depends_on_user_memory
            }
 
+.. _bypass-task-extraction-section:
+.. dropdown:: Bypass LLM-based Task Extraction
+   :color: secondary
+
+   Task extraction can be bypassed either temporarily using the ``/task:off`` :ref:`slash command <slash-commands-section>`, or set as the default behavior via the :ref:`configuration system <performance-configuration-section>`. This allows you to skip LLM-based task extraction and use the full conversation history directly in downstream processing, based on your workflow needs.
+
+   **Bypass Behavior:**
+    - Skips LLM-based task extraction entirely
+    - Passes full conversation history and retrieved datasource results as the "extracted task"
+    - Sets dependency flags to True (assumes full context and chat history needed)
+    - Maintains compatibility with downstream orchestration
+   
+   **When to Use Bypass Mode:**
+    - Code R&D scenarios where full conversational context aids development
+    - Short conversation histories where task extraction overhead exceeds benefits
+    - Minimal external data scenarios where context compression isn't needed
+    - High-throughput applications requiring reduced LLM call latency (trades orchestrator processing cost for extraction speed)
+   
+   **Advantages:**
+    - Faster upstream pipeline (skips LLM-based task extraction)
+    - No risk of losing conversational context or nuance
+   
+   **Disadvantages:**
+    - Longer capability selection process (full conversation history included)
+    - Longer orchestrator prompts (full conversation history included)
+    - Slower plan generation (more tokens to process)
+    - Potential for information overload in complex conversations
+
+
+
 Structured Output
 -----------------
 
@@ -109,7 +136,7 @@ Task extraction uses structured LLM generation for consistency:
    → Dependencies: history=True, memory=False
    
    User: "Use my preferred location"
-   → Task: "Get weather for user's preferred location"
+   → Task: "Get weather for the Bay Area"
    → Dependencies: history=False, memory=True
 
 Data Source Integration
@@ -129,7 +156,7 @@ Task extraction automatically integrates available data sources:
 
 **Graceful Degradation:** Task extraction continues without external data if sources are unavailable.
 
-**Context Enrichment:** Available data sources improve dependency detection and task clarity.
+**Context Enrichment:** Available data sources can improve dependency detection and task clarity.
 
 Error Handling
 --------------
@@ -199,16 +226,19 @@ Troubleshooting
 ---------------
 
 **Task Extraction Timeouts:**
+
 - Built-in retry logic with exponential backoff
 - Check network connectivity to LLM provider
 - Verify model configuration in ``config.yml``
 
 **Missing Dependencies:**
+
 - Review prompt builder examples for dependency detection
 - Check chat history formatting
 - Consider application-specific prompt overrides
 
 **Data Source Failures:**
+
 - Task extraction gracefully degrades without external data
 - Check data source provider registration
 - Verify data source configuration
@@ -217,12 +247,13 @@ Performance Considerations
 --------------------------
 
 **Optimization Features:**
+
 - Async processing with ``asyncio.to_thread()`` for non-blocking LLM calls
 - Parallel data source retrieval
 - Structured output for consistent parsing
-- Efficient context cleanup
 
 **Memory Management:**
+
 - Only essential task information persists in agent state
 - Data retrieval results don't persist beyond extraction
 - Native LangGraph message compatibility
@@ -235,14 +266,8 @@ Performance Considerations
    :doc:`../03_core-framework-systems/02_context-management-system`
        Context compression and dependency detection patterns
    
+   :doc:`../04_orchestrator-planning` 
+       How tasks become execution plans
+
    :doc:`../03_core-framework-systems/05_message-and-execution-flow`
        Message processing pipeline architecture
-
-Next Steps
-----------
-
-- :doc:`03_classification-and-routing` - How tasks are analyzed and routed
-- :doc:`../03_core-framework-systems/02_context-management-system` - Context integration details
-- :doc:`04_orchestrator-planning` - How tasks become execution plans
-
-Task Extraction provides the foundation for converting human conversations into structured, actionable inputs that the Alpha Berkeley Framework can process efficiently.

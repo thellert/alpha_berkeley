@@ -25,11 +25,11 @@ Core Architecture
 
 Our framework provides a domain-agnostic architecture for safety-critical systems, turning natural-language requests into reliable action through a four-stage pipeline—Task Extraction, Classification, Orchestration, and Execution with checkpointing and artifact tracking:
 
-1. **Task Extraction** → Convert conversational context into structured, actionable objectives
+1. :doc:`Task Extraction <developer-guides/04_infrastructure-components/02_task-extraction-system>` → Convert conversational context into structured, actionable objectives
 
-2. **Classification** → Dynamically select relevant capabilities from your domain-specific toolkit 
+2. :doc:`Classification <developer-guides/04_infrastructure-components/03_classification-and-routing>` → Dynamically select relevant capabilities from your domain-specific toolkit 
 
-3. **Orchestration** → Generate complete execution plans with explicit dependencies and human oversight
+3. :doc:`Orchestration <developer-guides/04_infrastructure-components/04_orchestrator-planning>` → Generate complete execution plans with explicit dependencies and human oversight
 
 4. **Execution** → Execute capabilities with checkpointing, artifact management, and safety controls
 

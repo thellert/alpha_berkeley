@@ -413,6 +413,24 @@ Streaming events integrate with LangGraph's native streaming and follow the same
 - **Execution Phase**: Dynamic extraction from StateManager and execution plans  
 - **Fallback**: Component name formatting for unknown components
 
+
+.. _performance-configuration-section:
+Performance Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The framework supports performance optimization through bypass configuration:
+
+.. code-block:: yaml
+
+   # Performance bypass settings (in main config.yml)
+   execution_control:
+     agent_control:
+       task_extraction_bypass_enabled: false      # Skip LLM-based task extraction
+       capability_selection_bypass_enabled: false # Skip LLM-based capability selection
+
+Both settings default to ``false`` and can be overridden at runtime using :ref:`slash commands <slash-commands-section>` (``/task:off``, ``/caps:off``).
+
+
 Model Factory Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

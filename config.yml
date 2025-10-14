@@ -35,6 +35,16 @@ execution_control:
   epics:
     writes_enabled: false            # Master switch: can EPICS writes ever happen?
   
+  # Agent control - Runtime behavior configuration
+  agent_control:
+    # Performance bypass settings (can be overridden at runtime via /task:off and /caps:off slash commands)
+    task_extraction_bypass_enabled: false       # If true, skips LLM-based task extraction and passes full conversation history 
+                                                # to downstream processing. Useful for code R&D scenarios or when context compression 
+                                                # overhead exceeds benefits. Trade-off: faster extraction but slower orchestration.
+    capability_selection_bypass_enabled: false  # If true, skips LLM-based capability classification and activates all registered 
+                                                # capabilities. Useful for exploratory R&D or small capability registries. 
+                                                # Trade-off: faster classification but slower orchestration with more capability options.
+  
   # Execution safety limits and control flow
   limits:
     max_reclassifications: 1         # Maximum times a task can be reclassified

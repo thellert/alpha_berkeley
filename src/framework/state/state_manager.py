@@ -128,8 +128,11 @@ def get_agent_control_defaults() -> Dict[str, Any]:
             "max_reclassifications": 1,
             "max_planning_attempts": 2,
             "max_step_retries": 0,
-    
             "max_execution_time_seconds": 300,
+            
+            # Bypass configuration defaults
+            "task_extraction_bypass_enabled": False,
+            "capability_selection_bypass_enabled": False,
         }
 
 

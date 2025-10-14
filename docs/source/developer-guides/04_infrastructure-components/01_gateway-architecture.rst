@@ -53,7 +53,7 @@ Key Features
    Gateway is the only component that creates agent state, ensuring consistency.
 
 **Slash Commands**
-   Built-in parsing for ``/planning:on``, ``/approval:enabled``, ``/debug:on``.
+   Built-in parsing for ``/planning:on``, ``/approval:enabled``, ``/debug:on``, and :ref:`performance bypass commands <slash-commands-section>`.
 
 **Approval Integration**
    Automatic detection of approval/rejection responses with LangGraph interrupt handling.
@@ -120,61 +120,109 @@ Gateway automatically handles:
        current_state=current_state  # Preserves persistent fields
    )
 
+.. _slash-commands-section:
 Slash Commands
 --------------
 
 Gateway parses and applies slash commands automatically:
 
+**Planning and Execution Control:**
+
 - ``/planning`` or ``/planning:on`` - Enable planning mode
-- ``/planning:off`` - Disable planning mode  
+- ``/planning:off`` - Disable planning mode (default)
 - ``/approval:on`` - Enable approval workflows
 - ``/approval:selective`` - Selective approval mode
 - ``/debug:on`` - Enable debug logging
 
-Commands are parsed from user input and applied to ``agent_control`` state before execution.
+**Performance Optimization:**
 
-.. _planning-mode-example:
+- ``/task:off`` - :ref:`Bypass task extraction <bypass-task-extraction-section>` (use full chat history)
+- ``/task:on`` - Enable task extraction (default)
+- ``/caps:off`` - Bypass capability selection (activate all capabilities)
+- ``/caps:on`` - Enable capability selection (default)
 
-.. dropdown:: 💡 Planning Mode Example
-   :open:
+Commands are parsed from user input and applied to ``agent_control`` state before execution and can temporarily change bypass settings for the current conversation session, overriding system defaults.
+
+.. dropdown:: 💡 Slash Command Examples
    :color: info
-   :icon: light-bulb
+   :icon: terminal
 
-   **Real CLI Session Showing Planning Mode**
+   **Real CLI Sessions Demonstrating Different Modes**
 
-   .. code-block:: text
-   
-      👤 You: /planning What's the weather in San Francisco?
-      🔄 Processing: /planning What's the weather in San Francisco?
-      ✅ Processed commands: ['planning']
-      🔄 Extracting actionable task from conversation
-      🔄 Analyzing task requirements...
-      🔄 Generating execution plan...
-      🔄 Requesting plan approval...
-      
-      ⚠️ **HUMAN APPROVAL REQUIRED** ⚠️
-      
-      **Planned Steps (2 total):**
-      **Step 1:** Retrieve current weather conditions for San Francisco including temperature, weather conditions, and timestamp (current_weather)
-      **Step 2:** Present the current weather information for San Francisco to the user in a clear and readable format (respond)
-      
-      **To proceed, respond with:**
-      - **`yes`** to approve and execute the plan
-      - **`no`** to cancel this operation
-      
-      👤 You: yes
-      🔄 Processing: yes
-      🔄 Resuming from interrupt...
-      🔄 Using approved execution plan
-      🔄 Executing current_weather... (10%)
-      🔄 Weather retrieved: San Francisco - 18.0°C
-      🔄 Executing respond... (10%)
-      📊 Execution completed (execution_step_results: 2 records)
-      
-      🤖 Here is the current weather in San Francisco:
-      As of today, the weather in San Francisco is **18.0°C and Partly Cloudy**.
+   .. tab-set::
 
-   Planning mode provides transparent oversight of multi-step operations before execution begins.
+      .. tab-item:: Planning Mode
+         :sync: planning
+
+         **Human Approval Workflow Example**
+
+         .. code-block:: text
+         
+            👤 You: /planning What's the weather in San Francisco?
+            🔄 Processing: /planning What's the weather in San Francisco?
+            ✅ Processed commands: ['planning']
+            🔄 Extracting actionable task from conversation
+            🔄 Analyzing task requirements...
+            🔄 Generating execution plan...
+            🔄 Requesting plan approval...
+            
+            ⚠️ **HUMAN APPROVAL REQUIRED** ⚠️
+            
+            **Planned Steps (2 total):**
+            **Step 1:** Retrieve current weather conditions for San Francisco including temperature, weather conditions, and timestamp (current_weather)
+            **Step 2:** Present the current weather information for San Francisco to the user in a clear and readable format (respond)
+            
+            **To proceed, respond with:**
+            - **`yes`** to approve and execute the plan
+            - **`no`** to cancel this operation
+            
+            👤 You: yes
+            🔄 Processing: yes
+            🔄 Resuming from interrupt...
+            🔄 Using approved execution plan
+            🔄 Executing current_weather... (10%)
+            🔄 Weather retrieved: San Francisco - 18.0°C
+            🔄 Executing respond... (10%)
+            📊 Execution completed (execution_step_results: 2 records)
+            
+            🤖 Here is the current weather in San Francisco:
+            As of today, the weather in San Francisco is **18.0°C and Partly Cloudy**.
+
+         Planning mode provides transparent oversight of multi-step operations before execution begins.
+
+      .. tab-item:: Performance Optimization
+         :sync: performance
+
+         **Bypass Mode Examples for Faster Response Times**
+
+         .. code-block:: text
+         
+            
+            # Example 1: Task extraction bypass for context-rich queries
+            👤 You: /task:off Analyze the correlation we discussed earlier
+            🔄 Processing: /task:off Analyze the correlation we discussed earlier
+            ✅ Processed commands: ['task:off']
+            🔄 Bypassing task extraction - using full conversation context
+            🔄 Analyzing task requirements...
+            🔄 Classification completed with 3 active capabilities
+            🔄 Generating execution plan...
+            
+            # Example 2: Full bypass for quick status queries
+            👤 You: /task:off /caps:off What's the current beam status?
+            🔄 Processing: /task:off /caps:off What's the current beam status?
+            ✅ Processed commands: ['task:off', 'caps:off']
+            🔄 Bypassing task extraction - using full conversation context
+            🔄 Bypassing capability selection - activating all capabilities
+            🔄 Generating execution plan...
+            
+
+
+         **Performance Comparison:**
+         
+         - **Normal Mode**: Task Extraction → Classification → Orchestration → Execution (3 LLM calls)
+         - **Task Bypass**: Classification → Orchestration → Execution (2 LLM call)
+         - **Caps Bypass**: Task Extraction → Orchestration → Execution (2 LLM call)  
+         - **Full Bypass**: Orchestration → Execution (1 preprocessing LLM calls)
 
 Approval Workflow Integration
 -----------------------------

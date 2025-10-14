@@ -147,11 +147,14 @@ class ClassificationNode(BaseInfrastructureNode):
         state: AgentState, 
         **kwargs
     ) -> Dict[str, Any]:
-        """Main classification logic with sophisticated capability selection and reclassification handling.
+        """Main classification logic with bypass support and sophisticated capability selection.
         
         Analyzes user tasks and selects appropriate capabilities using parallel
         LLM-based classification. Handles both initial classification and 
         reclassification scenarios with state preservation.
+        
+        Supports bypass mode where all available capabilities are activated,
+        skipping LLM-based classification for performance optimization.
         
         :param state: Current agent state
         :type state: AgentState
@@ -170,6 +173,29 @@ class ClassificationNode(BaseInfrastructureNode):
         # Define streaming helper here for step awareness
         streamer = get_streamer("framework", "classifier", state)
         
+        # Check if capability selection bypass is enabled
+        bypass_enabled = state.get("agent_control", {}).get("capability_selection_bypass_enabled", False)
+        
+        if bypass_enabled:
+            logger.info("Capability selection bypass enabled - activating all capabilities")
+            streamer.status("Bypassing capability selection - activating all capabilities")
+            
+            # Get all capability names directly from registry
+            registry = get_registry()
+            active_capabilities = registry.get_stats()['capability_names']
+            
+            logger.key_info(f"Bypass mode: activated all {len(active_capabilities)} capabilities")
+            streamer.status("All capabilities activated")
+            
+            # Return standardized classification result
+            return _create_classification_result(
+                active_capabilities=active_capabilities,
+                state=state,
+                message=f"Bypass mode: activated all {len(active_capabilities)} capabilities",
+                is_bypass=True
+            )
+        
+        # Original classification logic continues here...
         # Get previous failure context (may be None for initial classification)
         previous_failure = state.get('control_reclassification_reason')
         reclassification_count = state.get('control_reclassification_count', 0)
@@ -202,45 +228,71 @@ class ClassificationNode(BaseInfrastructureNode):
         logger.key_info(f"Classification completed with {len(active_capabilities)} active capabilities")
         logger.debug(f"Active capabilities: {active_capabilities}")
         streamer.status("Task classification complete")
-        
-        
-        # Return proper LangGraph state updates that merge instead of overwriting
-        # Use StateManager methods for cleaner state updates
-        # Use direct state updates instead of utility functions
-        
-        # Direct planning state update
-        planning_fields = {
-            "planning_active_capabilities": active_capabilities,
-            "planning_execution_plan": None,
-            "planning_current_step_index": 0
-        }
-        
-        # Always increment classification counter and clear reclassification reason
-        control_flow_update = {
-            "control_reclassification_count": reclassification_count + 1,
-            "control_reclassification_reason": None
-        }
-                
-        # Add status event using LangGraph's add reducer
-        status_event = create_status_update(
-            message=f"Classification completed with {len(active_capabilities)} capabilities",
-            progress=1.0,
-            complete=True,
-            node="classifier",
-            capabilities_selected=len(active_capabilities),
-            capability_names=active_capabilities,  # Already capability names now
-            reclassification=bool(previous_failure),
-            reclassification_count=reclassification_count + 1
-        )
         logger.info("Classification completed")
         
-        # Merge all updates - LangGraph will handle this properly
-        return {**planning_fields, **control_flow_update, **status_event}
+        # Return standardized classification result
+        return _create_classification_result(
+            active_capabilities=active_capabilities,
+            state=state,
+            message=f"Classification completed with {len(active_capabilities)} capabilities",
+            is_bypass=False,
+            previous_failure=previous_failure
+        )
 
 
 # ====================================================
 # Classification helper functions
 # ====================================================
+
+def _create_classification_result(
+    active_capabilities: List[str],
+    state: AgentState,
+    message: str,
+    is_bypass: bool = False,
+    previous_failure: Optional[str] = None
+) -> Dict[str, Any]:
+    """Create standardized classification result with all required state updates.
+    
+    Consolidates the creation of planning fields, control flow updates, and status events
+    into a single function to eliminate code duplication between bypass and normal
+    classification paths.
+    
+    :param active_capabilities: List of capability names that were selected
+    :param state: Current agent state for extracting reclassification count
+    :param message: Status message to display
+    :param is_bypass: Whether this is a bypass mode result
+    :param previous_failure: Previous failure reason (for reclassification detection)
+    :return: Complete state update dictionary for LangGraph
+    """
+    reclassification_count = state.get('control_reclassification_count', 0)
+    
+    # Planning state updates
+    planning_fields = {
+        "planning_active_capabilities": active_capabilities,
+        "planning_execution_plan": None,
+        "planning_current_step_index": 0
+    }
+    
+    # Control flow updates
+    control_flow_update = {
+        "control_reclassification_count": reclassification_count + 1,
+        "control_reclassification_reason": None
+    }
+    
+    # Status event with comprehensive metadata
+    status_event = create_status_update(
+        message=message,
+        progress=1.0,
+        complete=True,
+        node="classifier",
+        capabilities_selected=len(active_capabilities),
+        capability_names=active_capabilities,
+        reclassification=bool(previous_failure),
+        reclassification_count=reclassification_count + 1,
+        bypass_mode=is_bypass
+    )
+    
+    return {**planning_fields, **control_flow_update, **status_event}
 
 async def select_capabilities(
     task: str,

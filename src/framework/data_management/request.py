@@ -54,9 +54,13 @@ def create_data_source_request(
     """
     # Extract user ID from session context
     user_id = None
-    session_context = state.get('session_context', {})
-    if session_context and hasattr(session_context, 'user_id'):
-        user_id = session_context.user_id
+    try:
+        from configs.config import get_session_info
+        session_info = get_session_info()
+        user_id = session_info.get("user_id")
+    except Exception:
+        # Log but don't fail - some contexts might not have session info
+        pass
     
     return DataSourceRequest(
         user_id=user_id,
