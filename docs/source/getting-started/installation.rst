@@ -215,7 +215,7 @@ The Alpha Berkeley framework provides a pipeline connection to the OpenWebUI ser
    :color: info
    :icon: info
 
-   `OpenWebUI Pipelines <https://docs.openwebui.com/pipelines/>`_ are a powerful extensibility system that allows you to customize and extend OpenWebUI's functionality. Think of pipelines as plugins that can:
+   `OpenWebUI Pipelines <https://docs.openwebui.com/features/pipelines/>`_ are a powerful extensibility system that allows you to customize and extend OpenWebUI's functionality. Think of pipelines as plugins that can:
 
    - **Filter**: Process user messages before they reach the LLM and modify responses after they return
    - **Pipe**: Create custom "models" that integrate external APIs, build workflows, or implement RAG systems

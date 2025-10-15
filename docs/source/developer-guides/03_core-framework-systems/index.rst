@@ -12,6 +12,7 @@ Core Framework Systems
    03_registry-and-discovery
    04_prompt-customization
    05_message-and-execution-flow
+   06_configuration-architecture
 
 .. dropdown:: What You'll Learn
    :color: primary
@@ -24,6 +25,7 @@ Core Framework Systems
    - Convention-based registry patterns with lazy loading and component discovery
    - Domain-specific prompt builders with dependency injection patterns
    - Complete message processing pipeline from Gateway entry to response generation
+   - Three-tier YAML configuration with hierarchical merging and override patterns
 
    **Prerequisites:** Completion of Quick Start Patterns and understanding of LangGraph concepts
    
@@ -78,7 +80,7 @@ The Core Framework Systems implement a **LangGraph-Native, Type-Safe Architectur
 
       Domain-specific prompt builders with dependency injection and debugging tools.
 
-.. grid:: 1 1 1 1
+.. grid:: 1 1 2 2
    :gutter: 3
 
    .. grid-item-card:: 🔀 Message & Execution Flow
@@ -89,6 +91,15 @@ The Core Framework Systems implement a **LangGraph-Native, Type-Safe Architectur
       :shadow: md
 
       Complete message processing from Gateway entry to response generation.
+
+   .. grid-item-card:: ⚙️ Configuration Architecture
+      :link: 06_configuration-architecture
+      :link-type: doc
+      :class-header: bg-dark text-white
+      :class-body: text-center
+      :shadow: md
+
+      Three-tier YAML configuration with hierarchical merging and environment integration.
 
 System Integration
 ==================

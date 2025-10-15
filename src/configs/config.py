@@ -494,13 +494,6 @@ def get_application_service_config(app_name: str, service_name: str) -> Dict[str
     return app_services.get(service_name, {})
 
 
-def get_logging_color(capability_name: str) -> str:
-    """Get capability color with automatic context detection."""
-    configurable = _get_configurable()
-    logging_colors = configurable.get("logging_colors", {})
-    return logging_colors.get(capability_name, "white")
-
-
 def get_pipeline_config(app_name: str = None) -> Dict[str, Any]:
     """Get pipeline configuration with automatic context detection."""
     configurable = _get_configurable()
@@ -555,7 +548,28 @@ def get_session_info() -> Dict[str, Any]:
     }
 
 def get_interface_context() -> str:
-    """Get interface context with automatic detection."""
+    """
+    Get interface context indicating which user interface is being used.
+    
+    The interface context determines how responses are formatted and which
+    features are available (e.g., figure rendering, notebook links, command buttons).
+    
+    Returns:
+        str: The interface type, one of:
+            - "openwebui": Open WebUI interface with rich rendering capabilities
+            - "cli": Command-line interface with text-only output
+            - "unknown": Interface type not detected or not set
+    
+    Example:
+        >>> interface = get_interface_context()
+        >>> if interface == "openwebui":
+        ...     print("Rich UI features available")
+    
+    Note:
+        This is set automatically by each interface implementation during initialization.
+        The value is used by response generators to provide interface-appropriate
+        guidance about figures, notebooks, and executable commands.
+    """
     configurable = _get_configurable()
     return configurable.get("interface_context", "unknown")
 
