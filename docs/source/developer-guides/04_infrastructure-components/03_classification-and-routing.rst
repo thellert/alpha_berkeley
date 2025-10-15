@@ -267,55 +267,42 @@ Usage Examples
    # 2. No execution plan → "orchestrator"  
    # 3. Has plan → next step capability
 
-Integration Patterns
---------------------
+.. tab-set::
 
-**Registry Integration:**
-- Always-active capabilities configured in registry
-- Capability classifier guides provide examples
-- Dynamic capability discovery supported
+   .. tab-item:: Integration Patterns
+   
+      **Registry Integration:**
+          - Always-active capabilities configured in registry
+          - Capability classifier guides provide examples
+          - Dynamic capability discovery supported
+      
+      **State Management:**
+          - Classification results stored in ``planning_active_capabilities``
+          - Router tracks retry counts and error states
+          - State updates use LangGraph-compatible patterns
+      
+      **Error Recovery:**
+          - Automatic retry for network issues
+          - Reclassification for capability selection problems (RECLASSIFICATION severity)
+          - Replanning for execution strategy issues (REPLANNING severity)
+          - Router coordination for failed executions
 
-**State Management:**
-- Classification results stored in ``planning_active_capabilities``
-- Router tracks retry counts and error states
-- State updates use LangGraph-compatible patterns
-
-**Error Recovery:**
-- Automatic retry for network issues
-- Reclassification for capability selection problems (RECLASSIFICATION severity)
-- Replanning for execution strategy issues (REPLANNING severity)
-- Router coordination for failed executions
-
-Troubleshooting
----------------
-
-**No Capabilities Selected:**
-- Check always-active capability configuration in registry
-- Verify capability classifier guides are implemented
-- Review few-shot examples for relevance
-
-**Classification Errors:**
-- Enable debug logging to see LLM decisions
-- Check capability classifier guide examples
-- Verify model configuration for classification
-
-**Router Loops:**
-- Ensure execution plans end with "respond" or "clarify"
-- Check state field values at each routing decision
-- Verify all referenced capabilities are registered
-
-Performance Considerations
---------------------------
-
-**Classification Optimization:**
-- Parallel capability analysis when possible
-- Structured LLM output for reliable parsing
-- Efficient registry lookups for always-active capabilities
-
-**Router Efficiency:**
-- Priority-based routing (errors first, then progress checks)
-- Minimal state access for routing decisions
-- Clean error state management
+   .. tab-item:: Troubleshooting
+   
+      **No Capabilities Selected:**
+          - Check always-active capability configuration in registry
+          - Verify capability classifier guides are implemented
+          - Review few-shot examples for relevance
+      
+      **Classification Errors:**
+          - Enable debug logging to see LLM decisions
+          - Check capability classifier guide examples
+          - Verify model configuration for classification
+      
+      **Router Loops:**
+          - Ensure execution plans end with "respond" or "clarify"
+          - Check state field values at each routing decision
+          - Verify all referenced capabilities are registered
 
 .. seealso::
 
@@ -328,11 +315,13 @@ Performance Considerations
    :doc:`02_task-extraction-system`
        Task analysis and capability selection prerequisites
 
-Next Steps
-----------
-
-- :doc:`04_orchestrator-planning` - How selected capabilities become execution plans
-- :doc:`../03_core-framework-systems/03_registry-and-discovery` - Capability registry management
-- :doc:`06_error-handling-infrastructure` - Error handling patterns
+   :doc:`04_orchestrator-planning`
+       How selected capabilities become execution plans
+   
+   :doc:`../03_core-framework-systems/03_registry-and-discovery`
+       Capability registry management
+   
+   :doc:`06_error-handling-infrastructure`
+       Error handling patterns
 
 Classification and Routing determines which capabilities are needed and coordinates their execution through the framework's infrastructure.

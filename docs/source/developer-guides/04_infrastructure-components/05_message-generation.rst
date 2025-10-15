@@ -305,25 +305,25 @@ Key Features
 ------------
 
 **Adaptive Responses:**
-- Automatically adjusts style based on available context
-- Technical responses for execution data, conversational for general queries
+    - Automatically adjusts style based on available context
+    - Technical responses for execution data, conversational for general queries
 
 **Structured Clarification:**
-- Uses Pydantic models for consistent question format
-- Context-aware questions considering conversation history
+    - Uses Pydantic models for consistent question format
+    - Context-aware questions considering conversation history
 
 **Domain Customization:**
-- Applications override prompt builders for specialized responses
-- Maintains consistent behavior while allowing domain adaptation
+    - Applications override prompt builders for specialized responses
+    - Maintains consistent behavior while allowing domain adaptation
 
 **Error Integration:**
-- Provides user-friendly error messages through framework error handling
-- Different severity levels for response vs. clarification failures
+    - Provides user-friendly error messages through framework error handling
+    - Different severity levels for response vs. clarification failures
 
 .. seealso::
 
-   :doc:`../../api_reference/02_infrastructure/05_message-generation`
-       API reference for response and clarification systems
+   :doc:`../../api_reference/02_infrastructure/06_message-generation`
+      API reference for response and clarification systems
    
    :doc:`../03_core-framework-systems/02_context-management-system`
        Response mode detection and context integration
@@ -331,11 +331,13 @@ Key Features
    :doc:`../../api_reference/01_core_framework/05_prompt_management`
        Prompt builder customization patterns
 
-Next Steps
-----------
-
-- :doc:`06_error-handling-infrastructure` - Error communication patterns
-- :doc:`../03_core-framework-systems/02_context-management-system` - Context integration details
-- :doc:`../../api_reference/01_core_framework/05_prompt_management` - Prompt builder customization
+   :doc:`06_error-handling-infrastructure`
+       Error communication patterns
+   
+   :doc:`../03_core-framework-systems/02_context-management-system`
+       Context integration details
+   
+   :doc:`../../api_reference/01_core_framework/05_prompt_management`
+       Prompt builder customization
 
 Message Generation provides the final user interaction layer, converting execution results and handling ambiguous requests through adaptive, context-aware response and clarification systems.

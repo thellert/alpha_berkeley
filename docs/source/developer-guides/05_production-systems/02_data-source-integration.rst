@@ -386,11 +386,13 @@ Test your data source integration:
        return result.has_data
 
 
-Next Steps
-==========
+.. seealso::
 
-After implementing data source integration:
-
-- :doc:`04_memory-storage-service` - Understand the user memory system
-- :doc:`03_python-execution-service` - Integrate with code execution
-- :doc:`../03_core-framework-systems/03_registry-and-discovery` - Advanced registry patterns
+   :doc:`04_memory-storage-service`
+       Understand the user memory system
+   
+   :doc:`03_python-execution-service`
+       Integrate with code execution
+   
+   :doc:`../03_core-framework-systems/03_registry-and-discovery`
+       Advanced registry patterns

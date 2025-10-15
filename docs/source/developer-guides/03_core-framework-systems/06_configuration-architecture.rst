@@ -263,9 +263,13 @@ The repository contains complete working configurations:
 
 Use these as templates for your own configurations.
 
-Next Steps
-==========
+.. seealso::
 
-- :doc:`../../api_reference/01_core_framework/04_configuration_system` - Complete reference for all configuration sections
-- :doc:`03_registry-and-discovery` - How configuration integrates with the registry
-- :doc:`../05_production-systems/05_container-and-deployment` - Container deployment patterns
+   :doc:`../../api_reference/01_core_framework/04_configuration_system`
+       Complete reference for all configuration sections
+   
+   :doc:`03_registry-and-discovery`
+       How configuration integrates with the registry
+   
+   :doc:`../05_production-systems/05_container-and-deployment`
+       Container deployment patterns

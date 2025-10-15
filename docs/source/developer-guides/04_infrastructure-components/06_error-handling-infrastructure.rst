@@ -72,10 +72,11 @@ The error handling system combines intelligent classification, automated recover
                return {"messages": [AIMessage(content=_create_fallback_response(e, state))]}
 
 **Key Principles:**
-1. **Centralized Processing:** Single error node handles all scenarios
-2. **Context Preservation:** Errors don't lose conversation or execution context
-3. **Graceful Degradation:** System continues functioning when components fail
-4. **User-Friendly Communication:** Technical errors become actionable explanations
+
+- **Centralized Processing:** Single error node handles all scenarios
+- **Context Preservation:** Errors don't lose conversation or execution context
+- **Graceful Degradation:** System continues functioning when components fail
+- **User-Friendly Communication:** Technical errors become actionable explanations
 
 Error Classification System
 ---------------------------
@@ -418,56 +419,22 @@ Integration Patterns
            "delay_seconds": 2.0,   # Longer delay for external services
            "backoff_factor": 2.0   # Exponential backoff
        }
-
-Best Practices
---------------
-
-**Error Classification Guidelines:**
-- Use RETRIABLE for network/temporary issues
-- Use CRITICAL for configuration/validation errors  
-- Use REPLANNING for execution plan strategy issues
-- Use RECLASSIFICATION for capability selection issues
-- Use FATAL only for error node failures
-
-**State Management:**
-- Use ``control_error_info`` for error details
-- Use ``control_retry_count`` for tracking attempts
-- Use ``control_has_error`` as the error state flag
-
-**User Communication:**
-- Provide structured error reports with timestamps
-- Include execution context and recovery suggestions
-- Use LLM-generated explanations for clarity
-
-Troubleshooting
----------------
-
-**Error Node Infinite Loops:**
-ErrorNode uses FATAL classification to prevent loops when error handling fails.
-
-**Missing Error Context:**
-System provides fallback responses when error context creation fails.
-
-**Router Retry Issues:**
-Retry handling is embedded in ``router_conditional_edge()`` - check state field consistency.
-
 .. seealso::
 
    :doc:`../../api_reference/04_error_handling/02_exception_reference`
        API reference for error classification and recovery systems
-   
-   :doc:`../03_core-framework-systems/01_state-management-architecture`
-       Error classification systems and retry policies
-   
+     
    :doc:`05_message-generation`
        Error response generation and user communication patterns
 
-Next Steps
-----------
-
-- :doc:`../05_production-systems/01_human-approval-workflows` - Error integration with approval systems
-- :doc:`../03_core-framework-systems/01_state-management-architecture` - State management during errors
-- :doc:`05_message-generation` - How error responses are formatted
+   :doc:`../05_production-systems/01_human-approval-workflows`
+       Error integration with approval systems
+   
+   :doc:`../03_core-framework-systems/01_state-management-architecture`
+       State management during errors
+   
+   :doc:`05_message-generation`
+       How error responses are formatted
 
 Error Handling Infrastructure provides the resilience and user-friendly error communication that makes the Alpha Berkeley Framework production-ready, ensuring graceful failure handling while keeping users informed and engaged.
 

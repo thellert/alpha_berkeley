@@ -572,13 +572,10 @@ Configuration
 - Version control configuration files
 - Test configuration changes in development first
 
-Next Steps
-==========
+.. seealso::
 
-After setting up container deployment:
-
-- :doc:`../../api_reference/01_core_framework/04_configuration_system` - Advanced configuration patterns
-
-**Related API Reference:**
-- :doc:`../../api_reference/03_production_systems/05_container-management` - Container management API
-- :doc:`../../api_reference/01_core_framework/04_configuration_system` - Configuration system reference
+   :doc:`../../api_reference/01_core_framework/04_configuration_system`
+       Advanced configuration patterns
+   
+   :doc:`../../api_reference/03_production_systems/05_container-management`
+       Container management API

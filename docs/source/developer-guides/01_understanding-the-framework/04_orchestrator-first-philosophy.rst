@@ -347,21 +347,25 @@ Complete Orchestration Flow
    # Step 2: router_conditional_edge(state) -> "respond" 
    # Final: router_conditional_edge(state) -> "END"
 
-Next Steps
-==========
-
-1. **Build Capabilities**: :doc:`../02_quick-start-patterns/01_building-your-first-capability` - Create capabilities that work with orchestrated plans
-2. **Learn State Management**: :doc:`../03_core-framework-systems/01_state-management-architecture` - Understand execution state handling
-3. **Explore Approval Workflows**: :doc:`../05_production-systems/01_human-approval-workflows` - Add human oversight to plans
-4. **See Real Applications**: :doc:`../../example-applications/index` - Orchestration in complex scenarios
-
 .. seealso::
 
-   :doc:`../../api_reference/02_infrastructure/04_orchestrator-planning`
-       Complete orchestration implementation and execution planning
+   :doc:`../02_quick-start-patterns/01_building-your-first-capability`
+       Create capabilities that work with orchestrated plans
    
-   :doc:`../../api_reference/01_core_framework/04_execution_planning`
-       Plan data structures and validation patterns
+   :doc:`../03_core-framework-systems/01_state-management-architecture`
+       Understand execution state handling
+   
+   :doc:`../05_production-systems/01_human-approval-workflows`
+       Add human oversight to plans
+   
+   :doc:`../../example-applications/index`
+       Orchestration in complex scenarios
+   
+   :doc:`../../api_reference/02_infrastructure/04_orchestration`
+      Complete orchestration implementation and execution planning
+   
+   :doc:`../../api_reference/01_core_framework/02_state_and_context`
+      Plan data structures and state management patterns
    
    :doc:`../../api_reference/02_infrastructure/05_execution-control`
        Plan execution routing and deterministic flow control

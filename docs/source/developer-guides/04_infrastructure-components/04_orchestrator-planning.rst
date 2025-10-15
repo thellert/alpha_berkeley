@@ -328,23 +328,10 @@ Integration Examples
    # Execution pauses until user approves/rejects plan
    # Approved plans resume execution without re-planning
 
-Performance Considerations
---------------------------
-
-**LLM Optimization:**
-- Single LLM call per orchestration reduces latency
-- Structured output ensures reliable plan parsing  
-- Timeout handling prevents hanging operations
-
-**State Management:**
-- Minimal state updates for LangGraph compatibility
-- Efficient context serialization
-- Proper error state cleanup
-
 .. seealso::
 
-   :doc:`../../api_reference/02_infrastructure/04_orchestrator`
-       API reference for orchestration classes and functions
+   :doc:`../../api_reference/02_infrastructure/04_orchestration`
+      API reference for orchestration classes and functions
    
    :doc:`../05_production-systems/01_human-approval-workflows`
        LLM-powered planning with approval workflow integration
@@ -352,11 +339,10 @@ Performance Considerations
    :doc:`03_classification-and-routing`
        Capability selection and execution coordination patterns
 
-Next Steps
-----------
-
-- :doc:`05_message-generation` - How execution results become user responses
-- :doc:`../05_production-systems/01_human-approval-workflows` - Advanced approval patterns
-- :doc:`06_error-handling-infrastructure` - How orchestration errors are handled
+   :doc:`05_message-generation`
+       How execution results become user responses
+    
+   :doc:`06_error-handling-infrastructure`
+       How orchestration errors are handled
 
 Orchestrator Planning provides the strategic intelligence that converts capability selections into coherent, executable plans with comprehensive validation and approval integration.

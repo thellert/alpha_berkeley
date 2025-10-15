@@ -323,15 +323,16 @@ Troubleshooting
    decision = evaluator.evaluate(has_epics_writes=True, has_epics_reads=False)
    print(f"Approval decision: {decision}")
 
-Next Steps
-==========
+.. seealso::
 
-After implementing approval workflows:
-
-- :doc:`02_data-source-integration` - Integrate approval with data source providers
-- :doc:`03_python-execution-service` - Advanced Python execution with approval
-
-**Related API Reference:**
-
-- :doc:`../../api_reference/03_production_systems/01_human-approval` - Complete approval system API
-- :doc:`../../api_reference/01_core_framework/02_state_and_context` - AgentState and approval data management
+   :doc:`02_data-source-integration`
+       Integrate approval with data source providers
+   
+   :doc:`03_python-execution-service`
+       Advanced Python execution with approval
+   
+   :doc:`../../api_reference/03_production_systems/01_human-approval`
+       Complete approval system API
+   
+   :doc:`../../api_reference/01_core_framework/02_state_and_context`
+       AgentState and approval data management

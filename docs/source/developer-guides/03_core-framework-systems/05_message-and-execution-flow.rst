@@ -521,14 +521,6 @@ The framework uses LangGraph with router-controlled conditional edges.
        
        return workflow.compile()
 
-Next Steps
-==========
-
-- **Infrastructure Components**: Detailed documentation for each infrastructure component
-- **Capability Development**: Building custom capabilities for the framework
-- **Advanced Patterns**: Complex workflows and approval systems
-- **API Reference**: Complete method documentation
-
 .. seealso::
    :doc:`../04_infrastructure-components/01_gateway-architecture`
        Gateway implementation details

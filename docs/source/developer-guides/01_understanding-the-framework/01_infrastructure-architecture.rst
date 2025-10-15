@@ -328,16 +328,20 @@ Architecture Benefits
    - Router coordinates deterministic execution
    - Gateway and capabilities handle specific domain concerns
 
-Next Steps
-==========
-
-1. **Learn State Management**: :doc:`../03_core-framework-systems/01_state-management-architecture` - How state flows through the system
-2. **Explore Registry System**: :doc:`../03_core-framework-systems/03_registry-and-discovery` - How components are discovered and registered
-3. **Build Your First Capability**: :doc:`../02_quick-start-patterns/01_building-your-first-capability` - Hands-on implementation
-4. **Understand Error Handling**: :doc:`../04_infrastructure-components/06_error-handling-infrastructure` - Comprehensive error management
-
 .. seealso::
 
+   :doc:`../03_core-framework-systems/01_state-management-architecture`
+       How state flows through the system
+   
+   :doc:`../03_core-framework-systems/03_registry-and-discovery`
+       How components are discovered and registered
+   
+   :doc:`../02_quick-start-patterns/01_building-your-first-capability`
+       Hands-on implementation
+   
+   :doc:`../04_infrastructure-components/06_error-handling-infrastructure`
+       Comprehensive error management
+   
    :doc:`../../api_reference/02_infrastructure/01_gateway`
        Complete Gateway API for message processing and state management
    

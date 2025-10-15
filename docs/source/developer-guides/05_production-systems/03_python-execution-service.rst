@@ -423,17 +423,16 @@ Troubleshooting
    - **Solution**: Check execution folder configuration and notebook link generation
 
 
-Next Steps
-==========
+.. seealso::
 
-After implementing Python execution service integration:
-
-- :doc:`04_memory-storage-service` - Integrate memory storage with Python execution
-- :doc:`05_container-and-deployment` - Advanced container orchestration
-- :doc:`01_human-approval-workflows` - Understanding the approval system integration
-
-**Related API Reference:**
-
-- :doc:`../../api_reference/03_production_systems/03_python-execution` - Complete Python execution API
-- :doc:`../../api_reference/03_production_systems/01_human-approval` - Approval system integration
-- :doc:`../../api_reference/01_core_framework/02_state_and_context` - State management for execution workflows
+   :doc:`04_memory-storage-service`
+       Integrate memory storage with Python execution
+   
+   :doc:`05_container-and-deployment`
+       Advanced container orchestration
+   
+   :doc:`01_human-approval-workflows`
+       Understanding the approval system integration
+   
+   :doc:`../../api_reference/03_production_systems/03_python-execution`
+       Complete Python execution API

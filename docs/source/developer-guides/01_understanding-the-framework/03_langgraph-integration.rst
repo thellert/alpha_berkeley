@@ -379,16 +379,20 @@ Troubleshooting
    async for chunk in graph.astream(input_data, config, stream_mode="custom"):
        # Gets real-time status updates
 
-Next Steps
-==========
-
-1. **Build Components**: :doc:`../02_quick-start-patterns/01_building-your-first-capability` - Create LangGraph-integrated capabilities
-2. **Learn State Management**: :doc:`../03_core-framework-systems/01_state-management-architecture` - Deep dive into state patterns
-3. **Production Setup**: :doc:`../05_production-systems/05_container-and-deployment` - Deploy with PostgreSQL checkpointing
-4. **Advanced Patterns**: :doc:`../05_production-systems/01_human-approval-workflows` - Complex interrupt handling
-
 .. seealso::
 
+   :doc:`../02_quick-start-patterns/01_building-your-first-capability`
+       Create LangGraph-integrated capabilities
+   
+   :doc:`../03_core-framework-systems/01_state-management-architecture`
+       Deep dive into state patterns
+   
+   :doc:`../05_production-systems/05_container-and-deployment`
+       Deploy with PostgreSQL checkpointing
+   
+   :doc:`../05_production-systems/01_human-approval-workflows`
+       Complex interrupt handling
+   
    :doc:`../../api_reference/01_core_framework/02_state_and_context`
        Complete state structure and MessagesState integration
    
