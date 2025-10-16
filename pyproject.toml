@@ -8,7 +8,7 @@ version = "0.6.0"
 description = "An open-source, domain-agnostic, capability-based architecture for building intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = {text = "BSD-3-Clause"}
 authors = [
     {name = "Thorsten Hellert", email = "thellert@lbl.gov"},
 ]
@@ -24,7 +24,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
