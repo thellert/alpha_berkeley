@@ -12,9 +12,9 @@ project_root: ${PROJECT_ROOT}
 # - Registry: src/applications/{app}/registry.py
 
 applications:
-  - als_assistant
+  # - als_assistant
   # - wind_turbine
-  # - hello_world_weather
+  - hello_world_weather
   
 # ============================================================
 # OPERATOR CONTROLS - System-wide governance and safety policies
@@ -95,9 +95,9 @@ deployed_services:
   - framework.pipelines        # OpenWebUI pipeline interface server
   
   # ALS Assistant application services (domain-specific) - MOVED HERE FROM src/applications/als_assistant/config.yml as CONVENIENCE
-  - applications.als_assistant.mongo        # Primary database for ALS Assistant PV data
-  - applications.als_assistant.pv_finder    # PV discovery for EPICS - standalone MCP server
-  - applications.als_assistant.langfuse     # Observability and tracing infrastructure
+  # - applications.als_assistant.mongo        # Primary database for ALS Assistant PV data
+  # - applications.als_assistant.pv_finder    # PV discovery for EPICS - standalone MCP server
+  # - applications.als_assistant.langfuse     # Observability and tracing infrastructure
   
 
 # Development Configuration

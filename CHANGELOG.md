@@ -5,6 +5,17 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2025-10-20
+
+### Changed
+- **Default Application**: Changed default application from `als_assistant` to `hello_world_weather` for improved new user experience
+- **Documentation**: Updated installation guide to explicitly recommend `hello_world_weather` as the beginner-friendly starting point
+- **Configuration**: Commented out ALS-specific services (mongo, pv_finder, langfuse) in default config to simplify initial setup
+
+### Enhanced
+- **Getting Started Experience**: New users can now run the framework without LBNL-specific infrastructure requirements
+- **Installation Documentation**: Added clear application selection section with progressive complexity path (hello_world_weather → wind_turbine → als_assistant)
+
 ## [0.6.0] - 2025-10-14
 
 ### Added

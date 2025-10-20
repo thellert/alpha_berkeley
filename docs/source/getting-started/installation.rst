@@ -87,26 +87,37 @@ Modify the following settings in ``config.yml``:
 
 1. **Project Root Path**: Update ``project_root`` in ``config.yml`` to your repository path. Either set ``PROJECT_ROOT`` in your ``.env`` file (recommended for multiple machines) or hard-code the path directly in the YAML file.
 
-2. **Ollama Base URL**: Set the base URL for `Ollama <https://ollama.com/>`_
+2. **Select Your Application**: Choose which agent application to run. For new users, we recommend starting with the ``hello_world_weather`` example:
+
+   .. code-block:: yaml
+
+      applications:
+        - hello_world_weather
+   
+   This simple weather agent demonstrates core framework concepts without requiring complex setup or LBNL-specific infrastructure. Once you're comfortable with the basics, you can explore other applications like ``wind_turbine`` (multi-capability orchestration) or ``als_assistant`` (production EPICS/accelerator integration - LBNL only).
+
+3. **Ollama Base URL**: Set the base URL for `Ollama <https://ollama.com/>`_
    
    - For direct host access: ``localhost:11434``
    - For container-based agents (like OpenWebUI pipelines): ``host.containers.internal:11434``
    - See `Ollama Connection`_ for OpenWebUI-specific configuration
 
-3. **Deployed Services**: In the deployed services section, ensure the following are uncommented:
+4. **Deployed Services**: In the deployed services section, ensure the following framework services are uncommented:
    
    - ``framework.jupyter`` - this environment is intended to give users the capability to edit and run the alpha-berkeley generated codes
    - ``framework.open_webui`` - this is the entry point for the user, where you communicate interactively through `OpenWebUI <https://openwebui.com/>`_, a convenient web-based chat interface for LLMs
    - ``framework.pipelines`` - this is the core environment in which the agent is running
+   
+   **Note:** Application-specific services (like ``als_assistant.mongo``, ``als_assistant.pv_finder``) should remain commented out unless you're specifically using that application. The ``hello_world_weather`` application doesn't require any additional services.
 
-4. **API URL**: If you are using `CBorg <https://cborg.lbl.gov/>`_ as your model provider (LBNL internal only), set the CBorg API URL to either:
+5. **API URL**: If you are using `CBorg <https://cborg.lbl.gov/>`_ as your model provider (LBNL internal only), set the CBorg API URL to either:
    
    - Global API URL: ``https://api.cborg.lbl.gov/v1``
    - Local API URL: ``https://api-local.cborg.lbl.gov/v1`` (requires local network connection)
    
    In ``./config.yml``, update: ``api: providers:cborg:base_url: https://api-local.cborg.lbl.gov/v1``
 
-5. **For External Users (Non-LBNL)**: If you don't have access to CBorg, you'll need to configure alternative model providers in ``config.yml`` and ``src/framework/config.yml``. Update the ``provider`` fields under the ``models`` section to use providers like ``openai``, ``anthropic``, ``ollama``, or others you have access to. Ensure corresponding API keys are set in your ``.env`` file.
+6. **For External Users (Non-LBNL)**: If you don't have access to CBorg, you'll need to configure alternative model providers in ``config.yml`` and ``src/framework/config.yml``. Update the ``provider`` fields under the ``models`` section to use providers like ``openai``, ``anthropic``, ``ollama``, or others you have access to. Ensure corresponding API keys are set in your ``.env`` file.
 
    .. dropdown:: Need Support for Additional Providers?
       :color: info
