@@ -378,10 +378,11 @@ execution_control.limits
 **Fields:**
 
 ``max_reclassifications`` (integer)
-   Maximum times a task can be reclassified
+   Maximum number of reclassifications allowed
 
-   - Default: ``1``
+   - Default: ``1`` (allows 1 reclassification, meaning 2 total classification attempts)
    - Prevents infinite reclassification loops
+   - Counter only increments when reclassification actually occurs, not on initial classification
 
 ``max_planning_attempts`` (integer)
    Maximum orchestrator planning attempts

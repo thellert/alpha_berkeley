@@ -1,4 +1,20 @@
-# Alpha Berkeley Framework - Latest Release (v0.6.1)
+# Alpha Berkeley Framework - Latest Release (v0.6.2)
+
+🐛 **Bugfix Release** - Critical fix for reclassification counter logic ensuring proper retry behavior.
+
+## What's Fixed
+
+### 🔧 Reclassification Counter Bug
+- **Critical Bug Fixed**: `control_reclassification_count` was incorrectly incremented on initial classification
+- **Correct Behavior**: Counter now only increments on actual reclassifications (when `previous_failure` context is present)
+- **Impact**: With `max_reclassifications: 1`, system now correctly allows 1 reclassification (2 total attempts: initial + 1 retry)
+- **Implementation**: Simplified logic by updating counter once at the top of `_create_classification_result()` function
+
+### 📚 Documentation Updates
+- **Configuration Reference**: Clarified `max_reclassifications` parameter to explicitly state it allows N reclassifications after initial classification
+- **Developer Guide**: Updated classification and routing documentation for accuracy
+
+## Previous Release (v0.6.1)
 
 🎯 **Improved Onboarding Release** - Simplified default configuration for better new user experience with `hello_world_weather` as the default application.
 

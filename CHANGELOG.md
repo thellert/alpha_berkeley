@@ -5,6 +5,18 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2025-10-22
+
+### Fixed
+- **Reclassification Counter Bug**: Fixed critical bug where `control_reclassification_count` was incorrectly incremented on initial classification instead of only on actual reclassifications
+  - With `max_reclassifications: 1`, system now correctly allows 1 reclassification (2 total classification attempts: initial + 1 retry)
+  - Counter increment logic moved to only trigger when `previous_failure` context is present
+  - Simplified implementation by updating counter once at top of `_create_classification_result()` function
+
+### Documentation
+- **Configuration Reference**: Clarified `max_reclassifications` parameter documentation to explicitly state it allows N reclassifications after initial classification
+- **Developer Guide**: Updated classification and routing documentation to note counter only increments on actual reclassifications
+
 ## [0.6.1] - 2025-10-20
 
 ### Changed

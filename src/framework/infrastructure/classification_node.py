@@ -265,6 +265,9 @@ def _create_classification_result(
     :return: Complete state update dictionary for LangGraph
     """
     reclassification_count = state.get('control_reclassification_count', 0)
+    # Only increment if this is actually a reclassification
+    if previous_failure:
+        reclassification_count += 1
     
     # Planning state updates
     planning_fields = {
@@ -275,7 +278,7 @@ def _create_classification_result(
     
     # Control flow updates
     control_flow_update = {
-        "control_reclassification_count": reclassification_count + 1,
+        "control_reclassification_count": reclassification_count,
         "control_reclassification_reason": None
     }
     
@@ -288,7 +291,7 @@ def _create_classification_result(
         capabilities_selected=len(active_capabilities),
         capability_names=active_capabilities,
         reclassification=bool(previous_failure),
-        reclassification_count=reclassification_count + 1,
+        reclassification_count=reclassification_count,
         bypass_mode=is_bypass
     )
     
