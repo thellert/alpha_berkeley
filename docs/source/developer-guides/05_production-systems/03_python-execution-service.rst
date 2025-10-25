@@ -118,7 +118,7 @@ Use the Python execution service directly in your capabilities with proper appro
        clear_approval_state,
        handle_service_with_interrupts
    )
-   from configs.config import get_full_configuration
+   from framework.utils.config import get_full_configuration
    from langgraph.types import Command
 
    @capability_node

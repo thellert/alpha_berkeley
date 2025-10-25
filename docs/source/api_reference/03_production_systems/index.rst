@@ -175,18 +175,17 @@ These systems work together to provide comprehensive production capabilities:
 
          # Container deployment configuration
          deployed_services:
-           - framework.jupyter              # Secure execution environment
-           - framework.pipelines            # Processing pipeline infrastructure
-           - applications.als_assistant.pv_finder  # Application data
+           - jupyter              # Secure execution environment
+           - pipelines            # Processing pipeline infrastructure
+           - pv_finder            # Application data service (e.g., ALS Assistant)
 
-         framework:
-           execution:
-             execution_method: "container"   # Isolation by default
-             modes:
-               write_access:
-                 requires_approval: true    # Safety first
-                 allows_writes: true
-                 kernel_name: "python3-epics-write"
+         execution:
+           execution_method: "container"   # Isolation by default
+           modes:
+             write_access:
+               requires_approval: true    # Safety first
+               allows_writes: true
+               kernel_name: "python3-epics-write"
 
 .. dropdown:: 🚀 Next Steps
 

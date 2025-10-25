@@ -22,6 +22,54 @@ Overview
 
 The Alpha Berkeley Framework eliminates boilerplate through convention-based configuration loading and explicit registry patterns. Components are declared in registry configurations and loaded using standardized naming conventions.
 
+Project Creation and Structure
+==============================
+
+Creating a New Project
+~~~~~~~~~~~~~~~~~~~~~~
+
+Projects are created using the ``framework init`` command with predefined templates:
+
+.. code-block:: bash
+
+   # Install the framework
+   pip install framework
+   
+   # Create a new project from a template
+   framework init my-agent --template hello_world_weather
+   cd my-agent
+
+Available templates include:
+
+- ``minimal`` - Basic skeleton for starting from scratch
+- ``hello_world_weather`` - Simple weather agent (recommended for learning)
+- ``wind_turbine`` - Advanced multi-capability agent example
+
+Standard Project Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Generated projects follow a consistent structure:
+
+.. code-block::
+
+   my-agent/
+   ├── src/
+   │   └── my_agent/              # Package name derived from project name
+   │       ├── __init__.py
+   │       ├── registry.py         # Component registration
+   │       ├── context_classes.py  # Data models
+   │       ├── capabilities/       # Business logic
+   │       └── ...
+   ├── services/                   # Container configurations
+   ├── config.yml                  # Application settings
+   └── .env.example                # Environment variables template
+
+This structure provides:
+
+- **Clear separation**: Application code in ``src/``, configuration at root level
+- **Module consistency**: Package name matches project directory (``my-agent`` → ``my_agent``)
+- **Self-contained**: Each project includes complete configuration and service definitions
+
 Core Architecture
 =================
 
@@ -31,7 +79,7 @@ Configuration-Driven Loading System
 The framework uses three key patterns:
 
 1. **Explicit Component Registration**: Components are declared in registry configurations with full metadata
-2. **Convention-Based Module Loading**: Standardized paths for loading registry configurations and components
+2. **Configuration-Driven Discovery**: Registry location specified in ``config.yml``, components use simple module paths
 3. **Interface-Based Registry Pattern**: `RegistryConfigProvider` ensures type-safe component declarations
 
 This approach reduces boilerplate by ~80% while ensuring consistency and avoiding hidden dependencies.
@@ -107,60 +155,165 @@ Registry System
 Application Registry Pattern
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Each application provides a registry configuration:
+Each application provides a registry configuration using the ``extend_framework_registry()`` helper:
 
 .. code-block:: python
 
-   # File: applications/als_assistant/registry.py
+   # File: src/my_agent/registry.py
    from framework.registry import (
-       CapabilityRegistration, 
+       extend_framework_registry,
+       CapabilityRegistration,
+       ContextClassRegistration,
        RegistryConfig,
        RegistryConfigProvider
    )
 
-   class ALSAssistantRegistryProvider(RegistryConfigProvider):
+   class MyAgentRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
-           return RegistryConfig(
+           return extend_framework_registry(
                capabilities=[
                    CapabilityRegistration(
-                       name="pv_address_finding",
-                       module_path="applications.als_assistant.capabilities.pv_address_finding",
-                       class_name="PVAddressFindingCapability",
-                       description="Find EPICS PV addresses",
-                       provides=["PV_ADDRESSES"],
-                       requires=[]
+                       name="weather_data_retrieval",
+                       module_path="my_agent.capabilities.weather_data_retrieval",
+                       class_name="WeatherDataRetrievalCapability",
+                       description="Retrieve weather data for analysis",
+                       provides=["WEATHER_DATA"],
+                       requires=["TIME_RANGE"]
                    ),
                    CapabilityRegistration(
-                       name="data_analysis", 
-                       module_path="applications.als_assistant.capabilities.data_analysis",
-                       class_name="DataAnalysisCapability",
-                       description="Analyze scientific data",
+                       name="turbine_analysis", 
+                       module_path="my_agent.capabilities.turbine_analysis",
+                       class_name="TurbineAnalysisCapability",
+                       description="Analyze turbine performance data",
                        provides=["ANALYSIS_RESULTS"],
-                       requires=["DATA_SOURCES"]
+                       requires=["TURBINE_DATA", "WEATHER_DATA"]
+                   )
+               ],
+               context_classes=[
+                   ContextClassRegistration(
+                       context_type="WEATHER_DATA",
+                       module_path="my_agent.context_classes",
+                       class_name="WeatherDataContext"
+                   ),
+                   ContextClassRegistration(
+                       context_type="ANALYSIS_RESULTS",
+                       module_path="my_agent.context_classes",
+                       class_name="AnalysisResultsContext"
                    )
                ]
            )
 
+The ``extend_framework_registry()`` helper automatically includes all framework capabilities (memory, Python execution, time parsing, etc.) while adding your application-specific components.
+
+.. dropdown:: **Advanced Registry Patterns**
+   :color: info
+   :icon: tools
+
+   For specialized use cases, the framework provides advanced registry configuration patterns:
+
+   .. tab-set::
+
+      .. tab-item:: Explicit Registration
+
+         For complete control over all registered components, you can explicitly list everything:
+
+         .. code-block:: python
+
+            class MyAgentRegistryProvider(RegistryConfigProvider):
+                def get_registry_config(self) -> RegistryConfig:
+                    return RegistryConfig(
+                        capabilities=[
+                            # Must explicitly list all capabilities including framework ones
+                            CapabilityRegistration(
+                                name="orchestrator",
+                                module_path="framework.infrastructure.orchestrator_node",
+                                class_name="OrchestratorCapability",
+                                # ... full configuration
+                            ),
+                            # ... all other framework capabilities
+                            CapabilityRegistration(
+                                name="my_capability",
+                                module_path="my_agent.capabilities.my_capability",
+                                class_name="MyCapability",
+                                provides=["MY_DATA"],
+                                requires=[]
+                            )
+                        ],
+                        context_classes=[...],
+                        # ... all other registry sections
+                    )
+
+         **When to use:**
+
+         - Learning how the registry system works internally
+         - Debugging registry issues
+         - Needing complete control over initialization order
+
+         **Recommendation:** Use ``extend_framework_registry()`` for standard workflows - it's cleaner and less error-prone.
+
+      .. tab-item:: Excluding Framework Components
+
+         Replace framework capabilities with specialized versions:
+
+         .. code-block:: python
+
+            class MyAgentRegistryProvider(RegistryConfigProvider):
+                def get_registry_config(self) -> RegistryConfig:
+                    return extend_framework_registry(
+                        capabilities=[
+                            CapabilityRegistration(
+                                name="specialized_python",
+                                module_path="my_agent.capabilities.specialized_python",
+                                class_name="SpecializedPythonCapability",
+                                description="Domain-specific Python execution",
+                                provides=["ANALYSIS_RESULTS"],
+                                requires=["DOMAIN_DATA"]
+                            )
+                        ],
+                        # Exclude generic Python capability to avoid conflicts
+                        exclude_capabilities=["python"]
+                    )
+
+         **Common use cases:**
+
+         - Building domain-specific versions of framework capabilities
+         - Implementing custom approval workflows
+         - Adding specialized error handling for specific domains
+         - Requiring different dependency resolution
+
 Registry Initialization
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+The framework uses configuration-driven registry discovery:
+
+**Configuration Setup:**
+
+.. code-block:: yaml
+
+   # In your project's config.yml
+   registry_path: src/my_agent/registry.py  # Relative or absolute path
+
+**Initialization Process:**
+
 The framework systematically:
-1. Reads application list from configuration
-2. Loads registry providers using naming convention (`applications.{app_name}.registry`)
-3. Imports components lazily using explicit module paths to prevent circular imports
-4. Validates dependencies and initialization order
-5. Creates component instances ready for use
+
+1. Reads ``registry_path`` from configuration (supports relative and absolute paths)
+2. Dynamically imports the registry provider
+3. Calls ``get_registry_config()`` to obtain component registrations
+4. Imports components using their module paths
+5. Validates dependencies and initialization order
+6. Creates component instances ready for use
 
 .. code-block:: python
 
    from framework.registry import initialize_registry, get_registry
 
-   # Initialize the registry system
+   # Initialize the registry system (automatically uses registry_path from config)
    initialize_registry()
 
    # Access components
    registry = get_registry()
-   capability = registry.get_capability("pv_address_finding")
+   capability = registry.get_capability("weather_data_retrieval")
 
 Component Requirements
 ======================
@@ -234,7 +387,7 @@ Framework components use LangGraph's native streaming:
    class MyCapability(BaseCapability):
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
-           from configs.streaming import get_streamer
+           from framework.utils.streaming import get_streamer
            
            # Get framework streaming support
            streamer = get_streamer("framework", "my_capability", state)
@@ -255,20 +408,27 @@ Reduced Boilerplate
 
 .. code-block:: python
 
-   # Component implementation
+   # Component implementation (src/my_agent/capabilities/my_capability.py)
    @capability_node
    class MyCapability(BaseCapability):
        name = "my_capability"
        description = "What it does"
+       provides = ["MY_DATA"]
+       requires = []
        # Implementation handles infrastructure
 
-   # Registry declaration (required)
-   CapabilityRegistration(
-       name="my_capability",
-       module_path="applications.myapp.capabilities.my_capability",
-       class_name="MyCapability",
-       description="What it does",
-       provides=[], requires=[]
+   # Registry declaration (in src/my_agent/registry.py)
+   extend_framework_registry(
+       capabilities=[
+           CapabilityRegistration(
+               name="my_capability",
+               module_path="my_agent.capabilities.my_capability",
+               class_name="MyCapability",
+               description="What it does",
+               provides=["MY_DATA"],
+               requires=[]
+           )
+       ]
    )
 
 Consistency Guarantee
@@ -317,19 +477,21 @@ Common Issues
        name = "my_capability"
        description = "Does something"
 
-**Registry path mismatch:**
+**Module path mismatch:**
 
 .. code-block:: python
 
-   # Problem: Registry registration doesn't match file structure
+   # Problem: Module path doesn't match file location
+   # File: src/my_agent/capabilities/my_capability.py
    CapabilityRegistration(
-       module_path="applications.myapp.capabilities.missing",  # Wrong path
+       module_path="my_agent.capabilities.missing",  # Wrong - file doesn't exist
        class_name="MyCapability"
    )
 
-   # Solution: Match file structure exactly
+   # Solution: Use correct module path matching file structure
+   # File: src/my_agent/capabilities/my_capability.py
    CapabilityRegistration(
-       module_path="applications.myapp.capabilities.my_capability",  # Correct
+       module_path="my_agent.capabilities.my_capability",  # Correct
        class_name="MyCapability"
    )
 
@@ -345,15 +507,13 @@ Component logging follows the structured API pattern used throughout the framewo
 
 .. code-block:: python
 
-   from configs.logger import get_logger
+   from framework.utils.logger import get_logger
    
-   # Framework components (follows component naming conventions)
-   logger = get_logger("framework", "orchestrator")
-   logger = get_logger("framework", "task_extraction")
-   
-   # Application components (matches registry declarations)
-   logger = get_logger("hello_world_weather", "current_weather")
-   logger = get_logger("als_assistant", "data_analysis")
+   # All components use simple, flat component names
+   logger = get_logger("orchestrator")
+   logger = get_logger("task_extraction")
+   logger = get_logger("current_weather")
+   logger = get_logger("data_analysis")
    
    # Rich message hierarchy for development
    logger.key_info("Starting capability execution")
@@ -369,15 +529,14 @@ Component logging follows the structured API pattern used throughout the framewo
 
 .. code-block:: yaml
 
-   # Framework component colors (in src/framework/config.yml)
+   # Framework component colors (in framework's internal config.yml)
    logging:
      framework:
        logging_colors:
          orchestrator: "cyan"
          task_extraction: "thistle1"
    
-   # Application component colors (in src/applications/{app_name}/config.yml)
-   # Note: These get automatically namespaced under applications.{app_name} by config
+   # Application component colors (in your project's config.yml)
    logging:
      logging_colors:
        current_weather: "blue"
@@ -392,14 +551,14 @@ Streaming events integrate with LangGraph's native streaming and follow the same
 
 .. code-block:: python
 
-   from configs.streaming import get_streamer
+   from framework.utils.streaming import get_streamer
    
    @capability_node
    class MyCapability(BaseCapability):
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
            # Follows same naming pattern as get_logger
-           streamer = get_streamer("als_assistant", "my_capability", state)
+           streamer = get_streamer("my_capability", state)
            
            streamer.status("Processing data...")
            result = await process_data()
@@ -439,7 +598,7 @@ The model factory integrates with the configuration system following the same pr
 .. code-block:: python
 
    from framework.models import get_model
-   from configs.config import get_provider_config
+   from framework.utils.config import get_provider_config
    
    # Configuration-driven model creation
    provider_config = get_provider_config("anthropic")
@@ -497,6 +656,12 @@ Development utilities provide the same benefits as component registration:
 
 .. seealso::
 
+   :doc:`../../getting-started/hello-world-tutorial`
+       Step-by-step tutorial showing registry configuration in a working weather agent
+   
+   :doc:`../../getting-started/build-your-first-agent`
+       Advanced patterns including framework capability exclusion and custom prompts
+   
    :doc:`../../api_reference/01_core_framework/03_registry_system`
        API reference for registry management and component discovery
    

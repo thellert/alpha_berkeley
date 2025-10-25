@@ -14,32 +14,55 @@ A "Hello World Weather" agent is a simple agent that:
 * By this we demonstrate the complete capability → context → response flow
 * Shows framework integration patterns
 
-.. admonition:: What You'll Learn
+By the end of this guide, you'll have a working agent that responds to queries like "What's the weather in Prague?" with temperature and conditions data.
+
+.. dropdown:: **Prerequisites**
+   :color: info
+   :icon: list-unordered
+
+   **Required:** Alpha Berkeley framework installed via ``pip install framework``
    
-   By the end of this guide, you'll have a working agent that responds to queries like "What's the weather in Prague?" with temperature and conditions data.
+   If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
+   
+   - Install Podman (container runtime)
+   - Set up Python 3.11 virtual environment
+   - Install the framework package
+   - Configure your environment
+   
+   **Optional but Recommended:** Basic understanding of Python and async/await patterns.
 
-Prerequisites
-=============
+Step 1: Create the Project
+---------------------------
 
-* Alpha Berkeley framework installed and running, otherwise follow the :doc:`installation guide <installation>` in the documentation.
+First, create a new project from the hello_world_weather template using :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
+.. code-block:: bash
 
-Step 1: Explore the Project Structure
--------------------------------------
+   framework init weather-demo --template hello_world_weather
+   cd weather-demo
 
-You can find the complete implementation of the hello_world_weather application (`browse on GitHub <https://github.com/thellert/alpha_berkeley/tree/main/src/applications/hello_world_weather>`_) in the following directory structure:
+This generates a complete, self-contained project with the following structure:
 
 .. code-block::
 
-   src/applications/hello_world_weather/
-   ├── __init__.py
-   ├── config.yml
-   ├── mock_weather_api.py
-   ├── context_classes.py
-   ├── registry.py
-   └── capabilities/
-       ├── __init__.py
-       └── current_weather.py
+   weather-demo/
+   ├── src/
+   │   └── weather_demo/
+   │       ├── __init__.py
+   │       ├── mock_weather_api.py
+   │       ├── context_classes.py
+   │       ├── registry.py
+   │       └── capabilities/
+   │           ├── __init__.py
+   │           └── current_weather.py
+   ├── services/                  # Container service configurations
+   ├── config.yml                 # Complete configuration
+   └── .env.example               # API key template
+
+.. admonition:: New in v0.7.0: Template-Based Projects
+   :class: version-070-change
+
+   Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/hello_world_weather <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/hello_world_weather>`_.
 
 This tutorial will walk you through understanding how each component works and how they integrate together to create a complete AI agent application.
 
@@ -77,7 +100,7 @@ The ``mock_weather_api.py`` file provides a deterministic weather data provider 
 
 .. dropdown:: Complete Mock API Implementation
    
-   Full implementation of the mock weather service (`view mock API on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/mock_weather_api.py>`_)
+   Full implementation of the mock weather service (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/mock_weather_api.py>`_)
 
    .. code-block:: python
 
@@ -457,7 +480,7 @@ The classifier guide teaches the LLM when to activate your capability based on u
 
 .. dropdown:: Complete Current Weather Capability Implementation
    
-   Full capability showing all required methods and patterns (`view capability on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/capabilities/current_weather.py>`_)
+   Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
 
    .. code-block:: python
 
@@ -477,13 +500,13 @@ The classifier guide teaches the LLM when to activate your capability based on u
       from framework.base.errors import ErrorClassification, ErrorSeverity
       from framework.registry import get_registry
       from framework.state import AgentState, StateManager
-      from configs.logger import get_logger
-      from configs.streaming import get_streamer
+      from framework.utils.logger import get_logger
+      from framework.utils.streaming import get_streamer
       
-      from applications.hello_world_weather.context_classes import CurrentWeatherContext
-      from applications.hello_world_weather.mock_weather_api import weather_api
+      from weather_demo.context_classes import CurrentWeatherContext
+      from weather_demo.mock_weather_api import weather_api
       
-      logger = get_logger("hello_world_weather", "current_weather")
+      logger = get_logger("current_weather")
       registry = get_registry()
       
       @capability_node
@@ -634,156 +657,240 @@ The registry system is how the framework discovers and manages your application'
    
    The registry enables loose coupling and lazy loading - the framework can discover your components without importing them until needed, improving startup performance and modularity.
 
-**5.1: The Registry Provider Pattern**
+.. admonition:: New in v0.7.0: Registry Helper Functions
+   :class: version-070-change
 
-Every application implements a ``RegistryConfigProvider`` that tells the framework what components exist:
+   The framework now provides ``extend_framework_registry()`` helper that automatically includes all framework components with your custom ones. You only specify what's unique to your application.
+
+**5.1: Understanding the Registry Pattern**
+
+The registry uses a class-based provider pattern. Here's the recommended structure:
 
 .. code-block:: python
 
-   from framework.registry import RegistryConfigProvider, RegistryConfig
+   from framework.registry import (
+       extend_framework_registry,
+       CapabilityRegistration,
+       ContextClassRegistration,
+       RegistryConfig,
+       RegistryConfigProvider
+   )
    
-   class HelloWorldWeatherRegistryProvider(RegistryConfigProvider):
-       """Registry provider for Hello World Weather application."""
+   class WeatherRegistryProvider(RegistryConfigProvider):
+       """Registry provider for the weather application."""
        
        def get_registry_config(self) -> RegistryConfig:
-           """Tell the framework what components this application provides."""
-           return RegistryConfig(
-               capabilities=[...],      # Your capabilities
-               context_classes=[...]    # Your context classes
+           return extend_framework_registry(
+               capabilities=[
+                   CapabilityRegistration(
+                       name="current_weather",
+                       module_path="weather.capabilities.current_weather",
+                       class_name="CurrentWeatherCapability",
+                       description="Get current weather conditions",
+                       provides=["CURRENT_WEATHER"],
+                       requires=[]
+                   )
+               ],
+               context_classes=[
+                   ContextClassRegistration(
+                       context_type="CURRENT_WEATHER",
+                       module_path="weather.context_classes",
+                       class_name="CurrentWeatherContext"
+                   )
+               ]
            )
 
-**5.2: Registering Capabilities**
+**Benefits of this pattern:**
+- Automatically includes all framework capabilities (memory, time parsing, Python, etc.)
+- You only specify your application-specific components
+- Type-safe with proper IDE support
+- Clear, maintainable code
 
-Use a list of ``CapabilityRegistration`` objects to tell the framework about your capabilities:
+**5.2: Alternative: Explicit Registration (Advanced)**
 
-.. code-block:: python
-
-   from framework.registry import CapabilityRegistration
-   
-   capabilities=[
-       CapabilityRegistration(
-           name="current_weather",                    # Unique name
-           module_path="applications.hello_world_weather.capabilities.current_weather",
-           class_name="CurrentWeatherCapability",     # Class to load
-           description="Get current weather conditions for a location",
-           provides=["CURRENT_WEATHER"],              # Context types it creates
-           requires=[]                                # Context types it needs
-       )
-   ]
-
-**5.3: Registering Context Classes**
-
-Use a list of ``ContextClassRegistration`` objects to register your data structures:
+If you need fine control, you can explicitly list all components:
 
 .. code-block:: python
 
-   from framework.registry import ContextClassRegistration
+   from framework.registry import (
+       CapabilityRegistration,
+       ContextClassRegistration,
+       RegistryConfig,
+       RegistryConfigProvider
+   )
    
-   context_classes=[
-       ContextClassRegistration(
-           context_type="CURRENT_WEATHER",           # Must match capability's "provides"
-           module_path="applications.hello_world_weather.context_classes",
-           class_name="CurrentWeatherContext"        # Class to load
-       )
-   ]
+   class WeatherDemoRegistryProvider(RegistryConfigProvider):
+       def get_registry_config(self) -> RegistryConfig:
+           return RegistryConfig(
+               capabilities=[
+                   CapabilityRegistration(
+                       name="current_weather",
+                       module_path="weather_demo.capabilities.current_weather",
+                       class_name="CurrentWeatherCapability",
+                       description="Get current weather conditions for a location",
+                       provides=["CURRENT_WEATHER"],
+                       requires=[]
+                   )
+               ],
+               context_classes=[
+                   ContextClassRegistration(
+                       context_type="CURRENT_WEATHER",
+                       module_path="weather_demo.context_classes",
+                       class_name="CurrentWeatherContext"
+                   )
+               ]
+           )
+
+**When to use explicit registration:**
+- Learning how the registry system works internally
+- Debugging registry issues
+- Needing fine-grained control over registration details
 
 .. dropdown:: Complete Registry Implementation
    
-   Complete registry file (`view registry on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/registry.py>`_)
+   Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/registry.py.j2>`_)
 
    .. code-block:: python
 
       """
-      Hello World Weather Registry
+      Weather Application Registry
       
-      Simple registration of weather capabilities and context classes.
+      Registry configuration using extend_framework_registry() to automatically
+      include framework components and add weather-specific capability.
       """
       
       from framework.registry import (
-          CapabilityRegistration, 
-          ContextClassRegistration, 
+          extend_framework_registry,
+          CapabilityRegistration,
+          ContextClassRegistration,
           RegistryConfig,
           RegistryConfigProvider
       )
       
-      class HelloWorldWeatherRegistryProvider(RegistryConfigProvider):
-          """Registry provider for Hello World Weather application."""
+      class WeatherRegistryProvider(RegistryConfigProvider):
+          """Registry provider for weather tutorial application."""
           
           def get_registry_config(self) -> RegistryConfig:
-              """Get hello world weather application registry configuration.
-              
-              Returns:
-                  RegistryConfig: Registry configuration for hello world weather application
-              """
-              return RegistryConfig(
+              """Provide registry configuration with framework + weather components."""
+              return extend_framework_registry(
+                  # Add weather-specific capability
                   capabilities=[
                       CapabilityRegistration(
                           name="current_weather",
-                          module_path="applications.hello_world_weather.capabilities.current_weather",
-                          class_name="CurrentWeatherCapability", 
+                          module_path="weather.capabilities.current_weather",
+                          class_name="CurrentWeatherCapability",
                           description="Get current weather conditions for a location",
                           provides=["CURRENT_WEATHER"],
                           requires=[]
                       )
                   ],
                   
+                  # Add weather-specific context class
                   context_classes=[
                       ContextClassRegistration(
                           context_type="CURRENT_WEATHER",
-                          module_path="applications.hello_world_weather.context_classes", 
+                          module_path="weather.context_classes",
                           class_name="CurrentWeatherContext"
                       )
                   ]
               )
 
+   This automatically includes all framework capabilities (memory, Python, time parsing, etc.) while adding only your weather-specific components!
+
 Step 6: Application Configuration
 ----------------------------------
 
-The ``config.yml`` file contains the application settings (`view config on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/config.yml>`_):
+The generated project includes a complete ``config.yml`` file in the project root with all necessary settings pre-configured.
+
+.. admonition:: New in v0.7.0: Self-Contained Configuration
+   :class: version-070-change
+
+   Projects now include a complete, self-contained ``config.yml`` with all framework settings pre-configured. No need to edit multiple configuration files - everything is in one place.
+
+**Key Configuration Sections:**
+
+The ``config.yml`` includes:
 
 .. code-block:: yaml
 
-   # Hello World Weather Application Configuration - Quick Start Version
-
-   # OpenWebUI pipeline configuration
+   # Registry discovery - tells framework where your application code is
+   registry_path: src/weather/registry.py
+   
+   # Model configurations
+   models:
+     orchestrator:
+       provider: cborg  # or openai, anthropic, ollama
+       model_id: anthropic/claude-sonnet
+   
+   # Service deployments
+   deployed_services:
+     - framework.jupyter
+     - framework.open-webui
+     - framework.pipelines
+   
+   # Pipeline configuration
    pipeline:
-     name: "Hello World Weather"
+     name: "Weather Demo"
 
-   # Logging
-   logging:
-     logging_colors:
-       current_weather: "blue"
+**Customization:**
 
-**Enable Your Application**
+You can customize the configuration by editing ``config.yml``:
 
-Finally, you need to enable your application in the main configuration file. Add ``hello_world_weather`` to the applications list in the root ``config.yml``:
+1. **Change model providers** - Update ``provider`` fields under ``models``
+2. **Add/remove services** - Modify ``deployed_services`` list
+3. **Update paths** - Set ``project_root`` to your project directory
+4. **API keys** - Set in ``.env`` file (not in ``config.yml``)
 
-**File:** ``config.yml`` (at project root)
+Step 7: Deploy and Test Your Agent
+-----------------------------------
 
-.. code-block:: yaml
+Now that you understand the components, let's deploy and test the agent.
 
-   applications: 
-     - hello_world_weather
+**1. Deploy Services**
 
-.. admonition::
-   The framework automatically discovers application configurations using this applications list. Without adding your application here, the framework won't load it, even if the application config file exists.
+Start the containerized services using :doc:`framework deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
-Step 7: Test Your Agent
------------------------
+.. code-block:: bash
 
-To test your new agent, you can use the Direct Conversation interface, which allows you to interact with it directly from the command line.
+   # Start services in background
+   framework deploy up --detached
+   
+   # Check they're running
+   podman ps
 
-1. **Navigate to the CLI directory**:
-   .. code-block:: bash
+**2. Configure Environment**
 
-      cd interfaces/CLI
+Ensure your API keys are set in ``.env``:
 
-2. **Run the Direct Conversation script**:
-   .. code-block:: bash
+.. code-block:: bash
 
-      python direct_conversation.py
+   # Copy template
+   cp .env.example .env
+   
+   # Edit and add your API keys
+   # OPENAI_API_KEY=your-key-here
+   # ANTHROPIC_API_KEY=your-key-here
+   # CBORG_API_KEY=your-key-here
 
-*Start asking questions*: The framework will automatically load the hello_world_weather application and you can ask weather-related questions directly in the terminal. When you run your agent, you'll see the framework's decision-making process in action. Here are the key phases to watch for:
+**3. Start Chat Interface**
+
+Launch the interactive chat using :doc:`framework chat <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+
+.. code-block:: bash
+
+   framework chat
+
+**4. Test Your Agent**
+
+Ask weather-related questions:
+
+.. code-block:: text
+
+   You: What's the weather in San Francisco?
+   You: How's the weather in Prague?
+   You: Tell me the current conditions in New York
+
+When you run your agent, you'll see the framework's decision-making process in action. Here are the key phases to watch for:
 
 
 **Phase 1: Framework Initialization**

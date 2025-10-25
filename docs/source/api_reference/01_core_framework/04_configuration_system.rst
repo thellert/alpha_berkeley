@@ -5,13 +5,13 @@ Configuration System
 .. admonition:: 📖 Configuration Architecture Guide
    :class: tip
 
-   For a comprehensive guide to the YAML configuration system, three-tier architecture, merging rules, and best practices, see :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture`.
+   For a comprehensive guide to the YAML configuration system, self-contained architecture, and best practices, see :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture`.
    
    This page provides the complete reference for all configuration sections and the Python API for accessing configuration at runtime.
 
 Configuration system with YAML loading, environment resolution, and seamless LangGraph integration.
 
-.. currentmodule:: configs.config
+.. currentmodule:: framework.utils.config
 
 Core Classes
 ============
@@ -94,35 +94,15 @@ This section provides a complete reference for all configuration sections availa
 
    Before diving into specific sections, review :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture` to understand:
    
-   - The three-tier configuration hierarchy
-   - How settings merge and override
-   - When to use each configuration layer
+   - The self-contained configuration approach
+   - Configuration templates and project initialization
+   - Environment variable integration
    - Best practices for configuration organization
 
-Root Configuration Sections
-============================
+Configuration Sections
+======================
 
-These sections typically appear in the root ``config.yml`` file.
-
-import
-------
-
-**Type:** String
-
-**Location:** Root ``config.yml`` only
-
-**Purpose:** Specifies the framework configuration file to import and merge.
-
-.. code-block:: yaml
-
-   import: src/framework/config.yml
-
-**Details:**
-
-- Must be the first line in root ``config.yml``
-- Path is relative to the root config file
-- Triggers hierarchical configuration loading (framework → applications → root)
-- Required for framework integration
+All configuration is contained in a single ``config.yml`` file at the project root.
 
 build_dir
 ---------
@@ -170,30 +150,27 @@ project_root
 - Must be absolute path
 - Used by container management and execution systems
 
-applications
-------------
+registry_path
+-------------
 
-**Type:** List of strings
+**Type:** String
 
 **Location:** Root ``config.yml``
 
-**Default:** ``[]``
+**Default:** None (must be specified)
 
-**Purpose:** List of enabled applications to load.
+**Purpose:** Path to the application's registry module.
 
 .. code-block:: yaml
 
-   applications:
-     - als_assistant
-     - wind_turbine
-     - hello_world_weather
+   registry_path: ./src/my_app/registry.py
 
 **Details:**
 
-- Framework automatically loads ``src/applications/{app}/config.yml`` for each
-- Order doesn't matter - configs merge intelligently
-- Application must exist in ``src/applications/{app}/``
-- Empty list means no applications loaded
+- Points to the Python module that registers capabilities and context types
+- Path is relative to project root
+- Must contain a ``registry.py`` file with capability and context registrations
+- Required for framework to discover application capabilities
 
 Approval Configuration
 ======================
@@ -532,55 +509,51 @@ deployed_services
 .. code-block:: yaml
 
    deployed_services:
-     # Framework services
-     - framework.jupyter
-     - framework.open_webui
-     - framework.pipelines
+     # Framework infrastructure services
+     - jupyter
+     - open_webui
+     - pipelines
      
-     # Application services
-     - applications.als_assistant.mongo
-     - applications.als_assistant.pv_finder
-     - applications.als_assistant.langfuse
+     # Application-specific services (optional)
+     - mongo          # E.g., MongoDB for ALS Assistant
+     - pv_finder      # E.g., PV Finder MCP for ALS Assistant
+     - langfuse       # E.g., Observability for ALS Assistant
 
 **Service Naming:**
 
-Framework services:
-   - Full: ``framework.{service_name}``
-   - Short: ``{service_name}`` (framework assumed)
-   - Example: ``framework.jupyter`` or ``jupyter``
+Services use simple names that match their configuration keys:
+   - Infrastructure services: ``jupyter``, ``open_webui``, ``pipelines``
+   - Application services: ``mongo``, ``pv_finder``, etc.
+   - Names correspond to keys defined in the ``services:`` configuration section
 
-Application services:
-   - Must use full path: ``applications.{app}.{service_name}``
-   - Example: ``applications.als_assistant.mongo``
-
-**Override Behavior:**
+**Configuration Merging:**
 
 .. code-block:: yaml
 
-   # Framework defines its services
-   # src/framework/config.yml
+   # User project config.yml
    deployed_services:
-     - framework.jupyter
-     - framework.pipelines
+     - jupyter
+     - open_webui
+     - pipelines
+     - mongo       # Application-specific service
    
-   # Application defines its services
-   # src/applications/als_assistant/config.yml
-   deployed_services:
-     - applications.als_assistant.mongo
-   
-   # Root config overrides BOTH - this is what gets deployed
-   # config.yml
-   deployed_services:
-     - framework.jupyter
-     - applications.als_assistant.mongo
-     # pipelines not included = not deployed
+   # All services defined in services: section
+   services:
+     jupyter:
+       path: ./services/jupyter
+     open_webui:
+       path: ./services/open-webui
+     pipelines:
+       path: ./services/pipelines
+     mongo:
+       path: ./services/mongo
 
 **Details:**
 
-- Root ``config.yml`` has final authority (overrides framework and application)
-- Use for deployment-specific service control
-- Services not listed won't have containers started
-- Service definitions must exist in respective config files
+- Services listed in ``deployed_services`` must be defined in the ``services:`` section
+- Only listed services will be deployed when running ``framework deploy up``
+- Service names are simple strings matching configuration keys
+- See :doc:`../../developer-guides/05_production-systems/05_container-and-deployment` for complete deployment guide
 
 API Provider Configuration
 ==========================
@@ -609,13 +582,13 @@ api.providers
          api_key: ${ANTHROPIC_API_KEY}
          base_url: https://api.anthropic.com
        
-       openai:
-         api_key: ${OPENAI_API_KEY}
-         base_url: https://api.openai.com/v1
-       
-       gemini:
-         api_key: ${GEMINI_API_KEY}
-         base_url: https://generativelanguage.googleapis.com/v1beta
+      openai:
+        api_key: ${OPENAI_API_KEY}
+        base_url: https://api.openai.com/v1
+      
+      google:
+        api_key: ${GOOGLE_API_KEY}
+        base_url: https://generativelanguage.googleapis.com/v1beta
        
        ollama:
          api_key: ollama
@@ -1148,20 +1121,33 @@ pipeline.startup_hooks
 Configuration Examples
 ======================
 
-Complete Root Configuration
----------------------------
+Complete Configuration Example
+------------------------------
 
 .. code-block:: yaml
 
-   # Root config.yml - Comprehensive example
-   import: src/framework/config.yml
-   
+   # config.yml - Complete, self-contained configuration
    build_dir: ./build
    project_root: ${PROJECT_ROOT}
+   registry_path: ./src/my_app/registry.py
    
-   applications:
-     - als_assistant
+   # Model configuration (8 specialized models)
+   models:
+     orchestrator:
+       provider: cborg
+       model_id: anthropic/claude-sonnet
+     response:
+       provider: cborg
+       model_id: google/gemini-flash
+     # ... other 6 models ...
    
+   # Service deployment
+   deployed_services:
+     - jupyter
+     - open_webui
+     - pipelines
+   
+   # Safety controls
    approval:
      global_mode: "selective"
      capabilities:
@@ -1197,11 +1183,11 @@ Complete Root Configuration
      checkpoints: checkpoints
    
    deployed_services:
-     - framework.jupyter
-     - framework.open_webui
-     - framework.pipelines
-     - applications.als_assistant.mongo
-     - applications.als_assistant.pv_finder
+     - jupyter
+     - open_webui
+     - pipelines
+     - mongo
+     - pv_finder
    
    development:
      raise_raw_errors: false

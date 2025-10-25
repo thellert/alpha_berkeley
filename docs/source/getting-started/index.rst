@@ -37,10 +37,10 @@ By following this comprehensive learning path, you'll have:
 **Your Learning Path**
 ----------------------
 
-.. grid:: 1 1 3 3
+.. grid:: 1 1 2 2
    :gutter: 3
 
-   .. grid-item-card:: 📦 1. Setup
+   .. grid-item-card:: 📦 1. Fresh Installation
       :link: installation
       :link-type: doc
       :class-header: bg-info text-white
@@ -49,6 +49,19 @@ By following this comprehensive learning path, you'll have:
       
       **Outcome:** 
       Working dev environment
+
+   .. grid-item-card:: 🔄 1. Upgrading (v0.6.x → v0.7.0)
+      :link: migration-guide
+      :link-type: doc
+      :class-header: bg-warning text-white
+            
+      Migrate existing applications from embedded structure to pip-installable architecture.
+      
+      **Outcome:** 
+      Upgraded application
+
+.. grid:: 1 1 3 3
+   :gutter: 3
 
    .. grid-item-card:: 🌤️ 2. Hello World
       :link: hello-world-tutorial
@@ -69,6 +82,16 @@ By following this comprehensive learning path, you'll have:
       
       **Outcome:** 
       Production-ready patterns
+
+   .. grid-item-card:: 💡 3. Explore Examples
+      :link: ../example-applications/index
+      :link-type: doc
+      :class-header: bg-info text-white
+            
+      See production applications like ALS Assistant for advanced patterns.
+      
+      **Outcome:** 
+      Real-world inspiration
 
 .. grid:: 1 1 2 2
    :gutter: 3
@@ -97,5 +120,6 @@ By following this comprehensive learning path, you'll have:
    :hidden:
 
    installation
+   migration-guide
    hello-world-tutorial
    build-your-first-agent 

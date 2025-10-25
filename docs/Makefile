@@ -8,8 +8,8 @@ SPHINXBUILD  ?= sphinx-build
 SOURCEDIR    = source
 BUILDDIR     = build
 
-# Shared module paths
-SHARED_JS_DIR = ../services/framework/open-webui/functions/shared
+# Shared module paths (updated for new structure)
+SHARED_JS_DIR = ../src/framework/templates/services/open-webui/functions/shared
 STATIC_JS_DIR = source/_static/js
 
 # Put it first so that "make" without argument is like "make help".

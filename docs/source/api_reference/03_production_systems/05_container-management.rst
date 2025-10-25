@@ -7,7 +7,7 @@ Container orchestration and deployment system for managing framework and applica
 .. note::
    For implementation guides and examples, see :doc:`../../../developer-guides/05_production-systems/05_container-and-deployment`.
 
-.. currentmodule:: deployment
+.. currentmodule:: framework.deployment
 
 Core Modules
 ============
@@ -21,21 +21,21 @@ Core Modules
 Container Orchestration
 =======================
 
-.. automodule:: deployment.container_manager
+.. automodule:: framework.deployment.container_manager
    :members:
    :show-inheritance:
 
 Configuration Loading
 =====================
 
-.. automodule:: deployment.loader
+.. automodule:: framework.deployment.loader
    :members:
    :show-inheritance:
 
 Module Constants
 ================
 
-.. currentmodule:: deployment.container_manager
+.. currentmodule:: framework.deployment.container_manager
 
 .. data:: SERVICES_DIR
    

@@ -5,28 +5,174 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.2] - 2025-10-22
+## [0.7.0] - 2025-10-25
 
-### Fixed
-- **Reclassification Counter Bug**: Fixed critical bug where `control_reclassification_count` was incorrectly incremented on initial classification instead of only on actual reclassifications
-  - With `max_reclassifications: 1`, system now correctly allows 1 reclassification (2 total classification attempts: initial + 1 retry)
-  - Counter increment logic moved to only trigger when `previous_failure` context is present
-  - Simplified implementation by updating counter once at top of `_create_classification_result()` function
+### 🎉 Major Architecture Release - Framework Decoupling
 
-### Documentation
-- **Configuration Reference**: Clarified `max_reclassifications` parameter documentation to explicitly state it allows N reclassifications after initial classification
-- **Developer Guide**: Updated classification and routing documentation to note counter only increments on actual reclassifications
+This is a **major breaking release** that fundamentally changes how applications are built and deployed. The framework is now pip-installable, enabling independent application development in separate repositories.
 
-## [0.6.1] - 2025-10-20
+### Added
+
+#### Unified CLI System
+- **`framework` command** - Main CLI entry point with lazy loading for fast startup
+- **`framework init`** - Create new projects from templates with project scaffolding
+  - Templates: minimal, hello_world_weather, wind_turbine
+  - Options: `--template`, `--registry-style`, `--output-dir`, `--force`
+- **`framework deploy`** - Manage Docker services (up/down/restart/status/rebuild/clean)
+  - Intelligent service management with validation
+  - Service health checking
+- **`framework chat`** - Interactive CLI conversation interface
+- **`framework health`** - Comprehensive system diagnostics
+  - Validates Python version, dependencies, configuration, registry files, containers
+  - ~968 lines of diagnostic code
+- **`framework export-config`** - View framework default configuration template
+  - Supports YAML and JSON output
+  - Helps understand configuration options
+
+#### Template System
+- **3 Production-Ready Templates** - Instant project generation
+  - `minimal` - Bare-bones starter with TODO placeholders
+  - `hello_world_weather` - Simple weather query example
+  - `wind_turbine` - Complex multi-capability monitoring system
+- **Project Scaffolding** - Complete self-contained projects
+  - Application code (capabilities, registry, context classes)
+  - Service configurations (Jupyter, OpenWebUI, Pipelines)
+  - Self-contained configuration (~320 lines)
+  - Environment template (.env.example)
+  - Dependencies file (pyproject.toml)
+  - Getting started documentation
+
+#### Registry Helper Functions
+- **`extend_framework_registry()`** - Simplify application registries by ~70%
+  - Compact style: 5-10 lines instead of 80+ lines of boilerplate
+  - Automatic framework component inclusion
+  - Clean exclusion syntax: `exclude_capabilities=["python"]`
+  - Optional override support for advanced customization
+- **`get_framework_defaults()`** - Inspect framework components
+- **Progressive disclosure** - Start simple, go explicit when needed
+
+#### Path-Based Discovery
+- **Explicit registry file paths** in `config.yml`
+- **`registry_path`** configuration (top-level or nested)
+- **`importlib.util` based loading** - Robust module loading
+- **Temporary sys.path manipulation** - Like Django, Sphinx, Airflow
+- **Strict validation** - Exactly one `RegistryConfigProvider` per file
+- **Rich error messages** - Comprehensive resolution hints
+
+#### Self-Contained Configuration
+- **One `config.yml` per application** - Complete transparency
+- **~320 lines** - All framework settings visible and editable
+- **Framework defaults included** at project creation
+- **`.env` file support** - Automatic loading with python-dotenv
+- **Well-organized** - Clear section comments for easy navigation
+
+#### Documentation
+- **Migration Guide** - Comprehensive upgrade documentation (~730 lines)
+  - Breaking changes overview
+  - Step-by-step migration instructions (10 steps)
+  - Production and tutorial migration paths
+  - Common issues and solutions
+  - Migration progress checklist
+- **Updated Getting Started** - Fresh installation and migration paths
+- **CLI Reference** - Complete command documentation
+- **Registry Helper Documentation** - Helper function usage and examples
 
 ### Changed
-- **Default Application**: Changed default application from `als_assistant` to `hello_world_weather` for improved new user experience
-- **Documentation**: Updated installation guide to explicitly recommend `hello_world_weather` as the beginner-friendly starting point
-- **Configuration**: Commented out ALS-specific services (mongo, pv_finder, langfuse) in default config to simplify initial setup
+
+#### Breaking Changes - Repository Structure
+- **Framework** → Pip-installable package (`alpha-berkeley-framework`)
+- **Applications** → Separate repositories (production) or templates (tutorials)
+- **`interfaces/`** → `src/framework/interfaces/` (pip-installed)
+- **`deployment/`** → `src/framework/deployment/` (pip-installed)
+- **`src/configs/`** → `src/framework/utils/` (merged)
+
+#### Breaking Changes - Import Paths
+```python
+# OLD ❌
+from applications.my_app.capabilities import MyCapability
+
+# NEW ✅
+from my_app.capabilities import MyCapability
+```
+
+All `applications.*` imports must be updated to package names.
+
+#### Breaking Changes - CLI Commands
+```bash
+# OLD ❌
+python -m interfaces.CLI.direct_conversation
+python -m deployment.container_manager deploy_up
+
+# NEW ✅
+framework chat
+framework deploy up
+```
+
+#### Breaking Changes - Configuration
+- **Per-application config** - Each app has own `config.yml`
+- **No global framework config** - Self-contained configuration
+- **`registry_path` required** - Explicit registry file location
+- **All settings visible** - Complete transparency (~320 lines)
+
+#### Breaking Changes - Discovery
+- **Explicit path-based discovery** - No automatic `applications/` scanning
+- **Registry must be importable** - Proper Python package structure required
+- **Exactly one provider per file** - Strict enforcement
 
 ### Enhanced
-- **Getting Started Experience**: New users can now run the framework without LBNL-specific infrastructure requirements
-- **Installation Documentation**: Added clear application selection section with progressive complexity path (hello_world_weather → wind_turbine → als_assistant)
+
+#### Performance
+- **Lazy Loading CLI** - Heavy dependencies loaded only when needed
+- **Fast Help Display** - `framework --help` loads instantly
+- **Immediate Code Changes** - No reinstall/rebuild required
+
+#### Developer Experience
+- **Template-Based Generation** - New projects in seconds
+- **Registry Helpers** - 70% less boilerplate code
+- **Health Diagnostics** - Comprehensive validation with one command
+- **Self-Contained Config** - All settings in one place
+- **Natural Imports** - Module paths match package structure
+
+#### Backward Compatibility
+- **Legacy entry points maintained** - `alpha-berkeley`, `alpha-berkeley-deploy` still work
+- **Registry interface preserved** - `RegistryConfigProvider` unchanged
+- **Core functionality maintained** - All framework features work as before
+
+### Migration Guide
+
+#### For Production Applications
+1. Install framework: `pip install alpha-berkeley-framework`
+2. Create new repository structure
+3. Copy application code to new structure
+4. Update import paths (find-and-replace `applications.` → ``)
+5. Simplify registry with `extend_framework_registry()`
+6. Create self-contained `config.yml`
+7. Setup `.env` file with API keys
+8. Validate with `framework health`
+9. Test functionality with `framework chat`
+10. Initialize git repository and push
+
+#### For Tutorial Applications
+Regenerate from templates:
+```bash
+framework init my-weather --template hello_world_weather
+framework init my-turbine --template wind_turbine
+```
+
+#### Complete Instructions
+See comprehensive migration guide:
+https://thellert.github.io/alpha_berkeley/getting-started/migration-guide
+
+### Implementation Stats
+- **100+ tasks completed** across 6 implementation phases
+- **CLI infrastructure** - 5 commands with lazy loading (~2000 lines)
+- **Template system** - 3 app templates + project + services
+- **Registry helpers** - `extend_framework_registry()` (~200 lines)
+- **Migration guide** - Comprehensive documentation (~730 lines)
+- **Health diagnostics** - System validation (~968 lines)
+
+### Related Issues
+- Implements [#8 - Decouple Applications from Framework Repository](https://github.com/thellert/alpha_berkeley/issues/8)
 
 ## [0.6.0] - 2025-10-14
 

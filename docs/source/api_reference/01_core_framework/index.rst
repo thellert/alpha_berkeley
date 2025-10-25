@@ -162,7 +162,7 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from configs.config import (
+         from framework.utils.config import (
              get_config_value, get_model_config, get_full_configuration
          )
          
@@ -191,7 +191,7 @@ These systems work together to provide a unified development experience:
          from framework.base import BaseCapability, capability_node
          from framework.state import AgentState, StateManager
          from framework.context import ContextManager
-         from configs.config import get_model_config
+         from framework.utils.config import get_model_config
          from applications.als_assistant.context_classes import AnalysisResultsContext
          
          @capability_node

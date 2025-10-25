@@ -1,11 +1,40 @@
 Installation & Setup
 ====================
 
-Alpha-Berkeley - Getting Started Notes
----------------------------------------
+What You'll Learn
+~~~~~~~~~~~~~~~~~
 
-Prerequisites
-~~~~~~~~~~~~~
+This installation guide covers the complete framework setup process:
+
+* **Installing Podman** - Container runtime for secure, daemonless deployments
+* **Python 3.11 Setup** - Virtual environment configuration
+* **Framework Installation** - Installing the pip package with all dependencies
+* **Project Creation** - Generating a new project from templates
+* **Configuration** - Setting up ``config.yml`` and environment variables
+* **Service Deployment** - Starting containerized services (Jupyter, OpenWebUI, Pipelines)
+* **OpenWebUI Configuration** - Chat interface setup and customization
+
+.. dropdown:: **Prerequisites**
+   :color: info
+   :icon: list-unordered
+
+   **System Requirements:**
+   
+   - **Operating System:** Linux, macOS, or Windows with WSL2
+   - **Admin/sudo access:** Required for installing Podman and Python
+   - **Internet connection:** For downloading packages and container images
+   - **Disk space:** At least 5GB free for containers and dependencies
+   
+   **What You'll Install:**
+   
+   - Podman 5.0.0+ (container runtime)
+   - Python 3.11 (programming language)
+   - Alpha Berkeley Framework (pip package)
+   
+   **Time estimate:** 30-60 minutes for complete setup
+
+Installation Steps
+~~~~~~~~~~~~~~~~~~
 
 **Install Podman**
 
@@ -52,88 +81,246 @@ To avoid conflicts with your system Python packages, create a virtual environmen
    python3.11 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-**Installing Dependencies**
+**Installing the Framework**
 
-After creating and activating the virtual environment, install the required packages:
+After creating and activating the virtual environment, install the framework package:
 
 .. code-block:: bash
 
    # Upgrade pip to latest version
    pip install --upgrade pip
    
-   # Install main framework requirements (includes LangGraph, AI/ML tools, scientific computing)
-   pip install -r requirements.txt
-   
-   # Optional: Install documentation requirements (only needed if building docs)
-   # pip install -r docs/requirements.txt
+   # Install the framework
+   pip install framework
 
-The main `requirements.txt` file includes:
+.. admonition:: New in v0.7.0: Pip-Installable Architecture
+   :class: version-070-change
 
-* **Core Framework**: `LangGraph <https://www.langchain.com/langgraph>`_, `LangChain <https://www.langchain.com/>`_, `Pydantic-AI <https://ai.pydantic.dev/>`_
-* **AI/ML Integrations**: `Anthropic <https://www.anthropic.com/>`_, `OpenAI <https://openai.com/>`_, `Ollama <https://ollama.com/>`_
-* **Scientific Computing**: `NumPy <https://numpy.org/>`_, `Pandas <https://pandas.pydata.org/>`_, SciPy, Matplotlib, Scikit-learn
-* **ALS-Specific**: ALS Archiver Client, PyEPICS
-* **Container Management**: `Podman <https://podman.io/>`_, Podman-compose
-* **Development Tools**: `Jupyter <https://jupyter.org/>`_, Rich, NLTK
+   The framework is now distributed as a pip-installable package with modular dependencies. You no longer need to clone the repository or manage ``requirements.txt`` files manually.
 
-.. _Configuration:
+   **Core Dependencies** (always installed):
 
-Configuration
-~~~~~~~~~~~~~
+   * **Core Framework**: `LangGraph <https://www.langchain.com/langgraph>`_, `LangChain <https://www.langchain.com/>`_, `Pydantic-AI <https://ai.pydantic.dev/>`_
+   * **AI Providers**: `OpenAI <https://openai.com/>`_, `Anthropic <https://www.anthropic.com/>`_, `Google Generative AI <https://ai.google.dev/>`_, `Ollama <https://ollama.com/>`_
+   * **CLI & UI**: `Rich <https://rich.readthedocs.io/>`_, `Click <https://click.palletsprojects.com/>`_, `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_
+   * **Container Management**: `Podman <https://podman.io/>`_, Podman-compose
+   * **Configuration**: PyYAML, Jinja2, python-dotenv
+   * **Networking**: requests, websocket-client
 
-**Update config.yml**
+   **Optional Dependencies** (install with extras):
 
-Modify the following settings in ``config.yml``:
+   * **[scientific]**: NumPy, Pandas, SciPy, Matplotlib, Seaborn, Scikit-learn, ipywidgets *(required for Python execution capability)*
+   * **[docs]**: Sphinx and documentation tools
+   * **[dev]**: pytest, black, mypy, and development tools
 
-1. **Project Root Path**: Update ``project_root`` in ``config.yml`` to your repository path. Either set ``PROJECT_ROOT`` in your ``.env`` file (recommended for multiple machines) or hard-code the path directly in the YAML file.
+   **Installation Examples:**
 
-2. **Select Your Application**: Choose which agent application to run. For new users, we recommend starting with the ``hello_world_weather`` example:
+   .. code-block:: bash
 
-   .. code-block:: yaml
+      # Recommended: Core + scientific computing
+      pip install framework[scientific]
+      
+      # Everything (includes docs, dev tools, etc.)
+      pip install framework[all]
 
-      applications:
-        - hello_world_weather
-   
-   This simple weather agent demonstrates core framework concepts without requiring complex setup or LBNL-specific infrastructure. Once you're comfortable with the basics, you can explore other applications like ``wind_turbine`` (multi-capability orchestration) or ``als_assistant`` (production EPICS/accelerator integration - LBNL only).
+**Creating a New Project**
 
-3. **Ollama Base URL**: Set the base URL for `Ollama <https://ollama.com/>`_
-   
-   - For direct host access: ``localhost:11434``
-   - For container-based agents (like OpenWebUI pipelines): ``host.containers.internal:11434``
-   - See `Ollama Connection`_ for OpenWebUI-specific configuration
-
-4. **Deployed Services**: In the deployed services section, ensure the following framework services are uncommented:
-   
-   - ``framework.jupyter`` - this environment is intended to give users the capability to edit and run the alpha-berkeley generated codes
-   - ``framework.open_webui`` - this is the entry point for the user, where you communicate interactively through `OpenWebUI <https://openwebui.com/>`_, a convenient web-based chat interface for LLMs
-   - ``framework.pipelines`` - this is the core environment in which the agent is running
-   
-   **Note:** Application-specific services (like ``als_assistant.mongo``, ``als_assistant.pv_finder``) should remain commented out unless you're specifically using that application. The ``hello_world_weather`` application doesn't require any additional services.
-
-5. **API URL**: If you are using `CBorg <https://cborg.lbl.gov/>`_ as your model provider (LBNL internal only), set the CBorg API URL to either:
-   
-   - Global API URL: ``https://api.cborg.lbl.gov/v1``
-   - Local API URL: ``https://api-local.cborg.lbl.gov/v1`` (requires local network connection)
-   
-   In ``./config.yml``, update: ``api: providers:cborg:base_url: https://api-local.cborg.lbl.gov/v1``
-
-6. **For External Users (Non-LBNL)**: If you don't have access to CBorg, you'll need to configure alternative model providers in ``config.yml`` and ``src/framework/config.yml``. Update the ``provider`` fields under the ``models`` section to use providers like ``openai``, ``anthropic``, ``ollama``, or others you have access to. Ensure corresponding API keys are set in your ``.env`` file.
-
-   .. dropdown:: Need Support for Additional Providers?
-      :color: info
-      :icon: people   
-         
-      We're happy to implement support for additional model providers beyond those currently supported. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. If you need integration with your institution's internal AI services or other providers, please reach out to us. We can work with you to add native support for your preferred provider.
-
-**Environment Variables**
-
-Create a ``.env`` file with API keys:
+Once the framework is installed, create a new project from a template using the :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>` command:
 
 .. code-block:: bash
 
-   cp env.example .env
+   # Create a project with the hello_world_weather template
+   framework init my-weather-agent --template hello_world_weather
+   
+   # Navigate to your project
+   cd my-weather-agent
 
-Edit the ``.env`` file and provide the API keys for the model providers you are using.
+Available templates:
+
+* ``minimal`` - Basic skeleton for starting from scratch
+* ``hello_world_weather`` - Simple weather agent (recommended for learning)
+* ``wind_turbine`` - Advanced multi-capability agent example
+
+.. dropdown:: **Understand Your Project Structure**
+   :color: info
+   :icon: file-directory
+
+   The generated project includes all components needed for a complete AI agent application:
+
+   * **Application code** (``src/``) - Your capabilities, context classes, and business logic
+   * **Service configurations** (``services/``) - Container configs for Jupyter, OpenWebUI, and Pipelines
+   * **Configuration file** (``config.yml``) - Self-contained application settings
+   * **Environment template** (``.env.example``) - API keys and secrets template
+
+   **Project Structure Example** (using ``hello_world_weather`` template):
+
+   .. code-block::
+
+      my-weather-agent/
+      ├── src/
+      │   └── my_weather_agent/
+      │       ├── __init__.py
+      │       ├── mock_weather_api.py      # Data source
+      │       ├── context_classes.py       # Data models
+      │       ├── registry.py               # Component registration
+      │       └── capabilities/
+      │           ├── __init__.py
+      │           └── current_weather.py   # Business logic
+      ├── services/                        # Container configurations
+      ├── config.yml                       # Application settings
+      └── .env.example                     # API key template
+
+   **Want to understand what each component does?** 
+   
+   The :doc:`Hello World Tutorial <hello-world-tutorial>` provides a detailed walkthrough of this structure - explaining what each file does, how components work together, and how to customize them for your needs. If you want to understand the architecture before continuing with deployment, jump to the tutorial now.
+
+.. _Configuration:
+
+Configuration & Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The generated project includes both a ``config.yml`` configuration file and a ``.env.example`` template for environment variables. Configure both for your environment:
+
+.. tab-set::
+
+    .. tab-item:: config.yml
+
+        **Update config.yml**
+
+        The generated project includes a complete ``config.yml`` file in the project root. All framework settings are pre-configured with sensible defaults. Modify the following settings as needed:
+
+        **1. Project Root Path**
+        
+        Update ``project_root`` in ``config.yml`` to your project directory path. Either set ``PROJECT_ROOT`` in your ``.env`` file (recommended for multiple machines) or hard-code the path directly in the YAML file.
+
+        **2. Ollama Base URL**
+        
+        Set the base URL for `Ollama <https://ollama.com/>`_:
+        
+        - For direct host access: ``localhost:11434``
+        - For container-based agents (like OpenWebUI pipelines): ``host.containers.internal:11434``
+        - See `Ollama Connection`_ for OpenWebUI-specific configuration
+
+        **3. Deployed Services**
+        
+        Ensure the following are uncommented in ``deployed_services``:
+        
+        - ``jupyter`` - Environment for editing and running generated code
+        - ``open_webui`` - Web-based chat interface
+        - ``pipelines`` - Core agent runtime environment
+
+        **4. API Provider URLs**
+        
+        If using `CBorg <https://cborg.lbl.gov/>`_ (LBNL internal only), set the API URL:
+        
+        - Global: ``https://api.cborg.lbl.gov/v1``
+        - Local: ``https://api-local.cborg.lbl.gov/v1`` (requires local network)
+        
+        In ``config.yml``: ``api: providers:cborg:base_url: https://api-local.cborg.lbl.gov/v1``
+
+        **5. Model Providers (External Users)**
+        
+        If you don't have CBorg access, configure alternative providers in ``config.yml``. Update the ``provider`` fields under the ``models`` section to use ``openai``, ``anthropic``, ``ollama``, etc. Set corresponding API keys in your ``.env`` file.
+
+        .. dropdown:: Need Support for Additional Providers?
+           :color: info
+           :icon: people   
+              
+           We're happy to implement support for additional model providers beyond those currently supported. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. If you need integration with your institution's internal AI services or other providers, please reach out to us. We can work with you to add native support for your preferred provider.
+
+    .. tab-item:: Environment Variables
+
+        .. _environment-variables:
+
+        **Environment Variables**
+
+        The framework uses environment variables for **secrets** (API keys) and **machine-specific settings** (file paths, network configuration). This allows you to run the same project on different machines - your laptop, a lab server, or a control room computer - without changing your code or ``config.yml``.
+        
+        The generated project includes a ``.env.example`` template with all supported variables.
+        
+        **When to use .env vs config.yml:**
+        
+        - **Environment variables (.env):** Secrets, absolute paths, proxy settings that change per machine
+        - **Configuration file (config.yml):** Application behavior, model choices, capabilities that stay the same
+
+        **Setup:**
+
+        .. code-block:: bash
+
+           # Copy the template
+           cp .env.example .env
+           
+           # Edit with your values
+           nano .env  # or your preferred editor
+
+        **Required Variables:**
+
+        ``PROJECT_ROOT``
+           Absolute path to your project directory. Used in ``config.yml`` as ``${PROJECT_ROOT}`` for container path mapping.
+           
+           Example: ``/home/user/my-agent``
+
+        **API Keys** (at least one required):
+
+        ``OPENAI_API_KEY``
+           OpenAI API key for GPT models.
+           
+           Get from: https://platform.openai.com/api-keys
+
+        ``ANTHROPIC_API_KEY``
+           Anthropic API key for Claude models.
+           
+           Get from: https://console.anthropic.com/
+
+        ``GOOGLE_API_KEY``
+           Google API key for Gemini models.
+           
+           Get from: https://makersuite.google.com/app/apikey
+
+        ``CBORG_API_KEY``
+           CBorg API key (LBNL internal only).
+           
+           Get from: https://cborg.lbl.gov/
+
+        **Optional Variables:**
+
+        ``LOCAL_PYTHON_VENV``
+           Path to Python virtual environment for local execution mode.
+           
+           Default: Uses current active environment
+
+        ``TZ``
+           Timezone for timestamp formatting.
+           
+           Default: ``America/Los_Angeles``
+           
+           Example: ``UTC``, ``Europe/London``, ``Asia/Tokyo``
+
+        ``CONFIG_FILE``
+           Override config file location (advanced usage).
+           
+           Default: ``config.yml`` in current directory
+
+        **Network Settings** (for restricted environments):
+
+        ``HTTP_PROXY``
+           HTTP proxy server URL. Useful in production environments with firewall restrictions (labs, control rooms, corporate networks).
+           
+           Example: ``http://proxy.company.com:8080``
+
+        ``NO_PROXY``
+           Comma-separated list of hosts to exclude from proxy.
+           
+           Example: ``localhost,127.0.0.1,.internal``
+
+        .. note::
+           **Security & Multi-Machine Workflow:**
+           
+           - The framework automatically loads ``.env`` from your project root
+           - **Keep ``.env`` in ``.gitignore``** to protect secrets from version control
+           - Environment variables in ``config.yml`` are resolved using ``${VARIABLE_NAME}`` syntax
+           - **Best practice:** Keep one ``config.yml`` (in git), but different ``.env`` files per machine (NOT in git)
+           - Example: ``.env.laptop``, ``.env.controlroom``, ``.env.server`` - copy the appropriate one to ``.env`` when running on that machine
 
 Documentation
 ~~~~~~~~~~~~~
@@ -156,11 +343,16 @@ Once running, you can view the documentation at http://localhost:8082
 Building and Running
 ~~~~~~~~~~~~~~~~~~~~
 
-Once you have installed everything and compiled documentation, you can execute the build and run script. This will download all the necessary packages, run them as safe Podman containers and secure the communication between them.
+Once you have installed the framework, created a project, and configured it, you can start the services. The framework includes a deployment CLI that orchestrates all services using Podman containers.
 
 **Start Services**
 
-The framework uses a container manager to orchestrate all services. For detailed information about all container management options, see :doc:`../developer-guides/05_production-systems/05_container-and-deployment`.
+The framework CLI provides convenient commands for managing services. For detailed information about all deployment options, see :doc:`../developer-guides/05_production-systems/05_container-and-deployment` or the :doc:`CLI reference <../developer-guides/02_quick-start-patterns/00_cli-reference>`.
+
+.. admonition:: New in v0.7.0: Framework CLI Commands
+   :class: version-070-change
+
+   Service management is now handled through the :doc:`framework deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>` command instead of running Python scripts directly.
 
 .. tab-set::
 
@@ -173,7 +365,7 @@ The framework uses a container manager to orchestrate all services. For detailed
 
         .. code-block:: bash
 
-           python3 ./deployment/container_manager.py config.yml up
+           framework deploy up
 
         3. Monitor the logs to ensure it starts correctly
         4. Once stable, stop with ``Ctrl+C`` and uncomment the next service
@@ -187,9 +379,19 @@ The framework uses a container manager to orchestrate all services. For detailed
 
         .. code-block:: bash
 
-           python3 ./deployment/container_manager.py config.yml up -d
+           framework deploy up --detached
 
         This runs all services in the background, suitable for production deployments where you don't need to monitor individual service logs.
+
+**Other Deployment Commands**
+
+.. code-block:: bash
+
+   framework deploy down      # Stop all services
+   framework deploy restart   # Restart services
+   framework deploy status    # Show service status
+   framework deploy clean     # Clean deployment
+   framework deploy rebuild   # Rebuild containers
 
 **Verify Services are Running**
 
@@ -388,3 +590,23 @@ Troubleshooting
 - **Python version mismatch**: Ensure you're using Python 3.11 with ``python3.11 -m venv venv``
 - **Package conflicts**: If you get dependency conflicts, try creating a fresh virtual environment
 - **Missing dependencies**: The main requirements.txt should install everything needed; avoid mixing with system packages
+
+Next Steps
+~~~~~~~~~~
+
+.. seealso::
+
+   :doc:`hello-world-tutorial`
+      Build your first simple weather agent
+   
+   :doc:`build-your-first-agent`
+      Multi-capability wind turbine agent with advanced patterns
+   
+   :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference`
+      Complete CLI command reference
+   
+   :doc:`../api_reference/01_core_framework/04_configuration_system`
+      Deep dive into configuration system
+   
+   :doc:`../developer-guides/03_core-framework-systems/03_registry-and-discovery`
+      Understanding the registry and component discovery

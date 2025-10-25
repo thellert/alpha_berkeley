@@ -24,10 +24,8 @@ src_root = os.path.abspath('../../src')
 sys.path.insert(0, project_root)
 sys.path.insert(0, src_root)
 
-# Add specific paths for framework modules
-sys.path.insert(0, os.path.join(src_root, 'framework'))
-sys.path.insert(0, os.path.join(src_root, 'configs'))
-sys.path.insert(0, os.path.join(project_root, 'deployment'))
+# Framework is now the only package we need
+# NO backwards compatibility for old paths
 
 # -- Project information -----------------------------------------------------
 

@@ -7,6 +7,7 @@ Quick Start Patterns
    :caption: Quick Start Patterns
    :hidden:
 
+   00_cli-reference
    01_building-your-first-capability
    02_state-and-context-essentials
    03_running-and-testing
@@ -29,8 +30,21 @@ Quick Start Patterns
 
 Get productive immediately with the Alpha Berkeley Framework's essential development patterns. Each guide focuses on specific skills you need to build effective agent capabilities.
 
-.. grid:: 1 1 1 3
+.. grid:: 1 1 2 2
    :gutter: 3
+
+   .. grid-item-card:: 🖥️ CLI Reference
+      :link: 00_cli-reference
+      :link-type: doc
+      :class-header: bg-primary text-white
+      :class-body: text-center
+      :shadow: md
+
+      **Start here - Essential commands**
+      
+      Complete reference for framework init, deploy, chat, and export-config. Learn project creation and deployment workflows.
+      
+      *10 minutes*
 
    .. grid-item-card:: 🏗️ Build Your First Capability
       :link: 01_building-your-first-capability
@@ -39,7 +53,7 @@ Get productive immediately with the Alpha Berkeley Framework's essential develop
       :class-body: text-center
       :shadow: md
 
-      **Start here for hands-on development**
+      **Hands-on development**
       
       Step-by-step implementation of BaseCapability with @capability_node decorator and framework integration.
       
@@ -71,7 +85,7 @@ Get productive immediately with the Alpha Berkeley Framework's essential develop
       
       *15-20 minutes*
 
-**Recommended order:** Build → State → Testing, but each guide stands alone for specific needs.
+**Recommended order:** CLI Reference → Build → State → Testing. Start with CLI commands, then dive into development patterns.
 
 .. dropdown:: 🚀 Next Steps
    

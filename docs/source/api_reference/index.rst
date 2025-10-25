@@ -49,12 +49,12 @@ API Reference
          
          **Production-Ready APIs:**
          
-         * :class:`framework.approval.ApprovalManager` - LangGraph-native approval workflows
-         * :class:`framework.data_management.DataSourceManager` - Provider discovery and retrieval
-         * :mod:`deployment.container_manager` - Service orchestration and deployment
-         * :func:`framework.models.get_chat_completion` - Multi-provider LLM management
-         * :doc:`01_core_framework/04_configuration_system` - Environment and settings management
-         * :doc:`05_framework_utilities/index` - Logging, streaming, and observability
+        * :class:`framework.approval.ApprovalManager` - LangGraph-native approval workflows
+        * :class:`framework.data_management.DataSourceManager` - Provider discovery and retrieval
+        * :mod:`framework.deployment.container_manager` - Service orchestration and deployment
+        * :func:`framework.models.get_chat_completion` - Multi-provider LLM management
+        * :doc:`01_core_framework/04_configuration_system` - Environment and settings management
+        * :doc:`05_framework_utilities/index` - Logging, streaming, and observability
 
       .. tab-item:: Quick API Solutions
          :class-content: solutions-tab
@@ -69,17 +69,17 @@ API Reference
          
          **Store user context** → :class:`~framework.context.ContextManager` + :doc:`01_core_framework/02_state_and_context`
          
-         **Deploy with containers** → :mod:`~deployment.container_manager` + :doc:`03_production_systems/05_container-management`
-         
-         **Handle complex data flows** → :class:`~framework.data_management.DataSourceManager`
-         
-         **Integrate external data** → :class:`~framework.data_management.DataSourceProvider` + provider patterns
-         
-         **Manage LLM models** → :func:`~framework.models.get_model` + :func:`~framework.models.get_chat_completion`
-         
-         **Configure logging** → :func:`~configs.logger.get_logger` + :class:`~configs.logger.ComponentLogger`
-         
-         **Stream responses** → :func:`~configs.streaming.get_streamer` + :class:`~configs.streaming.StreamWriter`
+        **Deploy with containers** → :mod:`~framework.deployment.container_manager` + :doc:`03_production_systems/05_container-management`
+        
+        **Handle complex data flows** → :class:`~framework.data_management.DataSourceManager`
+        
+        **Integrate external data** → :class:`~framework.data_management.DataSourceProvider` + provider patterns
+        
+        **Manage LLM models** → :func:`~framework.models.get_model` + :func:`~framework.models.get_chat_completion`
+        
+        **Configure logging** → :func:`~framework.utils.logger.get_logger` + :class:`~framework.utils.logger.ComponentLogger`
+        
+        **Stream responses** → :func:`~framework.utils.streaming.get_streamer` + :class:`~framework.utils.streaming.StreamWriter`
 
       .. tab-item:: By System Component
          :class-content: component-tab
