@@ -1,0 +1,86 @@
+"""{{ app_display_name }} Application Registry.
+
+This module defines the component registry for your application.
+Register your capabilities and context classes here.
+
+This registry uses the compact style with extend_framework_registry(),
+which automatically includes all framework components and lets you add
+your application-specific components. This reduces boilerplate by ~70%!
+
+For advanced users who want full control over every component, use:
+    framework init --registry-style explicit
+"""
+
+from framework.registry import (
+    extend_framework_registry,
+    CapabilityRegistration,
+    ContextClassRegistration,
+    RegistryConfig,
+    RegistryConfigProvider
+)
+
+
+class {{ app_class_name }}RegistryProvider(RegistryConfigProvider):
+    """Registry provider for {{ app_display_name }} application.
+    
+    This uses the compact registry style which automatically includes
+    framework components (routing, memory, Python execution, etc.) and
+    lets you focus on what's unique to your application.
+    
+    To see what the framework provides, run:
+        >>> from framework.registry import get_framework_defaults
+        >>> framework = get_framework_defaults()
+        >>> print([c.name for c in framework.capabilities])
+    """
+    
+    def get_registry_config(self) -> RegistryConfig:
+        """Get application registry configuration.
+        
+        Uses extend_framework_registry() to automatically include framework
+        defaults and add only your application-specific components.
+        
+        Returns:
+            RegistryConfig: Complete registry with framework + application components
+        """
+        return extend_framework_registry(
+            # Add your application capabilities
+            capabilities=[
+                # TODO: Register your capabilities here
+                # Example:
+                # CapabilityRegistration(
+                #     name="my_capability",
+                #     module_path="{{ package_name }}.capabilities.my_capability",
+                #     class_name="MyCapability",
+                #     description="Description of what your capability does",
+                #     provides=["MY_CONTEXT_TYPE"],
+                #     requires=[]
+                # ),
+            ],
+            
+            # Add your application context classes
+            context_classes=[
+                # TODO: Register your context classes here
+                # Example:
+                # ContextClassRegistration(
+                #     context_type="MY_CONTEXT_TYPE",
+                #     module_path="{{ package_name }}.context_classes",
+                #     class_name="MyContext"
+                # ),
+            ],
+            
+            # Optional: Exclude framework components you don't need
+            # exclude_capabilities=["python"],  # Don't need Python execution
+            
+            # Optional: Override framework components with custom implementations
+            # override_capabilities=[
+            #     CapabilityRegistration(
+            #         name="memory",  # Replace framework memory with custom
+            #         module_path="{{ package_name }}.capabilities.custom_memory",
+            #         class_name="CustomMemoryCapability",
+            #         description="Custom memory implementation",
+            #         provides=["MEMORY_CONTEXT"],
+            #         requires=[]
+            #     ),
+            # ],
+        )
+

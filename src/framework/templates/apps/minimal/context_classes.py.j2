@@ -1,0 +1,67 @@
+"""{{ app_display_name }} Context Classes.
+
+Define your context classes here. Context classes are type-safe data containers
+that enable structured data exchange between capabilities and the framework.
+"""
+
+from datetime import datetime
+from typing import Dict, Any, Optional, ClassVar
+from pydantic import Field
+from framework.context.base import CapabilityContext
+
+
+# TODO: Create your context classes
+# Example context class structure:
+
+class ExampleContext(CapabilityContext):
+    """Example context class showing the basic structure.
+    
+    Replace this with your actual context class implementation.
+    Context classes should:
+    - Inherit from CapabilityContext
+    - Define a CONTEXT_TYPE class variable
+    - Define a CONTEXT_CATEGORY class variable
+    - Define fields using Pydantic Field descriptors
+    - Implement get_access_details() method
+    - Implement get_summary() method
+    """
+    
+    CONTEXT_TYPE: ClassVar[str] = "EXAMPLE_CONTEXT"
+    CONTEXT_CATEGORY: ClassVar[str] = "DATA"
+    
+    # TODO: Define your data fields here
+    # Example fields:
+    # name: str = Field(description="Name of the item")
+    # value: float = Field(description="Numeric value")
+    # timestamp: datetime = Field(description="When this data was created")
+    
+    def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+        """Provide structured access information for LLM consumption.
+        
+        Args:
+            key_name: Optional context key name for access pattern generation
+            
+        Returns:
+            Dictionary containing access details and field information
+        """
+        # TODO: Implement access details for your context
+        key_ref = key_name if key_name else "key_name"
+        return {
+            "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}",
+            "available_fields": []  # TODO: List your fields
+        }
+    
+    def get_summary(self, key: str) -> dict:
+        """Generate summary of context data.
+        
+        Args:
+            key: Context key identifier
+            
+        Returns:
+            Dictionary containing a human-readable summary
+        """
+        # TODO: Implement summary generation for your context
+        return {
+            "summary": "TODO: Add your context summary here"
+        }
+

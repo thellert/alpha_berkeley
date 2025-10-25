@@ -1,0 +1,6 @@
+# Project Dependencies
+# Add your application-specific dependencies here
+
+# Framework will be installed via pip
+# framework>=0.7.0
+
