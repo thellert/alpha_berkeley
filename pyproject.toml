@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alpha-berkeley-framework"
-version = "0.6.2"
+version = "0.7.0"
 description = "An open-source, domain-agnostic, capability-based architecture for building intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -48,19 +48,12 @@ dependencies = [
     
     # Core framework dependencies
     "rich>=14.0.0",
+    "click>=8.1.0",
     "pydantic-ai>=0.2.11",
     "python-dotenv>=1.1.0",
     "PyYAML>=6.0.2",
     "Jinja2>=3.1.6",
     "requests>=2.32.3",
-    
-    # Runtime dependencies discovered during testing
-    "opentelemetry-api>=1.36.0",
-    "opentelemetry-sdk>=1.36.0",
-    "logfire>=3.16.1",
-    "pure_eval>=0.2.3",
-    "future>=1.0.0",
-    "nest-asyncio>=1.6.0",
     
     # Container management (Podman, not Docker)
     "podman>=5.4.0",
@@ -69,6 +62,12 @@ dependencies = [
     # Jupyter notebook support
     "nbformat>=5.0.0",
     "nbclient",
+    
+    # AI/ML provider integrations
+    "openai",
+    "anthropic",
+    "google-generativeai",
+    "ollama>=0.5.1",
     
     # Networking and protocols
     "websocket-client>=1.7.0",
@@ -93,7 +92,8 @@ docs = [
     "graphviz",
 ]
 
-# Scientific computing stack
+# Scientific computing stack - required for Python execution capability
+# These packages are available in the execution environment for data analysis
 scientific = [
     "pandas>=2.2.3",
     "numpy>=2.2.6",
@@ -101,21 +101,7 @@ scientific = [
     "matplotlib>=3.10.3",
     "seaborn",
     "scikit-learn",
-    "ipywidgets",
-]
-
-# ALS/EPICS specific dependencies
-epics = [
-    "pyepics>=3.5.0",
-    "als-archiver-client>=1.0.3",
-]
-
-# AI/ML provider integrations
-ai-providers = [
-    "openai",
-    "anthropic",
-    "google-generativeai",
-    "ollama>=0.5.1",
+    "ipywidgets",  # Interactive widgets for Jupyter notebooks
 ]
 
 # Database and storage
@@ -154,7 +140,7 @@ utils = [
 
 # All optional dependencies for complete installation
 all = [
-    "alpha-berkeley-framework[docs,scientific,epics,ai-providers,databases,memory,dev,nlp,utils]"
+    "alpha-berkeley-framework[docs,scientific,databases,memory,dev,nlp,utils]"
 ]
 
 [project.urls]
@@ -167,25 +153,37 @@ Changelog = "https://github.com/thellert/alpha_berkeley/blob/main/CHANGELOG.md"
 
 # Define console scripts for CLI entry points
 [project.scripts]
-alpha-berkeley = "interfaces.CLI.direct_conversation:main"
-alpha-berkeley-deploy = "deployment.container_manager:main"
+# Main CLI entry point (Click group with subcommands)
+# Using "framework" for now, will become "mentat" in Phase 8
+framework = "framework.cli.main:cli"
+
+# Legacy entry points (maintained for backward compatibility)
+alpha-berkeley = "framework.interfaces.cli.direct_conversation:main"
+alpha-berkeley-deploy = "framework.deployment.container_manager:main"
 alpha-berkeley-docs = "docs.launch_docs:main"
 
 # Package discovery configuration for src layout
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["framework*", "configs*", "applications*"]
-
-# Additional package discovery for interfaces and deployment
-[tool.setuptools.packages]
-"interfaces" = "interfaces"
-"deployment" = "deployment"
-"docs" = "docs"
+include = ["framework*"]
 
 # Include package data files
 [tool.setuptools.package-data]
 "*" = ["*.yml", "*.yaml", "*.json", "*.j2", "*.md", "*.txt", "*.cfg", "*.ini"]
-"framework" = ["config.yml"]
+"framework" = [
+    "config.yml",
+    "templates/**/*",
+    "templates/**/*.j2",
+    "templates/**/*.py",
+    "templates/**/*.yml",
+    "templates/**/*.yaml",
+    "templates/**/*.md",
+    "templates/**/*.txt",
+    "templates/**/*.sh",
+    "templates/**/*.css",
+    "templates/**/*.js",
+    "templates/**/*.json",
+]
 "deployment" = ["*.py"]
 "docs" = ["*.py", "Makefile", "*.md", "*.png", "*.log", "*.pid"]
 
