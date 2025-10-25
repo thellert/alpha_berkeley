@@ -59,9 +59,9 @@ from typing import Dict, Any
 from langgraph.types import interrupt
 
 from .models import PythonExecutionState
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 
-logger = get_logger("framework", "python")
+logger = get_logger("python")
 
 def create_approval_node():
     """Create a pure approval node function for LangGraph integration.
@@ -145,8 +145,8 @@ def create_approval_node():
         """
         
         # Define streaming helper here for step awareness
-        from configs.streaming import get_streamer
-        streamer = get_streamer("python_executor", "approval", state)
+        from framework.utils.streaming import get_streamer
+        streamer = get_streamer("python", state)
         streamer.status("Requesting human approval...")
         
         # Get the pre-created interrupt data from analyzer

@@ -21,8 +21,8 @@ import os
 from framework.state import AgentState
 from framework.registry.manager import RegistryManager, get_registry
 from framework.infrastructure.router_node import router_conditional_edge
-from configs.logger import get_logger
-from configs.config import get_current_application
+from framework.utils.logger import get_logger
+from framework.utils.config import get_current_application
 
 logger = get_logger(name="builder", color="white")
 

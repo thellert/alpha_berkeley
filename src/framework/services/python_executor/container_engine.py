@@ -92,9 +92,9 @@ import os
 
 from .models import PythonExecutionEngineResult
 from .exceptions import ContainerConnectivityError, CodeRuntimeError, ExecutionTimeoutError
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 
-logger = get_logger("framework", "python_executor")
+logger = get_logger("python_executor")
 
 
 @dataclass

@@ -19,10 +19,9 @@ from framework.registry import get_registry
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
     
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_model_config, get_config_value
-from pydantic_ai import Agent
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_model_config, get_config_value
 
 
 from framework.prompts.defaults.task_extraction import ExtractedTask
@@ -36,7 +35,7 @@ from framework.data_management import (
 from langchain_core.messages import BaseMessage
 
 
-logger = get_logger("framework", "task_extraction")
+logger = get_logger("task_extraction")
 registry = get_registry()
 
 # =============================================================================
@@ -253,10 +252,10 @@ class TaskExtractionNode(BaseInfrastructureNode):
         """
         
         # Explicit logger retrieval - professional practice
-        logger = get_logger("framework", "task_extraction")
+        logger = get_logger("task_extraction")
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "task_extraction", state)
+        streamer = get_streamer("task_extraction", state)
         
         # Get native LangGraph messages from flat state structure (move outside try block)
         messages = state["messages"]

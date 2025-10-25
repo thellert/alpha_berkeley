@@ -21,9 +21,9 @@ from .models import PythonExecutionState, PythonExecutionSuccess
 from .services import FileManager, NotebookManager
 from .config import PythonExecutorConfig
 from framework.context.context_manager import ContextManager
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 
-logger = get_logger("framework", "python_executor")
+logger = get_logger("python_executor")
 
 if TYPE_CHECKING:
     from .execution_control import ExecutionMode
@@ -475,8 +475,8 @@ def create_executor_node():
         """Execute approved Python code."""
         
         # Define streaming helper here for step awareness
-        from configs.streaming import get_streamer
-        streamer = get_streamer("python_executor", "executor", state)
+        from framework.utils.streaming import get_streamer
+        streamer = get_streamer("python_executor", state)
         streamer.status("Executing Python code...")
         
         # Check if we have code to execute
@@ -494,7 +494,7 @@ def create_executor_node():
             }
         
         # Set up execution context - get config from LangGraph configurable
-        from configs.config import get_full_configuration
+        from framework.utils.config import get_full_configuration
         configurable = get_full_configuration()  # Get entire configurable
         
         file_manager = FileManager(configurable)

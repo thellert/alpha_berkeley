@@ -51,12 +51,12 @@ from framework.base.examples import OrchestratorGuide, TaskClassifierGuide
 from framework.services.python_executor import PythonServiceResult
 from framework.services.python_executor.models import PythonExecutionRequest
 from framework.approval import get_approval_resume_data, clear_approval_state, create_approval_type, handle_service_with_interrupts
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_full_configuration
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_full_configuration
 from framework.prompts.loader import get_framework_prompts
 
-logger = get_logger("framework", "python")
+logger = get_logger("python")
 
 
 registry = get_registry()
@@ -399,7 +399,7 @@ class PythonCapability(BaseCapability):
         step = StateManager.get_current_step(state)
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "python", state)
+        streamer = get_streamer("python", state)
         streamer.status("Initializing Python executor service...")
         
         # Get Python executor service from registry

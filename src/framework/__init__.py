@@ -11,5 +11,11 @@ This package contains:
 - Configuration management
 """
 
+# Version information
+# NOTE: This will become MENTAT version at release (Phase 8)
+__version__ = "0.7.0"
+
+__all__ = ['__version__']
+
 # Framework is designed for on-demand imports to avoid circular dependencies
 # Use specific imports like: from framework.state import AgentState

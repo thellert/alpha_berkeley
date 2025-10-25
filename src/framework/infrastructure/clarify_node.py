@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from pydantic import BaseModel, Field
 import textwrap
 
-from pydantic_ai import Agent
 from framework.base import BaseCapability
 from framework.base.decorators import capability_node
 from framework.base.errors import ErrorClassification, ErrorSeverity
@@ -22,8 +21,8 @@ from framework.state import AgentState, ChatHistoryFormatter, StateManager
 from framework.base.planning import PlannedStep
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from configs.logger import get_logger
-from configs.config import get_full_configuration, get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.config import get_full_configuration, get_model_config
 from langchain_core.messages import AIMessage
 from langgraph.config import get_stream_writer
 
@@ -88,7 +87,7 @@ class ClarifyCapability(BaseCapability):
         """
         
         # Explicit logger retrieval - professional practice
-        logger = get_logger("framework", "clarify")
+        logger = get_logger("clarify")
         
         # Extract step if provided
         step = kwargs.get('step', {})

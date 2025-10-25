@@ -50,7 +50,7 @@ from typing_extensions import TypedDict
 from dataclasses import dataclass, field
 import logging
 
-from configs.config import get_execution_limits
+from framework.utils.config import get_execution_limits
 
 
 

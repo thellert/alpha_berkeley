@@ -12,10 +12,10 @@ application-specific decisions.
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional, NamedTuple
 from dataclasses import dataclass
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 from .execution_control import ExecutionMode
 
-logger = get_logger("framework", "python_analyzer")
+logger = get_logger("python_analyzer")
 
 @dataclass
 class BasicAnalysisResult:

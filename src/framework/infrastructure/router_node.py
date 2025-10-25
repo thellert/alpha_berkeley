@@ -20,8 +20,8 @@ from framework.base.decorators import infrastructure_node
 from framework.base.nodes import BaseInfrastructureNode
 from framework.base.errors import ErrorSeverity
 from framework.registry import get_registry
-from configs.logger import get_logger
-from configs.config import get_execution_limits
+from framework.utils.logger import get_logger
+from framework.utils.config import get_execution_limits
 
 @infrastructure_node(quiet=True)
 class RouterNode(BaseInfrastructureNode):
@@ -82,7 +82,7 @@ def router_conditional_edge(state: AgentState) -> str:
     :rtype: str
     """
     # Get logger internally - LangGraph native pattern
-    logger = get_logger("framework", "router")
+    logger = get_logger("router")
     
     # Get registry for node lookup
     registry = get_registry()

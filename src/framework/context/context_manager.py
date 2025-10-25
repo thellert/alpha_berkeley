@@ -18,13 +18,13 @@ import logging
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from datetime import datetime
 from pathlib import Path
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 
 if TYPE_CHECKING:
     from framework.context.base import CapabilityContext
     from framework.state.state import AgentState
 
-logger = get_logger("framework", "base")
+logger = get_logger("base")
 
 
 # ===================================================================

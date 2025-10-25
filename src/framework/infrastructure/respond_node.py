@@ -21,13 +21,13 @@ from framework.state import AgentState, StateManager
 from framework.base.planning import PlannedStep
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from configs.config import get_full_configuration, get_model_config
-from configs.logger import get_logger
-from configs.streaming import get_streamer
+from framework.utils.config import get_full_configuration, get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
 from langchain_core.messages import AIMessage
 
 # Use colored logger for message generator with light_cyan1 color
-logger = get_logger("framework", "message_generator")
+logger = get_logger("message_generator")
 
 
 @dataclass
@@ -110,13 +110,13 @@ class RespondCapability(BaseCapability):
         """
         
         # Explicit logger retrieval - professional practice
-        logger = get_logger("framework", "respond")
+        logger = get_logger("respond")
         
         # Use StateManager to get the current step
         step = StateManager.get_current_step(state)
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "respond", state)
+        streamer = get_streamer("respond", state)
         
         try:
             streamer.status("Gathering information for response...")
@@ -259,7 +259,7 @@ def _gather_information(state: AgentState) -> ResponseContext:
     logger.debug(f"Respond node found {len(ui_notebooks)} notebook links")
     
     # Get interface context from configurable
-    from configs.config import get_interface_context
+    from framework.utils.config import get_interface_context
     interface_context = get_interface_context()
     
     return ResponseContext(

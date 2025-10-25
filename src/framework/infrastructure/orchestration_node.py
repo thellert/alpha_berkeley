@@ -24,9 +24,9 @@ from framework.state.state import create_status_update
 from framework.registry import get_registry
 from framework.context.context_manager import ContextManager
 # Factory code consolidated inline as helper function
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_model_config, get_agent_dir
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_model_config, get_agent_dir
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
 
@@ -42,7 +42,7 @@ from framework.approval.approval_system import (
 if TYPE_CHECKING:
     from framework.base.errors import ErrorClassification
 
-logger = get_logger("framework", "orchestrator")
+logger = get_logger("orchestrator")
 
 
 registry = get_registry()
@@ -252,10 +252,10 @@ class OrchestrationNode(BaseInfrastructureNode):
         """
         
         # Explicit logger retrieval - professional practice
-        logger = get_logger("framework", "orchestrator")
+        logger = get_logger("orchestrator")
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "orchestrator", state)
+        streamer = get_streamer("orchestrator", state)
         
         # =====================================================================
         # STEP 1: CHECK FOR APPROVED PLAN IN AGENT STATE (HIGHEST PRIORITY)

@@ -32,8 +32,8 @@ from pydantic import BaseModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.types import Command
 
-from configs.logger import get_logger
-from configs.config import get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.config import get_model_config
 from framework.state import AgentState, StateManager
 from framework.state.messages import MessageUtils
 from framework.models import get_chat_completion
@@ -43,7 +43,7 @@ class ApprovalResponse(BaseModel):
     """Structured response for approval detection."""
     approved: bool
 
-logger = get_logger("framework", "gateway")
+logger = get_logger("gateway")
 
 @dataclass 
 class GatewayResult:

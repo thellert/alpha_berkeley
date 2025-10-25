@@ -33,7 +33,7 @@ from pydantic_ai.providers.anthropic import AnthropicProvider
 import openai
 from google import genai
 
-from configs.config import get_provider_config
+from framework.utils.config import get_provider_config
 
 
 def _create_openai_compatible_model(

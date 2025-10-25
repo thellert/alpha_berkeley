@@ -37,7 +37,6 @@ import textwrap
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, Field
-from pydantic_ai import Agent
 
 # Import from framework architecture
 from framework.base import (
@@ -61,16 +60,16 @@ from framework.registry import get_registry
 from framework.services.memory_storage import get_memory_storage_manager
 from framework.services.memory_storage import MemoryContent
 
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_model_config, get_session_info
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_model_config, get_session_info
 from framework.models import get_model, get_chat_completion
 from framework.state import ChatHistoryFormatter, AgentState, StateManager
 from langchain_core.messages import BaseMessage
 from framework.prompts.loader import get_framework_prompts
 from langgraph.types import interrupt
 
-logger = get_logger("framework", "memory")
+logger = get_logger("memory")
 
 
 registry = get_registry()
@@ -571,7 +570,7 @@ class MemoryOperationsCapability(BaseCapability):
         
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "memory", state)
+        streamer = get_streamer("memory", state)
         
         # =====================================================================
         # PHASE 1: CHECK FOR APPROVED MEMORY OPERATION (HIGHEST PRIORITY)
