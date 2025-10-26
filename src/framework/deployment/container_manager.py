@@ -304,6 +304,62 @@ def render_template(template_path, config, out_dir):
         f.write(rendered_content)
     return output_filepath
 
+def _copy_local_framework_for_override(out_dir):
+    """Copy local framework source to container build directory for development mode.
+    
+    This function locates the locally installed framework package and copies its
+    source code to a designated location in the container build directory. The
+    copied framework can then be installed in containers to override the standard
+    PyPI version during development and testing.
+    
+    The function automatically detects the framework installation location and
+    copies both the source code and project metadata required for proper
+    installation within containers.
+    
+    :param out_dir: Container build output directory
+    :type out_dir: str
+    :return: True if framework was successfully copied, False otherwise
+    :rtype: bool
+    """
+    try:
+        # Try to import the framework to get its location
+        import framework
+        from pathlib import Path
+        
+        # Get the framework source root
+        framework_module_path = Path(framework.__file__).parent
+        framework_source_root = framework_module_path.parent.parent  # Go up from src/framework to root
+        
+        # Copy the framework source to a predictable location
+        framework_override_dir = os.path.join(out_dir, "framework_override")
+        src_framework = framework_source_root / "src" / "framework"
+        
+        if src_framework.exists():
+            # Copy the framework source
+            shutil.copytree(src_framework, framework_override_dir, dirs_exist_ok=True)
+            print(f"📦 Copied framework source for dev override to {framework_override_dir}")
+            
+            # Copy pyproject.toml for proper installation
+            pyproject_src = framework_source_root / "pyproject.toml"
+            if pyproject_src.exists():
+                shutil.copy2(pyproject_src, os.path.join(out_dir, "framework_pyproject.toml"))
+                print(f"📝 Copied framework pyproject.toml for dependencies")
+            
+            return True
+        else:
+            print(f"⚠️  Framework source not found at {src_framework}")
+            return False
+            
+    except ImportError:
+        print("⚠️  Framework not found in local environment, containers will use PyPI version")
+        return False
+    except Exception as e:
+        print(f"⚠️  Failed to prepare framework override: {e}")
+        return False
+
+
+
+
 def render_kernel_templates(source_dir, config, out_dir):
     """Process all Jupyter kernel templates in a service directory.
     
@@ -369,7 +425,46 @@ def render_kernel_templates(source_dir, config, out_dir):
         render_template(template_path, config, kernel_out_dir)
         print(f"Rendered kernel template: {template_path} -> {kernel_out_dir}/kernel.json")
 
-def setup_build_dir(template_path, config, container_cfg):
+def _ensure_agent_data_structure(config):
+    """Ensure _agent_data directory and subdirectories exist before container deployment.
+    
+    This function creates the agent data directory structure based on the configuration
+    to prevent Docker/Podman mount failures when containers try to mount non-existent
+    directories. It creates both the main agent_data_dir and all configured subdirectories.
+    
+    :param config: Configuration dictionary containing file_paths settings
+    :type config: dict
+    """
+    # Get file paths configuration
+    file_paths = config.get('file_paths', {})
+    project_root = config.get('project_root', '.')
+    agent_data_dir = file_paths.get('agent_data_dir', '_agent_data')
+    
+    # Create main agent data directory
+    agent_data_path = Path(project_root) / agent_data_dir
+    agent_data_path.mkdir(parents=True, exist_ok=True)
+    
+    # Create all configured subdirectories
+    subdirs = [
+        'executed_python_scripts_dir',
+        'execution_plans_dir', 
+        'user_memory_dir',
+        'registry_exports_dir',
+        'prompts_dir',
+        'checkpoints'
+    ]
+    
+    for subdir_key in subdirs:
+        if subdir_key in file_paths:
+            subdir_name = file_paths[subdir_key]
+            subdir_path = agent_data_path / subdir_name
+            subdir_path.mkdir(parents=True, exist_ok=True)
+            print(f"Created agent data subdirectory: {subdir_path}")
+    
+    print(f"Ensured agent data structure exists at: {agent_data_path}")
+
+
+def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
     """Create complete build environment for service deployment.
     
     This function orchestrates the complete build directory setup process for
@@ -396,6 +491,8 @@ def setup_build_dir(template_path, config, container_cfg):
     :type config: dict
     :param container_cfg: Service-specific configuration settings
     :type container_cfg: dict
+    :param dev_mode: Development mode - copy local framework to containers
+    :type dev_mode: bool
     :return: Path to the rendered Docker Compose file
     :rtype: str
     
@@ -443,6 +540,10 @@ def setup_build_dir(template_path, config, container_cfg):
     # Create the build directory for this service 
     source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
     
+    # Extract service name from the path for container path resolution
+    # e.g., "services/jupyter" -> "jupyter", "src/framework/templates/services/pipelines" -> "pipelines"
+    service_name = os.path.basename(source_dir)
+    
     # Clear the directory if it exists
     build_dir = config.get('build_dir', './build')
     out_dir = os.path.join(build_dir, source_dir)
@@ -459,7 +560,7 @@ def setup_build_dir(template_path, config, container_cfg):
                 except OSError:
                     print(f"Warning: Could not remove {out_dir}, using incremental update approach")
                     # Use incremental update instead of full rebuild
-                    return _incremental_setup_build_dir(template_path, config, container_cfg, out_dir)
+                    return _incremental_setup_build_dir(template_path, config, container_cfg, out_dir, dev_mode)
             else:
                 raise
     os.makedirs(out_dir, exist_ok=True)
@@ -500,6 +601,16 @@ def setup_build_dir(template_path, config, container_cfg):
                 shutil.copy2(global_pyproject, repo_src_pyproject)
                 print(f"Copied user pyproject.toml to {repo_src_pyproject}")
             
+            # Copy local framework for development override (only in dev mode)
+            # This will override the PyPI framework after standard installation
+            if dev_mode:
+                framework_copied = _copy_local_framework_for_override(out_dir)
+                if framework_copied:
+                    print("🔧 Development mode: Framework override prepared")
+                else:
+                    print("📦 Development mode requested but framework override failed, using PyPI")
+            else:
+                print("📦 Production mode: Containers will install framework from PyPI")
         # Copy additional directories if specified in service configuration
         additional_dirs = container_cfg.get('additional_dirs', [])
         if additional_dirs:
@@ -529,6 +640,10 @@ def setup_build_dir(template_path, config, container_cfg):
                     elif src_dir:
                         print(f"Warning: Path {src_dir} does not exist, skipping")
             
+        # Ensure _agent_data directory structure exists before container deployment
+        # This prevents mount failures when containers try to mount non-existent directories
+        _ensure_agent_data_structure(config)
+        
         # Create flattened configuration file for container
         # This merges all imports and creates a complete config without import directives
         try:
@@ -536,14 +651,25 @@ def setup_build_dir(template_path, config, container_cfg):
             flattened_config = global_config.raw_config  # This contains the already-merged configuration
             
             # Adjust registry_path for container environment
-            # In containers, src/ is copied to repo_src/, and PYTHONPATH=/pipelines/repo_src
-            # So ./src/app/registry.py becomes ./app/registry.py
-            # TODO: Revisit this once we have the framework pip install working
+            # In containers, src/ is copied to repo_src/, and the working directory varies by service
+            # For pipelines service: working directory is /app but files are mounted at /pipelines
+            # For other services: working directory matches mount point
             if 'registry_path' in flattened_config:
                 registry_path = flattened_config['registry_path']
-                if isinstance(registry_path, str) and './src/' in registry_path:
-                    flattened_config['registry_path'] = registry_path.replace('./src/', './')
-                    print(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
+                if isinstance(registry_path, str) and registry_path.startswith('./src/'):
+                    # Determine if this is a pipelines service by checking the source directory
+                    is_pipelines_service = 'pipelines' in source_dir
+                    
+                    if is_pipelines_service:
+                        # For pipelines: use absolute path since working dir (/app) != mount point (/pipelines)
+                        # ./src/weather/registry.py -> /pipelines/repo_src/weather/registry.py
+                        flattened_config['registry_path'] = registry_path.replace('./src/', '/pipelines/repo_src/')
+                        print(f"Adjusted registry_path for pipelines container: {registry_path} -> {flattened_config['registry_path']}")
+                    else:
+                        # For other services: use relative path since working dir == mount point
+                        # ./src/weather/registry.py -> ./repo_src/weather/registry.py
+                        flattened_config['registry_path'] = registry_path.replace('./src/', './repo_src/')
+                        print(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
             
             config_yml_dst = os.path.join(out_dir, "config.yml")
             with open(config_yml_dst, 'w') as f:
@@ -588,7 +714,8 @@ def parse_args():
             COMMAND: Deployment command - 'up' or 'down' (optional)
             
         Options:
-            -d, --detached: Run in detached mode (only with 'up')
+            -d, --detached: Run in detached mode (only with 'up' or 'rebuild')
+            --dev: Development mode - use local framework package instead of PyPI
     
     Examples:
         Generate compose files only::
@@ -599,12 +726,22 @@ def parse_args():
         Deploy services in foreground::
         
             $ python container_manager.py config.yml up
-            # Deploys services and shows output
+            # Deploys services and shows output (uses PyPI framework)
             
         Deploy services in background::
         
             $ python container_manager.py config.yml up -d
-            # Deploys services in detached mode
+            # Deploys services in detached mode (uses PyPI framework)
+            
+        Deploy with local framework for development::
+        
+            $ python container_manager.py config.yml up --dev
+            # Deploys services using local framework package for testing
+            
+        Deploy with local framework in background::
+        
+            $ python container_manager.py config.yml up -d --dev
+            # Deploys services in detached mode with local framework
             
         Stop services::
         
@@ -616,10 +753,10 @@ def parse_args():
             $ python container_manager.py config.yml clean
             # Removes containers, images, volumes, and networks
             
-        Rebuild from scratch::
+        Rebuild from scratch with local framework::
         
-            $ python container_manager.py config.yml rebuild -d
-            # Clean + rebuild + start in detached mode
+            $ python container_manager.py config.yml rebuild -d --dev
+            # Clean + rebuild + start in detached mode with local framework
     
     .. seealso::
        :func:`main execution block` : Uses parsed arguments for deployment operations
@@ -639,6 +776,11 @@ def parse_args():
         "-d", "--detached", action="store_true",
         help="Run in detached mode. Only valid with 'up'.")
 
+    # Optional --dev flag for local framework development
+    parser.add_argument(
+        "--dev", action="store_true",
+        help="Development mode: copy local framework package to containers instead of using PyPI version. Use this when testing local framework changes.")
+
     args = parser.parse_args()
 
     # Validation
@@ -647,7 +789,7 @@ def parse_args():
 
     return args
 
-def _incremental_setup_build_dir(template_path, config, service_config, out_dir):
+def _incremental_setup_build_dir(template_path, config, service_config, out_dir, dev_mode=False):
     """Setup build directory using incremental updates when full cleanup fails.
     
     This fallback function handles cases where the build directory cannot be
@@ -781,13 +923,15 @@ def clean_deployment(compose_files):
     print("Cleanup completed.")
 
 
-def prepare_compose_files(config_path):
+def prepare_compose_files(config_path, dev_mode=False):
     """Prepare compose files from configuration.
     
     Loads configuration and generates all necessary compose files for deployment.
     
     :param config_path: Path to the configuration file
     :type config_path: str
+    :param dev_mode: Development mode - copy local framework to containers
+    :type dev_mode: bool
     :return: Tuple of (config dict, list of compose file paths)
     :rtype: tuple[dict, list[str]]
     :raises RuntimeError: If configuration loading fails
@@ -823,7 +967,7 @@ def prepare_compose_files(config_path):
             if not os.path.isfile(template_path):
                 raise RuntimeError(f"Template file {template_path} not found for service '{service_name}'")
             
-            out = setup_build_dir(template_path, config, service_config)
+            out = setup_build_dir(template_path, config, service_config, dev_mode)
             compose_files.append(out)
         else:
             raise RuntimeError(f"Service '{service_name}' not found in configuration")
@@ -831,28 +975,46 @@ def prepare_compose_files(config_path):
     return config, compose_files
 
 
-def deploy_up(config_path, detached=False):
+def deploy_up(config_path, detached=False, dev_mode=False):
     """Start services using podman compose.
     
     :param config_path: Path to the configuration file
     :type config_path: str
     :param detached: Run in detached mode
     :type detached: bool
+    :param dev_mode: Development mode for local framework testing
+    :type dev_mode: bool
     """
-    config, compose_files = prepare_compose_files(config_path)
+    config, compose_files = prepare_compose_files(config_path, dev_mode)
+    
+    # Set up environment for containers
+    env = os.environ.copy()
+    if dev_mode:
+        env['DEV_MODE'] = 'true'
+        print("🔧 Development mode: DEV_MODE environment variable set for containers")
     
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
-    cmd.extend(["--env-file", ".env", "up"])
+    
+    # Only add --env-file if .env exists, otherwise let docker-compose use defaults
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+    else:
+        print("⚠️  No .env file found - services will start with default/empty environment variables")
+        print("💡 To configure API keys: cp .env.example .env && edit .env")
+    
+    cmd.append("up")
     if detached:
         cmd.append("-d")
     
     print(f"Running command:\n    {' '.join(cmd)}")
-    os.execvp(cmd[0], cmd)
+    os.execvpe(cmd[0], cmd, env)
 
 
-def deploy_down(config_path):
+def deploy_down(config_path, dev_mode=False):
     """Stop services using podman compose.
     
     :param config_path: Path to the configuration file
@@ -873,7 +1035,7 @@ def deploy_down(config_path):
     # If no existing compose files found, rebuild them
     if not compose_files:
         print("No existing compose files found, rebuilding...")
-        _, compose_files = prepare_compose_files(config_path)
+        _, compose_files = prepare_compose_files(config_path, dev_mode)
     else:
         print(f"Using existing compose files for 'down' operation:")
         for f in compose_files:
@@ -882,7 +1044,14 @@ def deploy_down(config_path):
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
-    cmd.extend(["--env-file", ".env", "down"])
+    
+    # Only add --env-file if .env exists
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+    
+    cmd.append("down")
     
     print(f"Running command:\n    {' '.join(cmd)}")
     os.execvp(cmd[0], cmd)
@@ -942,29 +1111,47 @@ def show_status(config_path):
     subprocess.run(cmd)
 
 
-def rebuild_deployment(config_path, detached=False):
+def rebuild_deployment(config_path, detached=False, dev_mode=False):
     """Rebuild deployment from scratch (clean + up).
     
     :param config_path: Path to the configuration file
     :type config_path: str
     :param detached: Run in detached mode
     :type detached: bool
+    :param dev_mode: Development mode for local framework testing
+    :type dev_mode: bool
     """
-    config, compose_files = prepare_compose_files(config_path)
+    config, compose_files = prepare_compose_files(config_path, dev_mode)
     
     # Clean first
     clean_deployment(compose_files)
+    
+    # Set up environment for containers
+    env = os.environ.copy()
+    if dev_mode:
+        env['DEV_MODE'] = 'true'
+        print("🔧 Development mode: DEV_MODE environment variable set for containers")
     
     # Then start up
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
-    cmd.extend(["--env-file", ".env", "up"])
+    
+    # Only add --env-file if .env exists
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+    else:
+        print("⚠️  No .env file found - services will start with default/empty environment variables")
+        print("💡 To configure API keys: cp .env.example .env && edit .env")
+    
+    cmd.append("up")
     if detached:
         cmd.append("-d")
     
     print(f"Running command:\n    {' '.join(cmd)}")
-    os.execvp(cmd[0], cmd)
+    os.execvpe(cmd[0], cmd, env)
 
 if __name__ == "__main__":
     """Main execution block for container management operations.
@@ -1014,18 +1201,18 @@ if __name__ == "__main__":
     
     try:
         if args.command == "up":
-            deploy_up(args.config, detached=args.detached)
+            deploy_up(args.config, detached=args.detached, dev_mode=args.dev)
         elif args.command == "down":
-            deploy_down(args.config)
+            deploy_down(args.config, dev_mode=args.dev)
         elif args.command == "clean":
             # For clean, we need to prepare files first
-            _, compose_files = prepare_compose_files(args.config)
+            _, compose_files = prepare_compose_files(args.config, dev_mode=args.dev)
             clean_deployment(compose_files)
         elif args.command == "rebuild":
-            rebuild_deployment(args.config, detached=args.detached)
+            rebuild_deployment(args.config, detached=args.detached, dev_mode=args.dev)
         else:
             # No command specified - just generate compose files
-            _, compose_files = prepare_compose_files(args.config)
+            _, compose_files = prepare_compose_files(args.config, dev_mode=args.dev)
             print("Generated compose files:")
             for compose_file in compose_files:
                 print(f" - {compose_file}")

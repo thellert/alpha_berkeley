@@ -43,7 +43,12 @@ console = Console()
     is_flag=True,
     help="Run services in detached mode (for up, restart, rebuild)"
 )
-def deploy(action: str, config: str, detached: bool):
+@click.option(
+    "--dev",
+    is_flag=True,
+    help="Development mode: copy local framework package to containers instead of using PyPI version. Use this when testing local framework changes."
+)
+def deploy(action: str, config: str, detached: bool, dev: bool):
     """Manage Docker/Podman services for Framework projects.
     
     This command wraps the existing container management functionality,
@@ -65,11 +70,17 @@ def deploy(action: str, config: str, detached: bool):
     Examples:
     
     \b
-      # Start services
+      # Start services (production mode - uses PyPI framework)
       $ framework deploy up
       
       # Start in background (detached mode)
       $ framework deploy up -d
+      
+      # Start with local framework for development/testing
+      $ framework deploy up --dev
+      
+      # Start in background with local framework
+      $ framework deploy up -d --dev
       
       # Stop services
       $ framework deploy down
@@ -82,6 +93,9 @@ def deploy(action: str, config: str, detached: bool):
       
       # Clean everything (removes data!)
       $ framework deploy clean
+      
+      # Rebuild with local framework for development
+      $ framework deploy rebuild --dev
     """
     console.print(f"🔧 Service management: [bold]{action}[/bold]")
     
@@ -92,10 +106,10 @@ def deploy(action: str, config: str, detached: bool):
         # Dispatch to existing container_manager functions
         # These are the ORIGINAL functions from Phase 1.5, behavior unchanged
         if action == "up":
-            deploy_up(config_path, detached=detached)
+            deploy_up(config_path, detached=detached, dev_mode=dev)
             
         elif action == "down":
-            deploy_down(config_path)
+            deploy_down(config_path, dev_mode=dev)
             
         elif action == "restart":
             deploy_restart(config_path, detached=detached)
@@ -105,11 +119,11 @@ def deploy(action: str, config: str, detached: bool):
             
         elif action == "clean":
             # clean_deployment expects compose_files list, so prepare them first
-            _, compose_files = prepare_compose_files(config_path)
+            _, compose_files = prepare_compose_files(config_path, dev_mode=dev)
             clean_deployment(compose_files)
             
         elif action == "rebuild":
-            rebuild_deployment(config_path, detached=detached)
+            rebuild_deployment(config_path, detached=detached, dev_mode=dev)
         
         # Note: The original functions handle all output and error messaging
         # We don't add extra output to avoid changing user experience
