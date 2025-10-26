@@ -5,7 +5,7 @@ services:
     build:
       context: ./jupyter
       dockerfile: Dockerfile
-    restart: unless-stopped
+    restart: "no"
     ports:
       - "{{services.jupyter.containers.read.port_host}}:{{services.jupyter.containers.read.port_container}}"
     volumes:
@@ -34,7 +34,7 @@ services:
     build:
       context: ./jupyter
       dockerfile: Dockerfile
-    restart: unless-stopped
+    restart: "no"
     ports:
       - "{{services.jupyter.containers.write.port_host}}:{{services.jupyter.containers.write.port_container}}"
     volumes:

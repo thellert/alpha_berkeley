@@ -6,21 +6,37 @@ echo "=============================================="
 echo "Starting Pipelines Container"
 echo "=============================================="
 
-# Install framework from development source
-if [ -d "/pipelines/framework_src" ]; then
-    echo "Installing framework from /pipelines/framework_src (editable mode)..."
-    pip install -e /pipelines/framework_src
-    echo "✓ Framework installed successfully"
-    
-    # Install framework dependencies
-    if [ -f "/pipelines/framework_src/requirements.txt" ]; then
-        echo "Installing framework dependencies..."
-        pip install --no-cache-dir -r /pipelines/framework_src/requirements.txt
-        echo "✓ Framework dependencies installed"
-    fi
+# Install project dependencies (including framework)
+if [ -f "/pipelines/repo_src/requirements.txt" ]; then
+    echo "Installing project dependencies from requirements.txt..."
+    pip install --no-cache-dir -r /pipelines/repo_src/requirements.txt
+    echo "✓ Project dependencies installed successfully"
 else
-    echo "WARNING: /pipelines/framework_src not found"
-    echo "Attempting to use framework from pip install..."
+    echo "WARNING: /pipelines/repo_src/requirements.txt not found"
+    echo "Installing framework directly as fallback..."
+    pip install alpha-berkeley-framework>=0.7.2
+fi
+
+# Development mode override - install local framework AFTER everything else
+if [ "$DEV_MODE" = "true" ] && [ -d "/pipelines/framework_override" ]; then
+    echo "🔧 Development mode: Overriding framework with local version..."
+    
+    # Create a temporary setup.py for the override
+    cat > /pipelines/framework_override/setup.py << 'EOF'
+from setuptools import setup, find_packages
+setup(
+    name="framework",
+    version="dev-override",
+    packages=find_packages(),
+    install_requires=[],  # Dependencies already installed from requirements.txt
+)
+EOF
+    
+    # Install the local framework (this will override the PyPI version)
+    pip install --no-cache-dir -e /pipelines/framework_override
+    echo "✓ Framework overridden with local development version"
+else
+    echo "📦 Using PyPI framework version"
 fi
 
 # Verify pipeline interface files exist

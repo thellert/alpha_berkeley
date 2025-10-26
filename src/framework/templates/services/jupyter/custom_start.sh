@@ -27,21 +27,37 @@ echo "Locating pip: $(which pip || echo 'pip not found in PATH')"
 echo "Locating start-notebook.sh: $(which start-notebook.sh || echo 'start-notebook.sh not found in PATH')"
 echo "Locating /usr/local/bin/start-notebook.sh: $(ls -l /usr/local/bin/start-notebook.sh || echo '/usr/local/bin/start-notebook.sh does not exist')"
 
-# Install framework from development source (pip-installable architecture test)
-if [ -d "/jupyter/framework_src" ]; then
-    echo "Installing framework from /jupyter/framework_src (editable mode)..."
-    pip install -e /jupyter/framework_src
-    echo "✓ Framework installed successfully"
-    
-    # Install framework dependencies
-    if [ -f "/jupyter/framework_src/requirements.txt" ]; then
-        echo "Installing framework dependencies..."
-        pip install --no-cache-dir -r /jupyter/framework_src/requirements.txt
-        echo "✓ Framework dependencies installed"
-    fi
+# Install project dependencies (including framework)
+if [ -f "/jupyter/repo_src/requirements.txt" ]; then
+    echo "Installing project dependencies from requirements.txt..."
+    pip install --no-cache-dir -r /jupyter/repo_src/requirements.txt
+    echo "✓ Project dependencies installed successfully"
 else
-    echo "ERROR: /jupyter/framework_src not found"
-    echo "Container needs framework source for development testing"
+    echo "WARNING: /jupyter/repo_src/requirements.txt not found"
+    echo "Installing framework directly as fallback..."
+    pip install alpha-berkeley-framework>=0.7.2
+fi
+
+# Development mode override - install local framework AFTER everything else
+if [ "$DEV_MODE" = "true" ] && [ -d "/jupyter/framework_override" ]; then
+    echo "🔧 Development mode: Overriding framework with local version..."
+    
+    # Create a temporary setup.py for the override
+    cat > /jupyter/framework_override/setup.py << 'EOF'
+from setuptools import setup, find_packages
+setup(
+    name="framework",
+    version="dev-override",
+    packages=find_packages(),
+    install_requires=[],  # Dependencies already installed from requirements.txt
+)
+EOF
+    
+    # Install the local framework (this will override the PyPI version)
+    pip install --no-cache-dir -e /jupyter/framework_override
+    echo "✓ Framework overridden with local development version"
+else
+    echo "📦 Using PyPI framework version"
 fi
 
 echo "Creating IPython default profile startup directory..."
