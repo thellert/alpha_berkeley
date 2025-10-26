@@ -73,17 +73,7 @@ services:
         execution_modes: ["write_access"]
     copy_src: true  # Copies user application from src/
     render_kernel_templates: true
-    additional_dirs:
-      # Copy framework source for pip install (minimal - just what's needed)
-      # TODO: Remove when framework is pre-installed in container images
-      - src: ../../projects/alpha_berkeley/src/framework
-        dst: framework_src/src/framework
-      - src: ../../projects/alpha_berkeley/src/configs
-        dst: framework_src/src/configs
-      - src: ../../projects/alpha_berkeley/pyproject.toml
-        dst: framework_src/pyproject.toml
-      - src: ../../projects/alpha_berkeley/requirements.txt
-        dst: framework_src/requirements.txt
+    # additional_dirs: []  # Add custom directories to copy if needed
 
   # Open WebUI - Primary user interface frontend
   open_webui:
@@ -98,17 +88,7 @@ services:
     port_host: 9099
     port_container: 9099
     copy_src: true  # Copies user application from src/
-    additional_dirs:
-      # Copy framework source for pip install (minimal - just what's needed)
-      # TODO: Remove when framework is pre-installed in container images
-      - src: ../../projects/alpha_berkeley/src/framework
-        dst: framework_src/src/framework
-      - src: ../../projects/alpha_berkeley/src/configs
-        dst: framework_src/src/configs
-      - src: ../../projects/alpha_berkeley/pyproject.toml
-        dst: framework_src/pyproject.toml
-      - src: ../../projects/alpha_berkeley/requirements.txt
-        dst: framework_src/requirements.txt
+    # additional_dirs: []  # Add custom directories to copy if needed
 
 # ============================================================
 # DEPLOYED SERVICES
