@@ -9,7 +9,7 @@ An open-source, domain-agnostic, capability-based architecture for building inte
 **📢 Conference Update**  
 Our work "Agentic Systems in Accelerator Control and Optimization" will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
 
-**🎉 Latest Release: v0.7.1** - Major architecture update! Framework is now pip-installable, enabling independent application development. See [Release Notes](RELEASE_NOTES.md) for details.
+**🎉 Latest Release: v0.7.2** - Simplified installation! PostgreSQL dependencies are now optional, making the framework easier to install and try. See [Release Notes](RELEASE_NOTES.md) for details.
 
 ## 🚀 Quick Start
 

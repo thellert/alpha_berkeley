@@ -5,6 +5,15 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2025-10-26
+
+### Changed
+- **Simplified Installation** - PostgreSQL dependencies moved to optional `[postgres]` extra
+  - Basic framework now installs without PostgreSQL requirements
+  - Uses in-memory checkpointing by default (perfect for development/testing)
+  - Production users can install `alpha-berkeley-framework[postgres]` for persistent state
+  - Resolves installation issues on systems without PostgreSQL packages
+
 ## [0.7.1] - 2025-10-26
 
 ### Added

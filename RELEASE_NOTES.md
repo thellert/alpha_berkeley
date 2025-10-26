@@ -1,8 +1,33 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.0)
+# Alpha Berkeley Framework - Latest Release (v0.7.2)
 
-🎉 **Major Architecture Release** - Framework is now pip-installable, enabling independent application development in separate repositories.
+🎉 **Simplified Installation** - PostgreSQL dependencies are now optional, making the framework much easier to install and try.
 
-## What's New
+## What's New in v0.7.2
+
+### 📦 Simplified Installation
+
+**PostgreSQL dependencies moved to optional extras** - The framework now installs without requiring PostgreSQL packages, making it much easier to get started:
+
+```bash
+# Basic installation (uses in-memory storage)
+pip install alpha-berkeley-framework
+
+# With PostgreSQL for persistent conversations  
+pip install alpha-berkeley-framework[postgres]
+
+# Full installation with all features
+pip install alpha-berkeley-framework[all]
+```
+
+**Benefits:**
+- ✅ Faster, simpler installation process
+- ✅ No PostgreSQL setup required for development/testing
+- ✅ Framework works perfectly with in-memory checkpointing
+- ✅ Production users can still get persistent state with `[postgres]` extra
+
+---
+
+## What's New in v0.7.0+
 
 ### 🏗️ Framework Decoupling (Breaking Changes)
 
