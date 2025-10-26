@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "alpha-berkeley-framework"
-version = "0.7.1"
+version = "0.7.2"
 description = "An open-source, domain-agnostic, capability-based architecture for building intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -40,11 +40,7 @@ dependencies = [
     # LangGraph dependencies - CRITICAL VERSION REQUIREMENTS
     "langgraph>=0.5.2",
     "langchain-core>=0.3.68",
-    "langgraph-checkpoint-postgres>=2.0.22,<3.0.0",
     "langgraph-sdk>=0.1.70,<0.2.0",
-    "psycopg[pool]>=3.1.0,<4.0.0",
-    "psycopg-pool>=3.1.0,<4.0.0",
-    "langchain-postgres>=0.0.12,<0.1.0",
     
     # Core framework dependencies
     "rich>=14.0.0",
@@ -111,6 +107,14 @@ databases = [
     "qdrant-client",
 ]
 
+# PostgreSQL checkpointing (production persistence)
+postgres = [
+    "langgraph-checkpoint-postgres>=2.0.22,<3.0.0",
+    "psycopg[pool]>=3.1.0,<4.0.0",
+    "psycopg-pool>=3.1.0,<4.0.0",
+    "langchain-postgres>=0.0.12,<0.1.0",
+]
+
 # Memory and vector storage
 memory = [
     "mem0ai>=0.1.88",
@@ -140,7 +144,7 @@ utils = [
 
 # All optional dependencies for complete installation
 all = [
-    "alpha-berkeley-framework[docs,scientific,databases,memory,dev,nlp,utils]"
+    "alpha-berkeley-framework[docs,scientific,databases,postgres,memory,dev,nlp,utils]"
 ]
 
 [project.urls]
