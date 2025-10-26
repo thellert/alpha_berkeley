@@ -1,4 +1,4 @@
-Migration Guide: Upgrading to v0.7.0
+Migration Guide: Upgrading to v0.7.0+
 =====================================
 
 .. admonition:: Who Should Read This

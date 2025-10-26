@@ -43,6 +43,7 @@ class HealthChecker:
         self.full = full
         self.results: List[HealthCheckResult] = []
         self.cwd = Path.cwd()
+        self.config = {}  # Initialize empty config, will be populated in check_configuration()
         
         # Load .env file early so environment variables are available for all checks
         self._load_env_file()
@@ -124,6 +125,9 @@ class HealthChecker:
             
             self.add_result("yaml_valid", "ok", "Valid YAML syntax")
             console.print("  [green]✅ Valid YAML syntax[/green]")
+            
+            # Store config for use in other checks
+            self.config = config
             
             # Check required sections
             self._check_config_structure(config)
@@ -261,27 +265,63 @@ class HealthChecker:
                 )
                 console.print(f"  [green]✅ All {len(env_vars)} environment variables set[/green]")
     
+    def _check_project_paths(self):
+        """Check if project_root and agent data directory paths are valid and accessible."""
+        
+        try:
+            # Get project_root from config (could be hardcoded or env var)
+            project_root = self.config.get('project_root')
+            if not project_root:
+                self.add_result("project_paths", "warning", "No project_root configured")
+                console.print("  [yellow]⚠️  No project_root configured[/yellow]")
+                return
+            
+            # Resolve project_root (handles ${PROJECT_ROOT} expansion)
+            project_root_resolved = os.path.expandvars(str(project_root))
+            project_root_path = Path(project_root_resolved)
+            
+            # Check if project_root exists
+            if project_root_path.exists():
+                self.add_result("project_root_path", "ok", f"Project root exists: {project_root_path}")
+                console.print(f"  [green]✅ Project root exists: {project_root_path}[/green]")
+            else:
+                self.add_result("project_root_path", "warning", f"Project root does not exist: {project_root_path}")
+                console.print(f"  [yellow]⚠️  Project root does not exist: {project_root_path}[/yellow]")
+                # Don't return - we can still check if it could be created
+            
+            # Check agent data directory
+            file_paths = self.config.get('file_paths', {})
+            agent_data_dir = file_paths.get('agent_data_dir', '_agent_data')
+            agent_data_path = project_root_path / agent_data_dir
+            
+            if agent_data_path.exists():
+                # Check if it's writable
+                if os.access(agent_data_path, os.W_OK):
+                    self.add_result("agent_data_dir", "ok", f"Agent data directory writable: {agent_data_path}")
+                    console.print(f"  [green]✅ Agent data directory writable[/green]")
+                else:
+                    self.add_result("agent_data_dir", "warning", f"Agent data directory not writable: {agent_data_path}")
+                    console.print(f"  [yellow]⚠️  Agent data directory not writable: {agent_data_path}[/yellow]")
+            else:
+                # Check if parent directory exists and is writable (can we create it?)
+                parent_dir = agent_data_path.parent
+                if parent_dir.exists() and os.access(parent_dir, os.W_OK):
+                    self.add_result("agent_data_dir", "ok", f"Agent data directory can be created: {agent_data_path}")
+                    console.print(f"  [green]✅ Agent data directory can be created[/green]")
+                else:
+                    self.add_result("agent_data_dir", "warning", f"Cannot create agent data directory: {agent_data_path}")
+                    console.print(f"  [yellow]⚠️  Cannot create agent data directory: {agent_data_path}[/yellow]")
+                    
+        except Exception as e:
+            self.add_result("project_paths", "error", f"Error checking project paths: {e}")
+            console.print(f"  [red]❌ Error checking project paths: {e}[/red]")
+    
     def check_file_system(self):
         """Check file system structure and permissions."""
         console.print("\n[bold]File System[/bold]")
         
-        # Check project root
-        project_root_env = os.environ.get("PROJECT_ROOT")
-        if project_root_env:
-            project_root = Path(project_root_env)
-            if project_root.exists():
-                self.add_result("project_root", "ok", f"PROJECT_ROOT set and exists: {project_root}")
-                console.print(f"  [green]✅ PROJECT_ROOT: {project_root}[/green]")
-            else:
-                self.add_result(
-                    "project_root",
-                    "warning",
-                    f"PROJECT_ROOT set but path does not exist: {project_root}"
-                )
-                console.print(f"  [yellow]⚠️  PROJECT_ROOT path not found: {project_root}[/yellow]")
-        else:
-            self.add_result("project_root", "warning", "PROJECT_ROOT not set")
-            console.print("  [yellow]⚠️  PROJECT_ROOT environment variable not set[/yellow]")
+        # Check project paths from config
+        self._check_project_paths()
         
         # Check .env file
         env_file = self.cwd / ".env"
@@ -319,27 +359,6 @@ class HealthChecker:
         except Exception as e:
             # Don't fail if we can't check registry
             pass
-        
-        # Check agent data directory
-        agent_data_dir = self.cwd / "_agent_data"
-        if agent_data_dir.exists():
-            if os.access(agent_data_dir, os.W_OK):
-                self.add_result("agent_data_dir", "ok", "Agent data directory exists and is writable")
-                console.print("  [green]✅ Agent data directory writable[/green]")
-            else:
-                self.add_result(
-                    "agent_data_dir",
-                    "warning",
-                    "Agent data directory exists but is not writable"
-                )
-                console.print("  [yellow]⚠️  Agent data directory not writable[/yellow]")
-        else:
-            self.add_result(
-                "agent_data_dir",
-                "warning",
-                "Agent data directory does not exist yet (will be created on first run)"
-            )
-            console.print("  [yellow]⚠️  Agent data directory not created yet[/yellow]")
         
         # Check disk space
         try:

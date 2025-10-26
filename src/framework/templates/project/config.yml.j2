@@ -178,7 +178,7 @@ file_paths:
 # Python execution configuration
 execution:
   execution_method: "local"              # Options: local | container
-  python_env_path: ${LOCAL_PYTHON_VENV}  # Path to Python with dependencies
+  python_env_path: {{ current_python_env }}  # Path to Python with dependencies
   
   # EPICS infrastructure (for hardware control applications)
   epics:

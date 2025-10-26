@@ -166,6 +166,11 @@ class TemplateManager:
         # 3. Prepare template context
         package_name = project_name.replace("-", "_").lower()
         class_name = self._generate_class_name(package_name)
+        
+        # Detect current Python environment
+        import sys
+        current_python = sys.executable
+        
         ctx = {
             "project_name": project_name,
             "package_name": package_name,
@@ -176,6 +181,7 @@ class TemplateManager:
             "framework_version": self._get_framework_version(),
             "project_root": str(project_dir.absolute()),
             "venv_path": "${LOCAL_PYTHON_VENV}",
+            "current_python_env": current_python,  # Actual path to current Python
             "default_provider": "cborg",
             "default_model": "google/gemini-flash",
             **(context or {})

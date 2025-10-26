@@ -1066,10 +1066,8 @@ class Pipeline:
                 return None
             
             # Convert agent directory path to static URL using environment variables
+            # NOTE: Pipeline always runs in container where PROJECT_ROOT/AGENT_DATA_DIR are set by deployment system
             # Our architecture constraint: all figures are in ${PROJECT_ROOT}/${agent_data_dir}/
-            import os
-            
-            # Get environment variables with robust validation
             project_root = os.getenv('PROJECT_ROOT')
             agent_data_dir = os.getenv('AGENT_DATA_DIR')
             
