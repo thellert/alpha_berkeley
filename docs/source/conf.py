@@ -31,9 +31,17 @@ sys.path.insert(0, src_root)
 
 # Function to get version from git
 def get_version_from_git():
-    """Get the current version from git tags, fallback to a default if not available."""
+    """Get the current version from git tags, with GitHub Actions support."""
     try:
-        # Get the latest git tag
+        # In GitHub Actions, check if we're building for a specific tag
+        github_ref = os.environ.get('GITHUB_REF', '')
+        if github_ref.startswith('refs/tags/v'):
+            # Extract version from GitHub ref (e.g., refs/tags/v0.7.2 -> 0.7.2)
+            version = github_ref.replace('refs/tags/v', '')
+            print(f"📋 Using version from GitHub tag: {version}")
+            return version
+        
+        # Fallback to git describe for local builds
         result = subprocess.run(
             ['git', 'describe', '--tags', '--abbrev=0'], 
             capture_output=True, 
@@ -42,12 +50,15 @@ def get_version_from_git():
         )
         if result.returncode == 0:
             # Remove 'v' prefix if present
-            version = result.stdout.strip()
-            return version.lstrip('v')
+            version = result.stdout.strip().lstrip('v')
+            print(f"📋 Using version from git describe: {version}")
+            return version
         else:
-            return ''
+            print("⚠️  No git tags found, using fallback version")
+            return '0.0.0-dev'
     except (subprocess.SubprocessError, FileNotFoundError):
-        return ''
+        print("⚠️  Git not available, using fallback version")
+        return '0.0.0-dev'
 
 project = 'Alpha Berkeley Framework'
 copyright = '2025, ALS Team'

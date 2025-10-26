@@ -6,10 +6,9 @@
 
 An open-source, domain-agnostic, capability-based architecture for building intelligent agents that can be adapted to any specific domain.
 
-**📢 Conference Update**  
-Our work "Agentic Systems in Accelerator Control and Optimization" will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
+**📄 Research**  
+This work was presented as a contributed oral presentation at [ICALEPCS'25](https://indico.jacow.org/event/86/overview) and will be featured at the [Machine Learning and the Physical Sciences Workshop](https://ml4physicalsciences.github.io/2025/) at NeurIPS 2025.
 
-**🎉 Latest Release: v0.7.2** - Simplified installation! PostgreSQL dependencies are now optional, making the framework easier to install and try. See [Release Notes](RELEASE_NOTES.md) for details.
 
 ## 🚀 Quick Start
 
@@ -33,31 +32,11 @@ framework chat
 # Or use the web interface at http://localhost:8080
 ```
 
+
 ## 📚 Documentation
 
 **[📖 Read the Full Documentation →](https://thellert.github.io/alpha_berkeley)**
 
-## Quick Links
-
-- **[🚀 Getting Started](https://thellert.github.io/alpha_berkeley/getting-started/)** - Complete learning path from setup to building sophisticated agents
-- **[📖 Installation Guide](https://thellert.github.io/alpha_berkeley/getting-started/installation)** - Fresh installation instructions
-- **[🔄 Migration Guide](https://thellert.github.io/alpha_berkeley/getting-started/migration-guide)** - Upgrading from v0.6.x to v0.7.0
-- **[🎓 Tutorials](https://thellert.github.io/alpha_berkeley/getting-started/)** - Step-by-step guides for building agents
-- **[📝 Release Notes](RELEASE_NOTES.md)** - What's new in v0.7.0
-- **[📋 Issue #8](https://github.com/thellert/alpha_berkeley/issues/8)** - Framework decoupling architecture
-
-## ✨ What's New in v0.7.0
-
-**Major Architecture Update** - Framework decoupled from applications:
-
-- 🎯 **Independent Development** - Applications in separate repositories
-- 📦 **Pip-Installable** - `pip install alpha-berkeley-framework`
-- 🛠️ **Unified CLI** - 5 commands (`init`, `deploy`, `chat`, `health`, `export-config`)
-- 📋 **Template System** - Generate complete projects instantly
-- 🎨 **Registry Helpers** - ~70% less boilerplate code
-- ⚡ **Immediate Changes** - Edit code, run instantly (no reinstall)
-
-**Breaking Changes:** v0.7.0 changes import paths and configuration structure. See [Migration Guide](https://thellert.github.io/alpha_berkeley/getting-started/migration-guide) for upgrade instructions.
 
 ## Key Features
 

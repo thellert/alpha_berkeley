@@ -70,13 +70,13 @@ def cli():
     Use 'framework COMMAND --help' for more information on a specific command.
     
     Examples:
-        framework init my-project              Create new project
-        framework deploy up                    Start services
-        framework chat                         Interactive conversation
-        framework health                       Check system health
-        framework export-config                View framework defaults
     
-    Note: This command will be renamed to 'mentat' in a future release.
+    \b
+      framework init my-project       Create new project
+      framework deploy up             Start services  
+      framework chat                  Interactive conversation
+      framework health                Check system health
+      framework export-config         View framework defaults
     """
     pass
 
