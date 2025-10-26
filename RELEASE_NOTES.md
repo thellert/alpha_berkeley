@@ -1,6 +1,28 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.2)
+# Alpha Berkeley Framework - Latest Release (v0.7.3)
 
-🎉 **Simplified Installation** - PostgreSQL dependencies are now optional, making the framework much easier to install and try.
+🎉 **Enhanced Container Deployment** - Development mode support, PyPI integration, and improved service templates for seamless local and production workflows.
+
+## What's New in v0.7.3
+
+### 🐳 Container Deployment Improvements
+
+#### **Development Mode Support**
+- **New `--dev` flag** for deploy CLI command enables local framework testing
+- **Local framework override** - seamlessly switch between PyPI and local framework versions
+- **Smart dependency installation** - containers detect dev mode and install local framework
+- **Improved development workflow** - no need to rebuild containers when testing framework changes
+
+#### **PyPI Distribution Integration**
+- **Project templates updated** to use PyPI framework distribution by default
+- **Automatic framework dependency** added to generated `pyproject.toml` and `requirements.txt`
+- **Removed hardcoded paths** from configuration templates for better portability
+- **Agent data structure creation** - ensures proper directory structure for container mounts
+
+#### **Service Template Enhancements**
+- **Improved container startup** with better logging and error messages
+- **Fallback mechanisms** for missing requirements.txt files
+- **Changed restart policy** to 'no' for better development experience
+- **Enhanced start scripts** with PyPI framework and dev mode detection
 
 ## What's New in v0.7.2
 

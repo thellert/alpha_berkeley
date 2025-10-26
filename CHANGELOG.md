@@ -5,6 +5,30 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.3] - 2025-10-26
+
+### Added
+- **Development Mode Support** - New `--dev` flag for deploy CLI command
+  - Local framework override capability for seamless development testing
+  - Smart dependency installation in containers with dev mode detection
+  - Automatic local framework installation when DEV_MODE is enabled
+
+### Changed
+- **Container Deployment** - Enhanced service templates and deployment workflow
+  - Project templates now use PyPI framework distribution by default
+  - Removed hardcoded framework paths from configuration templates
+  - Improved container startup scripts with better logging and error handling
+  - Changed container restart policy to 'no' for better development experience
+- **Project Templates** - Automatic framework dependency management
+  - Added framework dependency to generated `pyproject.toml` and `requirements.txt`
+  - Created proper agent data directory structure for container mounts
+  - Enhanced fallback mechanisms for missing requirements files
+
+### Fixed
+- **Container Manager** - Improved registry path resolution for different service types
+- **Environment Handling** - Graceful .env file handling with fallback warnings
+- **Mount Points** - Ensure container mount directories exist before deployment
+
 ## [0.7.2] - 2025-10-26
 
 ### Changed
