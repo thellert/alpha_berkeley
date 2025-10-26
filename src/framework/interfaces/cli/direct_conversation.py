@@ -40,6 +40,11 @@ from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.styles import Style
+from prompt_toolkit.completion import merge_completers
+
+# Centralized command system
+from framework.commands import get_command_registry, CommandContext, CommandResult
+from framework.commands.completer import UnifiedCommandCompleter
 
 logger = get_logger("cli")
 
@@ -138,11 +143,32 @@ class CLI:
         # Create custom key bindings
         self.key_bindings = self._create_key_bindings()
         
-        # Create custom style
+        # Create custom style with dark completion menu background
         self.prompt_style = Style.from_dict({
             'prompt': '#00aa00 bold',
             'suggestion': '#666666 italic',
+            
+            # Dark completion menu styling
+            'completion-menu': 'bg:#1c1c1c',           # Almost black background
+            'completion-menu.completion': 'bg:#1c1c1c', # Same dark background for items
+            'completion-menu.completion.current': 'bg:#2d2d2d', # Slightly lighter for selected
+            'completion-menu.scrollbar': '#444444',     # Dim scrollbar
+            'completion-menu.scrollbar.background': '#1c1c1c', # Dark scrollbar background
+            
+            # Fallback styles
+            'completion': 'bg:#1c1c1c',
+            'completion.current': 'bg:#2d2d2d',
+            'scrollbar': '#444444',
+            'scrollbar.background': '#1c1c1c',
         })
+        
+        # Initialize command system
+        self.command_context = CommandContext(
+            interface_type="cli",
+            cli_instance=self,
+            console=self.console
+        )
+        self.command_completer = UnifiedCommandCompleter(self.command_context)
         
     def _create_key_bindings(self):
         """Create custom key bindings for advanced CLI functionality.
@@ -199,10 +225,11 @@ class CLI:
             auto_suggest=AutoSuggestFromHistory(),
             key_bindings=self.key_bindings,
             style=self.prompt_style,
+            completer=self.command_completer,
             mouse_support=False,  # Disable to allow normal terminal scrolling
             complete_style='multi-column',
             enable_suspend=True,  # Allow Ctrl+Z
-            reserve_space_for_menu=0  # Don't reserve space that could interfere with scrolling
+            reserve_space_for_menu=8  # Reserve space for completion menu
         )
         
     async def initialize(self):
@@ -268,6 +295,7 @@ class CLI:
         
         self.console.print(Text(banner_text, style="bold cyan"))
         self.console.print("💡 Type 'bye' or 'end' to exit", style="yellow")
+        self.console.print("⚡ Use slash commands (/) for quick actions - try /help", style="bright_blue")
         self.console.print()
         
         # Initialize configuration using LangGraph config
@@ -383,7 +411,34 @@ class CLI:
                 if not user_input:
                     continue
                 
-                # Process user input
+                # Handle slash commands using centralized system
+                if user_input.startswith('/'):
+                    # Update command context with current state
+                    self.command_context.config = self.base_config
+                    self.command_context.gateway = self.gateway
+                    
+                    # Get current agent state from the graph
+                    try:
+                        if self.graph and self.base_config:
+                            current_state = self.graph.get_state(config=self.base_config)
+                            self.command_context.agent_state = current_state.values if current_state else None
+                        else:
+                            self.command_context.agent_state = None
+                    except Exception:
+                        self.command_context.agent_state = None
+                    
+                    self.command_context.session_id = self.thread_id
+                    
+                    registry = get_command_registry()
+                    result = await registry.execute(user_input, self.command_context)
+                    
+                    if result == CommandResult.EXIT:
+                        break
+                    elif result in [CommandResult.HANDLED, CommandResult.AGENT_STATE_CHANGED]:
+                        continue
+                    # If CONTINUE, fall through to normal processing
+                
+                # Process user input normally
                 await self._process_user_input(user_input)
                 
             except KeyboardInterrupt:

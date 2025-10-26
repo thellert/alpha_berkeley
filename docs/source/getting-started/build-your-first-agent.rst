@@ -203,7 +203,7 @@ Into a **6-step orchestrated execution plan** that looks like this:
       
       - **Logging Colors:** Customizes capability colors for better development experience
       
-      - **Hierarchical Merging:** Application config automatically merges over framework defaults, allowing selective customization without affecting other applications
+      - **Flat Configuration:** Application settings coexist with framework settings in a single config file using unique naming, providing transparent and explicit configuration management
 
 
 Let's explore the integration patterns step by step.

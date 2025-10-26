@@ -25,7 +25,7 @@ Core Framework Systems
    - Convention-based registry patterns with lazy loading and component discovery
    - Domain-specific prompt builders with dependency injection patterns
    - Complete message processing pipeline from Gateway entry to response generation
-   - Three-tier YAML configuration with hierarchical merging and override patterns
+   - Single-file YAML configuration with flat structure and environment variable resolution
 
    **Prerequisites:** Completion of Quick Start Patterns and understanding of LangGraph concepts
    
@@ -99,7 +99,7 @@ The Core Framework Systems implement a **LangGraph-Native, Type-Safe Architectur
       :class-body: text-center
       :shadow: md
 
-      Three-tier YAML configuration with hierarchical merging and environment integration.
+      Single-file YAML configuration with self-contained architecture and environment integration.
 
 System Integration
 ==================

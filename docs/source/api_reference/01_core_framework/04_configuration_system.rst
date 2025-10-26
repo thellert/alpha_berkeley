@@ -526,7 +526,7 @@ Services use simple names that match their configuration keys:
    - Application services: ``mongo``, ``pv_finder``, etc.
    - Names correspond to keys defined in the ``services:`` configuration section
 
-**Configuration Merging:**
+**Configuration Structure:**
 
 .. code-block:: yaml
 
@@ -1275,7 +1275,7 @@ Application Configuration Example
 .. seealso::
 
    :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture`
-       Complete guide to configuration architecture, merging, and best practices
+       Complete guide to configuration architecture, flat structure, and best practices
    
    :class:`framework.state.StateManager`
        State management utilities that use configuration

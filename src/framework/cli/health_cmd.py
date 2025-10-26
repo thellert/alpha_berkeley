@@ -852,26 +852,38 @@ class HealthChecker:
         error_count = sum(1 for r in self.results if r.status == "error")
         total_count = len(self.results)
         
-        # Create summary
-        summary = f"[bold]Summary:[/bold] {ok_count}/{total_count} checks passed"
+        # Build the content for the panel
+        panel_content = []
         
+        # Create summary line
+        summary = f"Summary: {ok_count}/{total_count} checks passed"
         if warning_count > 0:
             summary += f" ({warning_count} warning{'s' if warning_count > 1 else ''})"
         if error_count > 0:
-            summary += f" ([red]{error_count} error{'s' if error_count > 1 else ''}[/red])"
+            summary += f" ({error_count} error{'s' if error_count > 1 else ''})"
         
-        console.print(Panel(summary, box=box.ROUNDED))
+        panel_content.append(summary)
         
         # Show detailed errors and warnings if verbose
         if self.verbose and (warning_count > 0 or error_count > 0):
-            console.print("\n[bold]Details:[/bold]")
+            panel_content.append("")  # Empty line
+            panel_content.append("Details:")
             for result in self.results:
                 if result.status in ["warning", "error"]:
-                    color = "yellow" if result.status == "warning" else "red"
                     symbol = "⚠️ " if result.status == "warning" else "❌"
-                    console.print(f"  [{color}]{symbol} {result.name}:[/{color}] {result.message}")
+                    panel_content.append(f"  {symbol} {result.name}: {result.message}")
                     if result.details:
-                        console.print(f"     [dim]{result.details}[/dim]")
+                        panel_content.append(f"     {result.details}")
+        
+        # Create and display the framed panel
+        panel = Panel(
+            "\n".join(panel_content),
+            title="🏥 Framework Health Check Results",
+            border_style="dim cyan",
+            expand=False,
+            padding=(1, 2)
+        )
+        console.print(panel)
 
 
 @click.command()

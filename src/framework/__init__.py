@@ -12,8 +12,7 @@ This package contains:
 """
 
 # Version information
-# NOTE: This will become MENTAT version at release (Phase 8)
-__version__ = "0.7.0"
+__version__ = "0.7.1"
 
 __all__ = ['__version__']
 

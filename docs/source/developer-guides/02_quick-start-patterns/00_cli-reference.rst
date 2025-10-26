@@ -322,11 +322,47 @@ The chat interface provides an interactive session with your agent:
 
    Agent Configuration loaded successfully.
    Registry initialized with 25 capabilities
+   ⚡ Use slash commands (/) for quick actions - try /help
    
    You: What's the weather in San Francisco?
    
    Agent: [Processing request...]
    The current weather in San Francisco is 18°C with partly cloudy conditions.
+
+Slash Commands
+--------------
+
+The CLI supports slash commands for agent control and interface operations:
+
+**Agent Control Commands:**
+
+.. code-block:: bash
+
+   /planning:on          # Enable planning mode
+   /planning:off         # Disable planning mode
+   /approval:enabled     # Enable approval workflows
+   /approval:disabled    # Disable approval workflows
+   /approval:selective   # Enable selective approval
+
+**Performance Commands:**
+
+.. code-block:: bash
+
+   /task:off            # Bypass task extraction
+   /caps:off            # Bypass capability selection
+
+**CLI Commands:**
+
+.. code-block:: bash
+
+   /help                # Show available commands
+   /help <command>      # Show help for specific command
+   /exit                # Exit the chat session
+   /clear               # Clear the screen
+
+.. seealso::
+   :doc:`../../api_reference/01_core_framework/06_command_system`
+       Complete API reference for the centralized command system
 
 Prerequisites
 -------------
