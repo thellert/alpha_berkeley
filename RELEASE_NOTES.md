@@ -1,6 +1,29 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.3)
+# Alpha Berkeley Framework - Latest Release (v0.7.4)
 
-🎉 **Enhanced Container Deployment** - Development mode support, PyPI integration, and improved service templates for seamless local and production workflows.
+🐛 **Bug Fix Release** - Fixed template generation issues affecting registry class names and import paths.
+
+## What's New in v0.7.4
+
+### 🔧 Template Bug Fixes
+
+#### **Registry Class Name Generation**
+- **Fixed duplicate "RegistryProvider" suffix** in generated registry class names
+- Previously generated: `WeatherTutorialRegistryProviderRegistryProvider` ❌
+- Now generates: `WeatherTutorialRegistryProvider` ✅
+- Affects all three app templates: hello_world_weather, wind_turbine, minimal
+- Projects generated with v0.7.3 may need manual class name correction
+
+#### **Import Path Documentation**
+- **Updated template documentation** to use correct v0.7.0 import patterns
+- Changed from `applications.hello_world_weather.*` to `hello_world_weather.*`
+- Updated examples in mock_weather_api.py and capabilities/__init__.py
+- Ensures generated projects follow correct decoupled architecture
+
+#### **Requirements Template Rendering**
+- **Fixed framework version substitution** in generated requirements.txt
+- Moved requirements.txt from static files to rendered templates
+- Now properly replaces `{{ framework_version }}` placeholder with actual version
+- Ensures generated projects pin correct framework version
 
 ## What's New in v0.7.3
 

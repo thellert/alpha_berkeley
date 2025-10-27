@@ -5,6 +5,24 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.4] - 2025-10-27
+
+### Fixed
+- **Template Registry Class Names** - Fixed duplicate "RegistryProvider" suffix in generated registry class names
+  - Class name generation now produces correct names like `WeatherTutorialRegistryProvider` instead of `WeatherTutorialRegistryProviderRegistryProvider`
+  - Updated `_generate_class_name()` method to return PascalCase prefix only
+  - Templates correctly append "RegistryProvider" suffix
+  - Affects all three app templates: hello_world_weather, wind_turbine, minimal
+- **Template Import Paths** - Updated documentation examples to use v0.7.0 import patterns
+  - Changed from `applications.hello_world_weather.*` to `hello_world_weather.*`
+  - Updated mock_weather_api.py documentation examples
+  - Updated capabilities/__init__.py documentation and Sphinx references
+  - Ensures generated projects follow correct v0.7.0 decoupled architecture
+- **Requirements Template Rendering** - Fixed framework version substitution in generated requirements.txt
+  - Moved requirements.txt from static files to rendered templates
+  - Now properly replaces `{{ framework_version }}` placeholder with actual version
+  - Ensures generated projects pin correct framework version in requirements.txt
+
 ## [0.7.3] - 2025-10-26
 
 ### Added
