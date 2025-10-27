@@ -172,7 +172,7 @@ class SimpleWeatherAPI:
         
         Integration with weather capability::
         
-            >>> from applications.hello_world_weather.mock_weather_api import weather_api
+            >>> from hello_world_weather.mock_weather_api import weather_api
             >>> weather_data = weather_api.get_current_weather("New York")
             >>> # Use weather_data to create CurrentWeatherContext
     
@@ -327,7 +327,7 @@ for tutorial and development scenarios.
 Examples:
     Using the global weather API instance::
     
-        >>> from applications.hello_world_weather.mock_weather_api import weather_api
+        >>> from hello_world_weather.mock_weather_api import weather_api
         >>> current_weather = weather_api.get_current_weather("Prague")
         >>> print(f"Temperature: {current_weather.temperature}°C")
         Temperature: 14.0°C

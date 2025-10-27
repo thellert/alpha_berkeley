@@ -63,24 +63,24 @@ Exported Capabilities:
 Examples:
     Importing specific capabilities::
     
-        >>> from applications.hello_world_weather.capabilities import CurrentWeatherCapability
+        >>> from hello_world_weather.capabilities import CurrentWeatherCapability
         >>> capability = CurrentWeatherCapability()
         >>> print(capability.name)
         current_weather
     
     Importing all public capabilities::
     
-        >>> from applications.hello_world_weather.capabilities import *
+        >>> from hello_world_weather.capabilities import *
         >>> # Only CurrentWeatherCapability is imported due to __all__ declaration
     
     Framework registry integration::
     
         >>> # In registry.py
-        >>> from applications.hello_world_weather.capabilities import CurrentWeatherCapability
+        >>> from hello_world_weather.capabilities import CurrentWeatherCapability
         >>> # Capability is available for registration and framework integration
 
 .. seealso::
    :class:`CurrentWeatherCapability` : Primary weather capability exported by this module
-   :mod:`applications.hello_world_weather.registry` : Registry configuration using these capabilities
+   :mod:`hello_world_weather.registry` : Registry configuration using these capabilities
    :doc:`/developer-guides/capability-organization` : Capability module organization guide
 """ 
