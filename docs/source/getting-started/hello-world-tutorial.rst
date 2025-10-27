@@ -20,7 +20,7 @@ By the end of this guide, you'll have a working agent that responds to queries l
    :color: info
    :icon: list-unordered
 
-   **Required:** Alpha Berkeley framework installed via ``pip install framework``
+   **Required:** Alpha Berkeley framework installed via ``pip install alpha-berkeley-framework``
    
    If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
    
@@ -59,8 +59,8 @@ This generates a complete, self-contained project with the following structure:
    ├── config.yml                 # Complete configuration
    └── .env.example               # API key template
 
-.. admonition:: New in v0.7.0: Template-Based Projects
-   :class: version-070-change
+.. admonition:: New in v0.7+: Template-Based Projects
+   :class: version-07plus-change
 
    Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/hello_world_weather <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/hello_world_weather>`_.
 
@@ -657,8 +657,8 @@ The registry system is how the framework discovers and manages your application'
    
    The registry enables loose coupling and lazy loading - the framework can discover your components without importing them until needed, improving startup performance and modularity.
 
-.. admonition:: New in v0.7.0: Registry Helper Functions
-   :class: version-070-change
+.. admonition:: New in v0.7+: Registry Helper Functions
+   :class: version-07plus-change
 
    The framework now provides ``extend_framework_registry()`` helper that automatically includes all framework components with your custom ones. You only specify what's unique to your application.
 
@@ -802,8 +802,8 @@ Step 6: Application Configuration
 
 The generated project includes a complete ``config.yml`` file in the project root with all necessary settings pre-configured.
 
-.. admonition:: New in v0.7.0: Self-Contained Configuration
-   :class: version-070-change
+.. admonition:: New in v0.7+: Self-Contained Configuration
+   :class: version-07plus-change
 
    Projects now include a complete, self-contained ``config.yml`` with all framework settings pre-configured. No need to edit multiple configuration files - everything is in one place.
 

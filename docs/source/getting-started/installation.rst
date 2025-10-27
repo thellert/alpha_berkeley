@@ -91,10 +91,10 @@ After creating and activating the virtual environment, install the framework pac
    pip install --upgrade pip
    
    # Install the framework
-   pip install framework
+   pip install alpha-berkeley-framework
 
-.. admonition:: New in v0.7.0: Pip-Installable Architecture
-   :class: version-070-change
+.. admonition:: New in v0.7+: Pip-Installable Architecture
+   :class: version-07plus-change
 
    The framework is now distributed as a pip-installable package with modular dependencies. You no longer need to clone the repository or manage ``requirements.txt`` files manually.
 
@@ -118,10 +118,10 @@ After creating and activating the virtual environment, install the framework pac
    .. code-block:: bash
 
       # Recommended: Core + scientific computing
-      pip install framework[scientific]
+      pip install alpha-berkeley-framework[scientific]
       
       # Everything (includes docs, dev tools, etc.)
-      pip install framework[all]
+      pip install alpha-berkeley-framework[all]
 
 **Creating a New Project**
 
@@ -349,8 +349,8 @@ Once you have installed the framework, created a project, and configured it, you
 
 The framework CLI provides convenient commands for managing services. For detailed information about all deployment options, see :doc:`../developer-guides/05_production-systems/05_container-and-deployment` or the :doc:`CLI reference <../developer-guides/02_quick-start-patterns/00_cli-reference>`.
 
-.. admonition:: New in v0.7.0: Framework CLI Commands
-   :class: version-070-change
+.. admonition:: New in v0.7+: Framework CLI Commands
+   :class: version-07plus-change
 
    Service management is now handled through the :doc:`framework deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>` command instead of running Python scripts directly.
 

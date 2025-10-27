@@ -173,8 +173,8 @@ Deployment Workflow
 
 The container management system supports both development and production deployment patterns.
 
-.. admonition:: New in v0.7.0: Framework CLI Commands
-   :class: version-070-change
+.. admonition:: New in v0.7+: Framework CLI Commands
+   :class: version-07plus-change
 
    Service deployment is now managed through the ``framework deploy`` CLI command.
 
@@ -223,6 +223,59 @@ For production deployment:
    .. code-block:: bash
 
       podman ps
+
+Development Mode
+----------------
+
+**Development mode** enables testing framework changes in containers without publishing to PyPI. When enabled with the ``--dev`` flag, containers use your locally installed framework instead of the PyPI version.
+
+**When to Use:**
+
+- Testing framework modifications before release
+- Debugging framework internals within container environments
+- Contributing to framework development
+- Validating framework changes across containerized services
+
+**How It Works:**
+
+The deployment system automatically:
+
+1. Locates your locally installed framework package
+2. Copies the framework source code to the build directory
+3. Sets the ``DEV_MODE`` environment variable for containers
+4. Containers install the local framework copy instead of PyPI version
+
+**Usage:**
+
+.. code-block:: bash
+
+   # Deploy with local framework (foreground)
+   framework deploy up --dev
+   
+   # Deploy with local framework (background)
+   framework deploy up --detached --dev
+
+**Verification:**
+
+After deploying in development mode, verify the framework source was copied:
+
+.. code-block:: bash
+
+   # Check for framework override directory
+   ls build/services/jupyter/framework_override/
+   
+   # Check environment variable in container
+   podman exec jupyter-read env | grep DEV_MODE
+
+**Fallback Behavior:**
+
+If the local framework cannot be located or copied:
+
+- The system prints a warning message
+- Containers fall back to installing from PyPI
+- Deployment continues normally
+
+This ensures deployments succeed even if development mode setup fails.
 
 Docker Compose Templates
 =========================
@@ -339,11 +392,14 @@ Command Options
    # Use custom configuration file
    framework deploy up --config my-config.yml
    
+   # Deploy with local framework (development mode)
+   framework deploy up --dev
+   
    # Restart in detached mode
    framework deploy restart --detached
    
-   # Rebuild and start in detached mode
-   framework deploy rebuild --detached
+   # Rebuild and start in detached mode with local framework
+   framework deploy rebuild --detached --dev
 
 Deployment Workflow Details
 ----------------------------
@@ -673,6 +729,14 @@ Troubleshooting
       - Check permissions on source directories
       - Ensure additional_dirs paths exist
 
+      **Development mode issues:**
+
+      - Verify framework is installed in your active virtual environment
+      - Check that ``framework_override/`` directory exists in build after deployment
+      - Confirm ``DEV_MODE=true`` is set in container environment
+      - If framework source not found, containers will fall back to PyPI version
+      - Review console output for framework copy warnings during deployment
+
    .. tab-item:: Debugging Commands
 
       **List running containers:**
@@ -737,6 +801,19 @@ Troubleshooting
          # Or use rebuild command (clean + up in one step)
          framework deploy rebuild --detached
 
+      **Verify development mode:**
+
+      .. code-block:: bash
+
+         # Check if framework override was copied
+         ls -la build/services/jupyter/framework_override/
+         
+         # Verify DEV_MODE environment variable in container
+         podman exec jupyter-read env | grep DEV_MODE
+         
+         # Check framework installation in container
+         podman exec jupyter-read pip show framework
+
    .. tab-item:: Quick Reference
 
       **Common Commands:**
@@ -789,6 +866,8 @@ Troubleshooting
       - **Test services individually**: Deploy services one at a time to isolate issues
       - **Keep build directory in .gitignore**: Build artifacts shouldn't be version controlled
       - **Use meaningful container names**: Makes logs and debugging easier
+      - **Use development mode for framework changes**: Run ``framework deploy up --dev`` when testing framework modifications
+      - **Verify development mode**: Check console output for framework copy messages
 
       **Production:**
 

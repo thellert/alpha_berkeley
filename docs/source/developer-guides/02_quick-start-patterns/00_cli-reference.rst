@@ -16,7 +16,7 @@ CLI Reference
    - Running interactive sessions with ``framework chat``
    - Exporting configuration with ``framework export-config``
 
-   **Prerequisites:** Framework installed (``pip install framework``)
+   **Prerequisites:** Framework installed (``pip install alpha-berkeley-framework``)
    
    **Time Investment:** 10 minutes for quick reference
 
@@ -25,8 +25,8 @@ Overview
 
 The Alpha Berkeley Framework provides a unified CLI for all framework operations. All commands are accessed through the ``framework`` command with subcommands for specific operations.
 
-.. admonition:: New in v0.7.0: Unified CLI
-   :class: version-070-change
+.. admonition:: New in v0.7+: Unified CLI
+   :class: version-07plus-change
 
    The framework CLI provides a modern, unified interface for all operations. Previous Python script-based workflows have been replaced with convenient CLI commands.
 
@@ -184,12 +184,16 @@ Commands
 
    Options:
       ``--detached`` - Run services in background
+      
+      ``--dev`` - Development mode: use local framework instead of PyPI
 
    Examples:
       .. code-block:: bash
 
-         framework deploy up              # Start in foreground
-         framework deploy up --detached   # Start in background
+         framework deploy up                    # Start in foreground
+         framework deploy up --detached         # Start in background
+         framework deploy up --dev              # Start with local framework
+         framework deploy up --detached --dev   # Background with local framework
 
 ``down``
    Stop all running services.
@@ -226,10 +230,17 @@ Commands
 ``rebuild``
    Rebuild containers from scratch (useful after Dockerfile changes).
 
-   Example:
+   Options:
+      ``--detached`` - Run services in background after rebuild
+      
+      ``--dev`` - Development mode: use local framework instead of PyPI
+
+   Examples:
       .. code-block:: bash
 
-         framework deploy rebuild
+         framework deploy rebuild                    # Rebuild and start
+         framework deploy rebuild --detached         # Rebuild in background
+         framework deploy rebuild --detached --dev   # Rebuild with local framework
 
 Configuration
 -------------
@@ -505,6 +516,23 @@ Development Workflow
    
    # Clean up
    framework deploy clean
+
+Framework Development Workflow
+------------------------------
+
+If you're developing the framework itself:
+
+.. code-block:: bash
+
+   # Start services with local framework
+   framework deploy up --dev
+   
+   # Make changes to framework code
+   # Rebuild to test changes
+   framework deploy rebuild --dev
+   
+   # Verify local framework is used
+   podman exec jupyter-read pip show framework
 
 Configuration Reference
 -----------------------

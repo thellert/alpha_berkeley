@@ -33,7 +33,7 @@ Projects are created using the ``framework init`` command with predefined templa
 .. code-block:: bash
 
    # Install the framework
-   pip install framework
+   pip install alpha-berkeley-framework
    
    # Create a new project from a template
    framework init my-agent --template hello_world_weather

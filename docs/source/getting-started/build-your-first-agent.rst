@@ -56,8 +56,8 @@ This generates a complete, self-contained project with the following structure:
    ├── config.yml                 # Complete configuration
    └── .env.example               # API key template
 
-.. admonition:: New in v0.7.0: Template-Based Projects
-   :class: version-070-change
+.. admonition:: New in v0.7+: Template-Based Projects
+   :class: version-07plus-change
 
    Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/wind_turbine <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/wind_turbine>`_.
 
