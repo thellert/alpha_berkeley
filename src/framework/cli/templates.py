@@ -219,11 +219,12 @@ class TemplateManager:
             ("env.example.j2", ".env.example"),
             ("README.md.j2", "README.md"),
             ("pyproject.toml.j2", "pyproject.toml"),
+            ("requirements.txt", "requirements.txt"),  # Render to replace framework_version
         ]
         
         # Copy static files
         static_files = [
-            ("requirements.txt", "requirements.txt"),
+            # requirements.txt moved to rendered templates to handle {{ framework_version }}
         ]
         
         for template_file, output_file in files_to_render:
@@ -343,24 +344,25 @@ class TemplateManager:
             return "0.7.0"
     
     def _generate_class_name(self, package_name: str) -> str:
-        """Generate a registry class name from package name.
+        """Generate a PascalCase class name prefix from package name.
         
         Args:
             package_name: Python package name (e.g., "my_assistant")
             
         Returns:
-            PascalCase class name (e.g., "MyAssistantRegistryProvider")
+            PascalCase class name prefix (e.g., "MyAssistant")
+            Note: The template adds "RegistryProvider" suffix
             
         Examples:
             >>> TemplateManager()._generate_class_name("my_assistant")
-            'MyAssistantRegistryProvider'
+            'MyAssistant'
             >>> TemplateManager()._generate_class_name("weather_app")
-            'WeatherAppRegistryProvider'
+            'WeatherApp'
         """
         # Convert snake_case to PascalCase
         words = package_name.split('_')
         class_name = ''.join(word.capitalize() for word in words)
-        return f"{class_name}RegistryProvider"
+        return class_name
     
     def _create_agent_data_structure(self, project_dir: Path, ctx: Dict):
         """Create _agent_data directory structure for the project.
