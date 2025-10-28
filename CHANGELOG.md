@@ -5,6 +5,41 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.5] - 2025-10-28
+
+### Added
+- **Parallel Capability Classification** - Multiple capabilities now classified simultaneously using `asyncio.gather()`
+  - New `CapabilityClassifier` class for individual capability processing with proper resource management
+  - Semaphore-controlled concurrency to prevent API flooding while maintaining performance
+  - Configurable `max_concurrent_classifications` setting (default: 5) in `execution_control.limits`
+  - Enhanced error handling for individual classification failures
+- **Improved Reclassification Logic** - New `_detect_reclassification_scenario()` function
+  - Better detection of reclassification scenarios from error state
+  - Cleaner error state cleanup during reclassification
+  - Enhanced logging for reclassification process
+- **New Configuration Function** - `get_classification_config()` for accessing classification settings
+- **Documentation Build System** - Added `docs/config.yml` for documentation build compatibility
+
+### Changed
+- **Classification Architecture** - Refactored from sequential to parallel processing
+  - `select_capabilities()` now uses parallel task execution with semaphore control
+  - Removed old `_classify_capability()` function in favor of `CapabilityClassifier` class
+  - Improved error handling and logging throughout classification process
+- **Router Logic** - Simplified reclassification handling
+  - Removed manual state setting in router, moved responsibility to classifier
+  - Cleaner separation of concerns between router and classifier
+- **State Management** - Enhanced agent control state with new classification limits
+  - Added `max_concurrent_classifications` to `AgentControlState`
+  - Updated state manager defaults and configuration builder
+
+### Fixed
+- **Documentation Build System** - Updated for pip-installable framework structure
+  - Changed from `requirements.txt` to `pip install -e ".[docs]"` in Makefile and GitHub Actions
+  - Added mock imports for documentation build compatibility
+  - Fixed dropdown syntax and removed unused CSS rules
+- **Installation Guide** - Added docs extras install option and fixed formatting
+- **Command Help Text** - Fixed escaped newlines in command help strings
+
 ## [0.7.4] - 2025-10-27
 
 ### Fixed
