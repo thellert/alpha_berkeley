@@ -102,8 +102,8 @@ class BaseInfrastructureNode(ABC):
             @staticmethod
             async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
                 # Explicit logger retrieval - professional practice
-                from configs.logger import get_logger
-                logger = get_logger("framework", "task_extraction")
+                from framework.utils.logger import get_logger
+                logger = get_logger("task_extraction")
                 
                 # Use get_stream_writer() for pure LangGraph streaming
                 from langgraph.config import get_stream_writer
@@ -192,12 +192,12 @@ class BaseInfrastructureNode(ABC):
             @staticmethod
             async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
                 # Explicit logger retrieval - professional practice
-                from configs.logger import get_logger
-                logger = get_logger("framework", "orchestrator")
+                from framework.utils.logger import get_logger
+                logger = get_logger("orchestrator")
                 
                 # Define streaming helper here for step awareness
-                from configs.streaming import get_streamer
-                streamer = get_streamer("framework", "orchestrator", state)
+                from framework.utils.streaming import get_streamer
+                streamer = get_streamer("orchestrator", state)
                 streamer.status("Starting orchestration")
                 
                 logger.info("Starting execution planning")

@@ -220,7 +220,7 @@ class UserMemoryProvider(DataSourceProvider):
                 entries=[entry.content for entry in memory_entries]
             )
             
-            logger.info(f"Retrieved {len(memory_entries)} core memory entries for user {user_id}")
+            logger.debug(f"Retrieved {len(memory_entries)} core memory entries for user {user_id}")
             
             return DataSourceContext(
                 source_name=self.name,

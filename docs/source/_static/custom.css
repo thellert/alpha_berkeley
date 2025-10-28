@@ -6,6 +6,21 @@ div.downstream-project-links a {
   color: inherit !important;
 }
 
+/* Custom admonition for v0.7+ changes (all versions 0.7.0 and later) - SEARCH MARKER: version-07plus-change */
+.admonition.version-07plus-change {
+  border-left: 4px solid #00BCD4;
+  background-color: rgba(0, 188, 212, 0.05);
+}
+
+.admonition.version-07plus-change .admonition-title {
+  background-color: rgba(0, 188, 212, 0.1);
+  color: #0097A7;
+}
+
+.admonition.version-07plus-change .admonition-title::before {
+  content: "🎯 ";
+}
+
 /* Clean table styling that matches original theme */
 table.docutils {
   border-collapse: collapse;

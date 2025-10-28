@@ -181,7 +181,7 @@ Production Integration Patterns
       .. code-block:: python
 
          # Container management using the function-based system
-         from deployment.container_manager import find_service_config, setup_build_dir
+         from framework.deployment.container_manager import find_service_config, setup_build_dir
          
          # Deploy services by configuring them in deployed_services list
          deployed_services = [

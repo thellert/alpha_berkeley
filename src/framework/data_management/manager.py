@@ -7,6 +7,7 @@ with a cleaner approach supporting core and application-specific data sources.
 
 import logging
 import asyncio
+import warnings
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 import time
@@ -23,7 +24,7 @@ class DataRetrievalResult:
     successful_sources: List[str] = field(default_factory=list)
     failed_sources: List[str] = field(default_factory=list)
     total_sources_attempted: int = 0
-    retrieval_time_ms: Optional[float] = None
+    retrieval_time_sec: Optional[float] = None
     
     @property
     def has_data(self) -> bool:
@@ -37,6 +38,19 @@ class DataRetrievalResult:
             return 0.0
         return len(self.successful_sources) / self.total_sources_attempted
     
+    @property
+    def retrieval_time_ms(self) -> Optional[float]:
+        """
+        Deprecated: Use retrieval_time_sec instead.
+        Returns retrieval time in milliseconds for backwards compatibility.
+        """
+        warnings.warn(
+            "retrieval_time_ms is deprecated, use retrieval_time_sec instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.retrieval_time_sec * 1000 if self.retrieval_time_sec is not None else None
+    
     def get_summary(self) -> Dict[str, Any]:
         """Get a summary of the retrieval results."""
         return {
@@ -45,7 +59,7 @@ class DataRetrievalResult:
             'sources_failed': len(self.failed_sources),
             'success_rate': self.success_rate,
             'context_types_retrieved': list(set(ctx.context_type for ctx in self.context_data.values())),
-            'retrieval_time_ms': self.retrieval_time_ms
+            'retrieval_time_sec': self.retrieval_time_sec
         }
 
 class DataSourceManager:
@@ -145,17 +159,23 @@ class DataSourceManager:
             else:
                 failed_sources.append(provider_name)
         
-        retrieval_time_ms = (time.time() - start_time) * 1000
+        retrieval_time_sec = time.time() - start_time
         
         retrieval_result = DataRetrievalResult(
             context_data=context_data,
             successful_sources=successful_sources,
             failed_sources=failed_sources,
             total_sources_attempted=len(providers),
-            retrieval_time_ms=retrieval_time_ms
+            retrieval_time_sec=retrieval_time_sec
         )
         
-        logger.info(f"Data retrieval complete: {retrieval_result.get_summary()}")
+        # Log human-readable summary
+        if failed_sources:
+            logger.info(f"Retrieved data from {len(successful_sources)}/{len(providers)} sources in {retrieval_time_sec:.2f}s "
+                       f"(failed: {', '.join(failed_sources)})")
+        else:
+            logger.info(f"Retrieved data from {len(successful_sources)} source{'s' if len(successful_sources) != 1 else ''} in {retrieval_time_sec:.2f}s")
+        
         return retrieval_result
     
     def get_provider(self, provider_name: str) -> Optional[DataSourceProvider]:

@@ -187,7 +187,7 @@ Create simple test scripts using the Gateway pattern:
    from framework.graph import create_graph
    from framework.infrastructure.gateway import Gateway
    from langgraph.checkpoint.memory import MemorySaver
-   from configs.config import get_full_configuration
+   from framework.utils.config import get_full_configuration
    
    async def test_capability():
        # Initialize framework
@@ -235,21 +235,21 @@ Debug Logging
 
 .. code-block:: python
 
-   from configs.logger import get_logger
+   from framework.utils.logger import get_logger
    
    # Enable debug logging for components
-   framework_logger = get_logger("framework", "debug")
-   capability_logger = get_logger("my_app", "my_capability")
+   framework_logger = get_logger("debug")
+   capability_logger = get_logger("my_capability")
 
 Capability Debugging
 --------------------
 
 .. code-block:: python
 
-   from configs.logger import get_logger
-   from configs.streaming import get_streamer
+   from framework.utils.logger import get_logger
+   from framework.utils.streaming import get_streamer
    
-   logger = get_logger("my_app", "debug_capability")
+   logger = get_logger("debug_capability")
    
    @capability_node
    class DebuggingCapability(BaseCapability):
@@ -379,7 +379,7 @@ Configuration Issues
 
 .. code-block:: python
 
-   from configs.config import get_full_configuration
+   from framework.utils.config import get_full_configuration
    import os
    
    # Check environment variables

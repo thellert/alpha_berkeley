@@ -2,7 +2,7 @@
 Configuration Architecture
 ========================
 
-**What you'll learn:** How the three-tier configuration system works, how settings merge and override, and where to place different types of configuration.
+**What you'll learn:** How the framework's self-contained configuration system works, configuration templates, and environment variable integration.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -10,61 +10,74 @@ Configuration Architecture
 
    **Key Concepts:**
    
-   - Three-tier hierarchy: root → framework → application
-   - Import mechanism and configuration merging
-   - Override patterns and precedence rules
+   - Self-contained configuration approach
+   - Configuration templates and project initialization
    - Environment variable integration
-   - When to use each configuration layer
+   - Viewing framework defaults with ``framework export-config``
+   - Configuration organization and best practices
 
    **Prerequisites:** Basic `YAML <https://yaml.org>`__ knowledge
    
-   **Time Investment:** 15 minutes
+   **Time Investment:** 10 minutes
 
-Three-Tier Architecture
-=======================
+Self-Contained Configuration
+============================
 
-The framework uses three configuration layers that load and merge in sequence:
+The framework uses a **single, self-contained configuration file** approach. Each project has one ``config.yml`` file at the project root that contains all settings - framework and application-specific.
 
 .. code-block:: text
 
-   config.yml (root)                    ← Operator controls, final authority
-       
-        ↓ imports
-  
-   src/framework/config.yml             ← Framework defaults
-  
-        ↓ merged with
-  
-   src/applications/{app}/config.yml    ← Application-specific settings
+   my-project/
+   ├── config.yml              ← Complete, self-contained configuration
+   ├── .env                    ← Environment variables (secrets, dynamic paths)
+   └── src/
+       └── my_app/
+           └── registry.py     ← Application code registry
 
-**Loading Process:**
+**Design Philosophy:**
 
-1. Load framework configuration
-2. Load each enabled application's configuration
-3. Merge applications with framework (deep merge for most sections)
-4. Apply root configuration as final overrides
-5. Resolve environment variables (``${VAR_NAME}``)
+- **Transparency:** All settings visible in one place
+- **Simplicity:** No imports, no merging, no hidden defaults
+- **Self-documenting:** Every option is explicit and can be customized
+- **Version control friendly:** Configuration evolves with your project
 
 Configuration Files
 ===================
 
-Root Configuration
-------------------
+Project Configuration
+---------------------
 
 **Location:** ``config.yml`` (project root)
 
-**Purpose:** Deployment control and operator overrides
+**Purpose:** Complete project configuration - all settings in one place
 
 .. code-block:: yaml
 
-   # Import framework
-   import: src/framework/config.yml
+   # ============================================================
+   # My Project Configuration
+   # ============================================================
    
-   # Enable applications
-   applications:
-     - hello_world_weather
+   build_dir: ./build
+   project_root: /path/to/my-project
+   registry_path: ./src/my_app/registry.py
    
-   # Operator controls
+   # Model configuration - 8 specialized models
+   models:
+     orchestrator:
+       provider: cborg
+       model_id: anthropic/claude-sonnet
+     response:
+       provider: cborg
+       model_id: google/gemini-flash
+     # ... other models ...
+   
+   # Service deployment control
+   deployed_services:
+     - jupyter
+     - open_webui
+     - pipelines
+   
+   # Safety controls
    approval:
      global_mode: "selective"
      capabilities:
@@ -75,145 +88,72 @@ Root Configuration
    execution_control:
      epics:
        writes_enabled: false
-   
-   # Service deployment control
-   deployed_services:
-     - framework.jupyter
-     - framework.pipelines
+     limits:
+       max_step_retries: 3
+       graph_recursion_limit: 100
    
    # API providers
    api:
      providers:
-       anthropic:
-         api_key: ${ANTHROPIC_API_KEY}
-         base_url: https://api.anthropic.com
-
-Framework Configuration
------------------------
-
-**Location:** ``src/framework/config.yml``
-
-**Purpose:** Framework defaults and core infrastructure
-
-.. code-block:: yaml
-
-   framework:
-     services:
-       jupyter:
-         path: ./services/framework/jupyter
-         port_host: 8088
-     
-     models:
-       orchestrator:
-         provider: cborg
-         model_id: anthropic/claude-sonnet
-       response:
-         provider: cborg
-         model_id: google/gemini-flash
+       cborg:
+         api_key: ${CBORG_API_KEY}
+         base_url: https://api.cborg.lbl.gov/v1
    
-   logging:
-     framework:
-       logging_colors:
-         orchestrator: "cyan"
-         classifier: "light_salmon1"
+   # And many more sections...
 
-**Rarely modified directly** - applications override instead.
+Configuration Template
+----------------------
 
-Application Configuration
---------------------------
+**Location:** ``src/framework/templates/project/config.yml.j2``
 
-**Location:** ``src/applications/{app}/config.yml``
+**Purpose:** Template used by ``framework init`` to create new projects
 
-**Purpose:** Application-specific settings (models, services, pipeline configuration)
+When you run ``framework init my-project``, the template is rendered with your project-specific values to create a complete, self-contained ``config.yml``.
 
-.. code-block:: yaml
+**View the template:**
 
-   # Application models
-   models:
-     data_analysis:
-       provider: cborg
-       model_id: anthropic/claude-sonnet
+.. code-block:: bash
+
+   # See what a default config looks like
+   framework export-config
    
-   # Application services
-   services:
-     mongo:
-       name: mongo
-       path: ./services/applications/als_assistant/mongo
-       port_host: 27017
-   
-   # Pipeline configuration
-   pipeline:
-     name: "ALS Assistant"
-     startup_hooks:
-       - "initialization.setup_nltk_resources"
-   
-   # Logging colors
-   logging:
-     logging_colors:
-       data_analysis: "deep_sky_blue1"
+   # Save to file for reference
+   framework export-config --output reference.yml
 
-Merging and Precedence
-=======================
+Configuration Sections
+======================
 
-Precedence Order
-----------------
+A complete ``config.yml`` includes these major sections:
 
-When the same key exists at multiple levels:
+**Project Metadata:**
+   - ``build_dir`` - Where to generate deployment files
+   - ``project_root`` - Absolute path to project
+   - ``registry_path`` - Path to application registry
 
-.. code-block:: text
+**Model Configuration:**
+   - ``models`` - 8 specialized AI models for different roles
+   - Each model specifies provider and model_id
 
-   1. Root config.yml          ← Always wins
-   2. Application config.yml   ← Overrides framework
-   3. Framework config.yml     ← Provides defaults
+**Service Configuration:**
+   - ``services`` - Jupyter, Open WebUI, Pipelines services
+   - ``deployed_services`` - Which services to deploy
 
-Deep Merge Sections
--------------------
+**Safety Controls:**
+   - ``approval`` - Human approval workflows
+   - ``execution_control`` - Safety limits and constraints
 
-These sections **combine** values from all layers:
+**Execution Settings:**
+   - ``execution`` - Python execution method and environment
+   - ``python_executor`` - Retry limits and timeouts
 
-- ``api.providers`` - All providers available
-- ``models`` - Framework + application models
-- ``services`` - Framework + application services
-- ``logging.logging_colors`` - All colors combined
+**Development:**
+   - ``development`` - Debug settings, prompt saving
+   - ``logging`` - Log levels and colors
 
-.. code-block:: yaml
+**API Providers:**
+   - ``api.providers`` - API keys and endpoints
 
-   # Framework
-   models:
-     orchestrator:
-       provider: cborg
-   
-   # Application
-   models:
-     data_analysis:
-       provider: cborg
-   
-   # Result: BOTH models available
-   models:
-     orchestrator: {...}
-     data_analysis: {...}
-
-Override Sections
------------------
-
-These sections **replace entirely** - highest level wins:
-
-- ``deployed_services`` - Root config controls deployment
-- ``approval`` - Root config sets policy
-- ``execution_control`` - Root config sets limits
-
-.. code-block:: yaml
-
-   # Framework
-   deployed_services:
-     - framework.jupyter
-     - framework.pipelines
-   
-   # Root
-   deployed_services:
-     - framework.jupyter
-   
-   # Result: ONLY jupyter deployed (pipelines excluded)
+See :doc:`../../api_reference/01_core_framework/04_configuration_system` for complete reference.
 
 Environment Variables
 =====================
@@ -246,22 +186,34 @@ Use ``${VAR_NAME}`` syntax with optional defaults:
 
 **Security:** Never commit ``.env`` to version control. Keep it in ``.gitignore``.
 
-Working Examples
-================
+Creating New Projects
+=====================
 
-The repository contains complete working configurations:
+**Initialize with template:**
 
-**Root Configuration:** `config.yml <https://github.com/thellert/alpha_berkeley/blob/main/config.yml>`_
-   Complete deployment configuration with operator controls
+.. code-block:: bash
 
-**Framework Configuration:** `src/framework/config.yml <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/config.yml>`_
-   Framework defaults and service definitions
+   # Create new project from template
+   framework init my-project
+   
+   # This creates:
+   # my-project/
+   # ├── config.yml           ← Complete, self-contained config
+   # ├── .env.example         ← Example environment variables
+   # ├── src/my_project/      ← Your application code
+   # └── services/            ← Service definitions
 
-**Application Examples:**
-   - `ALS Assistant <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/als_assistant/config.yml>`_ - Production application
-   - `Hello World Weather <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/config.yml>`_ - Minimal application
+**Customize your config.yml:**
 
-Use these as templates for your own configurations.
+1. Update ``project_root`` with absolute path
+2. Configure API providers in ``api.providers``
+3. Choose models for each role in ``models``
+4. Set safety controls in ``approval`` and ``execution_control``
+5. Create ``.env`` file with secrets
+
+**Reference existing projects:**
+
+View complete working configurations in the ``_legacy_applications/`` directory for examples of different configuration patterns.
 
 .. seealso::
 

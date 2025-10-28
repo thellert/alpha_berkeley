@@ -77,11 +77,11 @@ Step 2: Implement Capability
    from datetime import datetime
    from framework.base import BaseCapability, capability_node
    from framework.state import AgentState, StateManager
-   from configs.logger import get_logger
-   from configs.streaming import get_streamer
+   from framework.utils.logger import get_logger
+   from framework.utils.streaming import get_streamer
    from applications.my_app.context_classes import ProcessedDataContext
    
-   logger = get_logger("my_app", "data_processor")
+   logger = get_logger("data_processor")
 
    @capability_node
    class DataProcessorCapability(BaseCapability):

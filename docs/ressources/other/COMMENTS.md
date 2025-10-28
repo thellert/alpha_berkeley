@@ -315,7 +315,7 @@ class DataAnalysisCapability(BaseCapability):
     async def execute(state: AgentState, **kwargs):
         # Explicit logger retrieval follows professional patterns
         from configs.logger import get_logger
-        logger = get_logger("framework", "data_analysis")
+        logger = get_logger("data_analysis")
 ```
 
 ### Application-Specific Context

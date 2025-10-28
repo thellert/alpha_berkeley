@@ -28,6 +28,15 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch full history including all tags
+        
+    - name: Debug version information
+      run: |
+        echo "🔍 GitHub Ref: $GITHUB_REF"
+        echo "🔍 GitHub Ref Name: $GITHUB_REF_NAME"
+        echo "🔍 GitHub Ref Type: $GITHUB_REF_TYPE"
+        echo "🔍 Latest git tag: $(git describe --tags --abbrev=0 2>/dev/null || echo 'No tags found')"
+        echo "🔍 All recent tags:"
+        git tag --sort=-version:refname | head -5 || echo "No tags found"
       
     - name: Set up Python
       uses: actions/setup-python@v4

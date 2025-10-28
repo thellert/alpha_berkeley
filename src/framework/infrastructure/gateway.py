@@ -32,18 +32,19 @@ from pydantic import BaseModel
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.types import Command
 
-from configs.logger import get_logger
-from configs.config import get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.config import get_model_config
 from framework.state import AgentState, StateManager
 from framework.state.messages import MessageUtils
 from framework.models import get_chat_completion
+from framework.commands import get_command_registry, CommandContext, CommandResult
 
 
 class ApprovalResponse(BaseModel):
     """Structured response for approval detection."""
     approved: bool
 
-logger = get_logger("framework", "gateway")
+logger = get_logger("gateway")
 
 @dataclass 
 class GatewayResult:
@@ -105,7 +106,20 @@ class Gateway:
         except Exception as e:
             self.logger.warning(f"Could not load config system: {e}")
         
+        # Register agent control commands in centralized registry
+        self._register_agent_commands()
+        
         self.logger.info("Gateway initialized")
+    
+    def _register_agent_commands(self):
+        """Register agent control commands with the centralized registry."""
+        try:
+            from framework.commands.categories import register_agent_control_commands
+            registry = get_command_registry()
+            register_agent_control_commands(registry)
+            self.logger.debug("Registered agent control commands")
+        except Exception as e:
+            self.logger.warning(f"Could not register agent control commands: {e}")
     
     async def process_message(
         self, 
@@ -202,8 +216,8 @@ class Gateway:
     ) -> GatewayResult:
         """Handle new message flow with fresh state creation."""
         
-        # Parse slash commands first
-        slash_commands, cleaned_message = self._parse_slash_commands(user_input)
+        # Parse and execute slash commands using centralized system
+        slash_commands, cleaned_message = await self._process_slash_commands(user_input, config)
         
         # Get current state if available to preserve persistent fields
         current_state = None
@@ -211,10 +225,10 @@ class Gateway:
             try:
                 graph_state = compiled_graph.get_state(config)
                 current_state = graph_state.values if graph_state else None
-                # Debug: Show what we're starting with
+                # Show what we're starting with
                 if current_state:
                     exec_history = current_state.get("execution_history", [])
-                    self.logger.info(f"DEBUG: Previous state has {len(exec_history)} execution records")
+                    self.logger.debug(f"Previous state has {len(exec_history)} execution records")
             except Exception as e:
                 self.logger.warning(f"Could not get current state: {e}")
         
@@ -225,28 +239,30 @@ class Gateway:
             current_state=current_state
         )
         
-        # Debug: Show fresh state execution history
+        # Show fresh state execution history
         fresh_exec_history = fresh_state.get("execution_history", [])
-        self.logger.info(f"DEBUG: Fresh state created with {len(fresh_exec_history)} execution records")
+        self.logger.debug(f"Fresh state created with {len(fresh_exec_history)} execution records")
         
-        # Apply slash commands if any
+        # Apply agent control changes from slash commands if any
         if slash_commands:
-            # Create readable command list with options
-            command_list = [f"/{cmd}:{opt}" if opt else f"/{cmd}" for cmd, opt in slash_commands.items()]
-            self.logger.info(f"Processing slash commands: {command_list}")
-            agent_control_updates = self._apply_slash_commands(slash_commands)
-            fresh_state['agent_control'].update(agent_control_updates)
-            self.logger.info(f"Applied slash commands {command_list} to agent_control")
+            from framework.state import apply_slash_commands_to_agent_control_state
+            fresh_state['agent_control'] = apply_slash_commands_to_agent_control_state(
+                fresh_state['agent_control'], slash_commands
+            )
+            self.logger.info(f"Applied agent control changes from slash commands")
         
         # Add execution metadata
         fresh_state["execution_start_time"] = time.time()
         
         self.logger.info("Created fresh state for new conversation turn")
         
-        # Create readable command list for user feedback
+        # Create readable command list for user feedback with detailed changes
         processed_commands = []
         if slash_commands:
-            processed_commands = [f"/{cmd}:{opt}" if opt else f"/{cmd}" for cmd, opt in slash_commands.items()]
+            change_descriptions = []
+            for key, value in slash_commands.items():
+                change_descriptions.append(f"{key}={value}")
+            processed_commands = [f"Applied agent control changes: {', '.join(change_descriptions)}"]
         
         return GatewayResult(
             agent_state=fresh_state,
@@ -375,115 +391,65 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
             "approved_payload": None
         }
     
-    def _parse_slash_commands(self, user_input: str) -> Tuple[Dict[str, Optional[str]], str]:
-        """Parse slash commands from user input.
-        
-        Supported formats:
-        - /command - command without option
-        - /command:option - command with option
+    async def _process_slash_commands(self, user_input: str, config: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], str]:
+        """Process slash commands using the centralized command system.
         
         Returns:
-            Tuple of (commands_dict, remaining_message)
+            Tuple of (agent_control_changes, remaining_message)
         """
         if not user_input.startswith('/'):
             return {}, user_input
         
-        commands = {}
-        remaining_parts = []
+        # Create command context for gateway execution
+        context = CommandContext(
+            interface_type="gateway",
+            config=config,
+            gateway=self
+        )
         
-        # Split message into parts
+        registry = get_command_registry()
+        agent_control_changes = {}
+        remaining_parts = []
+        processed_commands = []
+        
+        # Split message into parts to handle multiple commands
         parts = user_input.split()
         
         for part in parts:
             if part.startswith('/'):
-                if ':' in part:
-                    # Format: /command:option
-                    match = re.match(r'^/([a-zA-Z_]+):([a-zA-Z_]+)$', part)
-                    if match:
-                        command, option = match.groups()
-                        commands[command] = option
-                        self.logger.debug(f"Parsed command: /{command}:{option}")
+                try:
+                    result = await registry.execute(part, context)
+                    
+                    if isinstance(result, dict):
+                        # Agent control command returned state changes
+                        agent_control_changes.update(result)
+                        processed_commands.append(part)
+                        
+                        # Verbose logging for each specific change
+                        for key, value in result.items():
+                            self.logger.info(f"Set {key} = {value} via slash command {part}")
+                        
+                    elif result == CommandResult.AGENT_STATE_CHANGED:
+                        processed_commands.append(part)
+                        self.logger.info(f"Agent state changed by command: {part}")
+                    elif result in [CommandResult.HANDLED, CommandResult.CONTINUE]:
+                        processed_commands.append(part)
+                        self.logger.debug(f"Command handled: {part}")
                     else:
-                        self.logger.warning(f"Invalid command format: {part}")
-                        remaining_parts.append(part)
-                else:
-                    # Format: /command
-                    match = re.match(r'^/([a-zA-Z_]+)$', part)
-                    if match:
-                        command = match.group(1)
-                        commands[command] = None
-                        self.logger.debug(f"Parsed command: /{command}")
-                    else:
-                        self.logger.warning(f"Invalid command format: {part}")
-                        remaining_parts.append(part)
+                        self.logger.warning(f"Unexpected command result for {part}: {result}")
+                        
+                except Exception as e:
+                    self.logger.error(f"Error processing command {part}: {e}")
+                    remaining_parts.append(part)  # Keep invalid commands in message
             else:
                 remaining_parts.append(part)
         
+        # Log summary of processed commands
+        if processed_commands:
+            self.logger.info(f"Processing slash commands: {processed_commands}")
+        
         remaining_message = ' '.join(remaining_parts)
-        return commands, remaining_message
+        return agent_control_changes, remaining_message
     
-    def _apply_slash_commands(self, commands: Dict[str, Optional[str]]) -> Dict[str, Any]:
-        """Apply slash commands to agent control state.
-        
-        Returns only the changes from slash commands (will be merged with existing state).
-        """
-        # Only track changes from slash commands (not full state)
-        agent_control_changes = {}
-        
-        # Apply slash commands  
-        for command, option in commands.items():
-            if command == "planning":
-                if option in ["on", "enabled", "true"] or option is None:
-                    agent_control_changes["planning_mode_enabled"] = True
-                    self.logger.info("Enabled planning mode via slash command")
-                elif option in ["off", "disabled", "false"]:
-                    agent_control_changes["planning_mode_enabled"] = False
-                    self.logger.info("Disabled planning mode via slash command")
-            
-            elif command == "approval":
-                if option in ["on", "enabled", "true"] or option is None:
-                    agent_control_changes["approval_mode"] = "enabled"
-                    self.logger.info("Enabled approval mode via slash command")
-                elif option in ["off", "disabled", "false"]:
-                    agent_control_changes["approval_mode"] = "disabled"
-                    self.logger.info("Disabled approval mode via slash command")
-                elif option == "selective":
-                    agent_control_changes["approval_mode"] = "selective"
-                    self.logger.info("Set approval mode to selective via slash command")
-            
-            elif command == "debug":
-                if option in ["on", "enabled", "true"] or option is None:
-                    agent_control_changes["debug_mode"] = True
-                    self.logger.info("Enabled debug mode via slash command")
-                elif option in ["off", "disabled", "false"]:
-                    agent_control_changes["debug_mode"] = False
-                    self.logger.info("Disabled debug mode via slash command")
-            
-            # Task extraction bypass control
-            elif command == "task":
-                if option in ["off", "disabled", "false"]:
-                    agent_control_changes["task_extraction_bypass_enabled"] = True
-                    self.logger.info("Enabled task extraction bypass via slash command")
-                elif option in ["on", "enabled", "true"]:
-                    agent_control_changes["task_extraction_bypass_enabled"] = False
-                    self.logger.info("Disabled task extraction bypass via slash command")
-                else:
-                    self.logger.warning(f"Invalid option for /task command: '{option}'. Use 'on' or 'off'")
-            
-            # Capability selection bypass control
-            elif command == "caps":
-                if option in ["off", "disabled", "false"]:
-                    agent_control_changes["capability_selection_bypass_enabled"] = True
-                    self.logger.info("Enabled capability selection bypass via slash command")
-                elif option in ["on", "enabled", "true"]:
-                    agent_control_changes["capability_selection_bypass_enabled"] = False
-                    self.logger.info("Disabled capability selection bypass via slash command")
-                else:
-                    self.logger.warning(f"Invalid option for /caps command: '{option}'. Use 'on' or 'off'")
-            
-            else:
-                self.logger.warning(f"Unknown slash command: /{command}")
-        
-        return agent_control_changes
     
  

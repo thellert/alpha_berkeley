@@ -1,0 +1,6 @@
+# Project Dependencies
+# Add your application-specific dependencies here
+
+# Framework dependency
+alpha-berkeley-framework>={{ framework_version }}
+

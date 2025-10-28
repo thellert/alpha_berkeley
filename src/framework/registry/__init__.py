@@ -109,6 +109,12 @@ from .base import (
     DomainAnalyzerRegistration
 )
 
+# Helper functions for simplified registry creation
+from .helpers import (
+    extend_framework_registry,
+    get_framework_defaults
+)
+
 __all__ = [
     # Core registry system
     'RegistryManager',
@@ -125,5 +131,9 @@ __all__ = [
     'DataSourceRegistration',
     'ServiceRegistration',
     'FrameworkPromptProviderRegistration',
-    'RegistryConfig'
+    'RegistryConfig',
+    
+    # Helper functions (NEW - Phase 4.6)
+    'extend_framework_registry',
+    'get_framework_defaults',
 ] 

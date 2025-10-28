@@ -57,9 +57,9 @@ from framework.base.errors import ErrorClassification, ErrorSeverity
 from framework.state import AgentState, StateManager
 from framework.base.examples import OrchestratorGuide, TaskClassifierGuide
 from framework.registry import get_registry
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_model_config
 from framework.prompts.loader import get_framework_prompts
 
 
@@ -368,10 +368,10 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
     two_weeks_ago = (now - timedelta(days=14)).strftime('%Y-%m-%d %H:%M:%S')
     
     # DEBUG: Log what we're calculating
-    logger = get_logger("framework", "time_range_parsing")
-    logger.debug(f"⏰ TIME DEBUG - Current time: {current_time_str}")
-    logger.debug(f"⏰ TIME DEBUG - 24 hours ago: {twenty_four_hours_ago}")
-    logger.debug(f"⏰ TIME DEBUG - User query: {user_query}")
+    logger = get_logger("time_range_parsing")
+    logger.debug(f"TIME DEBUG - Current time: {current_time_str}")
+    logger.debug(f"TIME DEBUG - 24 hours ago: {twenty_four_hours_ago}")
+    logger.debug(f"TIME DEBUG - User query: {user_query}")
     
     prompt = textwrap.dedent(f"""
         You are an expert time range parser. Your task is to extract time ranges from user queries and convert them to absolute datetime values.
@@ -537,13 +537,13 @@ class TimeRangeParsingCapability(BaseCapability):
         """
 
         # Explicit logger retrieval - professional practice
-        logger = get_logger("framework", "time_range_parsing")
+        logger = get_logger("time_range_parsing")
         
         # Extract current step from execution plan (single source of truth)
         step = StateManager.get_current_step(state)
 
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "time_range_parsing", state)
+        streamer = get_streamer("time_range_parsing", state)
         
         logger.info(f"Starting LLM-based time range parsing: {step.get('task_objective', 'unknown')}")
         streamer.status("Parsing time range with LLM...")

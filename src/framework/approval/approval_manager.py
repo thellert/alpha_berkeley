@@ -292,7 +292,7 @@ def get_approval_manager() -> ApprovalManager:
     global _approval_manager
     
     if _approval_manager is None:
-        from configs.config import get_config_value
+        from framework.utils.config import get_config_value
         
         # Get approval configuration from config system
         approval_config = get_config_value('approval_config')

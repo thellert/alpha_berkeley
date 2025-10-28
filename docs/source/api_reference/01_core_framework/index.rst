@@ -12,6 +12,7 @@ Core Framework
    03_registry_system
    04_configuration_system
    05_prompt_management
+   06_command_system
 
 .. dropdown:: What You'll Find Here
    :color: primary
@@ -25,6 +26,7 @@ Core Framework
    - **RegistryManager & component discovery** - Convention-based component loading
    - **Configuration & environment resolution** - Seamless configuration management
    - **FrameworkPromptProvider & customization** - Domain-agnostic prompt management
+   - **CommandRegistry & slash commands** - Centralized command system with autocompletion
 
    **Prerequisites:** Basic Python knowledge and agentic system concepts
    
@@ -89,7 +91,7 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       
       YAML-based configuration with environment resolution, model settings, and LangGraph integration.
 
-.. grid:: 1 1 1 1
+.. grid:: 1 1 2 2
    :gutter: 3
 
    .. grid-item-card:: 💬 Prompt Management
@@ -102,6 +104,17 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       **Domain-Agnostic Prompt System**
       
       Dependency injection for prompt customization with builder patterns, defaults, and application-specific overrides.
+
+   .. grid-item-card:: ⚡ Command System
+      :link: 06_command_system
+      :link-type: doc
+      :class-header: bg-dark text-white
+      :class-body: text-center
+      :shadow: md
+
+      **Centralized Slash Commands**
+      
+      Unified command registry with categorization, autocompletion, and extensible handlers for all interfaces.
 
 Framework Integration Patterns
 ==============================
@@ -162,7 +175,7 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from configs.config import (
+         from framework.utils.config import (
              get_config_value, get_model_config, get_full_configuration
          )
          
@@ -191,7 +204,7 @@ These systems work together to provide a unified development experience:
          from framework.base import BaseCapability, capability_node
          from framework.state import AgentState, StateManager
          from framework.context import ContextManager
-         from configs.config import get_model_config
+         from framework.utils.config import get_model_config
          from applications.als_assistant.context_classes import AnalysisResultsContext
          
          @capability_node

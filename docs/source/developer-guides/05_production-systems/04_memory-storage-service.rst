@@ -304,7 +304,7 @@ Troubleshooting
    print(f"Memory manager available: {manager is not None}")
    
    # Check memory directory
-   from configs.config import get_agent_dir
+   from framework.utils.config import get_agent_dir
    memory_dir = get_agent_dir('user_memory_dir')
    print(f"Memory directory: {memory_dir}")
    

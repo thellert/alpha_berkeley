@@ -67,11 +67,11 @@ from datetime import datetime
 import textwrap
 from typing import Dict, Any, Optional, List
 
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 from framework.context import load_context
 from .models import PythonExecutionContext, PythonExecutionState, NotebookAttempt, NotebookType
 
-logger = get_logger("framework", "python_services")
+logger = get_logger("python_services")
 
 
 # =============================================================================

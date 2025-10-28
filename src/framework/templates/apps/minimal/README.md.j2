@@ -1,0 +1,90 @@
+# {{ app_display_name }}
+
+A minimal Alpha Berkeley Framework application template ready for your custom implementation.
+
+## Getting Started
+
+This template provides the basic structure for building your application. Follow the TODOs in the code to implement your functionality.
+
+## Quick Start
+
+```bash
+# 1. Implement your capabilities
+vim {{ package_name }}/capabilities/my_capability.py
+
+# 2. Define your context classes
+vim {{ package_name }}/context_classes.py
+
+# 3. Register components
+vim {{ package_name }}/registry.py
+
+# 4. Configure your application
+vim config.yml
+
+# 5. Run your application
+framework chat
+```
+
+## Project Structure
+
+```
+{{ package_name }}/
+├── registry.py              # TODO: Register your capabilities and context classes
+├── context_classes.py       # TODO: Define your data structures
+└── capabilities/            # TODO: Implement your business logic
+    └── __init__.py
+```
+
+## Implementation Steps
+
+### 1. Define Context Classes
+
+Edit `{{ package_name }}/context_classes.py`:
+- Create Pydantic models for your data
+- Inherit from `CapabilityContext`
+- Define `CONTEXT_TYPE` and `CONTEXT_CATEGORY`
+- Implement `get_access_details()` and `get_summary()`
+
+### 2. Implement Capabilities
+
+Create files in `{{ package_name }}/capabilities/`:
+- Inherit from `BaseCapability`
+- Use `@capability_node` decorator
+- Define `name`, `description`, `provides`, `requires`
+- Implement `execute()` method
+
+### 3. Register Components
+
+Edit `{{ package_name }}/registry.py`:
+- Add `CapabilityRegistration` entries for each capability
+- Add `ContextClassRegistration` entries for each context class
+
+### 4. Configure Application
+
+Edit `config.yml`:
+- Configure models and providers
+- Set approval modes
+- Configure services
+
+## Examples to Learn From
+
+Generate working examples to understand the patterns:
+
+```bash
+# Simple example
+framework init my-weather --template hello_world_weather
+
+# Advanced example
+framework init my-turbine --template wind_turbine
+```
+
+## Documentation
+
+- [Building Your First Capability](https://thellert.github.io/alpha_berkeley/developer-guides/building-first-capability.html)
+- [Context Classes Guide](https://thellert.github.io/alpha_berkeley/developer-guides/context-classes.html)
+- [Registry System](https://thellert.github.io/alpha_berkeley/developer-guides/registry-and-discovery.html)
+
+## Need Help?
+
+Start with the `hello_world_weather` template to see a complete working example, then come back to this minimal template to build your own.
+

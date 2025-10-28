@@ -20,12 +20,12 @@ from .models import PythonExecutionState, AnalysisResult, validate_result_struct
 from .services import FileManager, NotebookManager
 from .execution_control import ExecutionMode
 from .execution_policy_analyzer import BasicAnalysisResult, DomainAnalysisManager, ExecutionPolicyManager
-from configs.logger import get_logger
-from configs.streaming import get_streamer
-from configs.config import get_full_configuration
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
+from framework.utils.config import get_full_configuration
 from framework.approval.approval_manager import get_python_execution_evaluator
 
-logger = get_logger("framework", "python_analyzer")
+logger = get_logger("python_analyzer")
 
 
 class StaticCodeAnalyzer:
@@ -241,7 +241,7 @@ def create_analyzer_node():
         """Perform static analysis and package approval data to avoid double execution."""
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("python_executor", "analyzer", state)
+        streamer = get_streamer("python_analyzer", state)
         streamer.status("Analyzing Python code...")
         
         # Check if we have code to analyze

@@ -47,7 +47,7 @@ from functools import wraps
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 from framework.base.errors import ErrorSeverity
 
 
@@ -176,7 +176,7 @@ def capability_node(cls):
     error_classifier = getattr(cls, 'classify_error', None)
     retry_policy_func = getattr(cls, 'get_retry_policy', None)
     
-    logger = get_logger("framework", capability_name)
+    logger = get_logger(capability_name)
     
     # Validate required components
     if not capability_name:
@@ -475,12 +475,12 @@ def infrastructure_node(cls=None, *, quiet=False):
             @staticmethod
             async def execute(state: AgentState, **kwargs):
                 # Explicit logger retrieval - professional practice
-                from configs.logger import get_logger
-                logger = get_logger("framework", "task_extraction")
+                from framework.utils.logger import get_logger
+                logger = get_logger("task_extraction")
                 
                 # Define streaming helper here for step awareness
-                from configs.streaming import get_streamer
-                streamer = get_streamer("framework", "task_extraction", state)
+                from framework.utils.streaming import get_streamer
+                streamer = get_streamer("task_extraction", state)
                 streamer.status("Processing...")
                 
                 logger.info("Starting task extraction")
@@ -532,7 +532,7 @@ def _create_infrastructure_node(cls, quiet=False):
     error_classifier = getattr(cls, 'classify_error', None)
     retry_policy_func = getattr(cls, 'get_retry_policy', None)
     
-    logger = get_logger("framework", node_name)
+    logger = get_logger(node_name)
     
     # Validate required components
     if not node_name:

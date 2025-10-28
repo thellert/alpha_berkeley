@@ -8,7 +8,7 @@ configuration interface.
 **Core Components:**
 
 - :class:`AgentControlState`: Unified control configuration with runtime overrides
-- :func:`apply_slash_commands_to_agent_control_state`: Slash command processing utilities
+- :func:`apply_slash_commands_to_agent_control_state`: Apply command changes to agent control state
 
 **Configuration Management:**
 
@@ -50,7 +50,7 @@ from typing_extensions import TypedDict
 from dataclasses import dataclass, field
 import logging
 
-from configs.config import get_execution_limits
+from framework.utils.config import get_execution_limits
 
 
 
@@ -134,7 +134,7 @@ class AgentControlState(TypedDict, total=False):
             ... )
     
     .. seealso::
-       :func:`apply_slash_commands_to_agent_control_state` : Runtime override utilities
+       :func:`apply_slash_commands_to_agent_control_state` : Apply command changes to control state
        :class:`framework.state.AgentState` : Main state containing control state
        :mod:`configs.config` : Base configuration system
     """
@@ -160,32 +160,34 @@ class AgentControlState(TypedDict, total=False):
 
     
 
+
+def apply_slash_commands_to_agent_control_state(
+    agent_control_state: AgentControlState, 
+    command_changes: Dict[str, Any]
+) -> AgentControlState:
+    """Apply processed command changes to agent control configuration.
     
-def apply_slash_commands_to_agent_control_state(agent_control_state: AgentControlState, commands: Dict[str, Optional[str]]) -> AgentControlState:
-    """Apply slash command overrides to agent control configuration.
+    This function takes the output from the centralized command system and applies
+    the changes to the agent control state. It ensures proper state merging with
+    existing configuration while preserving all non-modified fields.
     
-    This function processes slash commands from user input and applies them as
-    runtime overrides to the agent control state. The function creates a new
-    control state instance with the specified overrides applied, supporting
-    various command formats and validation logic.
+    The function handles the complete state update workflow:
     
-    The function handles the complete slash command processing workflow:
-    
-    1. **Command Validation**: Validates command format and options
-    2. **State Copying**: Creates a new control state instance
-    3. **Override Application**: Applies command-specific overrides
+    1. **State Copying**: Creates a new control state instance with all existing values
+    2. **Change Application**: Applies only the specific changes from commands
+    3. **Default Handling**: Ensures all fields have proper default values
     4. **Logging**: Records applied changes for debugging and audit
     
-    **Supported Commands:**
+    **Command Integration:**
     
-    - **/planning**: Enable/disable planning mode with optional on/off parameter
-    - Future commands can be easily added following the same pattern
+    This function works with the centralized command system where agent control
+    commands return dictionaries of state changes (e.g., {"planning_mode_enabled": True}).
     
-    :param agent_control_state: Current agent control state to override
+    :param agent_control_state: Current agent control state to update
     :type agent_control_state: AgentControlState
-    :param commands: Dictionary mapping command names to their option values
-    :type commands: Dict[str, Optional[str]]
-    :return: New AgentControlState instance with slash command overrides applied
+    :param command_changes: Dictionary of field changes from command handlers
+    :type command_changes: Dict[str, Any]
+    :return: New AgentControlState instance with command changes applied
     :rtype: AgentControlState
     
     .. note::
@@ -197,36 +199,27 @@ def apply_slash_commands_to_agent_control_state(agent_control_state: AgentContro
        rather than raising exceptions to maintain execution continuity.
     
     Examples:
-        Planning mode commands::
+        Applying planning mode change::
         
             >>> current_state = AgentControlState(planning_mode_enabled=False)
-            >>> commands = {"planning": None}  # Enable planning
+            >>> changes = {"planning_mode_enabled": True}  # From command handler
             >>> new_state = apply_slash_commands_to_agent_control_state(
-            ...     current_state, commands
+            ...     current_state, changes
             ... )
             >>> new_state['planning_mode_enabled']
             True
         
-        Planning mode with explicit option::
+        Applying multiple changes::
         
-            >>> commands = {"planning": "off"}  # Disable planning
-            >>> new_state = apply_slash_commands_to_agent_control_state(
-            ...     current_state, commands
-            ... )
-            >>> new_state['planning_mode_enabled']
-            False
-        
-        Multiple commands::
-        
-            >>> commands = {
-            ...     "planning": "on",
-            ...     # Additional commands can be added here
+            >>> changes = {
+            ...     "planning_mode_enabled": True,
+            ...     "debug_mode": True
             ... }
             >>> new_state = apply_slash_commands_to_agent_control_state(
-            ...     current_state, commands
+            ...     current_state, changes
             ... )
         
-        No commands (passthrough)::
+        No changes (passthrough)::
         
             >>> new_state = apply_slash_commands_to_agent_control_state(
             ...     current_state, {}
@@ -238,13 +231,13 @@ def apply_slash_commands_to_agent_control_state(agent_control_state: AgentContro
        :class:`AgentControlState` : Control state structure being modified
        :mod:`framework.infrastructure.gateway` : Gateway parsing slash commands
     """
-    if not commands:
+    if not command_changes:
         return agent_control_state
         
     # Get execution limits from configuration for consistent defaults
     execution_limits = get_execution_limits()
     
-    # Create a copy for modification
+    # Create a copy with all existing values preserved
     new_instance = AgentControlState(
         planning_mode_enabled=agent_control_state.get('planning_mode_enabled', False),
         epics_writes_enabled=agent_control_state.get('epics_writes_enabled', False),
@@ -258,16 +251,12 @@ def apply_slash_commands_to_agent_control_state(agent_control_state: AgentContro
         max_execution_time_seconds=agent_control_state.get('max_execution_time_seconds', execution_limits.get('max_execution_time_seconds', 300)),
     )
     
-    # Apply planning command: /planning or /planning:on/off
-    if 'planning' in commands:
-        option = commands['planning']
-        if option is None or option in ['', 'on', 'true']:
-            new_instance['planning_mode_enabled'] = True
-            logger.info(f"Planning mode enabled by slash command: /planning")
-        elif option in ['off', 'false']:
-            new_instance['planning_mode_enabled'] = False
-            logger.info(f"Planning mode disabled by slash command: /planning:{option}")
+    # Apply the specific changes from command handlers
+    for field, value in command_changes.items():
+        if field in AgentControlState.__annotations__:
+            new_instance[field] = value
+            logger.info(f"Applied command change: {field} = {value}")
         else:
-            logger.warning(f"Unknown planning option: {option}. Valid options: on, off")
+            logger.warning(f"Unknown agent control field from command: {field}")
     
     return new_instance

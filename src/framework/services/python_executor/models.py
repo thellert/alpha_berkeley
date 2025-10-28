@@ -57,7 +57,7 @@ from pathlib import Path
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, Field
-from configs.logger import get_logger
+from framework.utils.logger import get_logger
 
 # Import for runtime use
 from .exceptions import ContainerConfigurationError
@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     from .execution_control import ExecutionMode
     from .execution_control import ExecutionControlConfig
 
-logger = get_logger("framework", "python_services")
+logger = get_logger("python_services")
 
 # =============================================================================
 # TYPE DEFINITIONS

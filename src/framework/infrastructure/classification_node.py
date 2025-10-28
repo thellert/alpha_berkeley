@@ -22,15 +22,15 @@ from framework.registry import get_registry
 from framework.base import BaseCapability, ClassifierExample, CapabilityMatch
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from configs.config import get_model_config
-from configs.logger import get_logger
-from configs.streaming import get_streamer
+from framework.utils.config import get_model_config
+from framework.utils.logger import get_logger
+from framework.utils.streaming import get_streamer
 from framework.base.errors import ErrorClassification, ErrorSeverity
 from framework.base.nodes import BaseInfrastructureNode
 
 
 # Use colored logger for classifier
-logger = get_logger("framework", "classifier")
+logger = get_logger("classifier")
 
 
 @infrastructure_node
@@ -171,7 +171,7 @@ class ClassificationNode(BaseInfrastructureNode):
             raise ReclassificationRequiredError("No current task found")
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("framework", "classifier", state)
+        streamer = get_streamer("classifier", state)
         
         # Check if capability selection bypass is enabled
         bypass_enabled = state.get("agent_control", {}).get("capability_selection_bypass_enabled", False)

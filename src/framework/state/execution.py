@@ -56,7 +56,7 @@ from framework.base import BaseCapability
 from framework.base.planning import ExecutionPlan
 from framework.base.results import ExecutionRecord, ExecutionResult
 # Context data is now stored as pure dictionaries - no import needed
-from configs.config import get_config_value
+from framework.utils.config import get_config_value
 
 
 @dataclass

@@ -53,7 +53,7 @@ Key Features
    Gateway is the only component that creates agent state, ensuring consistency.
 
 **Slash Commands**
-   Built-in parsing for ``/planning:on``, ``/approval:enabled``, ``/debug:on``, and :ref:`performance bypass commands <slash-commands-section>`.
+   Integrated with the centralized command system for ``/planning:on``, ``/approval:enabled``, ``/debug:on``, and performance bypass commands.
 
 **Approval Integration**
    Automatic detection of approval/rejection responses with LangGraph interrupt handling.

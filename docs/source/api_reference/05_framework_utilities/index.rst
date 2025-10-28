@@ -15,7 +15,7 @@ Core Components
    models.get_model
    models.get_chat_completion
 
-.. currentmodule:: configs
+.. currentmodule:: framework.utils
 
 .. autosummary::
    :toctree: _autosummary
@@ -44,7 +44,7 @@ Component logging and streaming utilities for framework development.
 Logging System
 --------------
 
-.. currentmodule:: configs.logger
+.. currentmodule:: framework.utils.logger
 
 .. autofunction:: get_logger
 
@@ -55,7 +55,7 @@ Logging System
 Streaming System
 ----------------
 
-.. currentmodule:: configs.streaming
+.. currentmodule:: framework.utils.streaming
 
 .. autofunction:: get_streamer
 

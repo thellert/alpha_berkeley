@@ -108,8 +108,8 @@ from typing import Dict, List, Optional, Type, Any, TYPE_CHECKING
 
 from .base import RegistryConfig, RegistryConfigProvider
 from framework.base.errors import RegistryError, ConfigurationError
-from configs.logger import get_logger
-from configs.config import get_config_value, get_agent_dir
+from framework.utils.logger import get_logger
+from framework.utils.config import get_config_value, get_agent_dir
 
 # Import for prompt loading
 try:
@@ -154,31 +154,32 @@ class RegistryManager:
        can be accessed. Failed initialization will raise RegistryError.
     """
     
-    def __init__(self, application_names: Optional[List[str]] = None):
-        """Initialize registry manager with convention-based application loading.
+    def __init__(self, registry_paths: Optional[List[str]] = None):
+        """Initialize registry manager with explicit path-based registry loading.
         
-        Creates a new registry manager instance that will load the specified
-        application registries using naming conventions. The manager
-        builds a merged configuration by combining the framework registry with
-        all specified application registries.
+        Creates a new registry manager instance that will load application
+        registries from explicit file paths. The manager builds a merged
+        configuration by combining the framework registry with all specified
+        application registries.
         
         The initialization process follows these steps:
-        1. Load framework registry from framework.registry.registry
-        2. Load application registries from applications.{app_name}.registry
+        1. Load framework registry from framework.registry.registry module
+        2. Load application registries from specified file paths using importlib.util
         3. Merge configurations with application overrides taking precedence
         4. Prepare component registries for lazy loading
         
-        Applications are loaded using the convention-based pattern where each
-        application name corresponds to a registry module at:
-        applications.{app_name}.registry
+        Applications are loaded using explicit path-based discovery where each
+        path points directly to a registry.py file. Paths can be absolute or
+        relative, and are resolved using pathlib.Path for robust handling.
         
         Each application registry module must contain exactly one class implementing
         the RegistryConfigProvider interface.
         
-        :param application_names: List of application names to load using conventions.
-            If None or empty, only the framework registry will be loaded. Application
-            names should match directory names under src/applications/
-        :type application_names: list[str], optional
+        :param registry_paths: List of paths to registry.py files to load.
+            Can be absolute paths (e.g., "/path/to/app/registry.py") or
+            relative paths (e.g., "./my_app/registry.py", "./src/app/registry.py").
+            If None or empty, only the framework registry will be loaded.
+        :type registry_paths: list[str], optional
         :raises RegistryError: If any application registry cannot be loaded
         :raises ConfigurationError: If registry configuration is invalid
         
@@ -187,16 +188,19 @@ class RegistryManager:
            to perform component loading and make components available for access.
            
         .. warning:
-           Invalid application names or missing registry modules will cause
-           initialization to fail. Ensure all specified applications have valid
-           registry modules.
+           Invalid paths or missing registry files will cause initialization to fail.
+           Ensure all specified paths point to valid registry.py files with a
+           RegistryConfigProvider implementation.
         
         Examples:
-            Create registry with specific applications::
+            Create registry with explicit paths::
             
-                >>> manager = RegistryManager(["als_assistant", "wind_turbine"])
+                >>> manager = RegistryManager([
+                ...     "./my_app/registry.py",
+                ...     "./src/another_app/registry.py"
+                ... ])
                 >>> manager.initialize()  # Load components
-                >>> capability = manager.get_capability("pv_address_finding")
+                >>> capability = manager.get_capability("my_capability")
             
             Create framework-only registry::
             
@@ -208,7 +212,7 @@ class RegistryManager:
             
                 >>> # Preferred approach - use global functions
                 >>> from framework.registry import initialize_registry, get_registry
-                >>> initialize_registry()  # Uses config to determine applications
+                >>> initialize_registry()  # Uses config to determine registry paths
                 >>> registry = get_registry()
         
         .. seealso::
@@ -217,7 +221,7 @@ class RegistryManager:
            :meth:`initialize` : Initialize components after construction
            :class:`RegistryConfigProvider` : Interface that applications must implement
         """
-        self.application_names = application_names or []
+        self.registry_paths = registry_paths or []
         self._initialized = False
         
         # Core registries (no circular imports - pure lookup tables)
@@ -236,16 +240,18 @@ class RegistryManager:
         self.config = self._build_merged_configuration()
     
     def _build_merged_configuration(self) -> RegistryConfig:
-        """Build merged configuration with application overrides using conventions.
+        """Build merged configuration using explicit path-based registry loading.
         
-        Uses conventions to locate application registries:
-        - Registry module: applications.{app_name}.registry
+        Loads registries from explicit file paths using robust importlib.util approach.
+        No string manipulation or sys.path adjustments required.
         
         Applications override framework components with the same name/type.
         
         :return: Merged registry configuration with application overrides applied
         :rtype: RegistryConfig
         """
+        from pathlib import Path
+        
         # Start with framework configuration (using interface pattern)
         framework_config = self._load_registry_from_module("framework.registry.registry")
         merged = RegistryConfig(
@@ -258,18 +264,30 @@ class RegistryManager:
             initialization_order=framework_config.initialization_order.copy()
         )
         
-        # Load and merge each application configuration
-        for app_name in self.application_names:
+        # Load and merge each application registry by path
+        for registry_path in self.registry_paths:
             try:
-                app_registry_config = self._load_registry_from_module(f"applications.{app_name}.registry")
-                if app_registry_config:
-                    self._merge_application_with_override(merged, app_registry_config, app_name)
-                    logger.info(f"Loaded application registry: {app_name}")
+                # Use path-based loading (robust, no string manipulation)
+                app_registry_config = self._load_registry_from_path(registry_path)
+                
+                # Use parent directory name as application name for merging
+                app_name = Path(registry_path).resolve().parent.name
+                
+                # Merge application configuration (applications override framework)
+                self._merge_application_with_override(merged, app_registry_config, app_name)
+                
+                logger.info(f"Loaded application registry from: {registry_path} (app: {app_name})")
+                
             except Exception as e:
-                logger.error(f"Failed to load application {app_name}: {e}")
-                raise RegistryError(f"Failed to load application {app_name}: {e}") from e
+                logger.error(f"Failed to load registry from {registry_path}: {e}")
+                raise RegistryError(f"Failed to load registry from {registry_path}: {e}") from e
         
-        logger.info(f"Built merged registry with {len(self.application_names)} applications")
+        # Log summary
+        if len(self.registry_paths) == 0:
+            logger.info("Built framework-only registry (no applications)")
+        else:
+            logger.info(f"Built merged registry with {len(self.registry_paths)} application(s)")
+        
         return merged
     
     def _load_registry_from_module(self, module_path: str) -> RegistryConfig:
@@ -334,6 +352,206 @@ class RegistryManager:
         except Exception as e:
             raise RegistryError(
                 f"Failed to load {component_name} registry from {module_path}: {e}"
+            ) from e
+
+    def _load_registry_from_path(self, registry_path: str) -> RegistryConfig:
+        """Load registry from filesystem path using importlib.util.
+        
+        This method provides robust path-based registry loading that works with
+        any file path (absolute or relative). It automatically configures sys.path
+        to enable component imports (context_classes, capabilities, etc.) following
+        the industry-standard pattern used by pytest, sphinx, and other major frameworks.
+        
+        The method follows the same provider discovery pattern as _load_registry_from_module,
+        finding exactly one class that implements RegistryConfigProvider and
+        instantiating it to get the registry configuration.
+        
+        **Path Management (Industry Standard):**
+        
+        When loading a registry from `./src/app_name/registry.py`, the registry will
+        reference modules like `"app_name.context_classes"`. For these imports to work,
+        the `src/` directory must be on sys.path. This method automatically detects
+        the project structure and adds the appropriate directory to sys.path before
+        loading components.
+        
+        This follows the established pattern used by:
+        - pytest (adds test directories to sys.path during collection)
+        - sphinx (adds doc directory to sys.path for conf.py imports)
+        - airflow (adds DAG folders to sys.path for cross-DAG imports)
+        
+        :param registry_path: Path to registry.py file (absolute or relative)
+        :type registry_path: str
+        :return: Registry configuration from the file
+        :rtype: RegistryConfig
+        :raises RegistryError: If file not found, invalid module, or no provider found
+        
+        .. note::
+           This method modifies sys.path to enable application module imports.
+           This is standard behavior for Python application frameworks and is
+           transparent to users (logged at INFO level).
+           
+        Examples:
+            Load from relative path::
+            
+                >>> config = self._load_registry_from_path("./my_app/registry.py")
+                
+            Load from absolute path::
+            
+                >>> config = self._load_registry_from_path("/path/to/app/registry.py")
+        """
+        import sys
+        import importlib.util
+        from pathlib import Path
+        
+        # Normalize path (handles absolute/relative, resolves .., etc.)
+        path = Path(registry_path).resolve()
+        
+        # Validate file exists
+        if not path.exists():
+            raise RegistryError(
+                f"Registry file not found: {registry_path}\n"
+                f"Resolved path: {path}\n"
+                f"Current directory: {Path.cwd()}"
+            )
+        
+        if not path.is_file():
+            raise RegistryError(
+                f"Registry path is not a file: {registry_path}\n"
+                f"Resolved path: {path}"
+            )
+        
+        # ============================================================================
+        # CONFIGURE SYS.PATH FOR APPLICATION MODULE IMPORTS (Industry Standard)
+        # ============================================================================
+        # Registry files reference modules like "app_name.context_classes" that won't
+        # be importable unless their parent directory is on sys.path.
+        #
+        # This follows the established pattern used by pytest, sphinx, and airflow:
+        # - pytest: Adds test directories during collection
+        # - sphinx: Adds doc directory for conf.py imports  
+        # - airflow: Adds DAG folders for cross-DAG imports
+        #
+        # We detect the project structure and add the appropriate directory.
+        # ============================================================================
+        
+        # Detect project structure - most generated projects use src/ directory
+        # Example: ./src/app_name/registry.py → need to add ./src/ to sys.path
+        app_dir = path.parent  # Directory containing registry.py (e.g., ./src/app_name/)
+        project_root = app_dir.parent  # One level up (e.g., ./src/ or project root)
+        
+        search_dir = None
+        detection_reason = None
+        
+        # Pattern 1: Registry inside src/ directory (most common for generated projects)
+        # Path: ./src/app_name/registry.py → Add ./src/ to sys.path
+        if project_root.name == 'src':
+            search_dir = project_root
+            detection_reason = "registry is in src/ directory structure"
+        
+        # Pattern 2: Registry elsewhere but src/ directory exists
+        # Path: ./app_name/registry.py but ./src/ exists → Add ./src/ to sys.path
+        elif (project_root / 'src').exists() and (project_root / 'src').is_dir():
+            search_dir = project_root / 'src'
+            detection_reason = "src/ directory exists in project root"
+        
+        # Pattern 3: Flat structure - registry at app root
+        # Path: ./app_name/registry.py (no src/) → Add ./app_name/ to sys.path
+        else:
+            search_dir = app_dir
+            detection_reason = "flat project structure (no src/ directory)"
+        
+        # Add to sys.path if not already present (deduplication)
+        search_dir_str = str(search_dir.resolve())
+        if search_dir_str not in sys.path:
+            sys.path.insert(0, search_dir_str)
+            logger.info(
+                f"Registry: Added {search_dir_str} to sys.path "
+                f"({detection_reason})"
+            )
+            logger.debug(
+                f"Registry: Path detection details:\n"
+                f"  - Registry file: {path}\n"
+                f"  - App directory: {app_dir}\n"
+                f"  - Project root: {project_root}\n"
+                f"  - Added to sys.path: {search_dir_str}"
+            )
+        else:
+            logger.debug(
+                f"Registry: {search_dir_str} already in sys.path "
+                f"({detection_reason})"
+            )
+        
+        # Load module from file using importlib.util
+        try:
+            spec = importlib.util.spec_from_file_location(
+                "_dynamic_registry",  # Module name (not important for our use)
+                path
+            )
+            
+            if spec is None or spec.loader is None:
+                raise RegistryError(
+                    f"Could not create module spec from registry file: {registry_path}\n"
+                    f"This usually indicates a corrupted or invalid Python file."
+                )
+            
+            # Create and execute the module
+            module = importlib.util.module_from_spec(spec)
+            sys.modules["_dynamic_registry"] = module
+            spec.loader.exec_module(module)
+            
+        except Exception as e:
+            raise RegistryError(
+                f"Failed to load Python module from {registry_path}: {e}\n"
+                f"Ensure the file contains valid Python code and no syntax errors."
+            ) from e
+        
+        # Find RegistryConfigProvider implementation (same pattern as _load_registry_from_module)
+        provider_classes = []
+        for name in dir(module):
+            obj = getattr(module, name)
+            if (inspect.isclass(obj) and 
+                issubclass(obj, RegistryConfigProvider) and 
+                obj != RegistryConfigProvider):
+                provider_classes.append(obj)
+        
+        # STRICT ENFORCEMENT: Exactly one provider class required
+        if len(provider_classes) == 0:
+            raise RegistryError(
+                f"No RegistryConfigProvider implementation found in {registry_path}.\n"
+                f"Registry files must define exactly one class implementing RegistryConfigProvider.\n"
+                f"Example:\n"
+                f"  from framework.registry import RegistryConfigProvider, RegistryConfig\n"
+                f"  \n"
+                f"  class MyRegistryProvider(RegistryConfigProvider):\n"
+                f"      def get_registry_config(self) -> RegistryConfig:\n"
+                f"          return RegistryConfig(...)"
+            )
+        elif len(provider_classes) > 1:
+            class_names = [cls.__name__ for cls in provider_classes]
+            raise RegistryError(
+                f"Multiple RegistryConfigProvider implementations found in {registry_path}: {class_names}.\n"
+                f"Registry files must define exactly one provider class.\n"
+                f"Found {len(provider_classes)} classes: {', '.join(class_names)}"
+            )
+        
+        # Instantiate provider and get configuration
+        try:
+            provider_class = provider_classes[0]
+            provider_instance = provider_class()
+            config = provider_instance.get_registry_config()
+            
+            # Use parent directory name as application name for logging
+            app_name = path.parent.name
+            logger.debug(
+                f"Loaded registry via {provider_class.__name__} from {registry_path} "
+                f"(application: {app_name})"
+            )
+            return config
+            
+        except Exception as e:
+            raise RegistryError(
+                f"Failed to instantiate or get config from {provider_classes[0].__name__} "
+                f"in {registry_path}: {e}"
             ) from e
 
 
@@ -1617,41 +1835,131 @@ def get_registry() -> RegistryManager:
 def _create_registry_from_config() -> RegistryManager:
     """Create registry manager from global configuration.
     
-    Expects simple application list in the format:
-    applications:
-      - als_assistant
-      - wind_turbine
+    Supports multiple configuration formats for registry path specification:
     
-    Uses conventions:
-    - Config: src/applications/{app}/config.yml
-    - Registry: applications.{app}.registry
+    1. Top-level format (simple, for single-app projects):
+       registry_path: ./src/my_app/registry.py
     
-    :return: Configured registry manager
+    2. Nested format (standard, recommended):
+       application:
+         registry_path: ./src/my_app/registry.py
+    
+    3. Multiple applications format (advanced):
+       applications:
+         app1:
+           registry_path: ./src/app1/registry.py
+         app2:
+           registry_path: ./src/app2/registry.py
+    
+    4. Legacy list format (deprecated):
+       applications:
+         - app1
+         - app2
+    
+    :return: Configured registry manager with registry paths
     :rtype: RegistryManager
+    :raises ConfigurationError: If configuration format is invalid
     """
     logger.debug("Creating registry from config...")
     try:
-        # Extract application list
-        applications = get_config_value('applications', [])
+        registry_paths = []
         
-        if isinstance(applications, list):
-            application_names = applications
-            logger.debug(f"Using applications from list: {application_names}")
-        elif isinstance(applications, dict):
-            # Handle case where applications is a dict with application configs
-            application_names = list(applications.keys())
-            logger.debug(f"Using applications from dict keys: {application_names}")
+        # Format 1: Top-level registry_path (simple, single-app)
+        top_level_path = get_config_value('registry_path', None)
+        if top_level_path:
+            registry_paths.append(top_level_path)
+            logger.debug(f"Using top-level registry_path: {top_level_path}")
+        
+        # Format 2: Nested application.registry_path (standard, recommended)
+        application = get_config_value('application', None)
+        if application and isinstance(application, dict):
+            if 'registry_path' in application:
+                path = application['registry_path']
+                if path not in registry_paths:  # Avoid duplicates
+                    registry_paths.append(path)
+                    logger.debug(f"Using application.registry_path: {path}")
+            else:
+                logger.warning(
+                    "Configuration has 'application' dict but no 'registry_path' key. "
+                    "Expected format: application:\n  registry_path: ./path/to/registry.py"
+                )
+        
+        # Format 3 & 4: applications (dict or list)
+        applications = get_config_value('applications', None)
+        if applications:
+            if isinstance(applications, dict):
+                # Format 3: Dict with app names and configs
+                for app_name, app_config in applications.items():
+                    if isinstance(app_config, dict) and 'registry_path' in app_config:
+                        path = app_config['registry_path']
+                        if path not in registry_paths:  # Avoid duplicates
+                            registry_paths.append(path)
+                            logger.debug(f"Using applications[{app_name}].registry_path: {path}")
+                    else:
+                        logger.warning(
+                            f"Application '{app_name}' config missing 'registry_path'. "
+                            f"Expected format: applications:\n  {app_name}:\n    registry_path: ./path/to/registry.py"
+                        )
+            
+            elif isinstance(applications, list):
+                # Format 4: Legacy list format (deprecated)
+                logger.warning(
+                    "⚠️  DEPRECATED: Convention-based application loading from list is deprecated.\n"
+                    "   Current config: applications: [list of names]\n"
+                    "   Please update to use explicit registry paths:\n"
+                    "   \n"
+                    "   # Simple format (single app):\n"
+                    "   registry_path: ./src/my_app/registry.py\n"
+                    "   \n"
+                    "   # Standard format (single app):\n"
+                    "   application:\n"
+                    "     registry_path: ./src/my_app/registry.py\n"
+                    "   \n"
+                    "   # Multiple apps:\n"
+                    "   applications:\n"
+                    "     app1:\n"
+                    "       registry_path: ./src/app1/registry.py\n"
+                    "     app2:\n"
+                    "       registry_path: ./src/app2/registry.py"
+                )
+                # For backward compatibility, try to construct paths from names
+                for app_name in applications:
+                    # Guess common path patterns
+                    possible_paths = [
+                        f"./src/applications/{app_name}/registry.py",
+                        f"./src/{app_name}/registry.py",
+                        f"./{app_name}/registry.py",
+                    ]
+                    # Try each possible path
+                    from pathlib import Path
+                    for path in possible_paths:
+                        if Path(path).exists():
+                            if path not in registry_paths:
+                                registry_paths.append(path)
+                                logger.info(f"Found registry for '{app_name}' at: {path}")
+                            break
+                    else:
+                        logger.error(
+                            f"Could not find registry for application '{app_name}'. "
+                            f"Tried: {possible_paths}\n"
+                            f"Please update config to use explicit registry_path."
+                        )
+            
+            else:
+                raise ConfigurationError(
+                    f"Configuration 'applications' must be a dict or list, "
+                    f"got {type(applications).__name__}: {applications}"
+                )
+        
+        # Log final configuration
+        if not registry_paths:
+            logger.info("No application registries configured - using framework-only registry")
         else:
-            # Configuration error - applications must be a list or dict
-            raise ConfigurationError(
-                f"Configuration 'applications' must be a list of application names or "
-                f"a dict with application configurations, got {type(applications).__name__}: {applications}"
-            )
+            logger.info(f"Configured {len(registry_paths)} application registry(ies):")
+            for path in registry_paths:
+                logger.info(f"  - {path}")
         
-        if not application_names:
-            logger.warning("No applications configured - using framework-only configuration")
-        
-        return RegistryManager(application_names)
+        return RegistryManager(registry_paths=registry_paths)
         
     except Exception as e:
         logger.error(f"Failed to create registry from config: {e}")

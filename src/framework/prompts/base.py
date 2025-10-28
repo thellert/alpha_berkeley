@@ -16,12 +16,12 @@ from typing import Optional, List, Any, Dict, TYPE_CHECKING
 from dataclasses import dataclass
 from datetime import datetime
 
-from configs.logger import get_logger
-from configs.config import get_config_value, get_agent_dir
+from framework.utils.logger import get_logger
+from framework.utils.config import get_config_value, get_agent_dir
 from framework.base import TaskClassifierGuide
 if TYPE_CHECKING:
     from framework.base import OrchestratorGuide, BaseExample
-logger = get_logger("framework", "base")
+logger = get_logger("base")
 
 
 

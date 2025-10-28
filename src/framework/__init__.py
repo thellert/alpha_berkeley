@@ -11,5 +11,10 @@ This package contains:
 - Configuration management
 """
 
+# Version information
+__version__ = "0.7.4"
+
+__all__ = ['__version__']
+
 # Framework is designed for on-demand imports to avoid circular dependencies
 # Use specific imports like: from framework.state import AgentState

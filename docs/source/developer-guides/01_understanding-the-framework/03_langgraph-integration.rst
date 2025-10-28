@@ -247,7 +247,7 @@ The framework provides real-time status updates through LangGraph's streaming:
 
 .. code-block:: python
 
-   from configs.streaming import get_streamer
+   from framework.utils.streaming import get_streamer
 
    @capability_node  
    class DataAnalysisCapability(BaseCapability):

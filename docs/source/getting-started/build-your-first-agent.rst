@@ -19,6 +19,48 @@ This tutorial builds on the Hello World foundations to demonstrate **orchestrati
 
    **What's New Here:** Multi-step orchestration with 6 coordinated capabilities, basic RAG integration patterns, dynamic Python execution with human approval workflows, complex data dependencies across multiple capabilities, and application-specific configuration overrides.
 
+Getting Started - Create the Project
+------------------------------------
+
+First, create a new wind turbine project from the template using :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+
+.. code-block:: bash
+
+   framework init turbine-agent --template wind_turbine
+   cd turbine-agent
+
+This generates a complete, self-contained project with the following structure:
+
+.. code-block::
+
+   turbine-agent/                 # Your project directory
+   ├── src/
+   │   └── turbine_agent/         # Package name (derived from project name: turbine-agent → turbine_agent)
+   │       ├── __init__.py
+   │       ├── registry.py
+   │       ├── context_classes.py
+   │       ├── mock_apis.py
+   │       ├── capabilities/
+   │       │   ├── __init__.py
+   │       │   ├── weather_data_retrieval.py
+   │       │   ├── turbine_data_archiver.py
+   │       │   ├── knowledge_retrieval.py
+   │       │   └── turbine_analysis.py
+   │       ├── data_sources/
+   │       │   ├── __init__.py
+   │       │   └── knowledge_provider.py
+   │       └── framework_prompts/
+   │           ├── __init__.py
+   │           └── response_generation.py
+   ├── services/                  # Container service configurations
+   ├── config.yml                 # Complete configuration
+   └── .env.example               # API key template
+
+.. admonition:: New in v0.7+: Template-Based Projects
+   :class: version-07plus-change
+
+   Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/wind_turbine <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/wind_turbine>`_.
+
 🎯 What You'll Learn
 --------------------
 
@@ -145,7 +187,7 @@ Into a **6-step orchestrated execution plan** that looks like this:
       
       **Registry Customization (`WindTurbineRegistryProvider`):**
       
-      - **Framework Exclusions:** Explicitly excludes the generic `python` capability via `framework_exclusions={"capabilities": ["python"]}` to prevent conflicts with the specialized `turbine_analysis` capability
+      - **Framework Exclusions:** Explicitly excludes the generic `python` capability via `exclude_capabilities=["python"]` parameter to prevent conflicts with the specialized `turbine_analysis` capability
       
       - **Custom Registration:** Registers 4 domain-specific capabilities, 4 context classes, 1 data source, and 1 framework prompt provider, all tailored to wind turbine monitoring
       
@@ -161,7 +203,7 @@ Into a **6-step orchestrated execution plan** that looks like this:
       
       - **Logging Colors:** Customizes capability colors for better development experience
       
-      - **Hierarchical Merging:** Application config automatically merges over framework defaults, allowing selective customization without affecting other applications
+      - **Flat Configuration:** Application settings coexist with framework settings in a single config file using unique naming, providing transparent and explicit configuration management
 
 
 Let's explore the integration patterns step by step.
@@ -196,7 +238,7 @@ The wind turbine application uses **4 specialized context classes** that demonst
 - **Analysis Results**: ``AnalysisResultsContext`` stores Python execution outputs with flexible schema
 
 **File Locations:**
-- Full implementations: ``src/applications/wind_turbine/context_classes.py``
+- Full implementations: ``src/turbine_agent/context_classes.py``
 - Basic patterns explained in: :doc:`Hello World Tutorial <hello-world-tutorial>`
 
 Step 2: Mock APIs
@@ -209,7 +251,7 @@ The wind turbine application includes basic mock APIs for tutorial purposes:
 
 These follow the same patterns covered in :ref:`hello-world-tutorial-mock-apis` (type-safe models, async methods, realistic data structures). Nothing special here - just supporting infrastructure to demonstrate the framework's integration patterns.
 
-**File Location:** ``src/applications/wind_turbine/mock_apis.py``
+**File Location:** ``src/turbine_agent/mock_apis.py``
 
 Step 3: Simple Knowledge Integration
 ------------------------------------
@@ -237,7 +279,7 @@ Step 3: Simple Knowledge Integration
 
 **Example Output:** Instead of text like "Excellent performance: Above 85% capacity factor", you get ``{"excellent_efficiency_percent": 85.0}`` ready for Python calculations.
 
-**File Location:** ``src/applications/wind_turbine/data_sources/knowledge_provider.py``
+**File Location:** ``src/turbine_agent/data_sources/knowledge_provider.py``
 
 Step 4: Multi-Capability Coordination
 -------------------------------------
@@ -328,7 +370,7 @@ Step 4: Multi-Capability Coordination
 
 **Key Insight:** The framework's dependency resolution ensures capabilities execute in the correct order and have access to exactly the data they need.
 
-**File Locations:** ``src/applications/wind_turbine/capabilities/``
+**File Locations:** ``src/turbine_agent/capabilities/``
 
 Step 5: Multi-Component Registry Configuration
 ----------------------------------------------
@@ -341,20 +383,27 @@ Step 5: Multi-Component Registry Configuration
 
    class WindTurbineRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
-           return RegistryConfig(
-               # Advanced: Override framework defaults
-               framework_exclusions={
-                   "capabilities": ["python"]  # Use specialized turbine_analysis instead
-               },
-               
+           return extend_framework_registry(
                # Register 4 capabilities with complex dependencies
                capabilities=[
-                   CapabilityRegistration(name="turbine_analysis", requires=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"]),
-                   # ... 3 other capabilities
+                   CapabilityRegistration(
+                       name="turbine_analysis",
+                       module_path="turbine_agent.capabilities.turbine_analysis",
+                       class_name="TurbineAnalysisCapability",
+                       description="Analyze turbine performance",
+                       provides=["ANALYSIS_RESULTS"],
+                       requires=["TURBINE_DATA", "WEATHER_DATA", "TURBINE_KNOWLEDGE"]
+                   ),
+                   # ... 3 other CapabilityRegistration objects
                ],
                
-               # Register knowledge provider for basic RAG integration
-               data_sources=[DataSourceRegistration(name="wind_farm_knowledge", ...)]
+               # Register context classes, data sources, prompt providers
+               context_classes=[...],
+               data_sources=[...],
+               framework_prompt_providers=[...],
+               
+               # Advanced: Exclude framework Python capability
+               exclude_capabilities=["python"]  # Use specialized turbine_analysis instead
            )
 
 **Integration Features:**
@@ -363,7 +412,7 @@ Step 5: Multi-Component Registry Configuration
 - **Data Source Integration**: Knowledge providers for domain expertise
 - **Custom Framework Prompts**: Domain-specific prompt builders for specialized AI behavior
 
-**File Location:** ``src/applications/wind_turbine/registry.py``
+**File Location:** ``src/turbine_agent/registry.py``
 
 Step 6: Custom Framework Prompts
 --------------------------------
@@ -382,7 +431,7 @@ The framework uses generic prompts by default, but you can replace them with dom
 
    .. code-block:: python
 
-      # src/applications/wind_turbine/framework_prompts/response_generation.py
+      # src/turbine_agent/framework_prompts/response_generation.py
       class WindTurbineResponseGenerationPromptBuilder(DefaultResponseGenerationPromptBuilder):
           
           def get_role_definition(self) -> str:
@@ -406,7 +455,7 @@ The framework uses generic prompts by default, but you can replace them with dom
       framework_prompt_providers=[
           FrameworkPromptProviderRegistration(
               application_name="wind_turbine",
-              module_path="applications.wind_turbine.framework_prompts",
+              module_path="turbine_agent.framework_prompts",
               prompt_builders={
                   "response_generation": "WindTurbineResponseGenerationPromptBuilder"
               }
@@ -415,7 +464,7 @@ The framework uses generic prompts by default, but you can replace them with dom
 
    **Result:** The AI now responds with wind turbine expertise - structured tables, industry terminology, proper formatting, and domain-specific analysis patterns.
 
-**File Locations:** ``src/applications/wind_turbine/framework_prompts/response_generation.py``, ``src/applications/wind_turbine/registry.py``
+**File Locations:** ``src/turbine_agent/framework_prompts/response_generation.py``, ``src/turbine_agent/registry.py``
 
 Integration Patterns Mastered
 -----------------------------

@@ -37,7 +37,7 @@ import httpx
 from google import genai
 from google.genai import types as genai_types
 
-from configs.config import get_provider_config
+from framework.utils.config import get_provider_config
 
 
 def _is_typed_dict(cls) -> bool:
@@ -472,12 +472,18 @@ def get_chat_completion(
             http_client=http_client,
         )
 
+        # Determine which token parameter to use based on model
+        # Newer models (GPT-5, o1-*, o3, o4, etc.) require max_completion_tokens
+        # Based on OpenAI API error: "Use 'max_completion_tokens' instead"
+        uses_completion_tokens = any(prefix in model_id.lower() for prefix in ['gpt-5', 'o1-', 'o3', 'o4'])
+        token_param = 'max_completion_tokens' if uses_completion_tokens else 'max_tokens'
+
         if output_model is not None:
             # Use structured outputs with Pydantic model (recommended approach)
             response = client.beta.chat.completions.parse(
                 model=model_id,
                 messages=[{"role": "user", "content": message}],
-                max_tokens=max_tokens,
+                **{token_param: max_tokens},
                 response_format=output_model,
             )
             if not response.choices:
@@ -489,7 +495,7 @@ def get_chat_completion(
             response = client.chat.completions.create(
                 model=model_id,
                 messages=[{"role": "user", "content": message}],
-                max_tokens=max_tokens,
+                **{token_param: max_tokens},
             )
             if not response.choices:
                 raise ValueError("OpenAI API returned empty choices list")

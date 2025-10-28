@@ -33,7 +33,12 @@ The registry system uses a two-tier architecture:
 **Application Registries**
   Domain-specific components (capabilities, context classes, data sources)
 
-Applications register components by implementing ``RegistryConfigProvider`` in their ``registry.py`` module. The framework automatically discovers and loads these using the convention ``applications.{app_name}.registry``.
+Applications register components by implementing ``RegistryConfigProvider`` in their ``registry.py`` module. The framework loads registries from the path specified in configuration:
+
+.. code-block:: yaml
+
+   # config.yml
+   registry_path: ./src/my_app/registry.py
 
 RegistryManager
 ===============
@@ -51,9 +56,9 @@ The ``RegistryManager`` provides centralized access to all framework components:
    registry = get_registry()
    
    # Access components
-   capability = registry.get_capability("pv_address_finding")
-   context_class = registry.get_context_class("PV_ADDRESSES")
-   data_source = registry.get_data_source("experiment_database")
+   capability = registry.get_capability("weather_data_retrieval")
+   context_class = registry.get_context_class("WEATHER_DATA")
+   data_source = registry.get_data_source("knowledge_base")
 
 **Key Methods:**
 
@@ -65,37 +70,84 @@ The ``RegistryManager`` provides centralized access to all framework components:
 Application Registry Implementation
 ===================================
 
-Applications implement ``RegistryConfigProvider`` to define their components:
+Applications implement registries using the ``RegistryConfigProvider`` interface with the ``extend_framework_registry()`` helper:
 
 .. code-block:: python
 
-   # applications/my_app/registry.py
+   # src/my_app/registry.py
    from framework.registry import (
-       RegistryConfigProvider, RegistryConfig,
-       CapabilityRegistration, ContextClassRegistration
+       extend_framework_registry,
+       CapabilityRegistration,
+       ContextClassRegistration,
+       RegistryConfig,
+       RegistryConfigProvider
    )
    
    class MyAppRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
-           return RegistryConfig(
+           return extend_framework_registry(
                capabilities=[
                    CapabilityRegistration(
-                       name="my_capability",
-                       module_path="applications.my_app.capabilities.my_capability",
-                       class_name="MyCapability",
-                       description="My application capability",
-                       provides=["MY_CONTEXT"],
-                       requires=[]
+                       name="weather_data_retrieval",
+                       module_path="my_app.capabilities.weather_data_retrieval",
+                       class_name="WeatherDataRetrievalCapability",
+                       description="Retrieve weather data for analysis",
+                       provides=["WEATHER_DATA"],
+                       requires=["TIME_RANGE"]
                    )
                ],
                context_classes=[
                    ContextClassRegistration(
-                       context_type="MY_CONTEXT",
-                       module_path="applications.my_app.context_classes",
-                       class_name="MyContext"
+                       context_type="WEATHER_DATA",
+                       module_path="my_app.context_classes",
+                       class_name="WeatherDataContext"
                    )
                ]
            )
+
+The ``extend_framework_registry()`` helper automatically includes all framework capabilities (memory, Python execution, time parsing, etc.) while adding your application-specific components.
+
+**Advanced Options:**
+
+.. code-block:: python
+
+   return extend_framework_registry(
+
+       # Exclude generic Python capability (replaced with specialized turbine_analysis)
+       exclude_capabilities=["python"],
+
+       capabilities=[
+           # Specialized analysis replaces generic Python capability
+           CapabilityRegistration(
+               name="turbine_analysis",
+               module_path="my_app.capabilities.turbine_analysis",
+               class_name="TurbineAnalysisCapability",
+               description="Analyze turbine performance with domain-specific logic",
+               provides=["ANALYSIS_RESULTS"],
+               requires=["TURBINE_DATA", "WEATHER_DATA"]
+           )
+       ],
+       context_classes=[...],
+       
+       # Add data sources
+       data_sources=[
+           DataSourceRegistration(
+               name="knowledge_base",
+               module_path="my_app.data_sources.knowledge",
+               class_name="KnowledgeProvider",
+               description="Domain knowledge retrieval"
+           )
+       ],
+       
+       # Add custom framework prompt providers
+       framework_prompt_providers=[
+           FrameworkPromptProviderRegistration(
+               application_name="my_app",
+               module_path="my_app.framework_prompts",
+               prompt_builders={"response_generation": "CustomResponseBuilder"}
+           )
+       ]
+   )
 
 Component Registration
 ======================
@@ -104,56 +156,64 @@ Component Registration
 
 .. code-block:: python
 
-   # Registration in registry.py
+   # In registry.py
    CapabilityRegistration(
-       name="pv_address_finding",
-       module_path="applications.als_assistant.capabilities.pv_address_finding",
-       class_name="PVAddressFindingCapability",
-       description="Find Process Variable addresses",
-       provides=["PV_ADDRESSES"],
-       requires=[]
+       name="weather_data_retrieval",
+       module_path="my_app.capabilities.weather_data_retrieval",
+       class_name="WeatherDataRetrievalCapability",
+       description="Retrieve weather data for analysis",
+       provides=["WEATHER_DATA"],
+       requires=["TIME_RANGE"]
    )
 
-   # Implementation in capability file
+   # Implementation in src/my_app/capabilities/weather_data_retrieval.py
+   from framework.base import BaseCapability, capability_node
+   
    @capability_node
-   class PVAddressFindingCapability(BaseCapability):
-       name = "pv_address_finding"
-       description = "Find Process Variable addresses"
+   class WeatherDataRetrievalCapability(BaseCapability):
+       name = "weather_data_retrieval"
+       description = "Retrieve weather data for analysis"
+       provides = ["WEATHER_DATA"]
+       requires = ["TIME_RANGE"]
        
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
            # Implementation here
-           return {"success": True}
+           return {"weather_data": data}
 
 **Context Class Registration:**
 
 .. code-block:: python
 
-   # Registration
+   # In registry.py
    ContextClassRegistration(
-       context_type="PV_ADDRESSES",
-       module_path="applications.als_assistant.context_classes",
-       class_name="PVAddresses"
+       context_type="WEATHER_DATA",
+       module_path="my_app.context_classes",
+       class_name="WeatherDataContext"
    )
 
-   # Implementation
-   class PVAddresses(CapabilityContext):
-       CONTEXT_TYPE = "PV_ADDRESSES"
+   # Implementation in src/my_app/context_classes.py
+   from framework.context.base import CapabilityContext
+   
+   class WeatherDataContext(CapabilityContext):
+       CONTEXT_TYPE: ClassVar[str] = "WEATHER_DATA"
+       CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
        
-       pvs: List[str]
-       search_query: str
+       location: str
+       temperature: float
+       conditions: str
        timestamp: datetime
 
 **Data Source Registration:**
 
 .. code-block:: python
 
+   # In registry.py
    DataSourceRegistration(
-       name="experiment_database",
-       module_path="applications.als_assistant.database.experiment_database",
-       class_name="ExperimentDatabaseProvider",
-       description="Experiment database access",
-       health_check_required=True
+       name="knowledge_base",
+       module_path="my_app.data_sources.knowledge",
+       class_name="KnowledgeProvider",
+       description="Domain knowledge retrieval"
    )
 
 Registry Initialization and Usage
@@ -170,14 +230,14 @@ Registry Initialization and Usage
    registry = get_registry()
    
    # Get capabilities
-   capability = registry.get_capability("pv_address_finding")
+   capability = registry.get_capability("weather_data_retrieval")
    all_capabilities = registry.get_all_capabilities()
    
    # Get context classes
-   pv_context_class = registry.get_context_class("PV_ADDRESSES")
+   weather_context_class = registry.get_context_class("WEATHER_DATA")
    
    # Get data sources
-   db_provider = registry.get_data_source("experiment_database")
+   knowledge_provider = registry.get_data_source("knowledge_base")
 
 **Registry Export for External Tools:**
 
@@ -220,42 +280,46 @@ Components are loaded lazily during registry initialization:
 4. **Services** - Internal LangGraph service graphs
 5. **Capabilities** - Domain-specific functionality
 
-Best Practices
-==============
+Best Practices and Troubleshooting
+===================================
 
-**Registry Configuration:**
-- Keep registrations simple and focused
-- Use clear, descriptive names and descriptions
-- Define ``provides`` and ``requires`` accurately for dependency tracking
+.. tab-set::
 
-**Capability Implementation:**
-- Always use ``@capability_node`` decorator
-- Implement required attributes: ``name``, ``description``
-- Make ``execute()`` method static and async
-- Return dictionary of state updates
+   .. tab-item:: Best Practices
 
-**Application Structure:**
-- Place registry in ``applications/{app_name}/registry.py``
-- Implement exactly one ``RegistryConfigProvider`` class
-- Organize capabilities in ``capabilities/`` directory
+      **Registry Configuration:**
+         - Keep registrations simple and focused
+         - Use clear, descriptive names and descriptions
+         - Define ``provides`` and ``requires`` accurately for dependency tracking
 
-Common Issues
-=============
+      **Capability Implementation:**
+         - Always use ``@capability_node`` decorator
+         - Implement required attributes: ``name``, ``description``
+         - Make ``execute()`` method static and async
+         - Return dictionary of state updates
 
-**Component Not Found:**
-1. Verify component is registered in ``RegistryConfigProvider``
-2. Check module path and class name are correct
-3. Ensure ``initialize_registry()`` was called
+      **Application Structure:**
+         - Place registry in ``src/{app_name}/registry.py``
+         - Implement exactly one ``RegistryConfigProvider`` class per application
+         - Organize capabilities in ``src/{app_name}/capabilities/`` directory
+         - Configure registry location in ``config.yml`` via ``registry_path``
 
-**Missing @capability_node:**
-1. Ensure ``@capability_node`` decorator is applied
-2. Verify ``name`` and ``description`` class attributes exist
-3. Check that ``execute()`` method is implemented as static method
+   .. tab-item:: Common Issues
 
-**Registry Export Issues:**
-1. Check that export directory is writable and accessible
-2. Verify ``auto_export=True`` during initialization for automatic exports
-3. Use manual ``export_registry_to_json()`` for debugging specific states
+      **Component Not Found:**
+         1. Verify component is registered in ``RegistryConfigProvider``
+         2. Check module path and class name are correct
+         3. Ensure ``initialize_registry()`` was called
+
+      **Missing @capability_node:**
+         1. Ensure ``@capability_node`` decorator is applied
+         2. Verify ``name`` and ``description`` class attributes exist
+         3. Check that ``execute()`` method is implemented as static method
+
+      **Registry Export Issues:**
+         1. Check that export directory is writable and accessible
+         2. Verify ``auto_export=True`` during initialization for automatic exports
+         3. Use manual ``export_registry_to_json()`` for debugging specific states
 
 .. seealso::
    :doc:`05_message-and-execution-flow`

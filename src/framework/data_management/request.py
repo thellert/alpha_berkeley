@@ -55,7 +55,7 @@ def create_data_source_request(
     # Extract user ID from session context
     user_id = None
     try:
-        from configs.config import get_session_info
+        from framework.utils.config import get_session_info
         session_info = get_session_info()
         user_id = session_info.get("user_id")
     except Exception:

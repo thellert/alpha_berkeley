@@ -57,8 +57,8 @@ from .messages import MessageUtils
 from framework.base.planning import ExecutionPlan, PlannedStep
 from framework.context.base import CapabilityContext
 from framework.context.context_manager import ContextManager
-from configs.config import get_agent_control_defaults as _get_agent_control_defaults
-from configs.logger import get_logger
+from framework.utils.config import get_agent_control_defaults as _get_agent_control_defaults
+from framework.utils.logger import get_logger
 
 # LangGraph native imports
 from langchain_core.messages import BaseMessage, HumanMessage

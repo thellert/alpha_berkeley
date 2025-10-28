@@ -6,16 +6,37 @@
 
 An open-source, domain-agnostic, capability-based architecture for building intelligent agents that can be adapted to any specific domain.
 
-**📢 Conference Update**  
-Our work "Agentic Systems in Accelerator Control and Optimization" will be presented as a contributed **oral presentation** at [ICALEPCS'25](https://indico.jacow.org/event/86/overview).
+**📄 Research**  
+This work was presented as a contributed oral presentation at [ICALEPCS'25](https://indico.jacow.org/event/86/overview) and will be featured at the [Machine Learning and the Physical Sciences Workshop](https://ml4physicalsciences.github.io/2025/) at NeurIPS 2025.
+
+
+## 🚀 Quick Start
+
+```bash
+# Install the framework
+pip install alpha-berkeley-framework
+
+# Create a new project from a template
+framework init my-weather-agent --template hello_world_weather
+
+# Navigate to your project
+cd my-weather-agent
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start the command line chat interface
+framework chat
+
+# Or use the web interface at http://localhost:8080
+```
+
 
 ## 📚 Documentation
 
 **[📖 Read the Full Documentation →](https://thellert.github.io/alpha_berkeley)**
 
-## Quick Links
-
-- **[🚀 Getting Started](https://thellert.github.io/alpha_berkeley/getting-started/)** - Complete learning path from setup to building sophisticated agents
 
 ## Key Features
 

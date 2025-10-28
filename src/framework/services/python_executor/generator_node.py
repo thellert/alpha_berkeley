@@ -9,15 +9,15 @@ import textwrap
 from typing import List, Dict, Any
 
 from framework.models import get_chat_completion
-from configs.logger import get_logger
-from configs.config import get_model_config
-from configs.streaming import get_streamer
+from framework.utils.logger import get_logger
+from framework.utils.config import get_model_config
+from framework.utils.streaming import get_streamer
 
 from .exceptions import CodeGenerationError, MaxAttemptsExceededError
 from .models import PythonExecutionState
 from .services import FileManager, NotebookManager
 
-logger = get_logger("framework", "python_generator")
+logger = get_logger("python_generator")
 
 
 class LLMCodeGenerator:
@@ -162,7 +162,7 @@ def create_generator_node():
             logger.error(f"NO REQUEST FOUND IN STATE! State content: {state}")
         
         # Define streaming helper here for step awareness
-        streamer = get_streamer("python_executor", "generator", state)
+        streamer = get_streamer("python_generator", state)
         streamer.status("Generating Python code...")
         
         # Use existing code generator logic - access request data via state.request

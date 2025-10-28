@@ -12,7 +12,7 @@ from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
 
-from configs.config import get_framework_service_config, get_session_info, get_agent_dir
+from framework.utils.config import get_framework_service_config, get_session_info, get_agent_dir
 from framework.state import UserMemories
 
 try:
@@ -187,7 +187,7 @@ class MemoryStorageManager:
                         )
                         memory_contents.append(memory_content)
             
-            logger.info(f"Retrieved {len(memory_contents)} memory entries for user {user_id}")
+            logger.debug(f"Retrieved {len(memory_contents)} memory entries for user {user_id}")
             return memory_contents
             
         except Exception as e:

@@ -39,8 +39,8 @@ Gateway Class
       ~Gateway._detect_approval_response
       ~Gateway._extract_resume_payload
       ~Gateway._clear_approval_state
-      ~Gateway._parse_slash_commands
-      ~Gateway._apply_slash_commands
+      ~Gateway._process_slash_commands
+      ~Gateway._register_agent_commands
 
 Gateway Result
 --------------

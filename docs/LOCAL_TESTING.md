@@ -25,7 +25,7 @@ That's it! This single command:
 
 ## Troubleshooting
 
-- **Import errors**: Check that new modules are either in `requirements.txt` or mocked in `conf.py`
+- **Import errors**: Check that new modules are either in `pyproject.toml` dependencies or mocked in `conf.py`
 - **Missing files**: Ensure all documented modules have proper `__init__.py` files
 - **Build fails**: Run `make clean` then try again
 
