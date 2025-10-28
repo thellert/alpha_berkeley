@@ -3,7 +3,7 @@ Classification
 
 .. currentmodule:: framework.infrastructure.classification_node
 
-Infrastructure node that handles task classification and capability selection by analyzing user tasks against available capabilities.
+Infrastructure node that handles task classification and capability selection by analyzing user tasks against available capabilities using parallel processing with semaphore-controlled concurrency.
 
 ClassificationNode
 ------------------
@@ -18,6 +18,16 @@ Supporting Functions
 --------------------
 
 .. autofunction:: select_capabilities
+
+.. autofunction:: _detect_reclassification_scenario
+
+CapabilityClassifier
+--------------------
+
+.. autoclass:: CapabilityClassifier
+   :members:
+   :show-inheritance:
+   :special-members: __init__
 
 Core Models
 -----------

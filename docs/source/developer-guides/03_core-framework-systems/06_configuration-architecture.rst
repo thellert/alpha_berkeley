@@ -1,6 +1,6 @@
-========================
+==========================
 Configuration Architecture
-========================
+==========================
 
 **What you'll learn:** How the framework's self-contained configuration system works, configuration templates, and environment variable integration.
 
@@ -91,6 +91,7 @@ Project Configuration
      limits:
        max_step_retries: 3
        graph_recursion_limit: 100
+       max_concurrent_classifications: 5
    
    # API providers
    api:

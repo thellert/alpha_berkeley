@@ -72,6 +72,8 @@ Runtime Information
 
 .. autofunction:: get_agent_control_defaults
 
+.. autofunction:: get_classification_config
+
 Development Utilities
 ---------------------
 
@@ -351,6 +353,7 @@ execution_control.limits
        max_step_retries: 3
        max_execution_time_seconds: 3000
        graph_recursion_limit: 100
+       max_concurrent_classifications: 5
 
 **Fields:**
 
@@ -384,6 +387,14 @@ execution_control.limits
 
    - Default: ``100``
    - Prevents infinite state graph loops
+
+``max_concurrent_classifications`` (integer)
+   Maximum concurrent LLM classification requests
+
+   - Default: ``5``
+   - Controls parallel capability classification to prevent API flooding
+   - Balances performance with API rate limits
+   - Higher values = faster classification but more API load
 
 System Configuration
 ====================
@@ -1169,6 +1180,7 @@ Complete Configuration Example
        max_step_retries: 3
        max_execution_time_seconds: 3000
        graph_recursion_limit: 100
+       max_concurrent_classifications: 5
    
    system:
      timezone: ${TZ:-America/Los_Angeles}

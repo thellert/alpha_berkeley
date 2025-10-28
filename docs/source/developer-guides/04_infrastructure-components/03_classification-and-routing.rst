@@ -44,11 +44,16 @@ Classification Architecture
            current_task = state.get("task_current_task")
            available_capabilities = registry.get_all_capabilities()
            
-           # Run capability selection
+           # Detect reclassification scenario from error state
+           previous_failure = _detect_reclassification_scenario(state)
+           
+           # Run parallel capability selection with concurrency control
            active_capabilities = await select_capabilities(
                task=current_task,
                available_capabilities=available_capabilities,
-               state=state
+               state=state,
+               logger=logger,
+               previous_failure=previous_failure
            )
            
            return {
@@ -56,6 +61,18 @@ Classification Architecture
                "planning_execution_plan": None,
                "planning_current_step_index": 0
            }
+
+**Parallel Classification Components:**
+
+.. code-block:: python
+
+   class CapabilityClassifier:
+       """Handles individual capability classification with proper resource management."""
+       
+       async def classify(self, capability: BaseCapability, semaphore: asyncio.Semaphore) -> bool:
+           """Classify a single capability with semaphore-controlled concurrency."""
+           async with semaphore:  # Proper semaphore usage
+               return await self._perform_classification(capability)
 
 Capability Selection Process
 ----------------------------
@@ -72,28 +89,45 @@ Capability Selection Process
        if capability.name in always_active_names:
            active_capabilities.append(capability.name)
 
-**Step 2: LLM-Based Classification**
+**Step 2: Parallel LLM-Based Classification**
 
 .. code-block:: python
 
-   # Classify remaining capabilities using few-shot examples
-   for capability in remaining_capabilities:
-       classifier = capability.classifier_guide
-       
-       # Build classification prompt with examples
-       system_prompt = classification_builder.get_system_instructions(
-           capability_instructions=classifier.instructions,
-           classifier_examples=examples_string
-       )
-       
-       # LLM classification with structured output
-       response = await get_chat_completion(
-           message=f"{system_prompt}\n\nUser request:\n{task}",
-           output_model=CapabilityMatch
-       )
-       
-       if response.is_match:
+   # Get classification configuration for concurrency control
+   classification_config = get_classification_config()
+   max_concurrent = classification_config['max_concurrent_classifications']
+   
+   # Create classifier instance with shared context
+   classifier = CapabilityClassifier(task, state, logger, previous_failure)
+   
+   # Create semaphore for concurrency control
+   semaphore = asyncio.Semaphore(max_concurrent)
+   
+   # Create classification tasks with proper semaphore usage
+   classification_tasks = [
+       classifier.classify(capability, semaphore)
+       for capability in remaining_capabilities
+   ]
+   
+   # Execute all classifications in parallel with semaphore control
+   classification_results = await asyncio.gather(*classification_tasks, return_exceptions=True)
+   
+   # Process results and collect active capabilities
+   for capability, result in zip(remaining_capabilities, classification_results):
+       if isinstance(result, Exception):
+           logger.error(f"Classification failed for capability '{capability.name}': {result}")
+           continue
+       elif result is True:
            active_capabilities.append(capability.name)
+
+The parallel classification system includes configurable concurrency limits to balance performance with API rate limits:
+
+.. code-block:: yaml
+
+   # config.yml
+   execution_control:
+     limits:
+       max_concurrent_classifications: 5  # Maximum concurrent LLM requests
 
 .. dropdown:: Bypass LLM-based Capability Selection
    :color: secondary
