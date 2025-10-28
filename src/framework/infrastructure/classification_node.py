@@ -22,7 +22,7 @@ from framework.registry import get_registry
 from framework.base import BaseCapability, ClassifierExample, CapabilityMatch
 from framework.models import get_chat_completion
 from framework.prompts.loader import get_framework_prompts
-from framework.utils.config import get_model_config
+from framework.utils.config import get_model_config, get_classification_config
 from framework.utils.logger import get_logger
 from framework.utils.streaming import get_streamer
 from framework.base.errors import ErrorClassification, ErrorSeverity
@@ -196,8 +196,10 @@ class ClassificationNode(BaseInfrastructureNode):
             )
         
         # Original classification logic continues here...
-        # Get previous failure context (may be None for initial classification)
-        previous_failure = state.get('control_reclassification_reason')
+        
+        # Detect reclassification scenario from error state
+        previous_failure = _detect_reclassification_scenario(state)
+        
         reclassification_count = state.get('control_reclassification_count', 0)
         
         if previous_failure:
@@ -265,9 +267,24 @@ def _create_classification_result(
     :return: Complete state update dictionary for LangGraph
     """
     reclassification_count = state.get('control_reclassification_count', 0)
-    # Only increment if this is actually a reclassification
+    
+    # Initialize error state cleanup as empty - only populate if this is a reclassification
+    error_state_cleanup = {}
+    
+    # Only increment and clear error state if this is actually a reclassification
     if previous_failure:
         reclassification_count += 1
+        logger.info(f"Incremented reclassification count to {reclassification_count} due to previous failure: {previous_failure}")
+        
+        # Clear error state since we're handling the reclassification
+        # This is safe because classifier provides a fresh start with new capabilities
+        error_state_cleanup = {
+            "control_has_error": False,
+            "control_error_info": None,
+            "control_last_error": None,
+            "control_retry_count": 0,
+            "control_current_step_retry_count": 0
+        }
     
     # Planning state updates
     planning_fields = {
@@ -295,7 +312,137 @@ def _create_classification_result(
         bypass_mode=is_bypass
     )
     
-    return {**planning_fields, **control_flow_update, **status_event}
+    return {**planning_fields, **control_flow_update, **error_state_cleanup, **status_event}
+
+
+def _detect_reclassification_scenario(state: AgentState) -> Optional[str]:
+    """Detect if this classification is a reclassification due to a previous error.
+    
+    Analyzes the current agent state to determine if this classification run
+    is happening because a previous capability (like orchestrator) failed and
+    requested reclassification.
+    
+    :param state: Current agent state containing error information
+    :type state: AgentState
+    :return: Reclassification reason string if this is a reclassification, None otherwise
+    :rtype: Optional[str]
+    """
+    # Check if there's an active error state
+    has_error = state.get('control_has_error', False)
+    if not has_error:
+        return None
+    
+    # Extract error information
+    error_info = state.get('control_error_info', {})
+    error_classification = error_info.get('classification')
+    
+    # Validate error classification exists and has required attributes
+    if not error_classification or not hasattr(error_classification, 'severity'):
+        return None
+    
+    # Check if this is specifically a reclassification error
+    try:
+        is_reclassification = error_classification.severity.name == 'RECLASSIFICATION'
+    except AttributeError:
+        # Handle case where severity doesn't have .name attribute
+        is_reclassification = str(error_classification.severity) == 'RECLASSIFICATION'
+    
+    if not is_reclassification:
+        return None
+    
+    # Build reclassification reason string
+    capability_name = error_info.get('capability_name', 'unknown')
+    user_message = getattr(error_classification, 'user_message', None) or 'Reclassification required'
+    
+    return f"Capability {capability_name} requested reclassification: {user_message}"
+
+class CapabilityClassifier:
+    """Handles individual capability classification with proper resource management."""
+    
+    def __init__(self, task: str, state: AgentState, logger, previous_failure: Optional[str] = None):
+        self.task = task
+        self.state = state
+        self.logger = logger
+        self.previous_failure = previous_failure
+    
+    async def classify(self, capability: BaseCapability, semaphore: asyncio.Semaphore) -> bool:
+        """Classify a single capability with semaphore-controlled concurrency.
+        
+        :param capability: The capability to analyze
+        :param semaphore: Semaphore for concurrency control
+        :return: True if capability is required, False otherwise
+        """
+        async with semaphore:  # Proper semaphore usage
+            return await self._perform_classification(capability)
+    
+    async def _perform_classification(self, capability: BaseCapability) -> bool:
+        """Perform the actual classification logic."""
+        # Validate classifier availability
+        classifier = self._get_classifier(capability)
+        if not classifier:
+            return False
+        
+        # Build classification prompt
+        message = self._build_classification_prompt(classifier)
+        self.logger.debug(f"\n\nTask Analyzer System Prompt for capability '{capability.name}':\n{message}\n\n")
+        
+        # Execute classification
+        try:
+            response_data = await asyncio.to_thread(
+                get_chat_completion,
+                model_config=get_model_config("framework", "classifier"),
+                message=message,
+                output_model=CapabilityMatch,
+            )
+            
+            result = self._process_classification_response(capability, response_data)
+            self.logger.info(f" >>> Capability '{capability.name}' >>> {result}")
+            return result
+            
+        except Exception as e:
+            self.logger.error(f"Error in capability classification for '{capability.name}': {e}")
+            return False
+    
+    def _get_classifier(self, capability: BaseCapability):
+        """Get classifier with proper error handling."""
+        try:
+            classifier = capability.classifier_guide
+            if not classifier:
+                self.logger.warning(f"No classifier found for capability '{capability.name}' - skipping")
+                return None
+            return classifier
+        except Exception as e:
+            self.logger.error(f"Error loading classifier for capability '{capability.name}': {e}")
+            # For import errors, skip this capability instead of failing entire classification
+            if isinstance(e, (ImportError, ModuleNotFoundError, NameError)):
+                self.logger.warning(f"Skipping capability '{capability.name}' due to import error: {e}")
+                return None
+            # For other errors, re-raise with capability context for better error reporting
+            raise Exception(f"Capability '{capability.name}' classifier failed: {e}") from e
+    
+    def _build_classification_prompt(self, classifier) -> str:
+        """Build the classification prompt."""
+        capability_instructions = classifier.instructions
+        examples_string = ClassifierExample.join(classifier.examples, randomize=True)
+        
+        prompt_provider = get_framework_prompts()
+        classification_builder = prompt_provider.get_classification_prompt_builder()
+        system_prompt = classification_builder.get_system_instructions(
+            capability_instructions=capability_instructions,
+            classifier_examples=examples_string,
+            context=None,
+            previous_failure=self.previous_failure
+        )
+        return f"{system_prompt}\n\nUser request:\n{self.task}"
+    
+    def _process_classification_response(self, capability: BaseCapability, response_data) -> bool:
+        """Process and validate classification response."""
+        if isinstance(response_data, CapabilityMatch):
+            return response_data.is_match
+        else:
+            self.logger.error(f"Classification call for '{capability.name}' did not return a CapabilityMatch. Got: {type(response_data)}")
+            return False
+
 
 async def select_capabilities(
     task: str,
@@ -303,7 +450,7 @@ async def select_capabilities(
     state: AgentState,
     logger,
     previous_failure: Optional[str] = None
-) -> List[str]:  # Return capability names instead of instances
+) -> List[str]:
     """Select capabilities needed for the task by using classification.
     
     :param task: Task description for analysis
@@ -313,6 +460,7 @@ async def select_capabilities(
     :param state: Current agent state
     :type state: AgentState
     :param logger: Logger instance
+    :param previous_failure: Previous failure reason for reclassification context
     :return: List of capability names needed for the task
     :rtype: List[str]
     """
@@ -321,89 +469,47 @@ async def select_capabilities(
     registry = get_registry()
     always_active_names = registry.get_always_active_capability_names()
     
-    active_capabilities: List[str] = []  # Store capability names instead of instances
+    active_capabilities: List[str] = []
     
     # Step 1: Add always-active capabilities from registry configuration
     for capability in available_capabilities:
         if capability.name in always_active_names:
-            active_capabilities.append(capability.name)  # Store name instead of instance
+            active_capabilities.append(capability.name)
     
     # Step 2: Classify remaining capabilities (those not marked as always_active)
     remaining_capabilities = [cap for cap in available_capabilities if cap.name not in always_active_names]
     
-    # Classify each remaining capability
-    for capability in remaining_capabilities:
-        is_required = await _classify_capability(capability, task, state, logger, previous_failure)
+    if remaining_capabilities:
+        # Get classification configuration for concurrency control
+        classification_config = get_classification_config()
+        max_concurrent = classification_config['max_concurrent_classifications']
         
-        if is_required:
-            active_capabilities.append(capability.name)  # Store name instead of instance
+        logger.info(f"Classifying {len(remaining_capabilities)} capabilities with max {max_concurrent} concurrent requests")
+        
+        # Create classifier instance with shared context
+        classifier = CapabilityClassifier(task, state, logger, previous_failure)
+        
+        # Create semaphore for concurrency control
+        semaphore = asyncio.Semaphore(max_concurrent)
+        
+        # Create classification tasks with proper semaphore usage
+        classification_tasks = [
+            classifier.classify(capability, semaphore)
+            for capability in remaining_capabilities
+        ]
+        
+        # Execute all classifications in parallel with semaphore control
+        classification_results = await asyncio.gather(*classification_tasks, return_exceptions=True)
+        
+        # Process results and collect active capabilities
+        for capability, result in zip(remaining_capabilities, classification_results):
+            if isinstance(result, Exception):
+                logger.error(f"Classification failed for capability '{capability.name}': {result}")
+                # Skip failed classifications - don't activate capability on error
+                continue
+            elif result is True:
+                active_capabilities.append(capability.name)
     
     logger.info(f"{len(active_capabilities)} capabilities required: {active_capabilities}")
     return active_capabilities
-
-
-async def _classify_capability(capability: BaseCapability, task: str, state: AgentState, logger, previous_failure: Optional[str] = None) -> bool:
-    """Classify a single capability to determine if it's needed.
-    
-    :param capability: The capability to analyze
-    :type capability: BaseCapability
-    :param task: Task description for analysis
-    :type task: str
-    :param state: Current agent state
-    :type state: AgentState
-    :param logger: Logger instance
-    :return: True if capability is required, False otherwise
-    :rtype: bool
-    """
-    # Skip capabilities without classifiers - handle errors during classifier loading
-    try:
-        classifier = capability.classifier_guide
-        if not classifier:
-            logger.warning(f"No classifier found for capability '{capability.name}' - skipping")
-            return False
-    except Exception as e:
-        logger.error(f"Error loading classifier for capability '{capability.name}': {e}")
-        # For import errors, skip this capability instead of failing entire classification
-        if isinstance(e, (ImportError, ModuleNotFoundError, NameError)):
-            logger.warning(f"Skipping capability '{capability.name}' due to import error: {e}")
-            return False
-        # For other errors, re-raise with capability context for better error reporting
-        raise Exception(f"Capability '{capability.name}' classifier failed: {e}") from e
-        
-    capability_instructions = classifier.instructions
-    examples_string = ClassifierExample.join(classifier.examples, randomize=True)
-    
-    # Get classification prompt directly
-    prompt_provider = get_framework_prompts()
-    classification_builder = prompt_provider.get_classification_prompt_builder()
-    system_prompt = classification_builder.get_system_instructions(
-        capability_instructions=capability_instructions,
-        classifier_examples=examples_string,
-        context=None,
-        previous_failure=previous_failure
-    )
-    message = f"{system_prompt}\n\nUser request:\n{task}"
-    
-    logger.debug(f"\n\nTask Analyzer System Prompt for capability '{capability.name}':\n{message}\n\n")
-
-    try:
-        response_data = await asyncio.to_thread(
-            get_chat_completion,
-            model_config=get_model_config("framework", "classifier"),
-            message=message,
-            output_model=CapabilityMatch,
-        )
-        
-        if isinstance(response_data, CapabilityMatch):
-            single_output = response_data
-        else:
-            logger.error(f"Classification call for '{capability.name}' did not return a CapabilityMatch. Got: {type(response_data)}")
-            single_output = CapabilityMatch(is_match=False)
-        
-        logger.info(f" >>> Capability '{capability.name}' >>> {single_output.is_match}")
-        return single_output.is_match
-
-    except Exception as e:
-        logger.error(f"Error in capability classification for '{capability.name}': {e}")
-        return False
 

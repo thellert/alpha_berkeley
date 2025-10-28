@@ -251,6 +251,7 @@ class ConfigBuilder:
             "max_planning_attempts": self._require_config('execution_control.limits.max_planning_attempts', 2),
             "max_step_retries": self._require_config('execution_control.limits.max_step_retries', 0),
             "max_execution_time_seconds": self._require_config('execution_control.limits.max_execution_time_seconds', 300),
+            "max_concurrent_classifications": self._require_config('execution_control.limits.max_concurrent_classifications', 5),
         }
     
     def _build_agent_control_defaults(self) -> Dict[str, Any]:
@@ -664,6 +665,30 @@ def get_config_value(path: str, default: Any = None) -> Any:
             return default
     
     return value
+
+
+def get_classification_config() -> Dict[str, Any]:
+    """
+    Get classification configuration with sensible defaults.
+    
+    Controls parallel LLM-based capability classification to prevent API flooding
+    while maintaining reasonable performance during task analysis.
+    
+    Returns:
+        Dictionary with classification configuration including concurrency limits
+        
+    Examples:
+        >>> config = get_classification_config()
+        >>> max_concurrent = config.get('max_concurrent_classifications', 5)
+    """
+    configurable = _get_configurable()
+    
+    # Get classification concurrency limit from execution_control.limits (consistent with other limits)
+    max_concurrent = configurable.get("execution_limits", {}).get("max_concurrent_classifications", 5)
+    
+    return {
+        "max_concurrent_classifications": max_concurrent
+    }
 
 
 def get_full_configuration() -> Dict[str, Any]:

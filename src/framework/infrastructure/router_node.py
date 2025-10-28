@@ -152,10 +152,9 @@ def router_conditional_edge(state: AgentState) -> str:
                 max_reclassifications = limits.get('max_reclassifications', 1)
                 
                 if current_reclassifications < max_reclassifications:
-                    # Set reclassification reason for classifier context and route to classifier
+                    # Route to classifier for reclassification (state will be updated by classifier)
                     logger.error(f"Router: Reclassification error in {capability_name}, routing to classifier "
                                f"(attempt #{current_reclassifications + 1}/{max_reclassifications})")
-                    state['control_reclassification_reason'] = f"Capability {capability_name} requested reclassification: {error_classification.user_message}"
                     return "classifier"
                 else:
                     # Reclassification attempts exhausted - route to error node
