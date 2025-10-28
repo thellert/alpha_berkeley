@@ -120,6 +120,9 @@ After creating and activating the virtual environment, install the framework pac
       # Recommended: Core + scientific computing
       pip install alpha-berkeley-framework[scientific]
       
+      # Core + documentation
+      pip install alpha-berkeley-framework[docs]
+      
       # Everything (includes docs, dev tools, etc.)
       pip install alpha-berkeley-framework[all]
 
@@ -162,7 +165,7 @@ Available templates:
       │       ├── __init__.py
       │       ├── mock_weather_api.py      # Data source
       │       ├── context_classes.py       # Data models
-      │       ├── registry.py               # Component registration
+      │       ├── registry.py              # Component registration
       │       └── capabilities/
       │           ├── __init__.py
       │           └── current_weather.py   # Business logic
@@ -313,14 +316,14 @@ The generated project includes both a ``config.yml`` configuration file and a ``
            
            Example: ``localhost,127.0.0.1,.internal``
 
-        .. note::
-           **Security & Multi-Machine Workflow:**
-           
-           - The framework automatically loads ``.env`` from your project root
-           - **Keep ``.env`` in ``.gitignore``** to protect secrets from version control
-           - Environment variables in ``config.yml`` are resolved using ``${VARIABLE_NAME}`` syntax
-           - **Best practice:** Keep one ``config.yml`` (in git), but different ``.env`` files per machine (NOT in git)
-           - Example: ``.env.laptop``, ``.env.controlroom``, ``.env.server`` - copy the appropriate one to ``.env`` when running on that machine
+.. note::
+   **Security & Multi-Machine Workflow:**
+   
+   - The framework automatically loads ``.env`` from your project root
+   - **Keep ``.env`` in ``.gitignore``** to protect secrets from version control
+   - Environment variables in ``config.yml`` are resolved using ``${VARIABLE_NAME}`` syntax
+   - **Best practice:** Keep one ``config.yml`` (in git), but different ``.env`` files per machine (NOT in git)
+   - Example: ``.env.laptop``, ``.env.controlroom``, ``.env.server`` - copy the appropriate one to ``.env`` when running on that machine
 
 Documentation
 ~~~~~~~~~~~~~
@@ -456,6 +459,7 @@ For optimal performance and user experience, consider these additional configura
 .. tab-set::
 
     .. tab-item:: Model Management
+       :name: model-management
 
         **Making Models Public:**
 
@@ -483,7 +487,7 @@ For optimal performance and user experience, consider these additional configura
         3. Change from **Current Model** to any local Ollama model (e.g., ``mistral:7b``, ``llama3:8b``)
         4. This prevents title generation from consuming your main agent's resources
 
-        Note that this model needs to be public as well (see `Model Management`_ section to the left).
+        Note that this model needs to be public as well (see :ref:`model-management` section to the left).
 
     .. tab-item:: Buttons
 

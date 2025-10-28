@@ -17,10 +17,6 @@ div.downstream-project-links a {
   color: #0097A7;
 }
 
-.admonition.version-07plus-change .admonition-title::before {
-  content: "🎯 ";
-}
-
 /* Clean table styling that matches original theme */
 table.docutils {
   border-collapse: collapse;

@@ -23,8 +23,9 @@ By following this comprehensive learning path, you'll have:
 * Framework mastery through essential development patterns
 * Complete API reference for daily development
 
-.. details:: **Prerequisites**
-   :class: dropdown
+.. dropdown:: **Prerequisites**
+   :color: info
+   :icon: list-unordered
    
    * Python 3.11 installed
 

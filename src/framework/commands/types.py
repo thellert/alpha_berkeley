@@ -251,7 +251,7 @@ class Command:
                 handler=planning_handler,
                 aliases=["plan"],
                 valid_options=["on", "off", "enabled", "disabled"],
-                help_text="Enable or disable planning mode.\n\nOptions:\n  on/enabled - Enable planning\n  off/disabled - Disable planning",
+                help_text="Enable or disable planning mode.\\n\\nOptions:\\n  on/enabled - Enable planning\\n  off/disabled - Disable planning",
                 interface_restrictions=["cli", "openwebui"]
             )
         

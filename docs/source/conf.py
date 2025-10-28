@@ -219,6 +219,20 @@ autodoc_mock_imports = [
     
     # Framework services that depend on complex infrastructure
     # Note: The services themselves can now import, but their dependencies are mocked above
+    
+    # Internal modules that have import issues during docs build
+    'container_manager',
+    'loader',
+    
+    # Framework modules that fail due to registry/config dependencies
+    'framework.infrastructure.task_extraction_node',
+    'framework.infrastructure.orchestration_node', 
+    'framework.infrastructure.error_node.ErrorType',
+    'framework.services.python_executor.PythonExecutorConfig',
+    
+    # Capability error classes that depend on registry
+    'framework.capabilities.memory',
+    'framework.capabilities.time_range_parsing',
 ]
 
 # IMPORTANT: If you see import errors for modules NOT in the above list,
