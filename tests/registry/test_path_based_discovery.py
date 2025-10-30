@@ -692,12 +692,25 @@ class TestProvider(RegistryConfigProvider):
         finally:
             sys.path[:] = original_syspath
     
-    def test_application_modules_can_import_after_syspath_setup(self, tmp_path):
+    def test_application_modules_can_import_after_syspath_setup(self, tmp_path, monkeypatch):
         """Test that application modules can actually be imported after sys.path setup."""
         # Create realistic project structure
         src_dir = tmp_path / "src"
         app_dir = src_dir / "weather_app"
         app_dir.mkdir(parents=True)
+        
+        # Create a minimal config.yml to avoid config loading errors
+        config_file = tmp_path / "config.yml"
+        config_file.write_text("""
+project_root: .
+models:
+  orchestrator:
+    provider: openai
+    model_id: gpt-4
+""")
+        
+        # Set CONFIG_FILE environment variable
+        monkeypatch.setenv('CONFIG_FILE', str(config_file))
         
         # Create context_classes module
         context_file = app_dir / "context_classes.py"

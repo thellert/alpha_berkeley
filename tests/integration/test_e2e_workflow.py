@@ -10,7 +10,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from framework.cli.init_cmd import init
-from configs.config import ConfigBuilder
+from framework.utils.config import ConfigBuilder
 from framework.registry.manager import RegistryManager
 
 

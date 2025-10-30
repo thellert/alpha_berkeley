@@ -10,7 +10,7 @@ import tempfile
 import yaml
 from pathlib import Path
 
-from configs.config import ConfigBuilder, get_config_value
+from framework.utils.config import ConfigBuilder, get_config_value
 
 
 class TestConfigBuilder:
@@ -214,13 +214,12 @@ execution_control:
         monkeypatch.setenv('CONFIG_FILE', str(config_file))
         
         # Reset global config
-        import configs.config
-        configs.config._config = None
+        import framework.utils.config as config_module
+        config_module._config = None
         
         # Test access
         value = get_config_value('execution_control.limits.max_retries', 0)
-        # Note: This may not work perfectly in tests due to global state
-        # but validates the function exists and is callable
+        assert value == 3  # Should retrieve the value from config
 
 
 if __name__ == "__main__":
