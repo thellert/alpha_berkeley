@@ -1,144 +1,214 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.5)
+# Alpha Berkeley Framework - Latest Release (v0.7.6)
 
-🚀 **Performance Enhancement Release** - Parallel capability classification with configurable concurrency control.
+🚀 **Architecture Enhancement Release** - Provider Registry System with extensible AI provider management.
 
-## What's New in v0.7.5
+## What's New in v0.7.6
 
-### ⚡ Parallel Capability Classification
+### 🏗️ Provider Registry System
 
-#### **Performance Improvements**
-- **Parallel Processing**: Multiple capabilities now classified simultaneously using `asyncio.gather()`
-- **Semaphore Control**: Configurable concurrency limits prevent API flooding while maintaining performance
-- **New Configuration**: `max_concurrent_classifications: 5` setting balances speed vs. API rate limits
+#### **Centralized Provider Management**
+- **Registry Integration**: AI providers now managed through the same registry system as capabilities, services, and other components
+- **Single Source of Truth**: All provider logic centralized in provider adapter classes
+- **Lazy Loading**: Providers loaded on-demand with proper dependency management
+- **Extensibility**: Applications can register custom providers (Azure OpenAI, institutional AI services, etc.)
 
-#### **Architecture Enhancements**
-- **New `CapabilityClassifier` Class**: Encapsulates individual capability classification with proper resource management
-- **Enhanced Error Handling**: Robust handling of import errors and classification failures
-- **Improved Reclassification Logic**: New `_detect_reclassification_scenario()` function with better state management
+#### **Provider Adapter Architecture**
+- **New `BaseProvider` Abstract Class**: Defines consistent interface for all AI providers
+- **Five Framework Providers**: Anthropic, OpenAI, Google, Ollama, CBORG adapters implemented
+- **Provider Metadata**: Simple class attributes define requirements (API key, base URL, proxy support)
+- **Health Check System**: Each provider implements connectivity testing with charge-aware logic
 
-#### **Configuration & Control**
-- **New Setting**: `execution_control.limits.max_concurrent_classifications` (default: 5)
-- **Cleaner State Management**: Proper error state cleanup during reclassification
-- **Better Logging**: Enhanced visibility into parallel classification process
+#### **Simplified Registration**
+- **Minimal Registration**: Just `module_path` and `class_name` required
+- **Metadata Introspection**: Registry reads provider metadata from class attributes
+- **60% Less Code**: Provider registration reduced from 8-9 lines to 2 lines per provider
+- **No Duplication**: Single source of truth eliminates metadata duplication
+
+#### **Code Reduction & Maintainability**
+- **~860 Lines Removed**: Eliminated provider-specific logic from factory.py, completion.py, health_cmd.py
+- **~290 Lines Saved**: Factory module reduced from 472 to 206 lines (-56%)
+- **~298 Lines Saved**: Completion module streamlined significantly
+- **~290 Lines Saved**: Health check module simplified
+- **Single Implementation**: Both PydanticAI models and direct completions use same adapter code
+
+### 🔧 Critical Features Preserved
+
+All existing functionality maintained:
+- ✅ **HTTP Proxy Support**: `HTTP_PROXY` environment variable for enterprise deployments
+- ✅ **Ollama Fallback Logic**: Automatic localhost ↔ host.containers.internal switching
+- ✅ **Timeout Configuration**: Per-provider and per-request timeouts
+- ✅ **Environment Variables**: `${VAR_NAME}` resolution in config files
+- ✅ **Extended Thinking**: Anthropic and Google thinking modes fully supported
+- ✅ **TypedDict Support**: Automatic conversion to Pydantic models
+- ✅ **Charge-Aware Health Checks**: Format validation for paid APIs (Anthropic, Google)
+
+### 🎯 Developer Experience Improvements
+
+#### **Custom Provider Registration**
+Applications can now register custom AI providers:
+
+```python
+from framework.registry import ProviderRegistration
+from framework.models.providers.base import BaseProvider
+
+# Define provider adapter
+class AzureOpenAIProviderAdapter(BaseProvider):
+    name = "azure_openai"
+    requires_api_key = True
+    requires_base_url = True
+    # ... implementation ...
+
+# Register in application registry
+return extend_framework_registry(
+    providers=[
+        ProviderRegistration(
+            module_path="my_app.providers.azure",
+            class_name="AzureOpenAIProviderAdapter"
+        )
+    ]
+)
+```
+
+Common use cases:
+- Azure OpenAI enterprise deployments
+- Institutional AI services (Stanford AI Playground, national lab endpoints)
+- Commercial providers (Cohere, Mistral AI, Together AI)
+- Self-hosted models with OpenAI-compatible APIs
+
+#### **Provider Discovery**
+```python
+from framework.registry import get_registry
+
+registry = get_registry()
+providers = registry.list_providers()  # ['anthropic', 'openai', 'google', 'ollama', 'cborg']
+provider = registry.get_provider('anthropic')  # Get provider class
+```
+
+### 🧪 Testing Infrastructure
+
+#### **pytest Configuration**
+- New `pytest.ini` with test markers (unit, integration, requires_api, etc.)
+- Organized test categorization for better test management
+- VCR cassette markers for recorded API interactions
+
+#### **VCR Test Support**
+- `tests/cassettes/` infrastructure for recording/replaying API interactions
+- Cost-effective integration testing without repeated API charges
+- Deterministic tests with recorded responses
+- Comprehensive README documenting VCR usage and security
+
+### 🛠️ Utilities & Infrastructure
+
+#### **Log Filtering System**
+- New `framework.utils.log_filter` module for dynamic log control
+- `LoggerFilter` class for selective suppression by logger name, level, or pattern
+- Context managers: `suppress_logger()`, `suppress_logger_level()`, `quiet_logger()`
+- Used in health checks to suppress verbose registry initialization logs
+
+#### **Memory Storage Improvements**
+- Switched from root logger to framework logger for consistency
+- Reduced log verbosity (INFO → DEBUG for initialization messages)
+- Better integration with framework logging patterns
 
 ### 📚 Documentation Updates
 
-#### **Comprehensive Documentation**
-- Updated classification guides with parallel processing examples
-- Added `CapabilityClassifier` class documentation and API references
-- Enhanced configuration documentation with new concurrency settings
-- Updated all configuration examples across developer guides
+#### **Provider Registry Documentation**
+- New `ProviderRegistration` documentation in registry API reference
+- Custom provider registration guide with Azure OpenAI example
+- Updated component initialization order to include providers
+- Provider access methods documented on `RegistryManager`
 
-#### **Build System Improvements**
-- Fixed documentation build system for pip-installable framework
-- Added `docs/config.yml` for build compatibility
-- Updated installation guide with docs extras option
-- Fixed various documentation formatting and cross-reference issues
+#### **Configuration Documentation**
+- Updated provider extensibility information
+- Direct link to custom provider registration guide
+- GitHub issue creation guidance for community providers
 
-## Benefits
+### 🧹 Code Cleanup
 
-- **Faster Classification**: Multiple capabilities processed simultaneously
-- **Resource Control**: Semaphore prevents API rate limiting
-- **Robust Error Handling**: Individual failures don't stop the entire process
-- **Scalable Architecture**: Handles large capability registries efficiently
-- **Configurable Performance**: Balance speed vs. API limits based on your needs
+#### **Removed Deprecated Code**
+- Deleted `src/framework/interfaces/openwebui/` (deprecated interface)
+- Removed `docs/ressources/other/EXECUTION_POLICY_SYSTEM.md` (outdated doc)
+- Cleaned up unused provider logic from multiple files
+
+#### **Test Updates**
+- Fixed config import paths (moved from `configs.config` to `framework.utils.config`)
+- Added minimal config.yml in tests to prevent config loading errors
+- Updated integration tests for new architecture
+
+## Benefits Summary
+
+1. **Maintainability**: Single source of truth for provider logic
+2. **Extensibility**: Applications can register custom providers easily
+3. **Consistency**: Same adapter used by factory.py and completion.py
+4. **Type Safety**: Strong typing throughout provider system
+5. **Discoverability**: `registry.list_providers()` shows available providers
+6. **Clean Architecture**: Clear separation between provider interface and implementation
+7. **Reduced Code**: ~860 lines removed, ~1,090 lines of well-structured adapter code added
+8. **Zero Breaking Changes**: All existing APIs work identically
+9. **Better Testing**: VCR infrastructure for integration tests
+10. **Enhanced Health Checks**: Provider-specific health validation through registry
+
+## Technical Details
+
+### Component Architecture
+```
+Registry System
+├── ProviderRegistration (minimal metadata: module_path, class_name)
+├── Provider Adapters (metadata as class attributes)
+│   ├── BaseProvider (abstract interface)
+│   ├── AnthropicProviderAdapter
+│   ├── OpenAIProviderAdapter
+│   ├── GoogleProviderAdapter
+│   ├── OllamaProviderAdapter
+│   └── CBorgProviderAdapter
+└── RegistryManager (lazy loading, metadata introspection)
+```
+
+### Initialization Order
+1. Context classes
+2. Data sources
+3. **Providers** (new in v0.7.6)
+4. Core nodes
+5. Services
+6. Capabilities
+7. Framework prompt providers
+
+### Provider Interface
+Each provider implements:
+- `create_model()` - PydanticAI model creation
+- `execute_completion()` - Direct API calls
+- `check_health()` - Connectivity validation
 
 ## Migration Notes
 
-No breaking changes. The new parallel classification system is backward compatible and enabled by default with sensible concurrency limits.
+**No breaking changes.** The provider registry is a backward-compatible internal refactoring. All existing code using `get_model()` and `get_chat_completion()` continues to work without modifications.
 
-To customize concurrency:
+### For Advanced Users
 
-```yaml
-# config.yml
-execution_control:
-  limits:
-    max_concurrent_classifications: 10  # Increase for faster classification
+If you need custom AI providers, you can now register them through the registry system. See documentation for complete examples.
+
+### Configuration Changes
+
+No configuration changes required. All existing `config.yml` provider configurations remain valid.
+
+## Files Changed
+
+- 12 atomic commits implementing provider registry system
+- 3 documentation files updated
+- 6 version files updated for v0.7.6 release
+
+## Upgrade Instructions
+
+```bash
+pip install --upgrade alpha-berkeley-framework
+```
+
+Or with specific extras:
+
+```bash
+pip install --upgrade "alpha-berkeley-framework[memory,docs]"
 ```
 
 ---
 
-## Previous Release (v0.7.4)
-
-🐛 **Bug Fix Release** - Fixed template generation issues affecting registry class names and import paths.
-
-### 🔧 Template Bug Fixes
-
-#### **Registry Class Name Generation**
-- **Fixed duplicate "RegistryProvider" suffix** in generated registry class names
-- Previously generated: `WeatherTutorialRegistryProviderRegistryProvider` ❌
-- Now generates: `WeatherTutorialRegistryProvider` ✅
-- Affects all three app templates: hello_world_weather, wind_turbine, minimal
-- Projects generated with v0.7.3 may need manual class name correction
-
-#### **Import Path Documentation**
-- **Updated template documentation** to use correct v0.7.0 import patterns
-- Changed from `applications.hello_world_weather.*` to `hello_world_weather.*`
-- Updated examples in mock_weather_api.py and capabilities/__init__.py
-- Ensures generated projects follow correct decoupled architecture
-
-#### **Requirements Template Rendering**
-- **Fixed framework version substitution** in generated requirements.txt
-- Moved requirements.txt from static files to rendered templates
-- Now properly replaces `{{ framework_version }}` placeholder with actual version
-- Ensures generated projects pin correct framework version in requirements.txt
-
-### 🔧 Technical Details
-
-**Files Changed:**
-- `src/framework/cli/templates.py` - Fixed class name generation logic
-- `src/framework/templates/project/hello_world_weather/src/hello_world_weather/mock_weather_api.py` - Updated import examples
-- `src/framework/templates/project/hello_world_weather/src/hello_world_weather/capabilities/__init__.py` - Updated documentation
-- `src/framework/templates/project/requirements.txt` → `requirements.txt.j2` - Made template renderable
-
-**Verification:**
-```bash
-# Test class name generation
-framework init test-project --template hello_world_weather
-# Should generate: TestProjectRegistryProvider (not TestProjectRegistryProviderRegistryProvider)
-
-# Test requirements.txt generation
-cat test-project/requirements.txt
-# Should show: alpha-berkeley-framework==0.7.4 (not {{ framework_version }})
-```
-
-### 🚨 Action Required for v0.7.3 Users
-
-If you generated a project with v0.7.3, you may need to manually fix the registry class name:
-
-1. **Check your registry file** (e.g., `src/my_app/registry.py`)
-2. **Look for duplicate suffix** in class name (e.g., `MyAppRegistryProviderRegistryProvider`)
-3. **Rename to correct format** (e.g., `MyAppRegistryProvider`)
-4. **Update any imports** that reference the old class name
-
-### 📊 Impact Assessment
-
-- **Low Risk**: Changes only affect newly generated projects
-- **Existing Projects**: Continue working without modification
-- **Template Users**: Benefit from cleaner generated code
-- **Documentation**: More accurate examples and import patterns
-
----
-
-## Installation
-
-```bash
-pip install alpha-berkeley-framework==0.7.5
-
-# Or with extras
-pip install alpha-berkeley-framework[scientific]==0.7.5
-pip install alpha-berkeley-framework[all]==0.7.5
-```
-
-## Quick Start
-
-```bash
-# Create a new project with parallel classification
-framework init my-agent --template hello_world_weather
-cd my-agent
-
-# The new parallel classification system is enabled by default
-# Customize concurrency in config.yml if needed
-```
-
-For complete installation and setup instructions, see our [Getting Started Guide](https://thellert.github.io/alpha_berkeley/getting-started/).
+**Full Changelog**: See [CHANGELOG.md](CHANGELOG.md) for detailed commit history

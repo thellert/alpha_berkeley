@@ -17,7 +17,7 @@ import sys
 try:
     from framework import __version__
 except ImportError:
-    __version__ = "0.7.5"
+    __version__ = "0.7.6"
 
 
 # PERFORMANCE OPTIMIZATION: Lazy command loading

@@ -5,6 +5,91 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.6] - 2025-10-30
+
+### Added
+- **Provider Registry System** - Centralized AI provider management integrated into framework registry
+  - New `ProviderRegistration` dataclass for minimal provider metadata (module_path, class_name only)
+  - Provider metadata introspected from class attributes (single source of truth)
+  - Registry methods: `get_provider()`, `list_providers()`, `get_provider_registration()`
+  - Providers added to component initialization order (early loading for use by capabilities)
+- **Provider Adapter Architecture** - New base class and five framework provider implementations
+  - `BaseProvider` abstract class defining provider interface (create_model, execute_completion, check_health)
+  - `AnthropicProviderAdapter` with extended thinking support
+  - `OpenAIProviderAdapter` with structured outputs and token parameter handling
+  - `GoogleProviderAdapter` with extended thinking support
+  - `OllamaProviderAdapter` with automatic localhost ↔ host.containers.internal fallback
+  - `CBorgProviderAdapter` for LBNL institutional AI service
+- **Log Filtering Utilities** - Dynamic log suppression system
+  - New `framework.utils.log_filter` module with `LoggerFilter` class
+  - Context managers: `suppress_logger()`, `suppress_logger_level()`, `quiet_logger()`
+  - Filter by logger name, level, message patterns, or combinations
+  - Thread-safe with pre-compiled regex patterns for performance
+- **Testing Infrastructure** - pytest configuration and VCR support
+  - New `pytest.ini` with test markers (unit, integration, requires_api, vcr, etc.)
+  - `tests/cassettes/` directory with comprehensive README for VCR usage
+  - Test markers for provider-specific tests (requires_openai, requires_anthropic, etc.)
+  - Added pytest-vcr and vcrpy to dev dependencies
+- **Custom Provider Registration** - Applications can register institutional/commercial providers
+  - Full documentation with Azure OpenAI example in registry guide
+  - Support for institutional AI services (Stanford AI Playground, national lab endpoints)
+  - Support for commercial providers (Cohere, Mistral AI, Together AI, etc.)
+
+### Changed
+- **Model Factory Refactoring** - Simplified to use provider registry (~280 lines removed)
+  - Replaced hardcoded provider requirements dict with registry lookups
+  - Use `provider.create_model()` for all provider types
+  - Removed `_create_openai_compatible_model()` helper function
+  - Removed `_get_ollama_fallback_urls()` and `_test_ollama_connection()` (moved to OllamaProviderAdapter)
+  - Validation uses provider class metadata instead of hardcoded dict
+- **Completion Module Refactoring** - Streamlined to use provider registry (~290 lines removed)
+  - Replaced all provider-specific if/elif blocks with `provider.execute_completion()`
+  - Removed provider requirements validation dict
+  - Removed `_get_ollama_fallback_urls()` helper
+  - Added `temperature` parameter to completion function
+- **Health Check Refactoring** - Updated to use provider registry (~290 lines removed)
+  - Initialize registry before provider checks with loading spinner
+  - Use `provider.check_health()` instead of provider-specific logic
+  - Removed all provider-specific if/elif blocks
+  - Removed `_test_provider_connectivity()` method
+  - Added `quiet_logger` usage to suppress verbose registry initialization logs
+  - Preserved charge-avoiding health checks for Anthropic and Google
+- **Memory Storage Logging** - Improved logging consistency
+  - Switched from root logger to framework logger (`get_logger("memory_storage")`)
+  - Changed initialization message from INFO to DEBUG level
+  - Reduced log verbosity for non-critical operations
+- **Module Exports** - Cleaned up framework.models exports
+  - Removed `_create_openai_compatible_model` from public API
+
+### Fixed
+- **Test Import Paths** - Updated config imports for relocated modules
+  - Changed from `configs.config` to `framework.utils.config`
+  - Added minimal config.yml in tests to prevent loading errors
+  - Updated integration tests for new configuration module location
+
+### Removed
+- **Deprecated Code Cleanup**
+  - Deleted `src/framework/interfaces/openwebui/` (deprecated interface implementation)
+  - Deleted `docs/ressources/other/EXECUTION_POLICY_SYSTEM.md` (outdated design document)
+
+### Documentation
+- **Provider Registry Documentation** - Comprehensive documentation for new system
+  - Added `ProviderRegistration` to registry API reference
+  - Custom provider registration guide with complete Azure OpenAI example
+  - Updated component initialization order in all docs
+  - Added provider access methods to RegistryManager documentation
+  - Updated configuration docs with custom provider extensibility information
+- **README and Examples** - Updated with custom provider examples
+  - Common use cases: Azure OpenAI, institutional services, commercial providers
+  - Integration with `get_model()` and `get_chat_completion()`
+  - Health check system integration
+
+### Technical Details
+- **Code Reduction**: ~860 lines removed from factory.py, completion.py, health_cmd.py
+- **New Code**: ~1,090 lines of well-structured provider adapter implementations
+- **Net Result**: More maintainable, extensible architecture with single source of truth
+- **Zero Breaking Changes**: All existing APIs remain unchanged
+
 ## [0.7.5] - 2025-10-28
 
 ### Added
