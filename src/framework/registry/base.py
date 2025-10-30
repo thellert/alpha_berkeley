@@ -310,6 +310,38 @@ class ServiceRegistration:
     internal_nodes: List[str] = field(default_factory=list)
 
 @dataclass
+class ProviderRegistration:
+    """Minimal registration for lazy loading AI model providers.
+    
+    Provider metadata (requires_api_key, supports_proxy, etc.) is defined as
+    class attributes on the provider class itself. The registry introspects
+    these attributes after loading the class, following the same pattern as
+    capabilities and context classes.
+    
+    This avoids metadata duplication between registration and class definition,
+    maintaining a single source of truth on the provider class.
+    
+    :param module_path: Python module path for lazy import (e.g., 'framework.models.providers.anthropic')
+    :type module_path: str
+    :param class_name: Provider class name within the module (e.g., 'AnthropicProviderAdapter')
+    :type class_name: str
+    
+    Example:
+        >>> ProviderRegistration(
+        ...     module_path="framework.models.providers.anthropic",
+        ...     class_name="AnthropicProviderAdapter"
+        ... )
+        
+        The registry will load this class and introspect metadata like:
+        - AnthropicProviderAdapter.name
+        - AnthropicProviderAdapter.requires_api_key
+        - AnthropicProviderAdapter.supports_proxy
+        etc.
+    """
+    module_path: str
+    class_name: str
+
+@dataclass
 class RegistryConfig:
     """Complete registry configuration with all component metadata.
     
@@ -337,6 +369,8 @@ class RegistryConfig:
     :type execution_policy_analyzers: list[ExecutionPolicyAnalyzerRegistration]
     :param framework_prompt_providers: Registration entries for prompt providers (optional)
     :type framework_prompt_providers: list[FrameworkPromptProviderRegistration]
+    :param providers: Registration entries for AI model providers (optional)
+    :type providers: list[ProviderRegistration]
     :param framework_exclusions: Framework component names to exclude by type (optional)
     :type framework_exclusions: dict[str, list[str]]
     :param initialization_order: Component type initialization sequence (optional)
@@ -353,12 +387,14 @@ class RegistryConfig:
     domain_analyzers: List[DomainAnalyzerRegistration] = field(default_factory=list)
     execution_policy_analyzers: List[ExecutionPolicyAnalyzerRegistration] = field(default_factory=list)
     framework_prompt_providers: List[FrameworkPromptProviderRegistration] = field(default_factory=list)
+    providers: List[ProviderRegistration] = field(default_factory=list)
     framework_exclusions: Dict[str, List[str]] = field(default_factory=dict)
     initialization_order: List[str] = field(default_factory=lambda: [
         "context_classes",
         "data_sources", 
         "domain_analyzers",
         "execution_policy_analyzers",
+        "providers",
         "capabilities",
         "framework_prompt_providers",
         "core_nodes",

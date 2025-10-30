@@ -234,7 +234,11 @@ class RegistryManager:
             'domain_analyzers': {},
             'execution_policy_analyzers': {},
             'framework_prompt_providers': {},
+            'providers': {},
         }
+        
+        # Provider-specific storage for metadata introspection
+        self._provider_registrations = {}
         
         # Build complete configuration by merging framework + applications
         self.config = self._build_merged_configuration()
@@ -261,6 +265,7 @@ class RegistryManager:
             data_sources=framework_config.data_sources.copy(),
             services=framework_config.services.copy(),
             framework_prompt_providers=framework_config.framework_prompt_providers.copy(),
+            providers=framework_config.providers.copy(),
             initialization_order=framework_config.initialization_order.copy()
         )
         
@@ -796,6 +801,8 @@ class RegistryManager:
             self._initialize_context_classes()
         elif component_type == "data_sources":
             self._initialize_data_sources()
+        elif component_type == "providers":
+            self._initialize_providers()
         elif component_type == "core_nodes":
             self._initialize_core_nodes()
         elif component_type == "services":
@@ -864,6 +871,64 @@ class RegistryManager:
                 logger.warning(f"Failed to initialize data source {reg.name}: {e}")
         
         logger.info(f"Registered {len(self._registries['data_sources'])} data sources")
+    
+    def _initialize_providers(self) -> None:
+        """Initialize AI model providers from registry configuration.
+        
+        Loads provider classes and introspects their class attributes for metadata.
+        This avoids duplication between ProviderRegistration and provider class.
+        Provider metadata (requires_api_key, supports_proxy, etc.) is defined as
+        class attributes and introspected after loading.
+        
+        :raises RegistryError: If provider class doesn't inherit from BaseProvider
+        :raises RegistryError: If provider doesn't define required metadata
+        """
+        logger.info(f"Initializing {len(self.config.providers)} provider(s)...")
+        
+        for registration in self.config.providers:
+            try:
+                # Lazy load provider class
+                module = importlib.import_module(registration.module_path)
+                provider_class = getattr(module, registration.class_name)
+                
+                # Validate it's a provider
+                try:
+                    from framework.models.providers.base import BaseProvider
+                    if not issubclass(provider_class, BaseProvider):
+                        raise RegistryError(
+                            f"Provider class {registration.class_name} "
+                            f"must inherit from BaseProvider"
+                        )
+                except ImportError:
+                    # BaseProvider not yet created, skip validation for now
+                    logger.warning(f"BaseProvider not found, skipping validation for {registration.class_name}")
+                
+                # Introspect metadata from class attributes (single source of truth)
+                provider_name = getattr(provider_class, 'name', None)
+                
+                # Validate required metadata is present
+                if provider_name is None or provider_name == NotImplemented:
+                    raise RegistryError(
+                        f"Provider {registration.class_name} must define 'name' class attribute"
+                    )
+                
+                # Store provider class (indexed by its name attribute)
+                self._registries['providers'][provider_name] = provider_class
+                
+                # Store registration for reference
+                self._provider_registrations[provider_name] = registration
+                
+                logger.info(f"  ✓ Registered provider: {provider_name}")
+                logger.debug(f"    - Module: {registration.module_path}")
+                logger.debug(f"    - Class: {registration.class_name}")
+                logger.debug(f"    - Requires API key: {getattr(provider_class, 'requires_api_key', 'N/A')}")
+                logger.debug(f"    - Supports proxy: {getattr(provider_class, 'supports_proxy', 'N/A')}")
+                
+            except Exception as e:
+                logger.error(f"  ✗ Failed to register provider from {registration.module_path}: {e}")
+                raise RegistryError(f"Provider registration failed for {registration.class_name}") from e
+        
+        logger.info(f"Provider initialization complete: {len(self._registries['providers'])} providers loaded")
     
     def _initialize_execution_policy_analyzers(self) -> None:
         """Initialize execution policy analyzer registry with instantiation.
@@ -1452,6 +1517,37 @@ class RegistryManager:
         :rtype: list[Any]
         """
         return list(self._registries['data_sources'].values())
+    
+    def get_provider(self, name: str) -> Optional[Type[Any]]:
+        """Retrieve registered provider class by name.
+        
+        :param name: Unique provider name from registration
+        :type name: str
+        :return: Provider class if registered, None otherwise
+        :rtype: Type[BaseProvider] or None
+        """
+        if not self._initialized:
+            raise RegistryError("Registry not initialized. Call initialize_registry() first.")
+        
+        return self._registries['providers'].get(name)
+    
+    def get_provider_registration(self, name: str) -> Optional[Any]:
+        """Get provider registration metadata.
+        
+        :param name: Provider name
+        :type name: str
+        :return: Provider registration if found, None otherwise
+        :rtype: ProviderRegistration or None
+        """
+        return self._provider_registrations.get(name)
+    
+    def list_providers(self) -> List[str]:
+        """Get list of all registered provider names.
+        
+        :return: List of provider names
+        :rtype: list[str]
+        """
+        return list(self._registries['providers'].keys())
     
     def get_service(self, name: str) -> Optional[Any]:
         """Retrieve registered service graph by name.

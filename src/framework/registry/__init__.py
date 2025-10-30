@@ -104,6 +104,7 @@ from .base import (
     DataSourceRegistration,
     ServiceRegistration,
     FrameworkPromptProviderRegistration,
+    ProviderRegistration,
     RegistryConfig,
     ExecutionPolicyAnalyzerRegistration,
     DomainAnalyzerRegistration
@@ -131,6 +132,7 @@ __all__ = [
     'DataSourceRegistration',
     'ServiceRegistration',
     'FrameworkPromptProviderRegistration',
+    'ProviderRegistration',
     'RegistryConfig',
     
     # Helper functions (NEW - Phase 4.6)
