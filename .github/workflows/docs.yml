@@ -14,10 +14,11 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Allow only one concurrent deployment, canceling older runs to prevent version race conditions.
+# When both main push and tag push trigger simultaneously, the tag build (with correct version) should win.
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
