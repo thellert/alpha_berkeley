@@ -8,11 +8,13 @@ Modules:
     config: Main configuration builder and access functions
     logger: Logging configuration utilities
     streaming: Streaming configuration utilities
+    log_filter: Flexible logging filter utilities
 """
 
 # Make the main modules available at package level
 from . import config
 from . import logger
 from . import streaming
+from . import log_filter
 
-__all__ = ['config', 'logger', 'streaming']
+__all__ = ['config', 'logger', 'streaming', 'log_filter']
