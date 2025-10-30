@@ -30,12 +30,7 @@ from typing import Optional, Union, Type, get_origin, get_args, get_type_hints
 from typing_extensions import TypedDict
 from urllib.parse import urlparse
 from pydantic import BaseModel, create_model, Field
-import anthropic
-import openai
-import ollama
 import httpx
-from google import genai
-from google.genai import types as genai_types
 
 from framework.utils.config import get_provider_config
 
@@ -163,48 +158,6 @@ def _validate_proxy_url(proxy_url: str) -> bool:
         return False
 
 
-def _get_ollama_fallback_urls(base_url: str) -> list[str]:
-    """Generate fallback URLs for Ollama based on the current base URL.
-    
-    This helper function generates appropriate fallback URLs to handle
-    common development scenarios where the execution context (container vs local)
-    doesn't match the configured Ollama URL.
-    
-    :param base_url: Current configured Ollama base URL
-    :type base_url: str
-    :return: List of fallback URLs to try in order
-    :rtype: list[str]
-    
-    .. note::
-       Fallback URLs are generated based on common patterns:
-       - host.containers.internal -> localhost (container to local)
-       - localhost -> host.containers.internal (local to container)
-       - Generic fallbacks for other scenarios
-    """
-    fallback_urls = []
-    
-    if "host.containers.internal" in base_url:
-        # Running in container but Ollama might be on localhost
-        fallback_urls = [
-            base_url.replace("host.containers.internal", "localhost"),
-            "http://localhost:11434"
-        ]
-    elif "localhost" in base_url:
-        # Running locally but Ollama might be in container context
-        fallback_urls = [
-            base_url.replace("localhost", "host.containers.internal"),
-            "http://host.containers.internal:11434"
-        ]
-    else:
-        # Generic fallbacks for other scenarios
-        fallback_urls = [
-            "http://localhost:11434",
-            "http://host.containers.internal:11434"
-        ]
-    
-    return fallback_urls
-
-
 def get_chat_completion(
     message: str,
     max_tokens: int = 1024,
@@ -214,8 +167,9 @@ def get_chat_completion(
     budget_tokens: int | None = None,
     enable_thinking: bool = False,
     output_model: Optional[Type[BaseModel]] = None,
-    base_url: Optional[str] = None, # currently used only for ollama
+    base_url: Optional[str] = None,
     provider_config: Optional[dict] = None,
+    temperature: float = 0.0,
 ) -> Union[str, BaseModel, list]:
     """Execute direct chat completion requests across multiple AI providers.
     
@@ -367,261 +321,54 @@ def get_chat_completion(
             base_url = provider_config.get("base_url")
         api_key = provider_config.get("api_key")
 
-    # Define provider requirements
-    provider_requirements = {
-        "google":    {"model_id": True, "api_key": True,  "base_url": False, "use_proxy": True},
-        "anthropic": {"model_id": True, "api_key": True,  "base_url": False, "use_proxy": True},
-        "openai":    {"model_id": True, "api_key": True,  "base_url": True,  "use_proxy": True},
-        "ollama":    {"model_id": True, "api_key": False, "base_url": True,  "use_proxy": False},
-        "cborg":     {"model_id": True, "api_key": True,  "base_url": True,  "use_proxy": True},
-    }
+    # Get provider from registry
+    from framework.registry import get_registry
+    registry = get_registry()
+    provider_class = registry.get_provider(provider)
     
-    if provider not in provider_requirements:
-        raise ValueError(f"Invalid provider: {provider}. Must be 'anthropic', 'cborg', 'google', 'ollama', or 'openai'.")
+    if not provider_class:
+        raise ValueError(f"Unknown provider: {provider}")
     
-    requirements = provider_requirements[provider]
+    # Validate requirements using provider metadata
+    if provider_class.requires_api_key and not api_key:
+        raise ValueError(f"API key required for {provider}")
+    if provider_class.requires_base_url and not base_url:
+        raise ValueError(f"Base URL required for {provider}")
+    if provider_class.requires_model_id and not model_id:
+        raise ValueError(f"Model ID required for {provider}")
     
-    # Common validation
-    if requirements["model_id"] and not model_id:
-        raise ValueError(f"Model ID for {provider} not provided.")
-    
-    if requirements["api_key"] and not api_key:
-        raise ValueError(f"No API key provided for {provider}.")
-    
-    if requirements["base_url"] and not base_url:
-        raise ValueError(f"No base URL provided for {provider}.")
-
     # Set up HTTP client with proxy if needed
-    proxy_url = os.environ.get("HTTP_PROXY")
-    should_use_proxy = False
     http_client = None
-    
-    if requirements["use_proxy"] and proxy_url:
-        if _validate_proxy_url(proxy_url):
-            should_use_proxy = True
+    if provider_class.supports_proxy:
+        proxy_url = os.environ.get("HTTP_PROXY")
+        if proxy_url and _validate_proxy_url(proxy_url):
             http_client = httpx.Client(proxy=proxy_url)
         else:
-            logger.warning(f"Invalid HTTP_PROXY URL format '{proxy_url}', ignoring proxy configuration")
+            if proxy_url:
+                logger.warning(f"Invalid HTTP_PROXY URL format '{proxy_url}', ignoring proxy configuration")
     
-    if not should_use_proxy and requirements["use_proxy"]:
-        # Only create client without proxy if no proxy was requested
-        http_client = None
-
-    # Provider-specific logic (validation already done above)
-    if provider == "anthropic":
-        client = anthropic.Anthropic(
-            api_key=api_key,
-            http_client=http_client,
-        )
-
-        request_params = {
-            "model": model_id,
-            "max_tokens": max_tokens,
-            "messages": [{"role": "user", "content": message}],
-        }
-
-        if enable_thinking and budget_tokens is not None:
-            if budget_tokens >= max_tokens:
-                raise ValueError("budget_tokens must be less than max_tokens.")
-            request_params["thinking"] = {
-                "type": "enabled",
-                "budget_tokens": budget_tokens
-            }
-        
-        message_response = client.messages.create(**request_params)
-        
-        if enable_thinking and "thinking" in request_params:
-            return message_response.content # Returns List[ContentBlock]
-        else:
-            # Concatenate text from all TextBlock instances
-            text_parts = [
-                block.text for block in message_response.content 
-                if isinstance(block, anthropic.types.TextBlock)
-            ]
-            return "\n".join(text_parts)
+    # Execute completion using provider adapter
+    provider_instance = provider_class()
     
-    # ----- GEMINI ------
-    elif provider == "google":
-        client = genai.Client(api_key=api_key)
-        
-        if not enable_thinking:
-            budget_tokens = 0
-            
-        if budget_tokens >= max_tokens: # Assuming max_tokens is the overall limit
-            raise ValueError("budget_tokens must be less than max_tokens.")
-
-        response = client.models.generate_content(
-            model=model_id,
-            contents=[message], # Use the transformed messages
-            config=genai_types.GenerateContentConfig(
-                **({"thinking_config": genai_types.ThinkingConfig(thinking_budget=budget_tokens)}),
-                max_output_tokens=max_tokens
-            )
-        )
-
-        return response.text # Returns str
-
-    # ----- OPENAI ------
-    elif provider == "openai":
-        if enable_thinking or budget_tokens is not None:
-            logging.warning("enable_thinking and budget_tokens are not used for OpenAI provider.")
-
-        client = openai.OpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            http_client=http_client,
-        )
-
-        # Determine which token parameter to use based on model
-        # Newer models (GPT-5, o1-*, o3, o4, etc.) require max_completion_tokens
-        # Based on OpenAI API error: "Use 'max_completion_tokens' instead"
-        uses_completion_tokens = any(prefix in model_id.lower() for prefix in ['gpt-5', 'o1-', 'o3', 'o4'])
-        token_param = 'max_completion_tokens' if uses_completion_tokens else 'max_tokens'
-
-        if output_model is not None:
-            # Use structured outputs with Pydantic model (recommended approach)
-            response = client.beta.chat.completions.parse(
-                model=model_id,
-                messages=[{"role": "user", "content": message}],
-                **{token_param: max_tokens},
-                response_format=output_model,
-            )
-            if not response.choices:
-                raise ValueError("OpenAI API returned empty choices list")
-            result = response.choices[0].message.parsed
-            return _handle_output_conversion(result, is_typed_dict_output)
-        else:
-            # Regular text completion
-            response = client.chat.completions.create(
-                model=model_id,
-                messages=[{"role": "user", "content": message}],
-                **{token_param: max_tokens},
-            )
-            if not response.choices:
-                raise ValueError("OpenAI API returned empty choices list")
-            return response.choices[0].message.content
-
-    # ----- OLLAMA ------
-    elif provider == "ollama":
-        if enable_thinking or budget_tokens is not None:
-            # These features are not standard for Ollama's basic chat API
-            # You might log a warning or simply ignore them.
-            pass
-        
-        chat_messages = [{'role': 'user', 'content': message}]
-        
-        options = {}
-        if max_tokens is not None: # Default is 1024
-             options['num_predict'] = max_tokens
-        # Other options like temperature, top_p could be added if needed
-
-        request_args = {
-            "model": model_id,
-            "messages": chat_messages,
-        }
-        if options: # Only add options if there are any
-            request_args["options"] = options
-
-        if output_model is not None:
-            # Instruct Ollama to use the Pydantic model's JSON schema for the output format.
-            request_args["format"] = output_model.model_json_schema()
-            # The user's prompt ('message') should ideally also guide the model
-            # towards generating the desired structured output.
-        
-        # Ollama connection with graceful fallback for development workflows
-        client = None
-        used_fallback = False
-        
-        try:
-            # First attempt: Use configured base_url
-            client = ollama.Client(host=base_url)
-            # Test connection with a simple health check
-            client.list()  # This will fail if Ollama is not accessible
-            logger.debug(f"Successfully connected to Ollama at {base_url}")
-        except Exception as e:
-            logger.debug(f"Failed to connect to Ollama at {base_url}: {e}")
-            
-            # Determine fallback URLs based on current base_url
-            fallback_urls = _get_ollama_fallback_urls(base_url)
-            
-            # Try fallback URLs
-            for fallback_url in fallback_urls:
-                try:
-                    logger.debug(f"Attempting fallback connection to Ollama at {fallback_url}")
-                    client = ollama.Client(host=fallback_url)
-                    client.list()  # Test connection
-                    used_fallback = True
-                    logger.warning(
-                        f"⚠️  Ollama connection fallback: configured URL '{base_url}' failed, "
-                        f"using fallback '{fallback_url}'. Consider updating your configuration "
-                        f"for your current execution environment."
-                    )
-                    break
-                except Exception as fallback_e:
-                    logger.debug(f"Fallback attempt failed for {fallback_url}: {fallback_e}")
-                    continue
-            
-            if client is None:
-                # All connection attempts failed
-                raise ValueError(
-                    f"Failed to connect to Ollama at configured URL '{base_url}' "
-                    f"and all fallback URLs {fallback_urls}. Please ensure Ollama is running "
-                    f"and accessible, or update your configuration."
-                )
-        
-        try:
-            response = client.chat(**request_args)
-        except Exception as e:
-            # Provide helpful error context
-            current_url = fallback_urls[0] if used_fallback else base_url
-            raise ValueError(
-                f"Ollama chat request failed using {current_url}. "
-                f"Error: {e}. Please verify the model '{model_id}' is available."
-            )
-        
-        # response is a dict, e.g.:
-        # {'model': 'llama3.1', 'created_at': ..., 
-        #  'message': {'role': 'assistant', 'content': '...'}, ...}
-        ollama_content_str = response['message']['content']
-
-        if output_model is not None:
-            # Validate the JSON string from Ollama against the Pydantic model
-            result = output_model.model_validate_json(ollama_content_str.strip())
-            return _handle_output_conversion(result, is_typed_dict_output)
-        else:
-            # If no output_model was specified, return the raw string content
-            return ollama_content_str
-
-    # ----- CBORG ------
-    elif provider == "cborg":
-        if enable_thinking or budget_tokens is not None:
-            logging.warning("enable_thinking and budget_tokens are not used for CBORG provider.")
-
-        client = openai.OpenAI(
-            api_key=api_key,
-            base_url=base_url,
-            http_client=http_client,
-        )
-
-        if output_model is not None:
-            # Use structured outputs with Pydantic model (same as OpenAI implementation)
-            response = client.beta.chat.completions.parse(
-                model=model_id,
-                messages=[{"role": "user", "content": message}],
-                max_tokens=max_tokens,
-                response_format=output_model,
-            )
-            if not response.choices:
-                raise ValueError("CBORG API returned empty choices list")
-            result = response.choices[0].message.parsed
-            return _handle_output_conversion(result, is_typed_dict_output)
-        else:
-            # Regular text completion
-            response = client.chat.completions.create(
-                model=model_id,
-                messages=[{"role": "user", "content": message}],
-                max_tokens=max_tokens,
-            )
-            if not response.choices:
-                raise ValueError("CBORG API returned empty choices list")
-            return response.choices[0].message.content 
+    # Build kwargs for provider
+    completion_kwargs = {
+        "enable_thinking": enable_thinking,
+        "budget_tokens": budget_tokens,
+        "system_prompt": None,  # Not used in current implementation
+        "output_format": output_model,  # Pydantic model (already converted from TypedDict if needed)
+        "http_client": http_client,
+        "is_typed_dict_output": is_typed_dict_output,
+    }
+    
+    result = provider_instance.execute_completion(
+        message=message,
+        model_id=model_id,
+        api_key=api_key,
+        base_url=base_url,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        **completion_kwargs
+    )
+    
+    # Result is already handled by provider (TypedDict conversion if needed)
+    return result 
