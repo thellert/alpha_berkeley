@@ -85,7 +85,8 @@ from .base import (
     ContextClassRegistration,
     DataSourceRegistration,
     ServiceRegistration,
-    FrameworkPromptProviderRegistration
+    FrameworkPromptProviderRegistration,
+    ProviderRegistration
 )
 
 
@@ -409,13 +410,38 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                 )
             ],
             
+            # Framework AI model providers (SIMPLIFIED - metadata introspected from class)
+            providers=[
+                ProviderRegistration(
+                    module_path="framework.models.providers.anthropic",
+                    class_name="AnthropicProviderAdapter"
+                ),
+                ProviderRegistration(
+                    module_path="framework.models.providers.openai",
+                    class_name="OpenAIProviderAdapter"
+                ),
+                ProviderRegistration(
+                    module_path="framework.models.providers.google",
+                    class_name="GoogleProviderAdapter"
+                ),
+                ProviderRegistration(
+                    module_path="framework.models.providers.ollama",
+                    class_name="OllamaProviderAdapter"
+                ),
+                ProviderRegistration(
+                    module_path="framework.models.providers.cborg",
+                    class_name="CBorgProviderAdapter"
+                ),
+            ],
+            
             # Simplified initialization order - decorators and subgraphs are imported directly when needed
             initialization_order=[
                 "context_classes",    # First - needed by capabilities
                 "data_sources",       # Second - needed by capabilities  
-                "core_nodes",         # Third - infrastructure nodes
-                "services",           # Fourth - internal service graphs
-                "capabilities",       # Fifth - depends on everything else including services
+                "providers",          # Third - AI model providers early for use by capabilities
+                "core_nodes",         # Fourth - infrastructure nodes
+                "services",           # Fifth - internal service graphs
+                "capabilities",       # Sixth - depends on everything else including services
                 "framework_prompt_providers"  # Last - imports applications that may need capabilities/context
             ]
         )
