@@ -50,6 +50,14 @@ RegistryManager
    
    .. automethod:: RegistryManager.get_all_services
    
+   **AI Providers:**
+   
+   .. automethod:: RegistryManager.get_provider
+   
+   .. automethod:: RegistryManager.list_providers
+   
+   .. automethod:: RegistryManager.get_provider_registration
+   
    .. rubric:: Registry Management
    
    .. automethod:: RegistryManager.initialize
@@ -118,6 +126,11 @@ RegistryConfig
       :type: List[ServiceRegistration]
       
       Registration entries for internal service graphs (optional).
+   
+   .. attribute:: providers
+      :type: List[ProviderRegistration]
+      
+      Registration entries for AI model providers (optional).
 
 Registration Classes
 ====================
@@ -230,6 +243,37 @@ Component Registration
       
       List of node names internal to this service.
 
+.. autoclass:: ProviderRegistration
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   
+   .. rubric:: Key Fields
+   
+   .. attribute:: module_path
+      :type: str
+      
+      Python module path for lazy import of provider adapter.
+   
+   .. attribute:: class_name
+      :type: str
+      
+      Provider adapter class name within the module.
+   
+   .. rubric:: Overview
+   
+   Minimal registration for AI model providers. Provider metadata (requires_api_key,
+   supports_proxy, etc.) is defined as class attributes on the provider class itself.
+   The registry introspects these attributes after loading the class, following the
+   same pattern as capabilities and context classes.
+   
+   This avoids metadata duplication between registration and class definition,
+   maintaining a single source of truth on the provider class.
+   
+   Applications can register custom providers for institutional AI services
+   (e.g., Azure OpenAI, Stanford AI Playground) or commercial
+   providers not included in the framework.
+
 Specialized Registration
 ------------------------
 
@@ -276,10 +320,11 @@ Components are initialized in strict dependency order:
 
 1. Context classes (required by capabilities)
 2. Data sources (required by capabilities)
-3. Core nodes (infrastructure components)
-4. Services (internal LangGraph service graphs)
-5. Capabilities (domain-specific functionality)
-6. Framework prompt providers (application-specific prompts)
+3. Providers (AI model providers - added in v0.7.6)
+4. Core nodes (infrastructure components)
+5. Services (internal LangGraph service graphs)
+6. Capabilities (domain-specific functionality)
+7. Framework prompt providers (application-specific prompts)
 
 **Lazy Loading:**
 

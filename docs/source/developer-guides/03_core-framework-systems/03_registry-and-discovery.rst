@@ -216,6 +216,85 @@ Component Registration
        description="Domain knowledge retrieval"
    )
 
+**AI Provider Registration:**
+
+Applications can register custom AI providers for institutional services or commercial providers not included in the framework:
+
+.. code-block:: python
+
+   # In registry.py
+   from framework.registry import ProviderRegistration
+   
+   return extend_framework_registry(
+       providers=[
+           ProviderRegistration(
+               module_path="my_app.providers.azure",
+               class_name="AzureOpenAIProviderAdapter"
+           )
+       ],
+       # ... other registrations ...
+   )
+   
+   # Implementation in src/my_app/providers/azure.py
+   from framework.models.providers.base import BaseProvider
+   from typing import Optional
+   import httpx
+   
+   class AzureOpenAIProviderAdapter(BaseProvider):
+       """Azure OpenAI provider with institutional configuration."""
+       
+       # Provider metadata (single source of truth)
+       name = "azure_openai"
+       requires_api_key = True
+       requires_base_url = True
+       requires_model_id = True
+       supports_proxy = True
+       default_base_url = None
+       
+       def create_model(
+           self,
+           model_id: str,
+           api_key: Optional[str],
+           base_url: Optional[str],
+           timeout: Optional[float],
+           http_client: Optional[httpx.AsyncClient]
+       ):
+           """Create PydanticAI model instance."""
+           # Implementation for Azure-specific model creation
+           pass
+       
+       def execute_completion(
+           self,
+           message: str,
+           model_id: str,
+           api_key: Optional[str],
+           base_url: Optional[str],
+           max_tokens: int = 1024,
+           temperature: float = 0.0,
+           **kwargs
+       ):
+           """Execute direct API completion."""
+           # Implementation for Azure-specific completions
+           pass
+       
+       def check_health(
+           self,
+           api_key: Optional[str],
+           base_url: Optional[str],
+           timeout: float = 5.0
+       ):
+           """Test connectivity and authentication."""
+           # Implementation for Azure health check
+           return (True, "Connected successfully")
+
+Common use cases for custom providers include:
+
+- **Institutional AI Services**: Stanford AI Playground, LBNL CBorg, national lab endpoints
+- **Commercial Providers**: Cohere, Mistral AI, Together AI, etc.
+- **Custom Endpoints**: Self-hosted models with OpenAI-compatible APIs
+
+Once registered, custom providers work seamlessly with :func:`framework.models.get_model` and :func:`framework.models.get_chat_completion`, and are automatically discovered by the health check system (``framework health``).
+
 Registry Initialization and Usage
 =================================
 
@@ -276,9 +355,11 @@ Components are loaded lazily during registry initialization:
 
 1. **Context classes** - Required by capabilities
 2. **Data sources** - Required by capabilities  
-3. **Core nodes** - Infrastructure components
-4. **Services** - Internal LangGraph service graphs
-5. **Capabilities** - Domain-specific functionality
+3. **Providers** - AI model providers
+4. **Core nodes** - Infrastructure components
+5. **Services** - Internal LangGraph service graphs
+6. **Capabilities** - Domain-specific functionality
+7. **Framework prompt providers** - Application-specific prompts
 
 Best Practices and Troubleshooting
 ===================================

@@ -50,7 +50,9 @@ Model and Provider Access
     :color: info
     :icon: people   
 
-    The framework's provider system is designed for extensibility. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. We're happy to work with you to implement native support for your institution's internal AI services or other providers you need. Contact us to discuss integration requirements.
+    The framework's provider system is designed for extensibility. Applications can register custom AI providers directly through the registry system - see :doc:`../../developer-guides/03_core-framework-systems/03_registry-and-discovery` for examples of registering Azure OpenAI, institutional AI services (Stanford AI Playground, LBNL CBorg, etc.), or other providers.
+    
+    For providers that would benefit the broader community, we're happy to work with you to add native framework support. Please create an issue on the GitHub repository to discuss integration requirements.
 
 Service Configuration
 ---------------------
