@@ -24,11 +24,10 @@ The module supports advanced features including:
    :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Model setup and configuration guide
 """
 
-from .factory import get_model, _create_openai_compatible_model
+from .factory import get_model
 from .completion import get_chat_completion
 
 __all__ = [
     'get_model',
-    'get_chat_completion', 
-    '_create_openai_compatible_model'
+    'get_chat_completion'
 ] 
