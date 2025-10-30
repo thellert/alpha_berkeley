@@ -7,6 +7,7 @@ This module provides the TemplateManager class which handles:
 - Copying service configurations to user projects
 """
 
+import os
 import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional, List
@@ -65,6 +66,41 @@ class TemplateManager:
             "Could not locate framework templates directory. "
             "Ensure the framework is properly installed."
         )
+    
+    def _detect_environment_variables(self) -> Dict[str, str]:
+        """Detect environment variables from the system for use in templates.
+        
+        This method checks for common environment variables that are typically
+        needed in .env files (API keys, paths, etc.) and returns those that are
+        currently set in the system.
+        
+        Returns:
+            Dictionary of detected environment variables with their values.
+            Only includes variables that are actually set (non-empty).
+            
+        Examples:
+            >>> manager = TemplateManager()
+            >>> env_vars = manager._detect_environment_variables()
+            >>> env_vars.get('OPENAI_API_KEY')  # Returns key if set, None otherwise
+        """
+        # List of environment variables we want to detect and potentially use
+        env_vars_to_check = [
+            'CBORG_API_KEY',
+            'OPENAI_API_KEY',
+            'ANTHROPIC_API_KEY',
+            'GOOGLE_API_KEY',
+            'PROJECT_ROOT',
+            'LOCAL_PYTHON_VENV',
+            'TZ',
+        ]
+        
+        detected = {}
+        for var in env_vars_to_check:
+            value = os.environ.get(var)
+            if value:  # Only include if the variable is set and non-empty
+                detected[var] = value
+        
+        return detected
     
     def list_app_templates(self) -> List[str]:
         """List available application templates.
@@ -171,6 +207,9 @@ class TemplateManager:
         import sys
         current_python = sys.executable
         
+        # Detect environment variables from the system
+        detected_env_vars = self._detect_environment_variables()
+        
         ctx = {
             "project_name": project_name,
             "package_name": package_name,
@@ -184,6 +223,8 @@ class TemplateManager:
             "current_python_env": current_python,  # Actual path to current Python
             "default_provider": "cborg",
             "default_model": "google/gemini-flash",
+            # Add detected environment variables
+            "env": detected_env_vars,
             **(context or {})
         }
         

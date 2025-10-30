@@ -108,6 +108,13 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
         console.print(f"  📋 Using template: [cyan]{template}[/cyan]")
         console.print(f"  📝 Registry style: [cyan]{registry_style}[/cyan]")
         
+        # Detect environment variables
+        detected_env = manager._detect_environment_variables()
+        if detected_env:
+            console.print(f"  🔑 Detected {len(detected_env)} environment variable(s) from system:")
+            for env_var in detected_env.keys():
+                console.print(f"     • {env_var}", style="dim")
+        
         # Handle existing directory
         output_path = Path(output_dir).resolve()
         project_path = output_path / project_name
