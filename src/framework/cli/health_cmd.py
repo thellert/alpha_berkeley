@@ -18,6 +18,10 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
+from rich.spinner import Spinner
+from rich.live import Live
+
+from framework.utils.log_filter import quiet_logger
 
 console = Console()
 
@@ -66,6 +70,22 @@ class HealthChecker:
     def check_all(self) -> bool:
         """Run all health checks and return True if all passed."""
         console.print("\n[bold cyan]🏥 Alpha Berkeley Framework - Health Check[/bold cyan]\n")
+        
+        # Initialize registry (needed for provider checks)
+        try:
+            from framework.registry import initialize_registry
+            
+            # Show spinner during registry initialization
+            spinner = Spinner("dots", text="[dim]Initializing framework registry...[/dim]", style="cyan")
+            with Live(spinner, console=console, transient=True):
+                if not self.verbose:
+                    with quiet_logger('REGISTRY'):
+                        initialize_registry()
+                else:
+                    initialize_registry()
+        except Exception as e:
+            if self.verbose:
+                console.print(f"  [dim]Could not initialize registry: {e}[/dim]")
         
         # Phase 1: Core checks (always run)
         self.check_configuration()
@@ -560,180 +580,66 @@ class HealthChecker:
                 console.print(f"  [dim]Could not check API providers: {e}[/dim]")
     
     def _check_provider(self, provider_name: str, provider_config: Dict):
-        """Check a specific API provider."""
-        # Check if API key is set
-        api_key = provider_config.get("api_key", "")
+        """Check a specific API provider using the provider registry."""
+        from framework.registry import get_registry
         
-        # Check if it's an environment variable reference
+        try:
+            # Suppress REGISTRY logger unless in verbose mode
+            if not self.verbose:
+                with quiet_logger('REGISTRY'):
+                    registry = get_registry()
+                    provider_class = registry.get_provider(provider_name)
+            else:
+                registry = get_registry()
+                provider_class = registry.get_provider(provider_name)
+        except Exception as e:
+            if self.verbose:
+                console.print(f"  [dim]Failed to get registry: {e}[/dim]")
+            provider_class = None
+        
+        if not provider_class:
+            self.add_result(
+                f"provider_{provider_name}",
+                "warning",
+                f"{provider_name}: Unknown provider (not in registry)"
+            )
+            console.print(f"  [yellow]⚠️  {provider_name}: Unknown provider[/yellow]")
+            return
+        
+        # Resolve API key from environment if needed
+        api_key = provider_config.get("api_key", "")
         if api_key.startswith("${") and api_key.endswith("}"):
             var_name = api_key[2:-1]
             api_key = os.environ.get(var_name, "")
         
-        if provider_name == "ollama":
-            # Ollama doesn't need an API key, always test connectivity (it's free)
-            base_url = provider_config.get("base_url")
-            if base_url:
-                # Try to test Ollama connection
-                try:
-                    from framework.models.factory import _test_ollama_connection
-                    if _test_ollama_connection(base_url):
-                        self.add_result(
-                            f"provider_{provider_name}",
-                            "ok",
-                            f"{provider_name}: accessible at {base_url}"
-                        )
-                        console.print(f"  [green]✅ {provider_name}: accessible[/green]")
-                    else:
-                        self.add_result(
-                            f"provider_{provider_name}",
-                            "warning",
-                            f"{provider_name}: not accessible at {base_url}"
-                        )
-                        console.print(f"  [yellow]⚠️  {provider_name}: not accessible[/yellow]")
-                except Exception as e:
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "warning",
-                        f"{provider_name}: could not test connection"
-                    )
-                    console.print(f"  [yellow]⚠️  {provider_name}: could not test[/yellow]")
-            else:
-                self.add_result(
-                    f"provider_{provider_name}",
-                    "warning",
-                    f"{provider_name}: no base_url configured"
-                )
-                console.print(f"  [yellow]⚠️  {provider_name}: no base_url[/yellow]")
-        else:
-            # For other providers, check if API key is set first
-            if not api_key or api_key == "your-api-key-here" or api_key.startswith("${"):
-                self.add_result(
-                    f"provider_{provider_name}",
-                    "warning",
-                    f"{provider_name}: API key not set"
-                )
-                console.print(f"  [yellow]⚠️  {provider_name}: API key not set[/yellow]")
-                return
-            
-            # API key is set - always test connectivity (it's fast and essentially free)
-            self._test_provider_connectivity(provider_name, provider_config, api_key)
-    
-    def _test_provider_connectivity(self, provider_name: str, provider_config: Dict, api_key: str):
-        """Test API endpoint connectivity (lightweight check, always runs)."""
-        try:
-            import requests
-            
-            base_url = provider_config.get("base_url")
-            
-            # Provider-specific connectivity tests
-            if provider_name in ["openai", "cborg"]:
-                # OpenAI-compatible API: test /v1/models endpoint
-                if not base_url:
-                    base_url = "https://api.openai.com/v1" if provider_name == "openai" else None
-                
-                if base_url:
-                    test_url = base_url.rstrip('/') + '/models'
-                    headers = {"Authorization": f"Bearer {api_key}"}
-                    
-                    response = requests.get(test_url, headers=headers, timeout=5)
-                    
-                    if response.status_code == 200:
-                        self.add_result(
-                            f"provider_{provider_name}",
-                            "ok",
-                            f"{provider_name}: API accessible and authenticated"
-                        )
-                        console.print(f"  [green]✅ {provider_name}: API accessible ✓[/green]")
-                    elif response.status_code == 401:
-                        self.add_result(
-                            f"provider_{provider_name}",
-                            "warning",
-                            f"{provider_name}: Authentication failed (invalid API key?)"
-                        )
-                        console.print(f"  [yellow]⚠️  {provider_name}: Authentication failed[/yellow]")
-                    else:
-                        self.add_result(
-                            f"provider_{provider_name}",
-                            "warning",
-                            f"{provider_name}: API returned status {response.status_code}"
-                        )
-                        console.print(f"  [yellow]⚠️  {provider_name}: Status {response.status_code}[/yellow]")
-                else:
-                    # No base_url, skip connectivity test
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "ok",
-                        f"{provider_name}: API key set (connectivity not tested)"
-                    )
-                    console.print(f"  [green]✅ {provider_name}: API key set[/green]")
-            
-            elif provider_name == "anthropic":
-                # Anthropic: use a lightweight validation approach
-                # Note: Anthropic doesn't have a free "list models" endpoint
-                # We'll just check if the key format looks valid
-                if api_key.startswith("sk-ant-"):
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "ok",
-                        f"{provider_name}: API key format valid (connectivity test skipped to avoid charges)"
-                    )
-                    console.print(f"  [green]✅ {provider_name}: API key format valid[/green]")
-                else:
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "warning",
-                        f"{provider_name}: API key format unusual (expected to start with 'sk-ant-')"
-                    )
-                    console.print(f"  [yellow]⚠️  {provider_name}: Unusual key format[/yellow]")
-            
-            elif provider_name in ["google", "gemini"]:
-                # Google: similar approach, avoid actual API call to prevent charges
-                # Just confirm the key is set and looks reasonable
-                if len(api_key) > 20:  # Google API keys are typically long
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "ok",
-                        f"{provider_name}: API key set (connectivity test skipped to avoid charges)"
-                    )
-                    console.print(f"  [green]✅ {provider_name}: API key set[/green]")
-                else:
-                    self.add_result(
-                        f"provider_{provider_name}",
-                        "warning",
-                        f"{provider_name}: API key seems short (may be invalid)"
-                    )
-                    console.print(f"  [yellow]⚠️  {provider_name}: Key seems short[/yellow]")
-            
-            else:
-                # Unknown provider: just confirm key is set
-                self.add_result(
-                    f"provider_{provider_name}",
-                    "ok",
-                    f"{provider_name}: API key set"
-                )
-                console.print(f"  [green]✅ {provider_name}: API key set[/green]")
+        # Get base URL from config
+        base_url = provider_config.get("base_url")
         
-        except requests.Timeout:
+        # Instantiate provider and check health
+        provider = provider_class()
+        success, message = provider.check_health(api_key, base_url, timeout=5.0)
+        
+        if success:
+            self.add_result(
+                f"provider_{provider_name}",
+                "ok",
+                f"{provider_name}: {message}"
+            )
+            console.print(f"  [green]✅ {provider_name}: {message}[/green]")
+        else:
             self.add_result(
                 f"provider_{provider_name}",
                 "warning",
-                f"{provider_name}: Connection timeout"
+                f"{provider_name}: {message}"
             )
-            console.print(f"  [yellow]⚠️  {provider_name}: Timeout[/yellow]")
-        except requests.RequestException as e:
-            self.add_result(
-                f"provider_{provider_name}",
-                "warning",
-                f"{provider_name}: Connection failed: {str(e)[:50]}"
-            )
-            console.print(f"  [yellow]⚠️  {provider_name}: Connection failed[/yellow]")
-        except Exception as e:
-            self.add_result(
-                f"provider_{provider_name}",
-                "warning",
-                f"{provider_name}: Could not test connectivity: {str(e)[:50]}"
-            )
-            console.print(f"  [yellow]⚠️  {provider_name}: Test failed[/yellow]")
+            console.print(f"  [yellow]⚠️  {provider_name}: {message}[/yellow]")
+    
+    def _resolve_api_key(self, api_key: str) -> str:
+        """Resolve API key if it's an environment variable reference."""
+        if api_key.startswith("${") and api_key.endswith("}"):
+            var_name = api_key[2:-1]
+            return os.environ.get(var_name, "")
+        return api_key
     
     def check_model_chat_completions(self):
         """Test actual chat completions with each unique model (full mode only)."""
@@ -796,13 +702,23 @@ class HealthChecker:
             test_message = "Reply with exactly: OK"
             
             # Call get_chat_completion with a timeout
+            # Suppress REGISTRY logger unless in verbose mode
             try:
-                response = get_chat_completion(
-                    message=test_message,
-                    provider=provider,
-                    model_id=model_id,
-                    max_tokens=50  # Keep it minimal
-                )
+                if not self.verbose:
+                    with quiet_logger('REGISTRY'):
+                        response = get_chat_completion(
+                            message=test_message,
+                            provider=provider,
+                            model_id=model_id,
+                            max_tokens=50  # Keep it minimal
+                        )
+                else:
+                    response = get_chat_completion(
+                        message=test_message,
+                        provider=provider,
+                        model_id=model_id,
+                        max_tokens=50  # Keep it minimal
+                    )
                 
                 # If we got here without exception and have a response, the model works
                 if response and isinstance(response, str) and len(response.strip()) > 0:
