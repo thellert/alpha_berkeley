@@ -7,12 +7,12 @@ Extracted from services.als_assistant.utils.memory_manager
 
 import os
 import json
-import logging
 from typing import Optional, List
 from pathlib import Path
 from datetime import datetime
 
 from framework.utils.config import get_framework_service_config, get_session_info, get_agent_dir
+from framework.utils.logger import get_logger
 from framework.state import UserMemories
 
 try:
@@ -22,7 +22,7 @@ except ImportError:
 
 from .models import MemoryContent
 
-logger = logging.getLogger(__name__)
+logger = get_logger("memory_storage")
 
 
 class MemoryStorageManager:
@@ -45,7 +45,7 @@ class MemoryStorageManager:
         """
         self.memory_dir = Path(memory_directory).resolve()
         self.memory_dir.mkdir(exist_ok=True, parents=True)
-        logger.info(f"Memory manager initialized with directory: {self.memory_dir}")
+        logger.debug(f"Memory manager initialized with directory: {self.memory_dir}")
     
     def _get_memory_file_path(self, user_id: str) -> Path:
         """Get path to user's memory file.
