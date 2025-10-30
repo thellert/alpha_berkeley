@@ -125,6 +125,8 @@ memory = [
 dev = [
     "pytest",
     "pytest-asyncio",
+    "pytest-vcr",  # Optional: For recording/replaying API interactions
+    "vcrpy",
     "black",
     "isort",
     "mypy",
