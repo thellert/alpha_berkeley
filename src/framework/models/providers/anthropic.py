@@ -14,6 +14,7 @@ class AnthropicProviderAdapter(BaseProvider):
     
     # Metadata (single source of truth)
     name = "anthropic"
+    description = "Anthropic (Claude models)"
     requires_api_key = True
     requires_base_url = False
     requires_model_id = True

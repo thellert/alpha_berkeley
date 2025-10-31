@@ -19,6 +19,7 @@ class BaseProvider(ABC):
     
     Metadata Attributes (define on subclass):
         name: Provider identifier (e.g., "anthropic", "openai")
+        description: User-friendly description for display in TUI (e.g., "Anthropic (Claude models)")
         requires_api_key: Whether provider requires API key for authentication
         requires_base_url: Whether provider requires custom base URL
         requires_model_id: Whether provider requires model ID specification
@@ -34,6 +35,7 @@ class BaseProvider(ABC):
     
     # Metadata - subclasses MUST override these class attributes
     name: str = NotImplemented  # Provider identifier (e.g., "anthropic")
+    description: str = NotImplemented  # User-friendly description (e.g., "Anthropic (Claude models)")
     requires_api_key: bool = NotImplemented
     requires_base_url: bool = NotImplemented
     requires_model_id: bool = NotImplemented

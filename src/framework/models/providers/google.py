@@ -15,6 +15,7 @@ class GoogleProviderAdapter(BaseProvider):
     
     # Metadata (single source of truth)
     name = "google"
+    description = "Google (Gemini models)"
     requires_api_key = True
     requires_base_url = False
     requires_model_id = True

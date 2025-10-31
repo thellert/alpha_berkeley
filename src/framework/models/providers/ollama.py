@@ -18,6 +18,7 @@ class OllamaProviderAdapter(BaseProvider):
     
     # Metadata (single source of truth)
     name = "ollama"
+    description = "Ollama (local models)"
     requires_api_key = False
     requires_base_url = True
     requires_model_id = True

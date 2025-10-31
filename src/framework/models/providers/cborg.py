@@ -17,6 +17,7 @@ class CBorgProviderAdapter(BaseProvider):
     
     # Metadata (single source of truth)
     name = "cborg"
+    description = "LBNL CBorg proxy (supports multiple models)"
     requires_api_key = True
     requires_base_url = True
     requires_model_id = True
