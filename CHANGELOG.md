@@ -5,6 +5,112 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.7] - 2025-11-01
+
+### Added
+- **Interactive Terminal UI (TUI)** - Comprehensive menu system for guided workflows
+  - New `interactive_menu.py` (1,771 lines) - Main TUI implementation with context-aware menus
+  - Context detection: Automatically adapts interface based on whether user is in a project directory
+  - Interactive project initialization with template, provider, and model selection
+  - Automatic API key detection from shell environment
+  - Secure password-style input for API keys not found in environment
+  - Beautiful Rich-formatted interface with colors and styled panels
+  - Smart defaults based on detected environment variables
+  - Seamless integration with existing Click commands
+- **Multi-Project Support** - Work seamlessly across multiple framework projects
+  - New `project_utils.py` (90 lines) - Unified project path resolution utilities
+  - `--project` flag added to all CLI commands (init, chat, deploy, health, export-config)
+  - `FRAMEWORK_PROJECT` environment variable support for persistent project selection
+  - Three ways to specify project: current directory, --project flag, or env var
+  - Explicit `config_path` parameter throughout configuration system
+  - Per-path config caching for efficient multi-project workflows
+  - Registry path resolution relative to config file location
+  - Project isolation with no cross-project configuration contamination
+- **Provider Descriptions** - User-friendly provider identification
+  - Added `description` field to `BaseProvider` abstract class
+  - All provider adapters updated with descriptions for TUI menus:
+    - anthropic: "Anthropic (Claude models)"
+    - openai: "OpenAI (GPT models)"
+    - google: "Google (Gemini models)"
+    - ollama: "Ollama (local models)"
+    - cborg: "LBNL CBorg proxy (supports multiple models)"
+- **Environment Variable Auto-Detection** - Intelligent project initialization
+  - `_detect_environment_variables()` method in TemplateManager
+  - Automatically detects API keys from system environment
+  - Updates `.env.example` template with detected values
+  - Displays detected environment variables during init command
+  - Falls back to placeholder values if vars not found
+- **Enhanced Container Status Display** - Professional formatted output
+  - Rich table formatting for `framework deploy status` command
+  - Colored status indicators with emoji (● Running / ● Stopped)
+  - Health status display (healthy/unhealthy/starting) when available
+  - Clear port mapping display (host→container format)
+  - JSON-based parsing for structured container information
+  - Helpful guidance when no services are running
+
+### Changed
+- **Configuration System** - Enhanced for multi-project scenarios
+  - All config utility functions now accept optional `config_path` parameter:
+    - `get_model_config()`, `get_provider_config()`, `get_framework_service_config()`
+    - `get_config_value()`, `get_full_configuration()`
+  - Implemented per-path config caching for performance
+  - Added `set_as_default` parameter for explicit path handling
+  - Maintains backward compatibility with singleton pattern
+- **Registry Manager** - Enhanced path resolution
+  - Added `config_path` parameter to `get_registry()` and `initialize_registry()`
+  - Resolve relative registry paths against config file location
+  - Pass config_path when initializing registry components
+  - Better base path resolution for registry files
+- **Data Source Manager** - Improved logging and status tracking
+  - Enhanced logging to distinguish empty vs. failed data sources
+  - Track sources that succeed but return no data
+  - Better summary format: "Data sources checked: 3 (1 with data, 1 empty, 1 failed)"
+  - Clearer UX for understanding data availability and debugging
+- **Default Model Selection** - Better out-of-box experience
+  - Changed default model from `gemini-2.0-flash-exp` to `claude-3-5-haiku-latest`
+  - Better performance and reliability for common tasks
+  - Lower latency and more consistent responses
+- **Docker Compose Templates** - Cleaner initial configuration
+  - Optional settings now commented out by default in generated templates
+  - Simpler initial setup for new projects
+  - Easy to uncomment and enable advanced features when needed
+- **Template Manager** - Enhanced for TUI integration
+  - Exported key functions for reuse by interactive menu
+  - Better separation of concerns between CLI and TUI
+  - Improved error handling and validation
+
+### Enhanced
+- **CLI Commands** - Unified project path resolution
+  - All commands updated with `--project` flag support
+  - Consistent path resolution using new `resolve_project_path()` utility
+  - Better error messages when project path invalid
+  - Project-aware command execution throughout
+- **User Experience** - Professional terminal interface
+  - Questionary library integration for interactive prompts
+  - Custom styling matching framework theme
+  - Rich console output with formatted panels and tables
+  - Helpful guidance and next-step suggestions
+  - Lower barrier to entry for new users
+  - Faster workflows for common tasks
+
+### Technical Details
+- **TUI Architecture** - ~1,900 lines of new code
+  - Context-aware menu system with adaptive interface
+  - Integration with TemplateManager for project scaffolding
+  - Integration with registry system for provider metadata
+  - Direct function calls (not Click commands) for efficiency
+  - Optional dependency on questionary (graceful fallback)
+- **Multi-Project Infrastructure** - ~300 lines of enhanced code
+  - Configuration system: per-path caching and explicit path support
+  - Registry manager: config-aware initialization and path resolution
+  - Data management: config path propagation
+  - CLI commands: unified path resolution utility
+- **Zero Breaking Changes** - Complete backward compatibility
+  - All existing CLI commands work unchanged
+  - TUI only activates when no arguments provided
+  - Direct commands remain primary interface for power users
+  - Configuration system maintains singleton pattern when no path specified
+
 ## [0.7.6] - 2025-10-30
 
 ### Added
