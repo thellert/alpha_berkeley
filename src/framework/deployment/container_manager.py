@@ -1081,12 +1081,18 @@ def deploy_restart(config_path, detached=False):
 
 
 def show_status(config_path):
-    """Show status of services.
+    """Show detailed status of services with formatted output.
     
     :param config_path: Path to the configuration file
     :type config_path: str
     """
     try:
+        from rich.console import Console
+        from rich.table import Table
+        import json
+        
+        console = Console()
+        
         config = ConfigBuilder(config_path)
         config = config.raw_config
     except Exception as e:
@@ -1099,16 +1105,106 @@ def show_status(config_path):
     compose_files = find_existing_compose_files(config, deployed_service_names)
     
     if not compose_files:
-        print("No compose files found. Services may not be deployed yet.")
+        console.print("\n[yellow]⚠️  No compose files found. Services may not be deployed yet.[/yellow]")
+        console.print("\n[dim]Run 'framework deploy build' to generate compose files[/dim]\n")
         return
     
+    # Get container status using podman compose ps --format json
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
-    cmd.extend(["--env-file", ".env", "ps"])
+    cmd.extend(["--env-file", ".env", "ps", "--format", "json"])
     
-    print(f"Running command:\n    {' '.join(cmd)}")
-    subprocess.run(cmd)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        
+        # Parse newline-delimited JSON output (one JSON object per line)
+        containers = []
+        if result.stdout.strip():
+            for line in result.stdout.strip().split('\n'):
+                line = line.strip()
+                # Skip warning messages and non-JSON lines
+                if line and not line.startswith('>') and not line.startswith('time='):
+                    try:
+                        container = json.loads(line)
+                        containers.append(container)
+                    except json.JSONDecodeError:
+                        # Skip non-JSON lines (warnings, etc.)
+                        continue
+        
+        # Create Rich table
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("Service", style="cyan", no_wrap=True)
+        table.add_column("Status", style="white")
+        table.add_column("Ports", style="blue")
+        table.add_column("Image", style="dim")
+        
+        if not containers:
+            console.print("\n[yellow]ℹ️  No services are currently running[/yellow]")
+            console.print(f"\n[dim]Configured services: {', '.join(deployed_service_names)}[/dim]")
+            console.print("\n[dim]Start services with: framework deploy up[/dim]\n")
+            return
+        
+        # Add rows for each container
+        for container in containers:
+            service_name = container.get("Service", container.get("Name", "unknown"))
+            state = container.get("State", "unknown")
+            health = container.get("Health", "")
+            
+            # Format status with emoji and health
+            if state == "running":
+                if health == "healthy":
+                    status = "[green]● Running (healthy)[/green]"
+                elif health == "unhealthy":
+                    status = "[yellow]● Running (unhealthy)[/yellow]"
+                elif health == "starting":
+                    status = "[cyan]● Running (starting)[/cyan]"
+                else:
+                    status = "[green]● Running[/green]"
+            elif state == "exited":
+                status = "[red]● Stopped[/red]"
+            elif state == "restarting":
+                status = "[yellow]● Restarting[/yellow]"
+            else:
+                status = f"[dim]● {state}[/dim]"
+            
+            # Format ports
+            ports_raw = container.get("Publishers", [])
+            if ports_raw:
+                # Extract published ports
+                port_list = []
+                for port in ports_raw:
+                    published = port.get("PublishedPort", "")
+                    target = port.get("TargetPort", "")
+                    if published and target:
+                        port_list.append(f"{published}→{target}")
+                ports = ", ".join(port_list) if port_list else "-"
+            else:
+                ports = "-"
+            
+            # Get image
+            image = container.get("Image", "unknown")
+            # Shorten image name if too long
+            if len(image) > 40:
+                image = "..." + image[-37:]
+            
+            table.add_row(service_name, status, ports, image)
+        
+        console.print(table)
+        console.print()
+        
+    except subprocess.CalledProcessError as e:
+        # Fallback to simple ps if json format not supported
+        console.print("\n[dim]Running basic status check...[/dim]\n")
+        cmd_simple = ["podman", "compose"]
+        for compose_file in compose_files:
+            cmd_simple.extend(("-f", compose_file))
+        cmd_simple.extend(["--env-file", ".env", "ps"])
+        subprocess.run(cmd_simple)
+    except json.JSONDecodeError:
+        console.print("[yellow]⚠️  Could not parse container status[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error getting status: {e}[/red]")
 
 
 def rebuild_deployment(config_path, detached=False, dev_mode=False):
