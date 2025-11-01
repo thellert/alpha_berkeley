@@ -147,6 +147,7 @@ class DataSourceManager:
         context_data = {}
         successful_sources = []
         failed_sources = []
+        empty_sources = []
         
         for (provider_name, _), result in zip(tasks, results):
             if isinstance(result, Exception):
@@ -155,7 +156,25 @@ class DataSourceManager:
             elif result is not None:
                 context_data[provider_name] = result
                 successful_sources.append(provider_name)
-                logger.debug(f"Successfully retrieved data from {provider_name}")
+                
+                # Check if the result has meaningful content
+                has_content = False
+                try:
+                    # Check if data is truthy (works for UserMemories and similar types)
+                    if result.data and (not hasattr(result.data, '__bool__') or bool(result.data)):
+                        has_content = True
+                    # Also check metadata hints like entry_count
+                    elif result.metadata.get('entry_count', 0) > 0:
+                        has_content = True
+                except Exception:
+                    # If we can't determine, assume it has content
+                    has_content = True
+                
+                if has_content:
+                    logger.debug(f"Successfully retrieved data from {provider_name}")
+                else:
+                    logger.debug(f"Retrieved empty result from {provider_name} (no data available)")
+                    empty_sources.append(provider_name)
             else:
                 failed_sources.append(provider_name)
         
@@ -169,12 +188,21 @@ class DataSourceManager:
             retrieval_time_sec=retrieval_time_sec
         )
         
-        # Log human-readable summary
-        if failed_sources:
-            logger.info(f"Retrieved data from {len(successful_sources)}/{len(providers)} sources in {retrieval_time_sec:.2f}s "
-                       f"(failed: {', '.join(failed_sources)})")
+        # Log human-readable summary with better clarity
+        sources_with_data = len([s for s in successful_sources if s not in empty_sources])
+        
+        if failed_sources or empty_sources:
+            details = []
+            if sources_with_data > 0:
+                details.append(f"{sources_with_data} with data")
+            if empty_sources:
+                details.append(f"{len(empty_sources)} empty")
+            if failed_sources:
+                details.append(f"{len(failed_sources)} failed")
+            
+            logger.info(f"Data sources checked: {len(providers)} ({', '.join(details)}) in {retrieval_time_sec:.2f}s")
         else:
-            logger.info(f"Retrieved data from {len(successful_sources)} source{'s' if len(successful_sources) != 1 else ''} in {retrieval_time_sec:.2f}s")
+            logger.info(f"Retrieved data from {sources_with_data} source{'s' if sources_with_data != 1 else ''} in {retrieval_time_sec:.2f}s")
         
         return retrieval_result
     

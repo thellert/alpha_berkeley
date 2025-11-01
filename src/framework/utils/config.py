@@ -304,52 +304,118 @@ class ConfigBuilder:
 # GLOBAL CONFIGURATION
 # =============================================================================
 
-# Global configuration instance
-_config: Optional[ConfigBuilder] = None
-_global_configurable: Optional[Dict[str, Any]] = None
+# Global configuration instances
+# Default config (singleton pattern for backward compatibility)
+_default_config: Optional[ConfigBuilder] = None
+_default_configurable: Optional[Dict[str, Any]] = None
+
+# Per-path config cache for explicit config paths
+_config_cache: Dict[str, ConfigBuilder] = {}
 
 
-def _get_config() -> ConfigBuilder:
-    """Get the global configuration instance (singleton pattern)."""
-    global _config, _global_configurable
+def _get_config(config_path: Optional[str] = None, set_as_default: bool = False) -> ConfigBuilder:
+    """Get configuration instance (singleton pattern with optional explicit path).
     
-    if _config is None:
-        # Check for environment variable override
-        config_file = os.environ.get('CONFIG_FILE')
-        if config_file:
-            _config = ConfigBuilder(config_file)
-        else:
-            _config = ConfigBuilder()
-        
-        # Cache configurable for efficient non-LangGraph contexts
-        _global_configurable = _config.configurable.copy()
-        
-        logger.info("Initialized configuration system")
+    This function supports two modes:
+    1. Default singleton: When no config_path provided, uses CONFIG_FILE env var or cwd/config.yml
+    2. Explicit path: When config_path provided, caches and returns config for that specific path
     
-    return _config
+    Args:
+        config_path: Optional explicit path to configuration file. If provided,
+                    this path is used instead of the default singleton behavior.
+        set_as_default: If True and config_path is provided, also set this config as the
+                       default singleton so future calls without config_path use it.
+    
+    Returns:
+        ConfigBuilder instance for the specified or default configuration
+        
+    Examples:
+        >>> # Default singleton behavior (backward compatible)
+        >>> config = _get_config()
+        
+        >>> # Explicit config path
+        >>> config = _get_config("/path/to/config.yml")
+        
+        >>> # Explicit path that becomes the default
+        >>> config = _get_config("/path/to/config.yml", set_as_default=True)
+    """
+    global _default_config, _default_configurable
+    
+    # If no explicit path, use default singleton behavior
+    if config_path is None:
+        if _default_config is None:
+            # Check for environment variable override
+            config_file = os.environ.get('CONFIG_FILE')
+            if config_file:
+                _default_config = ConfigBuilder(config_file)
+            else:
+                _default_config = ConfigBuilder()
+            
+            # Cache configurable for efficient non-LangGraph contexts
+            _default_configurable = _default_config.configurable.copy()
+            
+            logger.info("Initialized default configuration system")
+        
+        return _default_config
+    
+    # For explicit path, cache per path to avoid reloading
+    resolved_path = str(Path(config_path).resolve())
+    
+    if resolved_path not in _config_cache:
+        logger.info(f"Loading configuration from explicit path: {resolved_path}")
+        _config_cache[resolved_path] = ConfigBuilder(resolved_path)
+    
+    # If requested, also set this as the default config
+    if set_as_default and _default_config is None:
+        _default_config = _config_cache[resolved_path]
+        _default_configurable = _default_config.configurable.copy()
+        logger.debug(f"Set explicit config as default: {resolved_path}")
+    
+    return _config_cache[resolved_path]
 
 
-def _get_configurable() -> Dict[str, Any]:
-    """Get configurable dict with automatic context detection."""
+def _get_configurable(config_path: Optional[str] = None, set_as_default: bool = False) -> Dict[str, Any]:
+    """Get configurable dict with automatic context detection.
+    
+    This function supports both LangGraph execution contexts and standalone execution,
+    with optional explicit configuration path support.
+    
+    Args:
+        config_path: Optional explicit path to configuration file
+        set_as_default: If True and config_path is provided, set as default config
+        
+    Returns:
+        Complete configuration dictionary with all configurable values
+    """
     try:
         # Prefer LangGraph context for runtime-injected configuration
-        if get_config:
+        # (only when no explicit config_path is provided)
+        if config_path is None and get_config:
             config = get_config()
             return config.get("configurable", {})
         else:
-            raise ImportError("LangGraph not available")
+            raise ImportError("LangGraph not available or explicit path provided")
     except (RuntimeError, ImportError):
-        # Use cached global configurable for standalone execution
-        if _global_configurable is None:
-            _get_config()
-        return _global_configurable
+        # Use cached configurable for standalone execution
+        config = _get_config(config_path, set_as_default=set_as_default)
+        
+        # For default config, use cached configurable for performance
+        if config_path is None:
+            global _default_configurable
+            if _default_configurable is None:
+                _default_configurable = config.configurable.copy()
+            return _default_configurable
+        
+        # For explicit paths, return configurable directly
+        return config.configurable
 
 
 # =============================================================================
 # CONTEXT-AWARE UTILITY FUNCTIONS
 # =============================================================================
 
-def get_model_config(app_or_framework: str, service: str = None, model_type: str = None) -> Dict[str, Any]:
+def get_model_config(app_or_framework: str, service: str = None, model_type: str = None, 
+                     config_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Get model configuration with automatic context detection.
     
@@ -360,11 +426,12 @@ def get_model_config(app_or_framework: str, service: str = None, model_type: str
         app_or_framework: Application name or 'framework' for framework models
         service: Service name or model name for framework models
         model_type: Model type for nested services (optional)
+        config_path: Optional explicit path to configuration file
         
     Returns:
         Dictionary with model configuration
     """
-    configurable = _get_configurable()
+    configurable = _get_configurable(config_path)
     model_configs = configurable.get("model_configs", {})
     
     # Handle framework models
@@ -403,16 +470,32 @@ def get_model_config(app_or_framework: str, service: str = None, model_type: str
         return {}
 
 
-def get_provider_config(provider_name: str) -> Dict[str, Any]:
-    """Get API provider configuration with automatic context detection."""
-    configurable = _get_configurable()
+def get_provider_config(provider_name: str, config_path: Optional[str] = None) -> Dict[str, Any]:
+    """Get API provider configuration with automatic context detection.
+    
+    Args:
+        provider_name: Name of the provider (e.g., 'openai', 'anthropic')
+        config_path: Optional explicit path to configuration file
+        
+    Returns:
+        Dictionary with provider configuration
+    """
+    configurable = _get_configurable(config_path)
     provider_configs = configurable.get("provider_configs", {})
     return provider_configs.get(provider_name, {})
 
 
-def get_framework_service_config(service_name: str) -> Dict[str, Any]:
-    """Get framework service configuration with automatic context detection."""
-    configurable = _get_configurable()
+def get_framework_service_config(service_name: str, config_path: Optional[str] = None) -> Dict[str, Any]:
+    """Get framework service configuration with automatic context detection.
+    
+    Args:
+        service_name: Name of the framework service
+        config_path: Optional explicit path to configuration file
+        
+    Returns:
+        Dictionary with service configuration
+    """
+    configurable = _get_configurable(config_path)
     service_configs = configurable.get("service_configs", {})
     # Try new flat format first (single-config)
     if service_name in service_configs:
@@ -628,16 +711,18 @@ def get_agent_dir(sub_dir: str, host_path: bool = False) -> str:
 # LANGGRAPH NATIVE ACCESS
 # =============================================================================
 
-def get_config_value(path: str, default: Any = None) -> Any:
+def get_config_value(path: str, default: Any = None, config_path: Optional[str] = None) -> Any:
     """
     Get a specific configuration value by dot-separated path.
     
     This function provides context-aware access to configuration values,
-    working both inside and outside LangGraph execution contexts.
+    working both inside and outside LangGraph execution contexts. Optionally,
+    an explicit configuration file path can be provided.
     
     Args:
         path: Dot-separated configuration path (e.g., "execution.timeout")
         default: Default value to return if path is not found
+        config_path: Optional explicit path to configuration file
         
     Returns:
         The configuration value at the specified path, or default if not found
@@ -648,11 +733,14 @@ def get_config_value(path: str, default: Any = None) -> Any:
     Examples:
         >>> timeout = get_config_value("execution.timeout", 30)
         >>> debug_mode = get_config_value("development.debug", False)
+        
+        >>> # With explicit config path
+        >>> timeout = get_config_value("execution.timeout", 30, "/path/to/config.yml")
     """
     if not path:
         raise ValueError("Configuration path cannot be empty or None")
     
-    configurable = _get_configurable()
+    configurable = _get_configurable(config_path)
     
     # Navigate through dot-separated path
     keys = path.split('.')
@@ -691,22 +779,40 @@ def get_classification_config() -> Dict[str, Any]:
     }
 
 
-def get_full_configuration() -> Dict[str, Any]:
+def get_full_configuration(config_path: Optional[str] = None) -> Dict[str, Any]:
     """
     Get the complete configuration dictionary.
     
     This function provides access to the entire configurable dictionary,
-    working both inside and outside LangGraph execution contexts.
+    working both inside and outside LangGraph execution contexts. Optionally,
+    an explicit configuration file path can be provided.
+    
+    When an explicit config_path is provided, it is also set as the default
+    configuration so that subsequent config access without explicit path will
+    use this configuration.
+    
+    Args:
+        config_path: Optional explicit path to configuration file. If provided,
+                    loads configuration from this path and sets it as the default.
     
     Returns:
         Complete configuration dictionary with all configurable values
         
     Examples:
+        >>> # Default configuration (backward compatible)
         >>> config = get_full_configuration()
         >>> user_id = config.get("user_id")
         >>> models = config.get("model_configs", {})
+        
+        >>> # Explicit configuration path (also becomes default)
+        >>> config = get_full_configuration("/path/to/my-config.yml")
+        >>> models = config.get("model_configs", {})
+        >>> # Subsequent calls without path use this config
+        >>> other_value = get_config_value("some.setting")
     """
-    return _get_configurable()
+    # If explicit path provided, set as default for future access
+    set_as_default = config_path is not None
+    return _get_configurable(config_path, set_as_default=set_as_default)
 
 # Initialize the global configuration on import (skip for documentation/tests)
 # This provides convenience for module-level logger initialization, but is not

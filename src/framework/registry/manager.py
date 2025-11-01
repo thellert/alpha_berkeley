@@ -1846,8 +1846,9 @@ class RegistryManager:
 # ==============================================================================
 
 _registry: Optional[RegistryManager] = None
+_registry_config_path: Optional[str] = None
 
-def get_registry() -> RegistryManager:
+def get_registry(config_path: Optional[str] = None) -> RegistryManager:
     """Retrieve the global registry manager singleton instance.
     
     Returns the global registry manager instance, creating it automatically if it
@@ -1871,6 +1872,9 @@ def get_registry() -> RegistryManager:
         3. Build merged configuration (framework + applications)
         4. Return uninitialized registry instance
     
+    :param config_path: Optional explicit path to configuration file. If provided
+        on first call, this path is used to create the registry. Subsequent calls
+        ignore this parameter (singleton already exists).
     :return: The global registry manager singleton instance. The instance may not
         be initialized - call initialize_registry() or registry.initialize() to
         load components before accessing them
@@ -1897,6 +1901,11 @@ def get_registry() -> RegistryManager:
             >>> registry = get_registry()
             >>> capability = registry.get_capability("pv_address_finding")
         
+        With explicit config path::
+        
+            >>> registry = get_registry(config_path="/path/to/config.yml")
+            >>> # Registry created from specific config file
+        
         Check if registry is initialized::
         
             >>> registry = get_registry()
@@ -1918,17 +1927,18 @@ def get_registry() -> RegistryManager:
        :class:`RegistryManager` : The registry manager class returned by this function
        :doc:`/developer-guides/03_core-framework-systems/03_registry-and-discovery` : Registry access patterns
     """
-    global _registry
+    global _registry, _registry_config_path
     
     if _registry is None:
         logger.debug("Creating new registry instance...")
-        _registry = _create_registry_from_config()
+        _registry_config_path = config_path
+        _registry = _create_registry_from_config(config_path)
     else:
         logger.debug("Using existing registry instance...")
     
     return _registry
 
-def _create_registry_from_config() -> RegistryManager:
+def _create_registry_from_config(config_path: Optional[str] = None) -> RegistryManager:
     """Create registry manager from global configuration.
     
     Supports multiple configuration formats for registry path specification:
@@ -1952,25 +1962,60 @@ def _create_registry_from_config() -> RegistryManager:
          - app1
          - app2
     
+    :param config_path: Optional explicit path to configuration file
     :return: Configured registry manager with registry paths
     :rtype: RegistryManager
     :raises ConfigurationError: If configuration format is invalid
     """
+    from pathlib import Path
+    
     logger.debug("Creating registry from config...")
     try:
         registry_paths = []
         
+        # When using explicit config_path, ensure it becomes the default so components
+        # being instantiated later can access it without passing config_path everywhere
+        if config_path:
+            from framework.utils.config import _get_configurable
+            # This loads the config and sets it as default for future config access
+            _get_configurable(config_path=config_path, set_as_default=True)
+            logger.debug(f"Set {config_path} as default configuration")
+        
+        # Determine base path for resolving relative registry paths
+        # Priority: 1) project_root from config, 2) config file directory, 3) current directory
+        base_path = None
+        if config_path:
+            # Try to get project_root from the config (don't need config_path param anymore since it's default)
+            project_root = get_config_value('project_root', None)
+            if project_root:
+                base_path = Path(project_root)
+                logger.debug(f"Using project_root from config as base path: {base_path}")
+            else:
+                # Use config file's directory as base
+                base_path = Path(config_path).resolve().parent
+                logger.debug(f"Using config file directory as base path: {base_path}")
+        
+        def resolve_registry_path(path: str) -> str:
+            """Resolve registry path, handling relative paths correctly."""
+            if base_path and not Path(path).is_absolute():
+                # Resolve relative path against base_path
+                resolved = (base_path / path).resolve()
+                logger.debug(f"Resolved registry path '{path}' -> '{resolved}'")
+                return str(resolved)
+            return path
+        
         # Format 1: Top-level registry_path (simple, single-app)
+        # No need for config_path parameter - it's now the default
         top_level_path = get_config_value('registry_path', None)
         if top_level_path:
-            registry_paths.append(top_level_path)
+            registry_paths.append(resolve_registry_path(top_level_path))
             logger.debug(f"Using top-level registry_path: {top_level_path}")
         
         # Format 2: Nested application.registry_path (standard, recommended)
         application = get_config_value('application', None)
         if application and isinstance(application, dict):
             if 'registry_path' in application:
-                path = application['registry_path']
+                path = resolve_registry_path(application['registry_path'])
                 if path not in registry_paths:  # Avoid duplicates
                     registry_paths.append(path)
                     logger.debug(f"Using application.registry_path: {path}")
@@ -1987,7 +2032,7 @@ def _create_registry_from_config() -> RegistryManager:
                 # Format 3: Dict with app names and configs
                 for app_name, app_config in applications.items():
                     if isinstance(app_config, dict) and 'registry_path' in app_config:
-                        path = app_config['registry_path']
+                        path = resolve_registry_path(app_config['registry_path'])
                         if path not in registry_paths:  # Avoid duplicates
                             registry_paths.append(path)
                             logger.debug(f"Using applications[{app_name}].registry_path: {path}")
@@ -2027,12 +2072,12 @@ def _create_registry_from_config() -> RegistryManager:
                         f"./{app_name}/registry.py",
                     ]
                     # Try each possible path
-                    from pathlib import Path
                     for path in possible_paths:
-                        if Path(path).exists():
-                            if path not in registry_paths:
-                                registry_paths.append(path)
-                                logger.info(f"Found registry for '{app_name}' at: {path}")
+                        resolved_path = resolve_registry_path(path)
+                        if Path(resolved_path).exists():
+                            if resolved_path not in registry_paths:
+                                registry_paths.append(resolved_path)
+                                logger.info(f"Found registry for '{app_name}' at: {resolved_path}")
                             break
                     else:
                         logger.error(
@@ -2061,7 +2106,7 @@ def _create_registry_from_config() -> RegistryManager:
         logger.error(f"Failed to create registry from config: {e}")
         raise RuntimeError(f"Registry creation failed: {e}") from e
 
-def initialize_registry(auto_export: bool = True) -> None:
+def initialize_registry(auto_export: bool = True, config_path: Optional[str] = None) -> None:
     """Initialize the global registry system with all components.
     
     Performs complete initialization of the global registry system, including
@@ -2095,6 +2140,9 @@ def initialize_registry(auto_export: bool = True) -> None:
         files after successful initialization. Export files are saved to the
         configured registry_exports_dir location
     :type auto_export: bool
+    :param config_path: Optional explicit path to configuration file. Used when
+        creating the registry if it doesn't already exist.
+    :type config_path: Optional[str]
     :raises RegistryError: If registry initialization fails due to component loading
         errors, missing modules, or invalid component definitions
     :raises ConfigurationError: If global configuration is invalid, application
@@ -2123,6 +2171,11 @@ def initialize_registry(auto_export: bool = True) -> None:
             >>> # Now components are available
             >>> registry = get_registry()
             >>> capability = registry.get_capability("pv_address_finding")
+        
+        With explicit config path::
+        
+            >>> initialize_registry(config_path="/path/to/config.yml")
+            >>> # Registry created and initialized from specific config
             
         Initialize without metadata export::
         
@@ -2151,7 +2204,7 @@ def initialize_registry(auto_export: bool = True) -> None:
        :meth:`RegistryManager.initialize` : Core initialization method called by this function
        :meth:`RegistryManager.export_registry_to_json` : Export functionality used when auto_export=True
     """
-    registry = get_registry()
+    registry = get_registry(config_path=config_path)
     registry.initialize()
     
     # Auto-export registry data if requested
