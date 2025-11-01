@@ -215,7 +215,8 @@ execution_control:
         
         # Reset global config
         import framework.utils.config as config_module
-        config_module._config = None
+        config_module._default_config = None
+        config_module._default_configurable = None
         
         # Test access
         value = get_config_value('execution_control.limits.max_retries', 0)

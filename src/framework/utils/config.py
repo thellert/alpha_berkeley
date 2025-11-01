@@ -742,7 +742,7 @@ def get_config_value(path: str, default: Any = None, config_path: Optional[str] 
     
     configurable = _get_configurable(config_path)
     
-    # Navigate through dot-separated path
+    # Navigate through dot-separated path in configurable dict
     keys = path.split('.')
     value = configurable
     
@@ -750,7 +750,9 @@ def get_config_value(path: str, default: Any = None, config_path: Optional[str] 
         if isinstance(value, dict) and key in value:
             value = value[key]
         else:
-            return default
+            # Not found in configurable, try raw config as fallback
+            config = _get_config(config_path)
+            return config.get(path, default)
     
     return value
 
