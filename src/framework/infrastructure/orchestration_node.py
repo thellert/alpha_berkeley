@@ -395,7 +395,7 @@ class OrchestrationNode(BaseInfrastructureNode):
             logger.info(f"Constructed orchestrator instructions using:")
             logger.info(f" - {len(active_capabilities)} capabilities")
             logger.info(f" - {total_examples} structured examples")
-            logger.info(f" - {context_types} context types")
+            logger.info(f" - {context_types} context types from state")
             if error_context:
                 logger.info(f" - Error context for replanning (previous failure analysis)")
             

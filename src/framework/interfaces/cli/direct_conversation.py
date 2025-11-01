@@ -305,7 +305,9 @@ class CLI:
         self.thread_id = f"cli_session_{uuid.uuid4().hex[:8]}"
         
         # Get base configurable and add session info
-        configurable = get_full_configuration().copy()
+        # Use explicit config_path if provided (clean, no side effects)
+        # This also sets it as the default config for all subsequent config access
+        configurable = get_full_configuration(config_path=self.config_path).copy()
         configurable.update({
             "user_id": "cli_user",
             "thread_id": self.thread_id,
@@ -316,6 +318,7 @@ class CLI:
         
         # Add recursion limit to runtime config
         from framework.utils.config import get_config_value
+        # Config is now set as default, so we don't need to pass config_path
         recursion_limit = get_config_value("execution_limits.graph_recursion_limit")
         
         self.base_config = {
@@ -325,7 +328,7 @@ class CLI:
         
         # Initialize framework
         self.console.print("🔄 Initializing framework...", style="blue")
-        initialize_registry()
+        initialize_registry(config_path=self.config_path)
         registry = get_registry()
         checkpointer = MemorySaver()
         

@@ -27,6 +27,7 @@ class CBorgProviderAdapter(BaseProvider):
     health_check_model_id = "google/gemini-flash"  # Same for health check (already cheap)
     available_models = [
         "anthropic/claude-sonnet",
+        "anthropic/claude-haiku",
         "google/gemini-flash",
         "google/gemini-pro",
         "openai/gpt-4o",

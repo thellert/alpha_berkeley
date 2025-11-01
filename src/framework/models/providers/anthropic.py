@@ -20,8 +20,8 @@ class AnthropicProviderAdapter(BaseProvider):
     requires_model_id = True
     supports_proxy = True
     default_base_url = None
-    default_model_id = "claude-sonnet-4-5"  # Latest Sonnet for general use
-    health_check_model_id = "claude-haiku-4-5"  # Cheapest model for health checks
+    default_model_id = "claude-sonnet-4-5"
+    health_check_model_id = "claude-sonnet-4-5" 
     available_models = [
         "claude-opus-4-1",
         "claude-sonnet-4-5",
