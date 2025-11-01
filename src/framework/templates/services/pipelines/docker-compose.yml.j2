@@ -39,16 +39,16 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - CBORG_API_KEY=${CBORG_API_KEY}
-      # Langfuse observability configuration
-      - LANGFUSE_ENABLED=${LANGFUSE_ENABLED}
-      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
-      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
-      - LANGFUSE_HOST=${LANGFUSE_HOST}
-      # SQUID proxy (required for firewalled environments like ALS)
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - http_proxy=${http_proxy}
-      - https_proxy=${https_proxy}
-      - NO_PROXY=${NO_PROXY}
+      # Langfuse observability (optional - uncomment to enable LLM monitoring/tracing)
+      # - LANGFUSE_ENABLED=${LANGFUSE_ENABLED}
+      # - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      # - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      # - LANGFUSE_HOST=${LANGFUSE_HOST}
+      # Proxy settings (optional - uncomment if behind corporate firewall)
+      # - HTTP_PROXY=${HTTP_PROXY}
+      # - HTTPS_PROXY=${HTTPS_PROXY}
+      # - http_proxy=${http_proxy}
+      # - https_proxy=${https_proxy}
+      # - NO_PROXY=${NO_PROXY}
     networks:
       - alpha-berkeley-network

@@ -19,8 +19,9 @@ services:
       - PYTHONPATH=/jupyter/repo_src
       # Timezone synchronization with host (from system configuration)
       - TZ={{system.timezone}}
-      - HTTP_PROXY=${HTTP_PROXY}
-      - NO_PROXY=${NO_PROXY}
+      # Proxy settings (optional - uncomment if behind corporate firewall)
+      # - HTTP_PROXY=${HTTP_PROXY}
+      # - NO_PROXY=${NO_PROXY}
       # EPICS Read Container Configuration (kernels define specific gateways)
       - EPICS_CA_AUTO_ADDR_LIST=NO
       - EPICS_EXECUTION_MODE=read
@@ -48,8 +49,9 @@ services:
       - JUPYTER_ENABLE_LAB=yes
       # Timezone synchronization with host (from system configuration)
       - TZ={{system.timezone}}
-      - HTTP_PROXY=${HTTP_PROXY}
-      - NO_PROXY=${NO_PROXY}
+      # Proxy settings (optional - uncomment if behind corporate firewall)
+      # - HTTP_PROXY=${HTTP_PROXY}
+      # - NO_PROXY=${NO_PROXY}
       # EPICS Write Access Configuration (kernels define specific gateways)
       - EPICS_CA_AUTO_ADDR_LIST=NO
       - EPICS_EXECUTION_MODE=write_access

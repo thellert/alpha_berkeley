@@ -14,7 +14,8 @@ services:
       # Timezone synchronization with host (from system configuration)
       - TZ={{system.timezone}}
       - OLLAMA_BASE_URL={{api.providers.ollama.host}}:{{api.providers.ollama.port}}
-      - NO_PROXY=${NO_PROXY}
+      # Proxy settings (optional - uncomment if behind corporate firewall)
+      # - NO_PROXY=${NO_PROXY}
       - WEBUI_CUSTOM_CSS_URL=/static/custom.css
       - USER_MEMORY_DIR=/app/{{file_paths.user_memory_dir}}
     volumes:
