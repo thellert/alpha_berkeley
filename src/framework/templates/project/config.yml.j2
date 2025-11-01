@@ -21,33 +21,34 @@ registry_path: ./src/{{ package_name }}/registry.py
 # multiple roles or specialize each one.
 #
 # Common providers: cborg, openai, anthropic, google, ollama
-# Budget tip: Use google/gemini-flash via cborg for most roles
+# Budget tip: Use anthropic/claude-haiku via cborg for most roles
 
 models:
   orchestrator:
     provider: {{ default_provider | default("cborg") }}
-    model_id: anthropic/claude-sonnet
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
+    max_tokens: 4096
   response:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   classifier:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   approval:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   task_extraction:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   memory:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   python_code_generator:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
   time_parsing:
     provider: {{ default_provider | default("cborg") }}
-    model_id: {{ default_model | default("google/gemini-flash") }}
+    model_id: {{ default_model | default("anthropic/claude-haiku") }}
 
 # ============================================================
 # SERVICE CONFIGURATION
