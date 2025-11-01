@@ -34,14 +34,41 @@ By the end of this guide, you'll have a working agent that responds to queries l
 Step 1: Create the Project
 ---------------------------
 
-First, create a new project from the hello_world_weather template using :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+.. tab-set::
 
-.. code-block:: bash
+   .. tab-item:: Interactive Mode (Recommended)
 
-   framework init weather-demo --template hello_world_weather
-   cd weather-demo
+      The easiest way to create your project is using the interactive menu:
 
-This generates a complete, self-contained project with the following structure:
+      .. code-block:: bash
+
+         framework
+
+      This launches an interactive terminal UI that will:
+
+      1. Guide you through template selection (choose ``hello_world_weather``)
+      2. Help you select an AI provider and model
+      3. Automatically detect and configure API keys
+      4. Create a ready-to-use project
+
+      Just follow the prompts, and you'll have a complete project set up in minutes!
+
+   .. tab-item:: Direct CLI Command
+
+      If you prefer direct commands or are automating project creation:
+
+      .. code-block:: bash
+
+         framework init weather-demo --template hello_world_weather
+         cd weather-demo
+
+      This is perfect for scripts, automation, or when you already know exactly what you want.
+
+Both methods create identical project structures. Use whichever fits your workflow.
+
+**Generated Project Structure**
+
+Either method generates a complete, self-contained project with the following structure:
 
 .. code-block::
 
@@ -58,11 +85,6 @@ This generates a complete, self-contained project with the following structure:
    ├── services/                  # Container service configurations
    ├── config.yml                 # Complete configuration
    └── .env.example               # API key template
-
-.. admonition:: New in v0.7+: Template-Based Projects
-   :class: version-07plus-change
-
-   Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/hello_world_weather <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/hello_world_weather>`_.
 
 This tutorial will walk you through understanding how each component works and how they integrate together to create a complete AI agent application.
 

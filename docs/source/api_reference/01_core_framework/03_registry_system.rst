@@ -320,7 +320,7 @@ Components are initialized in strict dependency order:
 
 1. Context classes (required by capabilities)
 2. Data sources (required by capabilities)
-3. Providers (AI model providers - added in v0.7.6)
+3. Providers (LLM model providers)
 4. Core nodes (infrastructure components)
 5. Services (internal LangGraph service graphs)
 6. Capabilities (domain-specific functionality)

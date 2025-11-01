@@ -34,6 +34,7 @@ The Alpha Berkeley Framework provides a unified CLI for all framework operations
 
 .. code-block:: bash
 
+   framework                    # Launch interactive menu (NEW in v0.7.7)
    framework --version          # Show framework version
    framework --help             # Show available commands
    framework init PROJECT       # Create new project
@@ -41,10 +42,134 @@ The Alpha Berkeley Framework provides a unified CLI for all framework operations
    framework chat               # Start interactive chat
    framework export-config      # Export configuration
 
+Interactive Mode
+================
+
+The framework provides an interactive terminal UI (TUI) that automatically launches when you run ``framework`` without any arguments:
+
+.. code-block:: bash
+
+   framework
+
+The TUI is **completely optional** - all existing direct commands continue to work exactly as before. Use whichever approach fits your workflow:
+
+- **Interactive mode**: Great for exploration, learning, and infrequent tasks
+- **Direct commands**: Perfect for direct control without visual overhead, for experienced users
+
+Context-Aware Menus
+-------------------
+
+The interactive menu automatically detects your context and adapts accordingly:
+
+**Outside a Project Directory:**
+
+When not in a project directory, the menu offers:
+
+- **Select nearby project** - If framework projects are detected in subdirectories, you can select one to navigate to
+- **Create new project (interactive)** - Guided project creation with template, provider, and model selection
+- **Show init command syntax** - View direct CLI commands for scripting
+- **Show main help** - Display all available commands
+- **Exit** - Close the interactive menu
+
+**Inside a Project Directory:**
+
+When inside a project directory (detected by presence of ``config.yml``), the menu shows:
+
+- **chat** - Start CLI conversation interface
+- **deploy** - Manage containerized services (with subcommands for up, down, status, etc.)
+- **health** - Run comprehensive system health check
+- **config** - Display current project configuration
+- **init** - Create a new project (in a different location)
+- **help** - Show all available commands
+- **exit** - Close the interactive menu
+
+The menu displays your current project name and configuration (provider/model) for easy reference.
+
+Interactive Project Creation
+----------------------------
+
+The interactive project creation flow guides you through all the necessary steps:
+
+1. **Project Name**: Enter a name for your project
+2. **Template Selection**: Choose from available templates with descriptions:
+   
+   - ``minimal`` - Basic skeleton for custom development
+   - ``hello_world_weather`` - Simple weather agent example
+   - ``wind_turbine`` - Advanced multi-capability agent
+
+3. **Provider Selection**: Select your AI provider (Cborg, OpenAI, Anthropic, Google, Ollama, etc.)
+4. **Model Selection**: Choose from provider-specific models
+5. **API Key Setup**: 
+
+   - Automatically detects API keys from your shell environment
+   - Prompts for secure input if keys are not detected
+   - Generates ``.env`` file with detected or entered keys
+
+The interactive flow is equivalent to using ``framework init`` with appropriate flags, but with helpful guidance and validation at each step.
+
+Disabling Interactive Mode
+--------------------------
+
+If you prefer to only use direct commands, you can bypass the interactive menu by:
+
+- Running specific commands directly: ``framework chat``, ``framework deploy up``, etc.
+- Using ``framework --help`` to see available commands
+- The menu never interrupts existing scripts or automation
+
 Global Options
 ==============
 
 These options work with all ``framework`` commands.
+
+``--project`` / ``-p``
+----------------------
+
+The ``--project`` flag allows you to specify the project directory for commands that operate on existing projects (``chat``, ``deploy``, ``health``, ``export-config``), enabling multi-project workflows and CI/CD automation from any directory.
+
+.. code-block:: bash
+
+   framework COMMAND --project /path/to/project
+
+**Project Resolution Priority:**
+
+When determining which project to use, the framework checks in this order:
+
+1. **``--project`` CLI flag** (highest priority)
+2. **``FRAMEWORK_PROJECT`` environment variable**
+3. **Current working directory** (default)
+
+**Examples:**
+
+.. code-block:: bash
+
+   # Work with specific project from anywhere
+   framework chat --project ~/projects/weather-agent
+   framework deploy status --project ~/projects/turbine-monitor
+   
+   # Use environment variable for a session
+   export FRAMEWORK_PROJECT=~/projects/my-agent
+   framework chat              # Uses ~/projects/my-agent
+   framework deploy status     # Uses ~/projects/my-agent
+   
+   # CLI flag overrides environment variable
+   export FRAMEWORK_PROJECT=~/projects/agent1
+   framework chat --project ~/projects/agent2  # Uses agent2, not agent1
+
+**Use Cases:**
+
+- **Multi-project development**: Switch between projects without changing directories
+- **CI/CD pipelines**: Deploy or test specific projects from central scripts
+- **Automation**: Run health checks across multiple projects
+- **Parallel workflows**: Work with multiple projects simultaneously
+
+**Commands supporting ``--project``:**
+
+- ``framework chat --project PATH``
+- ``framework deploy COMMAND --project PATH``
+- ``framework health --project PATH``
+- ``framework export-config --project PATH``
+
+**Note**: The ``framework init`` command does not use ``--project`` because it creates a new project. Use ``--output-dir`` instead to specify where the new project should be created.
 
 ``--version``
 -------------
@@ -175,6 +300,20 @@ Syntax
 .. code-block:: bash
 
    framework deploy COMMAND [OPTIONS]
+
+Global Options
+--------------
+
+``--project PATH`` / ``-p PATH``
+   Project directory to use. If not specified, uses ``FRAMEWORK_PROJECT`` environment variable or current directory.
+   
+   This option works with all deploy subcommands (``up``, ``down``, ``status``, etc.).
+   
+   Example:
+      .. code-block:: bash
+
+         framework deploy status --project ~/projects/my-agent
+         framework deploy up --project ~/projects/my-agent --detached
 
 Commands
 --------
@@ -308,21 +447,36 @@ Syntax
 Options
 -------
 
-``--config PATH``
+``--project PATH`` / ``-p PATH``
+   Project directory to use. If not specified, uses ``FRAMEWORK_PROJECT`` environment variable or current directory.
+   
+   See :ref:`Global Options <--project>` for multi-project workflow details.
+
+``--config PATH`` / ``-c PATH``
    Path to configuration file.
    
-   Default: ``config.yml``
+   Default: ``config.yml`` in project directory
 
-Example
--------
+Examples
+--------
 
 .. code-block:: bash
 
-   # Start chat with default config
+   # Start chat in current directory
    framework chat
+   
+   # Start chat in specific project
+   framework chat --project ~/projects/my-agent
    
    # Use custom config
    framework chat --config my-config.yml
+   
+   # Combine project and config
+   framework chat --project ~/agent --config custom.yml
+   
+   # Use environment variable for project
+   export FRAMEWORK_PROJECT=~/projects/my-agent
+   framework chat
 
 Usage
 -----
@@ -399,7 +553,12 @@ Syntax
 Options
 -------
 
-``--output PATH``
+``--project PATH`` / ``-p PATH``
+   Project directory to use. If not specified, uses ``FRAMEWORK_PROJECT`` environment variable or current directory.
+   
+   This affects which project's configuration is exported.
+
+``--output PATH`` / ``-o PATH``
    Save configuration to file instead of printing to console.
 
 Examples
@@ -411,11 +570,23 @@ Examples
 
    framework export-config
 
+**View specific project's configuration:**
+
+.. code-block:: bash
+
+   framework export-config --project ~/projects/my-agent
+
 **Save to file:**
 
 .. code-block:: bash
 
    framework export-config --output framework-defaults.yml
+
+**Export from specific project and save:**
+
+.. code-block:: bash
+
+   framework export-config --project ~/agent --output agent-config.yml
 
 **Use as reference when customizing:**
 
@@ -462,7 +633,10 @@ For a **complete list of all supported environment variables** with descriptions
    PROJECT_ROOT=/path/to/your/project
    OPENAI_API_KEY=sk-...          # Or ANTHROPIC_API_KEY, GOOGLE_API_KEY, CBORG_API_KEY
    
-   # Optional
+   # Optional - Multi-project support (New in v0.7.7)
+   FRAMEWORK_PROJECT=/path/to/project
+   
+   # Optional - Other settings
    LOCAL_PYTHON_VENV=/path/to/venv
    TZ=America/Los_Angeles
    CONFIG_FILE=custom-config.yml
@@ -470,6 +644,19 @@ For a **complete list of all supported environment variables** with descriptions
    # Proxy settings (if needed)
    HTTP_PROXY=http://proxy:8080
    NO_PROXY=localhost,127.0.0.1
+
+``FRAMEWORK_PROJECT``
+   Default project directory for all commands. Allows working with a specific project from any location without using the ``--project`` flag on every command.
+
+   **Priority:** Lower than ``--project`` flag, higher than current directory.
+
+   **Example:**
+
+   .. code-block:: bash
+
+      export FRAMEWORK_PROJECT=~/projects/my-agent
+      framework chat           # Uses ~/projects/my-agent
+      framework deploy status  # Uses ~/projects/my-agent
 
 Common Workflows
 ================
@@ -533,6 +720,82 @@ If you're developing the framework itself:
    
    # Verify local framework is used
    podman exec jupyter-read pip show framework
+
+Multi-Project Workflows
+-----------------------
+
+.. admonition:: New in v0.7.7: Multi-Project Support
+   :class: version-07plus-change
+
+   Work with multiple projects simultaneously using the ``--project`` flag or ``FRAMEWORK_PROJECT`` environment variable.
+
+**Scenario 1: Parallel Development**
+
+Work on multiple projects from a central location:
+
+.. code-block:: bash
+
+   # Check status of all projects
+   framework deploy status --project ~/projects/weather-agent
+   framework deploy status --project ~/projects/turbine-monitor
+   framework deploy status --project ~/projects/als-assistant
+   
+   # Start chat with specific project
+   framework chat --project ~/projects/weather-agent
+
+**Scenario 2: Dedicated Terminal per Project**
+
+Use environment variables for persistent project selection:
+
+.. code-block:: bash
+
+   # Terminal 1: Weather Agent
+   export FRAMEWORK_PROJECT=~/projects/weather-agent
+   framework deploy up --detached
+   framework chat
+   
+   # Terminal 2: Turbine Monitor
+   export FRAMEWORK_PROJECT=~/projects/turbine-monitor
+   framework deploy up --detached
+   framework health
+   
+   # Terminal 3: Jump between projects
+   framework chat --project ~/projects/weather-agent
+   framework chat --project ~/projects/turbine-monitor
+
+**Scenario 3: CI/CD Pipeline**
+
+Automate deployment and testing across multiple projects:
+
+.. code-block:: bash
+
+   #!/bin/bash
+   # Deploy and test multiple projects
+   
+   PROJECTS=(
+       ~/projects/weather-agent
+       ~/projects/turbine-monitor
+       ~/projects/als-assistant
+   )
+   
+   for project in "${PROJECTS[@]}"; do
+       echo "Deploying $project..."
+       framework deploy up --detached --project "$project"
+       framework health --project "$project"
+   done
+
+**Scenario 4: Development + Production**
+
+Work with development and production configurations:
+
+.. code-block:: bash
+
+   # Development environment
+   export FRAMEWORK_PROJECT=~/dev/my-agent
+   framework deploy up
+   
+   # In another terminal, check production
+   framework deploy status --project /opt/production/my-agent
 
 Configuration Reference
 -----------------------

@@ -384,6 +384,52 @@ Basic Commands
    # Rebuild containers from scratch
    framework deploy rebuild
 
+Service Status Display
+----------------------
+
+The ``status`` command displays detailed information about all deployed services in a formatted table with visual indicators:
+
+.. code-block:: bash
+
+   framework deploy status
+
+**Example Output:**
+
+.. code-block:: text
+
+   Service Deployment Status
+   
+   ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+   ┃ Service       ┃ Status         ┃ Ports          ┃ Image          ┃
+   ┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+   │ open-webui    │ ● Running      │ 8080→8080      │ ghcr.io/...    │
+   │ pipelines     │ ● Running      │ 9099→9099      │ local/...      │
+   │ jupyter-read  │ ● Running      │ 8088→8088      │ local/...      │
+   │ jupyter-write │ ● Running      │ 8089→8088      │ local/...      │
+   │ mongo         │ ● Stopped      │ 27017→27017    │ mongo:latest   │
+   └───────────────┴────────────────┴────────────────┴────────────────┘
+
+The status display includes:
+
+- **Service**: Container name
+- **Status**: Running (●) or Stopped (●) with visual indicator
+- **Ports**: Port mappings (host→container)
+- **Image**: Container image used
+- **Health**: Health check status (if configured)
+
+**Multi-Project Status:**
+
+You can check status for specific projects using the ``--project`` flag:
+
+.. code-block:: bash
+
+   # Check status of specific project
+   framework deploy status --project ~/projects/weather-agent
+   
+   # Check multiple projects
+   framework deploy status --project ~/projects/agent1
+   framework deploy status --project ~/projects/agent2
+
 Command Options
 ---------------
 

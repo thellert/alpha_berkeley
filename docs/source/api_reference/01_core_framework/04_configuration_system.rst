@@ -30,11 +30,54 @@ ConfigBuilder
 Primary Access Functions
 ========================
 
+.. admonition:: New in v0.7.7: Multi-Project Support
+   :class: version-07plus-change
+
+   All configuration functions now accept an optional ``config_path`` parameter to explicitly specify which project's configuration to load. This enables multi-project workflows where you can work with multiple projects simultaneously.
+
+   **Common pattern:**
+
+   .. code-block:: python
+
+      from framework.utils.config import get_model_config
+      
+      # Use specific project's config
+      model = get_model_config("orchestrator", config_path="~/project/config.yml")
+      
+      # Default behavior (searches current directory)
+      model = get_model_config("orchestrator")
+
+   See :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture` for complete multi-project workflow documentation.
+
 .. autofunction:: get_config_value
+
+**Multi-Project Usage:**
+
+.. code-block:: python
+
+   # Get value from specific project
+   value = get_config_value(
+       "models.orchestrator.provider",
+       config_path="/path/to/project/config.yml"
+   )
 
 .. autofunction:: get_full_configuration
 
+**Multi-Project Usage:**
+
+.. code-block:: python
+
+   # Load complete config from specific project
+   config = get_full_configuration(config_path="~/my-agent/config.yml")
+
 .. autofunction:: get_agent_dir
+
+**Multi-Project Usage:**
+
+.. code-block:: python
+
+   # Get agent directory for specific project
+   agent_dir = get_agent_dir(config_path="~/my-agent/config.yml")
 
 Specialized Configuration Functions
 ===================================

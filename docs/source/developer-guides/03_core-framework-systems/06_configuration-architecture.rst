@@ -187,6 +187,76 @@ Use ``${VAR_NAME}`` syntax with optional defaults:
 
 **Security:** Never commit ``.env`` to version control. Keep it in ``.gitignore``.
 
+Multi-Project Workflows
+=======================
+
+.. admonition:: New in v0.7.7+: Multi-Project Support
+   :class: version-07plus-change
+
+   The configuration system now supports working with multiple projects simultaneously through explicit config paths and environment variables.
+
+The framework's configuration system supports working with multiple projects at once. This is useful for:
+
+- **Development**: Testing changes across multiple agents
+- **Production**: Managing dev, staging, and production configurations
+- **Research**: Running experiments with different configurations
+- **CI/CD**: Automated testing and deployment
+- **User Interfaces**: Enables flexible UI options like project selection menus and dynamic project switching
+
+Explicit Config Path
+--------------------
+
+All configuration utility functions accept an optional ``config_path`` parameter:
+
+.. code-block:: python
+
+   from framework.utils.config import get_model_config, get_registry_path
+   
+   # Load config from specific project
+   model_cfg = get_model_config(
+       "orchestrator", 
+       config_path="/path/to/project1/config.yml"
+   )
+   
+   # Get registry path from another project
+   registry_path = get_registry_path(
+       config_path="/path/to/project2/config.yml"
+   )
+
+Registry Path Resolution
+------------------------
+
+When using explicit config paths, all relative paths in the configuration (including ``registry_path``) are resolved **relative to the config file location**, not the current working directory:
+
+.. code-block:: python
+
+   # config.yml contains: registry_path: ./src/my_app/registry.py
+   
+   # Even if we're in /tmp, registry is resolved from config location
+   registry_path = get_registry_path(config_path="~/project/config.yml")
+   # Returns: ~/project/src/my_app/registry.py (not /tmp/src/...)
+
+This ensures configuration files are portable and work correctly regardless of where your script runs.
+
+Environment Variable for Default Project
+----------------------------------------
+
+Set ``FRAMEWORK_PROJECT`` to specify a default project directory:
+
+.. code-block:: bash
+
+   # Terminal 1: Work on project A
+   export FRAMEWORK_PROJECT=~/projects/agent-a
+   framework chat
+   framework deploy status
+   
+   # Terminal 2: Work on project B
+   export FRAMEWORK_PROJECT=~/projects/agent-b
+   framework chat
+   framework deploy status
+
+See :doc:`../../developer-guides/02_quick-start-patterns/00_cli-reference` for complete CLI multi-project workflow examples.
+
 Creating New Projects
 =====================
 

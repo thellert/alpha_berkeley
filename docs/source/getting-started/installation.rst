@@ -128,7 +128,32 @@ After creating and activating the virtual environment, install the framework pac
 
 **Creating a New Project**
 
-Once the framework is installed, create a new project from a template using the :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>` command:
+.. admonition:: New in v0.7.7: Interactive Project Creation
+   :class: version-07plus-change
+
+   The framework now includes an interactive menu that guides you through project creation with helpful prompts and automatic API key detection. This is the recommended method for new users.
+
+Once the framework is installed, you can create a new project using either the interactive menu or direct CLI commands:
+
+**Method 1: Interactive Mode (Recommended for New Users)**
+
+Simply run ``framework`` without any arguments to launch the interactive menu:
+
+.. code-block:: bash
+
+   framework
+
+The interactive menu will:
+
+1. Guide you through template selection with descriptions
+2. Help you choose an AI provider (Cborg, OpenAI, Anthropic, etc.)
+3. Let you select from available models
+4. Automatically detect API keys from your environment
+5. Create a ready-to-use project with smart defaults
+
+**Method 2: Direct CLI Command**
+
+For automation or if you prefer direct commands, use ``framework init``:
 
 .. code-block:: bash
 
@@ -143,6 +168,8 @@ Available templates:
 * ``minimal`` - Basic skeleton for starting from scratch
 * ``hello_world_weather`` - Simple weather agent (recommended for learning)
 * ``wind_turbine`` - Advanced multi-capability agent example
+
+Both methods create identical project structures - choose whichever fits your workflow.
 
 .. dropdown:: **Understand Your Project Structure**
    :color: info
@@ -246,7 +273,25 @@ The generated project includes both a ``config.yml`` configuration file and a ``
         - **Environment variables (.env):** Secrets, absolute paths, proxy settings that change per machine
         - **Configuration file (config.yml):** Application behavior, model choices, capabilities that stay the same
 
-        **Setup:**
+        **Automatic Setup (if API keys are in your environment):**
+
+        If you already have API keys exported in your shell:
+
+        .. code-block:: bash
+
+           # These are already in your shell environment
+           export ANTHROPIC_API_KEY=sk-ant-...
+           export CBORG_API_KEY=...
+           
+           # When you create a project, the framework automatically creates .env with them!
+           framework init my-agent
+           # or use interactive mode: framework
+
+        The framework will create a ``.env`` file automatically with your detected keys.
+
+        **Manual Setup (if keys are not in environment):**
+
+        If API keys are not in your environment, set them up manually:
 
         .. code-block:: bash
 
@@ -286,6 +331,13 @@ The generated project includes both a ``config.yml`` configuration file and a ``
            Get from: https://cborg.lbl.gov/
 
         **Optional Variables:**
+
+        ``FRAMEWORK_PROJECT``
+           Default project directory for CLI commands (new in v0.7.7). Allows working with specific projects without changing directories.
+           
+           Example: ``/home/user/projects/my-agent``
+           
+           See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for multi-project workflow examples.
 
         ``LOCAL_PYTHON_VENV``
            Path to Python virtual environment for local execution mode.

@@ -46,7 +46,7 @@ By following this comprehensive learning path, you'll have:
       :link-type: doc
       :class-header: bg-info text-white
             
-      Get your development environment running with Podman, dependencies, and configuration.
+      Get your development environment running with Podman, dependencies, and configuration. Includes interactive CLI for easy project creation!
       
       **Outcome:** 
       Working dev environment
