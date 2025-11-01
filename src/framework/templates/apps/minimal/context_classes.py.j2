@@ -221,7 +221,7 @@ class ExampleContext(CapabilityContext):
         
         return {
             # Show exact Python syntax to access this context
-            "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}",
+            "access_pattern": {% raw %}f"context.{self.CONTEXT_TYPE}.{key_ref}"{% endraw %},
             
             # List all accessible fields
             "available_fields": [
@@ -234,17 +234,17 @@ class ExampleContext(CapabilityContext):
             ],
             
             # Show concrete example of accessing data
-            "example_usage": (
-                f"# Access the numeric value\n"
-                f"value = context.{self.CONTEXT_TYPE}.{key_ref}.value\n\n"
-                f"# Access measurements list\n"
-                f"measurements = context.{self.CONTEXT_TYPE}.{key_ref}.measurements\n\n"
-                f"# Create a DataFrame (if using pandas)\n"
-                f"import pandas as pd\n"
-                f"df = pd.DataFrame({{\n"
-                f"    'measurement': context.{self.CONTEXT_TYPE}.{key_ref}.measurements\n"
-                f"}})"
-            ),
+            "example_usage": {% raw %}f"""# Access the numeric value
+value = context.{self.CONTEXT_TYPE}.{key_ref}.value
+
+# Access measurements list
+measurements = context.{self.CONTEXT_TYPE}.{key_ref}.measurements
+
+# Create a DataFrame (if using pandas)
+import pandas as pd
+df = pd.DataFrame({{
+    'measurement': context.{self.CONTEXT_TYPE}.{key_ref}.measurements
+}})"""{% endraw %},
             
             # Explain data structure if complex
             "data_structure": (
@@ -358,16 +358,15 @@ class SimpleAPIResponseContext(CapabilityContext):
         key_ref = key_name if key_name else "key_name"
         
         return {
-            "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.records",
+            "access_pattern": {% raw %}f"context.{self.CONTEXT_TYPE}.{key_ref}.records"{% endraw %},
             "available_fields": ["records", "total_count", "query_time"],
-            "example_usage": (
-                f"# Iterate over records\n"
-                f"for record in context.{self.CONTEXT_TYPE}.{key_ref}.records:\n"
-                f"    print(record['field_name'])\n\n"
-                f"# Convert to DataFrame\n"
-                f"import pandas as pd\n"
-                f"df = pd.DataFrame(context.{self.CONTEXT_TYPE}.{key_ref}.records)"
-            ),
+            "example_usage": {% raw %}f"""# Iterate over records
+for record in context.{self.CONTEXT_TYPE}.{key_ref}.records:
+    print(record['field_name'])
+
+# Convert to DataFrame
+import pandas as pd
+df = pd.DataFrame(context.{self.CONTEXT_TYPE}.{key_ref}.records)"""{% endraw %},
             "data_structure": "List of dictionaries, each representing one record"
         }
     
