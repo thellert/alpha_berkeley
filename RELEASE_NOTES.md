@@ -1,6 +1,15 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.7)
+# Alpha Berkeley Framework - Latest Release (v0.7.8)
 
 🚀 **User Experience Release** - Interactive Terminal UI and Multi-Project Support
+
+## What's New in v0.7.8
+
+### 🐛 Bug Fixes
+- Fixed config system test failure due to incorrect global variable references
+- Enhanced `get_config_value()` to support both processed and raw config paths
+- Improved template documentation clarity (example vs. valid categories)
+
+---
 
 ## What's New in v0.7.7
 

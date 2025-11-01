@@ -5,6 +5,13 @@ All notable changes to the Alpha Berkeley Framework will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.8] - 2025-11-01
+
+### Fixed
+- Fixed config system test failure by correcting global variable references (`_default_config` and `_default_configurable`)
+- Enhanced `get_config_value()` function to fall back to raw config when path not found in processed configurable dict
+- Updated template documentation to clarify "Example categories" instead of "Valid categories"
+
 ## [0.7.7] - 2025-11-01
 
 ### Added
