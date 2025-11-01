@@ -210,17 +210,18 @@ class UserMemoryProvider(DataSourceProvider):
             # Get memory entries from the storage manager
             memory_entries = self._memory_manager.get_all_memory_entries(user_id)
             
-            if not memory_entries:
-                logger.debug(f"No memory entries found for user {user_id}")
-                return None
-            
             # Convert to UserMemories format for compatibility
             from framework.state import UserMemories
-            user_memories = UserMemories(
-                entries=[entry.content for entry in memory_entries]
-            )
             
-            logger.debug(f"Retrieved {len(memory_entries)} core memory entries for user {user_id}")
+            if not memory_entries:
+                logger.debug(f"No memory entries found for user {user_id}")
+                # Return empty context instead of None - no data is not a failure
+                user_memories = UserMemories(entries=[])
+            else:
+                logger.debug(f"Retrieved {len(memory_entries)} core memory entries for user {user_id}")
+                user_memories = UserMemories(
+                    entries=[entry.content for entry in memory_entries]
+                )
             
             return DataSourceContext(
                 source_name=self.name,
@@ -228,7 +229,7 @@ class UserMemoryProvider(DataSourceProvider):
                 data=user_memories,
                 metadata={
                     "user_id": user_id,
-                    "entry_count": len(memory_entries),
+                    "entry_count": len(memory_entries) if memory_entries else 0,
                     "source_description": "Core user memory system",
                     "is_core_provider": True
                 },
