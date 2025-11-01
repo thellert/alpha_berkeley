@@ -113,7 +113,6 @@ valves.json
 
 # Agent data directories
 _agent_data/*
-RELEASE_NOTES_v*.md
 
 # Auto-generated documentation
 _autosummary/
@@ -122,6 +121,5 @@ _autosummary/
 *.pid
 
 # Development services and applications (keep locally but not in git)
-services/framework/mem0/
 _CLAUDE
-_openwebui
+_issues
