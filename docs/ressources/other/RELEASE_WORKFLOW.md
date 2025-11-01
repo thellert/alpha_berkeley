@@ -13,6 +13,29 @@ This document provides the **definitive workflow** for creating releases that en
 
 ## 📋 Correct Release Workflow
 
+### **Step 0: Pre-Release Testing (CRITICAL)**
+
+**⚠️ IMPORTANT**: Always run tests before starting the release process.
+
+1. **Activate Virtual Environment**
+   ```bash
+   source venv/bin/activate
+   ```
+
+2. **Run Full Test Suite**
+   ```bash
+   pytest -v
+   ```
+
+3. **Verify All Tests Pass**
+   - **9 failed tests = STOP**: Do not proceed with release
+   - **All tests pass = PROCEED**: Continue to Step 1
+   
+4. **Fix Any Failing Tests**
+   - If tests fail, fix issues first
+   - Re-run tests until all pass
+   - Commit fixes before proceeding
+
 ### **Step 1: Pre-Release Version Updates (CRITICAL)**
 
 **⚠️ IMPORTANT**: Update all version numbers BEFORE creating the GitHub release/tag.
