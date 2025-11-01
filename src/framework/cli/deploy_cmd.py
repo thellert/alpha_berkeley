@@ -30,13 +30,18 @@ console = Console()
 @click.command()
 @click.argument(
     "action",
-    type=click.Choice(["up", "down", "restart", "status", "clean", "rebuild"]),
+    type=click.Choice(["up", "down", "restart", "status", "build", "clean", "rebuild"]),
+)
+@click.option(
+    "--project", "-p",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Project directory (default: current directory or FRAMEWORK_PROJECT env var)"
 )
 @click.option(
     "--config", "-c",
     type=click.Path(exists=True),
     default="config.yml",
-    help="Configuration file (default: config.yml)"
+    help="Configuration file (default: config.yml in project directory)"
 )
 @click.option(
     "--detached", "-d",
@@ -48,7 +53,7 @@ console = Console()
     is_flag=True,
     help="Development mode: copy local framework package to containers instead of using PyPI version. Use this when testing local framework changes."
 )
-def deploy(action: str, config: str, detached: bool, dev: bool):
+def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
     """Manage Docker/Podman services for Framework projects.
     
     This command wraps the existing container management functionality,
@@ -61,6 +66,7 @@ def deploy(action: str, config: str, detached: bool, dev: bool):
       down     - Stop all services
       restart  - Restart all services
       status   - Show service status
+      build    - Build/prepare compose files without starting services
       clean    - Remove containers and volumes (WARNING: destructive)
       rebuild  - Clean, rebuild, and restart services
     
@@ -70,8 +76,11 @@ def deploy(action: str, config: str, detached: bool, dev: bool):
     Examples:
     
     \b
-      # Start services (production mode - uses PyPI framework)
+      # Start services in current directory
       $ framework deploy up
+      
+      # Start services in specific project
+      $ framework deploy up --project ~/projects/my-agent
       
       # Start in background (detached mode)
       $ framework deploy up -d
@@ -79,14 +88,18 @@ def deploy(action: str, config: str, detached: bool, dev: bool):
       # Start with local framework for development/testing
       $ framework deploy up --dev
       
-      # Start in background with local framework
-      $ framework deploy up -d --dev
-      
       # Stop services
       $ framework deploy down
       
       # Check status
       $ framework deploy status
+      
+      # Build compose files without starting services
+      $ framework deploy build
+      
+      # Use environment variable
+      $ export FRAMEWORK_PROJECT=~/projects/my-agent
+      $ framework deploy up
       
       # Use custom config
       $ framework deploy up --config my-config.yml
@@ -97,11 +110,13 @@ def deploy(action: str, config: str, detached: bool, dev: bool):
       # Rebuild with local framework for development
       $ framework deploy rebuild --dev
     """
-    console.print(f"🔧 Service management: [bold]{action}[/bold]")
+    from .project_utils import resolve_config_path
+    
+    console.print(f"Service management: [bold]{action}[/bold]")
     
     try:
-        # Convert config path to Path object (some functions may expect string or Path)
-        config_path = config  # Keep as string - original functions accept strings
+        # Resolve config path from project and config args
+        config_path = resolve_config_path(project, config)
         
         # Dispatch to existing container_manager functions
         # These are the ORIGINAL functions from Phase 1.5, behavior unchanged
@@ -116,6 +131,14 @@ def deploy(action: str, config: str, detached: bool, dev: bool):
             
         elif action == "status":
             show_status(config_path)
+            
+        elif action == "build":
+            # Just prepare compose files without starting services
+            console.print("🔨 Building compose files...")
+            _, compose_files = prepare_compose_files(config_path, dev_mode=dev)
+            console.print("\n✅ Compose files built successfully:")
+            for compose_file in compose_files:
+                console.print(f"  • {compose_file}")
             
         elif action == "clean":
             # clean_deployment expects compose_files list, so prepare them first

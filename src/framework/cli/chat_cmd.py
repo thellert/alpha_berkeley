@@ -21,12 +21,17 @@ console = Console()
 
 @click.command()
 @click.option(
+    "--project", "-p",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Project directory (default: current directory or FRAMEWORK_PROJECT env var)"
+)
+@click.option(
     "--config", "-c",
     type=click.Path(exists=True),
     default="config.yml",
-    help="Configuration file (default: config.yml)"
+    help="Configuration file (default: config.yml in project directory)"
 )
-def chat(config: str):
+def chat(project: str, config: str):
     """Start interactive CLI conversation interface.
     
     Opens an interactive chat session with the agent. The interface
@@ -53,21 +58,33 @@ def chat(config: str):
     Examples:
     
     \b
-      # Start chat with default config
+      # Start chat in current directory
       $ framework chat
+      
+      # Start chat in specific project
+      $ framework chat --project ~/projects/my-agent
       
       # Use custom configuration
       $ framework chat --config my-config.yml
+      
+      # Use environment variable
+      $ export FRAMEWORK_PROJECT=~/projects/my-agent
+      $ framework chat
     
     Note: Ensure services are running first (framework deploy up)
     """
-    console.print("🤖 Starting Framework CLI interface...")
+    from .project_utils import resolve_config_path
+    
+    console.print("Starting Framework CLI interface...")
     console.print("   Press Ctrl+C to exit\n")
     
     try:
+        # Resolve config path from project and config args
+        config_path = resolve_config_path(project, config)
+        
         # Call the existing run_cli function with config_path
         # This is the ORIGINAL function from Phase 1.5, behavior unchanged
-        asyncio.run(run_cli(config_path=config))
+        asyncio.run(run_cli(config_path=config_path))
         
     except KeyboardInterrupt:
         console.print("\n\n👋 Goodbye!", style="yellow")

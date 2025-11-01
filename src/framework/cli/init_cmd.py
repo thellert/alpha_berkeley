@@ -146,6 +146,14 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
         console.print(f"  ✓ Creating application code...", style="green")
         console.print(f"  ✓ Creating service configurations...", style="green")
         console.print(f"  ✓ Creating project configuration...", style="green")
+        
+        # Check if API keys were detected and .env was created
+        api_keys = ['CBORG_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY']
+        has_api_keys = any(key in detected_env for key in api_keys)
+        
+        if has_api_keys:
+            console.print(f"  ✓ Created .env with detected API keys", style="green")
+        
         console.print(
             f"\n✅ Project created successfully at: [bold]{project_path}[/bold]"
         )
@@ -153,10 +161,16 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
         # Show next steps
         console.print("\n📋 [bold]Next steps:[/bold]")
         console.print(f"  1. [cyan]cd {project_name}[/cyan]")
-        console.print("  2. [cyan]cp .env.example .env[/cyan]")
-        console.print("  3. # Edit .env with your API keys (OPENAI_API_KEY, etc.)")
-        console.print("  4. [cyan]framework deploy up[/cyan]")
-        console.print("  5. [cyan]framework chat[/cyan]")
+        
+        if has_api_keys:
+            console.print("  2. # .env already configured with detected API keys")
+            console.print("  3. [cyan]framework deploy up[/cyan]")
+            console.print("  4. [cyan]framework chat[/cyan]")
+        else:
+            console.print("  2. [cyan]cp .env.example .env[/cyan]")
+            console.print("  3. # Edit .env with your API keys (OPENAI_API_KEY, etc.)")
+            console.print("  4. [cyan]framework deploy up[/cyan]")
+            console.print("  5. [cyan]framework chat[/cyan]")
         
     except ValueError as e:
         console.print(f"❌ Error: {e}", style="red")

@@ -59,9 +59,10 @@ class LazyGroup(click.Group):
         return ['init', 'deploy', 'chat', 'export-config', 'health']
 
 
-@click.group(cls=LazyGroup)
+@click.group(cls=LazyGroup, invoke_without_command=True)
 @click.version_option(version=__version__, prog_name="framework")
-def cli():
+@click.pass_context
+def cli(ctx):
     """Alpha Berkeley Framework CLI - Capability-Based Agentic Framework.
     
     A unified command-line interface for creating, deploying, and interacting
@@ -72,13 +73,17 @@ def cli():
     Examples:
     
     \b
+      framework                       Launch interactive menu
       framework init my-project       Create new project
       framework deploy up             Start services  
       framework chat                  Interactive conversation
       framework health                Check system health
       framework export-config         View framework defaults
     """
-    pass
+    # NEW: If no command provided, launch interactive menu
+    if ctx.invoked_subcommand is None:
+        from .interactive_menu import launch_tui
+        launch_tui()
 
 
 def main():
@@ -86,10 +91,10 @@ def main():
     try:
         cli()
     except KeyboardInterrupt:
-        click.echo("\n👋 Goodbye!", err=True)
+        click.echo("\nGoodbye!", err=True)
         sys.exit(130)
     except Exception as e:
-        click.echo(f"❌ Error: {e}", err=True)
+        click.echo(f"Error: {e}", err=True)
         sys.exit(1)
 
 

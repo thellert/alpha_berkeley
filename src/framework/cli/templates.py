@@ -222,7 +222,7 @@ class TemplateManager:
             "venv_path": "${LOCAL_PYTHON_VENV}",
             "current_python_env": current_python,  # Actual path to current Python
             "default_provider": "cborg",
-            "default_model": "google/gemini-flash",
+            "default_model": "anthropic/claude-haiku",
             # Add detected environment variables
             "env": detected_env_vars,
             **(context or {})
@@ -276,6 +276,23 @@ class TemplateManager:
                     ctx,
                     project_dir / output_file
                 )
+        
+        # Create .env file only if API keys are detected
+        detected_env_vars = ctx.get('env', {})
+        api_keys = ['CBORG_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY']
+        has_api_keys = any(key in detected_env_vars for key in api_keys)
+        
+        if has_api_keys:
+            env_template = project_template_dir / "env.j2"
+            if env_template.exists():
+                self.render_template(
+                    "project/env.j2",
+                    ctx,
+                    project_dir / ".env"
+                )
+                # Set proper permissions (owner read/write only)
+                import os
+                os.chmod(project_dir / ".env", 0o600)
         
         # Copy static files
         for src_name, dst_name in static_files:

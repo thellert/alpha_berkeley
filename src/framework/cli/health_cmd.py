@@ -42,11 +42,11 @@ class HealthCheckResult:
 class HealthChecker:
     """Comprehensive health checker for Alpha Berkeley Framework."""
     
-    def __init__(self, verbose: bool = False, full: bool = False):
+    def __init__(self, verbose: bool = False, full: bool = False, project_path: Optional[Path] = None):
         self.verbose = verbose
         self.full = full
         self.results: List[HealthCheckResult] = []
-        self.cwd = Path.cwd()
+        self.cwd = project_path if project_path else Path.cwd()
         self.config = {}  # Initialize empty config, will be populated in check_configuration()
         
         # Load .env file early so environment variables are available for all checks
@@ -823,6 +823,11 @@ class HealthChecker:
 
 @click.command()
 @click.option(
+    "--project", "-p",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Project directory (default: current directory or FRAMEWORK_PROJECT env var)"
+)
+@click.option(
     "--verbose", "-v",
     is_flag=True,
     help="Show detailed information about warnings and errors"
@@ -832,7 +837,7 @@ class HealthChecker:
     is_flag=True,
     help="Test actual chat completions with each unique model (may incur small API costs)"
 )
-def health(verbose: bool, full: bool):
+def health(project: str, verbose: bool, full: bool):
     """Check the health of your Framework installation and configuration.
     
     This command performs comprehensive diagnostics without actually running
@@ -883,10 +888,21 @@ def health(verbose: bool, full: bool):
       
       # Full test with detailed output
       $ framework health --full --verbose
+      
+      # Check health of specific project
+      $ framework health --project ~/projects/my-agent
+      
+      # Use environment variable
+      $ export FRAMEWORK_PROJECT=~/projects/my-agent
+      $ framework health
     """
+    from .project_utils import resolve_project_path
     
     try:
-        checker = HealthChecker(verbose=verbose, full=full)
+        # Resolve project directory
+        project_path = resolve_project_path(project)
+        
+        checker = HealthChecker(verbose=verbose, full=full, project_path=project_path)
         success = checker.check_all()
         
         # Determine exit code

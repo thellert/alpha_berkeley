@@ -18,6 +18,11 @@ console = Console()
 
 @click.command(name="export-config")
 @click.option(
+    "--project", "-p",
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    help="Project directory (default: current directory or FRAMEWORK_PROJECT env var)"
+)
+@click.option(
     "--output", "-o",
     type=click.Path(),
     help="Output file (default: print to console)"
@@ -28,7 +33,7 @@ console = Console()
     default="yaml",
     help="Output format (default: yaml)"
 )
-def export_config(output: str, format: str):
+def export_config(project: str, output: str, format: str):
     """Export framework default configuration template.
     
     Displays the framework's default configuration template that is used
@@ -81,7 +86,7 @@ def export_config(output: str, format: str):
             project_root="/path/to/example_project",
             hostname="localhost",
             default_provider="cborg",
-            default_model="google/gemini-flash"
+            default_model="anthropic/claude-haiku"
         )
         
         # Parse the rendered config as YAML
