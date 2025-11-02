@@ -13,7 +13,7 @@ Architecture:
 
 Usage:
     from osprey.commands import get_command_registry, execute_command
-    
+
     registry = get_command_registry()
     result = await execute_command("/task:off", context)
 """
@@ -47,14 +47,14 @@ __all__ = [
     'register_command',
     'execute_command',
     'parse_command_line',
-    
+
     # Types
     'Command',
     'CommandResult', 
     'CommandCategory',
     'CommandContext',
     'CommandHandler',
-    
+
     # Command categories
     'register_cli_commands',
     'register_agent_control_commands', 

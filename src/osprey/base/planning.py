@@ -57,24 +57,24 @@ logger = logging.getLogger(__name__)
 
 class PlannedStep(TypedDict, total=False):
     """Individual execution step with comprehensive orchestration context.
-    
+
     This TypedDict represents a single capability execution within an agent's
     execution plan. It provides complete context including objectives, success
     criteria, input requirements, and expected outputs to enable sophisticated
     orchestration and capability coordination throughout the framework.
-    
+
     PlannedStep serves multiple critical functions:
     1. **Orchestration Guidance**: Clear objectives and success criteria for execution
     2. **Data Flow Management**: Input/output specifications for capability chaining
     3. **Context Management**: Unique keys for result storage and retrieval
     4. **Parameter Passing**: Flexible configuration for capability customization
     5. **Execution Tracking**: Complete context for monitoring and debugging
-    
+
     The structure uses total=False to support partial updates in LangGraph's
     state management system, enabling incremental plan construction and
     modification during execution. All fields are optional to provide
     flexibility in plan creation and evolution.
-    
+
     Field Definitions:
         - context_key: Unique identifier for storing step results in execution context
         - capability: Name of the capability to execute for this step
@@ -83,24 +83,24 @@ class PlannedStep(TypedDict, total=False):
         - expected_output: Context type key where results will be stored
         - parameters: Optional capability-specific configuration parameters
         - inputs: Step inputs as list of {context_type: context_key} mappings
-    
+
     Default behaviors (when fields not provided):
         - expected_output: None (no specific output context expected)
         - parameters: None (no custom parameters required)
         - inputs: [] (no input dependencies)
-    
+
     .. note::
        The task_objective should be complete and self-sufficient to enable
        capability execution without additional context. Success_criteria should
        be specific and measurable for reliable execution validation.
-    
+
     .. warning::
        Context keys must be unique within an execution plan to prevent
        result collisions. Use descriptive, namespaced keys for clarity.
-    
+
     Examples:
         Data retrieval step::
-        
+
             step = PlannedStep(
                 context_key="weather_data",
                 capability="weather_retrieval",
@@ -109,9 +109,9 @@ class PlannedStep(TypedDict, total=False):
                 expected_output="WEATHER_DATA",
                 parameters={"location": "San Francisco", "units": "metric"}
             )
-        
+
         Data processing step with dependencies::
-        
+
             step = PlannedStep(
                 context_key="processed_data",
                 capability="data_processor",
@@ -121,7 +121,7 @@ class PlannedStep(TypedDict, total=False):
                 inputs=[{"RAW_SENSOR_DATA": "sensor_readings"}],
                 parameters={"analysis_type": "trend", "window_size": 24}
             )
-    
+
     .. seealso::
        :class:`ExecutionPlan` : Complete execution plan containing multiple steps
        :class:`ExecutionRecord` : Historical record of completed step executions
@@ -137,43 +137,43 @@ class PlannedStep(TypedDict, total=False):
 
 class ExecutionPlan(TypedDict, total=False):
     """Complete execution plan with ordered capability sequence and orchestration context.
-    
+
     This TypedDict represents the orchestrator's comprehensive plan for accomplishing
     a user's request through a coordinated sequence of capability executions. It
     provides the complete execution roadmap including step ordering, data flow,
     and coordination requirements for complex multi-capability tasks.
-    
+
     ExecutionPlan serves as the primary coordination mechanism for:
     1. **Multi-Step Execution**: Ordered sequence of capability invocations
     2. **Data Flow Management**: Input/output coordination between capabilities
     3. **State Persistence**: LangGraph-compatible structure for checkpointing
     4. **Execution Tracking**: Foundation for monitoring and debugging
     5. **Plan Evolution**: Support for dynamic plan modification during execution
-    
+
     The structure uses total=False to support incremental plan construction
     and modification in LangGraph's state management system. This enables
     dynamic planning where plans can be built progressively and modified
     based on execution results and changing requirements.
-    
+
     Plan Structure:
         - steps: Ordered list of PlannedStep objects defining the execution sequence
-    
+
     Default behaviors (when fields not provided):
         - steps: [] (empty plan requiring population)
-    
+
     .. note::
        ExecutionPlan uses pure dictionary format for maximum compatibility with
        LangGraph's serialization and checkpointing systems. All plan data can
        be safely persisted and restored across execution sessions.
-    
+
     .. warning::
        Step ordering is critical for proper execution flow. Ensure dependencies
        between steps are properly sequenced and context keys are unique to
        prevent execution conflicts.
-    
+
     Examples:
         Simple two-step execution plan::
-        
+
             plan = ExecutionPlan(
                 steps=[
                     PlannedStep(
@@ -193,9 +193,9 @@ class ExecutionPlan(TypedDict, total=False):
                     )
                 ]
             )
-        
+
         Complex data processing pipeline::
-        
+
             plan = ExecutionPlan(
                 steps=[
                     PlannedStep(
@@ -223,7 +223,7 @@ class ExecutionPlan(TypedDict, total=False):
                     )
                 ]
             )
-    
+
     .. seealso::
        :class:`PlannedStep` : Individual execution step structure
        :func:`save_execution_plan_to_file` : Plan persistence utilities
@@ -236,13 +236,13 @@ class ExecutionPlan(TypedDict, total=False):
 
 def save_execution_plan_to_file(plan: ExecutionPlan, file_path: str) -> None:
     """Save ExecutionPlan to JSON file for persistence or debugging.
-    
+
     :param plan: ExecutionPlan dictionary to save
     :param file_path: Path where the execution plan should be saved
     """
     file_path = Path(file_path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     # Add metadata for version tracking
     plan_with_metadata = {
         '__metadata__': {
@@ -252,28 +252,28 @@ def save_execution_plan_to_file(plan: ExecutionPlan, file_path: str) -> None:
         },
         **plan
     }
-    
+
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(plan_with_metadata, f, indent=2, ensure_ascii=False)
-    
+
     logger.info(f"Saved ExecutionPlan with {len(plan.get('steps', []))} steps to: {file_path}")
 
 
 def load_execution_plan_from_file(file_path: str) -> ExecutionPlan:
     """Load ExecutionPlan from JSON file.
-    
+
     :param file_path: Path to the JSON file containing the execution plan
     :return: ExecutionPlan dictionary
     """
     file_path = Path(file_path)
-    
+
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-    
+
     # Remove metadata if present
     if '__metadata__' in data:
         del data['__metadata__']
-    
+
     logger.info(f"Loaded ExecutionPlan with {len(data.get('steps', []))} steps from: {file_path}")
-    
+
     return ExecutionPlan(data) 

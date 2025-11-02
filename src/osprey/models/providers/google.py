@@ -12,7 +12,7 @@ from .base import BaseProvider
 
 class GoogleProviderAdapter(BaseProvider):
     """Google AI (Gemini) provider implementation."""
-    
+
     # Metadata (single source of truth)
     name = "google"
     description = "Google (Gemini models)"
@@ -28,7 +28,7 @@ class GoogleProviderAdapter(BaseProvider):
         "gemini-2.5-flash",
         "gemini-2.5-flash-lite"
     ]
-    
+
     def create_model(
         self,
         model_id: str,
@@ -43,7 +43,7 @@ class GoogleProviderAdapter(BaseProvider):
             http_client=http_client
         )
         return GeminiModel(model_name=model_id, provider=provider)
-    
+
     def execute_completion(
         self,
         message: str,
@@ -59,17 +59,17 @@ class GoogleProviderAdapter(BaseProvider):
     ) -> str:
         """Execute Google Gemini chat completion with thinking support."""
         client = genai.Client(api_key=api_key)
-        
+
         # Handle thinking configuration
         enable_thinking = kwargs.get("enable_thinking", False)
         budget_tokens = kwargs.get("budget_tokens", 0)
-        
+
         if not enable_thinking:
             budget_tokens = 0
-            
+
         if budget_tokens >= max_tokens:
             raise ValueError("budget_tokens must be less than max_tokens.")
-        
+
         response = client.models.generate_content(
             model=model_id,
             contents=[message],
@@ -78,9 +78,9 @@ class GoogleProviderAdapter(BaseProvider):
                 max_output_tokens=max_tokens
             )
         )
-        
+
         return response.text
-    
+
     def check_health(
         self,
         api_key: Optional[str],
@@ -89,23 +89,23 @@ class GoogleProviderAdapter(BaseProvider):
         model_id: Optional[str] = None
     ) -> tuple[bool, str]:
         """Check Google API health with minimal test call.
-        
+
         Makes a minimal API call (~10 tokens, ~$0.0001) to verify the API key works.
         An API key that can't handle a penny's worth of tokens is a critical issue.
         """
         if not api_key:
             return False, "API key not set"
-        
+
         # Check for placeholder/template values
         if api_key.startswith("${") or "YOUR_API_KEY" in api_key.upper():
             return False, "API key not configured (placeholder value detected)"
-        
+
         # Use provided model or cheapest default from metadata
         test_model = model_id or self.health_check_model_id
-        
+
         try:
             client = genai.Client(api_key=api_key)
-            
+
             # Minimal test: 1 token in, 1 token out (~$0.0001 cost)
             response = client.models.generate_content(
                 model=test_model,
@@ -114,13 +114,13 @@ class GoogleProviderAdapter(BaseProvider):
                     max_output_tokens=1
                 )
             )
-            
+
             # If we got here, API key works
             return True, "API accessible and authenticated"
-            
+
         except Exception as e:
             error_msg = str(e).lower()
-            
+
             # Check for common error types
             if "authentication" in error_msg or "api key" in error_msg or "invalid" in error_msg:
                 return False, "Authentication failed (invalid API key)"

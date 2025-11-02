@@ -36,11 +36,11 @@ logger = logging.getLogger(__name__)
 
 def _validate_proxy_url(proxy_url: str) -> bool:
     """Validate HTTP proxy URL format and accessibility.
-    
+
     Performs basic validation of proxy URL format to ensure it follows
     standard HTTP/HTTPS proxy URL patterns. This helps catch common
     configuration errors early and provides clear feedback.
-    
+
     :param proxy_url: Proxy URL to validate
     :type proxy_url: str
     :return: True if proxy URL appears valid, False otherwise
@@ -48,7 +48,7 @@ def _validate_proxy_url(proxy_url: str) -> bool:
     """
     if not proxy_url:
         return False
-    
+
     try:
         parsed = urlparse(proxy_url)
         # Check for valid scheme and netloc (host:port)
@@ -71,25 +71,25 @@ def get_model(
     max_tokens: int = 100000,
 ) -> Union[OpenAIModel, AnthropicModel, GeminiModel]:
     """Create a configured LLM model instance for structured generation with PydanticAI.
-    
+
     This factory function creates and configures LLM model instances optimized for
     structured generation workflows using PydanticAI agents. It handles provider-specific
     initialization, credential validation, HTTP client configuration, and proxy setup
     automatically based on environment variables and configuration files.
-    
+
     The function supports flexible configuration through multiple approaches:
     - Direct parameter specification for programmatic use
     - Model configuration dictionaries from YAML files
     - Automatic credential loading from configuration system
     - Environment-based HTTP proxy detection and configuration
-    
+
     Provider-specific behavior:
     - **Anthropic**: Requires API key and model ID, supports HTTP proxy
     - **Google**: Requires API key and model ID, supports HTTP proxy  
     - **OpenAI**: Requires API key and model ID, supports HTTP proxy and custom base URLs
     - **Ollama**: Requires model ID and base URL, no API key needed, no proxy support
     - **CBORG**: Requires API key, model ID, and base URL, supports HTTP proxy
-    
+
     :param provider: AI provider name ('anthropic', 'google', 'openai', 'ollama', 'cborg')
     :type provider: str, optional
     :param model_config: Configuration dictionary with provider, model_id, and other settings
@@ -108,20 +108,20 @@ def get_model(
     :raises ValueError: If provider is not supported
     :return: Configured model instance ready for PydanticAI agent integration
     :rtype: Union[OpenAIModel, AnthropicModel, GeminiModel]
-    
+
     .. note::
        HTTP proxy configuration is automatically detected from the HTTP_PROXY
        environment variable for supported providers. Timeout and connection
        pooling are managed through shared HTTP clients when proxies are enabled.
-    
+
     .. warning::
        API keys and base URLs are validated before model creation. Ensure proper
        configuration is available through the config system or direct
        parameter specification.
-    
+
     Examples:
         Basic model creation with direct parameters::
-        
+
             >>> from osprey.models import get_model
             >>> model = get_model(
             ...     provider="anthropic",
@@ -130,9 +130,9 @@ def get_model(
             ... )
             >>> # Use with PydanticAI Agent
             >>> agent = Agent(model=model, output_type=YourModel)
-            
+
         Using configuration dictionary from YAML::
-        
+
             >>> model_config = {
             ...     "provider": "cborg",
             ...     "model_id": "anthropic/claude-sonnet",
@@ -140,15 +140,15 @@ def get_model(
             ...     "timeout": 30.0
             ... }
             >>> model = get_model(model_config=model_config)
-            
+
         Ollama local model setup::
-        
+
             >>> model = get_model(
             ...     provider="ollama",
             ...     model_id="llama3.1:8b",
             ...     base_url="http://localhost:11434"
             ... )
-    
+
     .. seealso::
        :func:`~completion.get_chat_completion` : Direct chat completion without structured output
        :func:`configs.config.get_provider_config` : Provider configuration loading
@@ -168,16 +168,16 @@ def get_model(
     from osprey.registry import get_registry
     registry = get_registry()
     provider_class = registry.get_provider(provider)
-    
+
     if not provider_class:
         raise ValueError(f"Unknown provider: {provider}. Use registry.list_providers() to see available providers.")
-    
+
     # Get provider config
     provider_config = get_provider_config(provider)
     api_key = provider_config.get("api_key", api_key)
     base_url = provider_config.get("base_url", base_url)
     timeout = provider_config.get("timeout", timeout)
-    
+
     # Validate requirements using provider metadata
     if provider_class.requires_api_key and not api_key:
         raise ValueError(f"API key required for {provider}")
@@ -185,7 +185,7 @@ def get_model(
         raise ValueError(f"Base URL required for {provider}")
     if provider_class.requires_model_id and not model_id:
         raise ValueError(f"Model ID required for {provider}")
-    
+
     # Setup HTTP client (proxy + timeout)
     async_http_client: Optional[httpx.AsyncClient] = None
     if provider_class.supports_proxy:
@@ -194,7 +194,7 @@ def get_model(
             async_http_client = httpx.AsyncClient(proxy=proxy_url, timeout=timeout)
         elif timeout:
             async_http_client = httpx.AsyncClient(timeout=timeout)
-    
+
     # Create model using provider
     provider_instance = provider_class()
     return provider_instance.create_model(

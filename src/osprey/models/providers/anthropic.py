@@ -11,7 +11,7 @@ from .base import BaseProvider
 
 class AnthropicProviderAdapter(BaseProvider):
     """Anthropic AI provider implementation."""
-    
+
     # Metadata (single source of truth)
     name = "anthropic"
     description = "Anthropic (Claude models)"
@@ -27,7 +27,7 @@ class AnthropicProviderAdapter(BaseProvider):
         "claude-sonnet-4-5",
         "claude-haiku-4-5"
     ]
-    
+
     def create_model(
         self,
         model_id: str,
@@ -45,7 +45,7 @@ class AnthropicProviderAdapter(BaseProvider):
             model_name=model_id,
             provider=provider
         )
-    
+
     def execute_completion(
         self,
         message: str,
@@ -62,23 +62,23 @@ class AnthropicProviderAdapter(BaseProvider):
         """Execute Anthropic chat completion with extended thinking support."""
         # Get http_client if provided (for proxy support)
         http_client = kwargs.get("http_client")
-        
+
         client = anthropic.Anthropic(
             api_key=api_key,
             http_client=http_client,
         )
-        
+
         request_params = {
             "model": model_id,
             "messages": [{"role": "user", "content": message}],
             "max_tokens": max_tokens,
             "temperature": temperature
         }
-        
+
         # Add extended thinking if enabled
         enable_thinking = kwargs.get("enable_thinking", False)
         budget_tokens = kwargs.get("budget_tokens")
-        
+
         if enable_thinking and budget_tokens is not None:
             if budget_tokens >= max_tokens:
                 raise ValueError("budget_tokens must be less than max_tokens")
@@ -86,9 +86,9 @@ class AnthropicProviderAdapter(BaseProvider):
                 "type": "enabled",
                 "budget_tokens": budget_tokens
             }
-        
+
         response = client.messages.create(**request_params)
-        
+
         if enable_thinking and "thinking" in request_params:
             return response.content  # Returns List[ContentBlock]
         else:
@@ -98,7 +98,7 @@ class AnthropicProviderAdapter(BaseProvider):
                 if isinstance(block, anthropic.types.TextBlock)
             ]
             return "\n".join(text_parts)
-    
+
     def check_health(
         self,
         api_key: Optional[str],
@@ -107,23 +107,23 @@ class AnthropicProviderAdapter(BaseProvider):
         model_id: Optional[str] = None
     ) -> tuple[bool, str]:
         """Check Anthropic API health with minimal test call.
-        
+
         Makes a minimal API call (~10 tokens, ~$0.0001) to verify the API key works.
         An API key that can't handle a penny's worth of tokens is a critical issue.
         """
         if not api_key:
             return False, "API key not set"
-        
+
         # Check for placeholder/template values
         if api_key.startswith("${") or api_key.startswith("sk-ant-xxx"):
             return False, "API key not configured (placeholder value detected)"
-        
+
         # Use provided model or cheapest default from metadata
         test_model = model_id or self.health_check_model_id
-        
+
         try:
             client = anthropic.Anthropic(api_key=api_key)
-            
+
             # Minimal test: 1 token in, 1 token out (~$0.0001 cost)
             response = client.messages.create(
                 model=test_model,
@@ -131,10 +131,10 @@ class AnthropicProviderAdapter(BaseProvider):
                 messages=[{"role": "user", "content": "Hi"}],
                 timeout=timeout
             )
-            
+
             # If we got here, API key works
             return True, "API accessible and authenticated"
-            
+
         except anthropic.AuthenticationError:
             return False, "Authentication failed (invalid API key)"
         except anthropic.PermissionDeniedError:

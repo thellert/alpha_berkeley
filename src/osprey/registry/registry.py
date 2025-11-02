@@ -42,7 +42,7 @@ ensuring core infrastructure is available before application components are load
 
 Examples:
     Framework registry is loaded automatically::
-    
+
         >>> from osprey.registry import initialize_registry, get_registry
         >>> initialize_registry()  # Loads framework registry first
         >>> registry = get_registry()
@@ -51,9 +51,9 @@ Examples:
         >>> memory_capability = registry.get_capability("memory")
         >>> time_parsing = registry.get_capability("time_range_parsing")
         >>> python_service = registry.get_service("python_executor")
-        
+
     Application override of framework component::
-    
+
         >>> # In applications/myapp/registry.py
         >>> class MyAppRegistryProvider(RegistryConfigProvider):
         ...     def get_registry_config(self) -> RegistryConfig:
@@ -92,18 +92,18 @@ from .base import (
 
 class FrameworkRegistryProvider(RegistryConfigProvider):
     """Framework registry provider implementing the standard interface pattern.
-    
+
     This provider generates the framework-only registry configuration containing
     all core infrastructure components required for framework operation. It follows
     the same RegistryConfigProvider interface pattern used by applications,
     ensuring consistency across the entire registry system.
-    
+
     The framework registry provides the foundational components that applications
     build upon, including routing infrastructure, core capabilities, standard
     context classes, and essential services. Applications register their own
     components through separate registry modules that are discovered and merged
     with this framework configuration at runtime.
-    
+
     Component Categories Provided:
         - **Core Nodes**: Router, classifier, orchestrator, error handler
         - **Framework Capabilities**: Memory, time parsing, Python execution, communication
@@ -111,29 +111,29 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
         - **Data Sources**: User memory and core system data providers
         - **Services**: Python executor and other internal service graphs
         - **Prompt Providers**: Default prompt implementations for all framework operations
-    
+
     The registry configuration returned by this provider serves as the baseline
     that gets merged with application registries. Applications can override any
     framework component by registering a component with the same name.
-    
+
     Initialization Priority:
         This framework registry is always loaded first during registry initialization,
         ensuring core infrastructure is available before application components are
         processed. The initialization follows dependency order within the framework
         components themselves.
-    
+
     .. note::
        This provider is used by the registry system during framework initialization.
        Manual instantiation is not required or recommended.
-       
+
     .. warning::
        Changes to this registry affect all applications using the framework.
        New components should be added carefully with consideration for backward
        compatibility.
-       
+
     Examples:
         The framework registry is used automatically::
-        
+
             >>> # Framework registry is loaded automatically during initialization
             >>> from osprey.registry import initialize_registry, get_registry
             >>> initialize_registry()
@@ -143,76 +143,76 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
             >>> memory_cap = registry.get_capability("memory")
             >>> router_node = registry.get_node("router")
             >>> time_context = registry.get_context_class("TIME_RANGE")
-            
+
         Applications can override framework components::
-        
+
             >>> # Applications can replace framework components by name
             >>> # This happens automatically during registry merging
             >>> custom_memory = registry.get_capability("memory")  # May be app override
-        
+
     .. seealso::
        :class:`RegistryConfigProvider` : Interface implemented by this class
        :class:`RegistryManager` : Manager that uses this provider
        :func:`get_registry_config` : Method that returns the framework configuration
        :doc:`/developer-guides/osprey-architecture` : Osprey component architecture
     """
-    
+
     def get_registry_config(self) -> RegistryConfig:
         """Create comprehensive framework registry configuration.
-        
+
         Generates the complete registry configuration for all core framework
         infrastructure components. This configuration serves as the foundation
         that applications build upon and can selectively override.
-        
+
         The framework registry provides essential components organized by category:
-        
+
         Infrastructure Nodes:
             - Router: Central routing and decision authority
             - Task Extraction: Structured task parsing from user queries
             - Classifier: Query classification for capability selection
             - Orchestrator: Execution planning and coordination
             - Error Handler: Comprehensive error processing and recovery
-            
+
         Framework Capabilities:
             - Memory Operations: User memory storage and retrieval
             - Time Range Parsing: Temporal query parsing and normalization
             - Python Execution: Code generation and execution
             - Communication: Response generation and clarification requests
-            
+
         Standard Context Classes:
             - Memory Context: Memory operation results
             - Time Range Context: Parsed temporal information
             - Python Results Context: Code execution results
-            
+
         Core Data Sources:
             - User Memory Provider: Personal memory and preferences
-            
+
         Internal Services:
             - Python Executor Service: Multi-node code processing workflow
-            
+
         Default Prompt Providers:
             - Complete set of default prompt builders for all framework operations
-        
+
         All components are designed for LangGraph integration with proper
         decorator patterns and dependency management. The configuration
         follows dependency order to ensure proper initialization.
-        
+
         :return: Complete framework registry configuration with all core
             infrastructure components, context classes, services, and prompt providers
         :rtype: RegistryConfig
-        
+
         .. note::
            This method is called once during registry initialization. The returned
            configuration is merged with application registries, with applications
            able to override any framework component by name.
-           
+
         .. warning::
            All components in this registry are considered part of the framework's
            public API. Changes should maintain backward compatibility.
-           
+
         Examples:
             The configuration includes all framework components::
-            
+
                 >>> provider = FrameworkRegistryProvider()
                 >>> config = provider.get_registry_config()
                 >>> 
@@ -226,9 +226,9 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                 >>> 
                 >>> # Framework provides standard context classes
                 >>> assert any(ctx.context_type == "TIME_RANGE" for ctx in config.context_classes)
-                
+
             Applications can override framework components::
-            
+
                 >>> # Application registry can override by using same name
                 >>> app_config = RegistryConfig(
                 ...     capabilities=[
@@ -242,7 +242,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                 ...         )
                 ...     ]
                 ... )
-        
+
         .. seealso::
            :class:`RegistryConfig` : Structure of the returned configuration
            :class:`RegistryManager` : Manager that merges this with application configs
@@ -283,7 +283,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                     description="Error handling and recovery"
                 ),
             ],
-            
+
             # Framework-level capabilities (not application-specific)
             capabilities=[
                 # Memory operations capability (framework-level)
@@ -340,7 +340,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                     functional_node="clarify"
                 )
             ],
-            
+
             # Framework-level context classes
             context_classes=[
                 # Memory context (framework-level)
@@ -362,7 +362,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                     class_name="PythonResultsContext"
                 )
             ],
-            
+
             # Framework-level data sources
             data_sources=[
                 # Core user memory (framework-level)
@@ -389,7 +389,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
 
                 ),
             ],
-            
+
             # Framework prompt providers
             framework_prompt_providers=[
                 FrameworkPromptProviderRegistration(
@@ -433,7 +433,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                     class_name="CBorgProviderAdapter"
                 ),
             ],
-            
+
             # Simplified initialization order - decorators and subgraphs are imported directly when needed
             initialization_order=[
                 "context_classes",    # First - needed by capabilities

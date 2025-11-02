@@ -19,24 +19,24 @@ class CapabilityContext(BaseModel):
     """
     Base class for all capability context objects. Uses Pydantic for automatic
     serialization/deserialization and type validation.
-    
+
     This class provides:
     - Automatic JSON serialization via .model_dump()
     - Automatic deserialization via .model_validate()
     - Type validation on field assignment
     - Consistent interface for all context types
     """
-    
+
     model_config = {
         # Enforce JSON-compatible types only (no complex Python objects)
         "arbitrary_types_allowed": False,
-        
+
         # Allow field names for compatibility
         "populate_by_name": True,
-        
+
         # Use enum values for serialization
         "use_enum_values": True,
-        
+
         # JSON encoders for specific types (Pydantic v2 syntax)
         "json_encoders": {
             datetime: lambda v: v.isoformat(),
@@ -56,10 +56,10 @@ class CapabilityContext(BaseModel):
     def get_access_details(self, key: str) -> dict:
         """
         Get detailed access information for this context data.
-        
+
         Args:
             key: The context key this data is stored under
-            
+
         Returns:
             Dictionary with access details including summary, capabilities, etc.
         """
@@ -68,10 +68,10 @@ class CapabilityContext(BaseModel):
     def get_summary(self, key: str) -> dict:
         """
         Get a summary of this context data.
-        
+
         Args:
             key: The context key this data is stored under
-            
+
         Returns:
             Dictionary with information about the context
         """

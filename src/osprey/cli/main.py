@@ -26,7 +26,7 @@ except ImportError:
 
 class LazyGroup(click.Group):
     """Click group that lazily loads subcommands only when invoked."""
-    
+
     def get_command(self, ctx, cmd_name):
         """Lazily import and return the command when it's invoked."""
         # Map command names to their module paths
@@ -37,23 +37,23 @@ class LazyGroup(click.Group):
             'export-config': 'osprey.cli.export_config_cmd',
             'health': 'osprey.cli.health_cmd',
         }
-        
+
         if cmd_name not in commands:
             return None
-        
+
         # Lazy import - only loads when command is actually used
         import importlib
         mod = importlib.import_module(commands[cmd_name])
-        
+
         # Get the command function from the module
         # Convention: module name without _cmd suffix
         if cmd_name == 'export-config':
             cmd_func = getattr(mod, 'export_config')
         else:
             cmd_func = getattr(mod, cmd_name)
-        
+
         return cmd_func
-    
+
     def list_commands(self, ctx):
         """Return list of available commands (for --help)."""
         return ['init', 'deploy', 'chat', 'export-config', 'health']

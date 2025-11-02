@@ -74,11 +74,11 @@ def export_config(project: str, output: str, format: str):
                 style="dim"
             )
             raise click.Abort()
-        
+
         # Read and render the template with example values
         with open(template_path, 'r') as f:
             template_content = f.read()
-        
+
         template = Template(template_content)
         rendered_config = template.render(
             project_name="example_project",
@@ -88,10 +88,10 @@ def export_config(project: str, output: str, format: str):
             default_provider="cborg",
             default_model="anthropic/claude-haiku"
         )
-        
+
         # Parse the rendered config as YAML
         config_data = yaml.safe_load(rendered_config)
-        
+
         # Format output based on requested format
         if format == "yaml":
             output_str = yaml.dump(
@@ -103,7 +103,7 @@ def export_config(project: str, output: str, format: str):
         else:  # json
             import json
             output_str = json.dumps(config_data, indent=2, ensure_ascii=False)
-        
+
         # Output to file or console
         if output:
             output_path = Path(output)
@@ -125,7 +125,7 @@ def export_config(project: str, output: str, format: str):
             console.print(
                 f"\n[dim]💡 Tip: Save to file with --output flag[/dim]"
             )
-            
+
     except KeyboardInterrupt:
         console.print("\n⚠️  Operation cancelled", style="yellow")
         raise click.Abort()

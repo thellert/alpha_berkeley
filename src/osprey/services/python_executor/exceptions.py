@@ -49,7 +49,7 @@ clear separation between different types of errors.
 
 Examples:
     Catching and handling different error categories::
-    
+
         >>> try:
         ...     result = await executor.execute_code(code)
         ... except ContainerConnectivityError as e:
@@ -61,9 +61,9 @@ Examples:
         ... except ExecutionTimeoutError as e:
         ...     logger.error(f"Execution timeout: {e.timeout_seconds}s")
         ...     # Notify user and potentially increase timeout
-        
+
     Error category-based retry logic::
-    
+
         >>> if exception.should_retry_execution():
         ...     # Infrastructure error - retry same code
         ...     await retry_execution(code)
@@ -80,21 +80,21 @@ import textwrap
 
 class ErrorCategory(Enum):
     """High-level error categories that determine appropriate recovery strategies.
-    
+
     This enumeration classifies all Python executor errors into categories that
     directly correspond to different recovery and retry strategies. The categorization
     enables intelligent error handling that can automatically determine whether to
     retry execution, regenerate code, or require user intervention.
-    
+
     :cvar INFRASTRUCTURE: Container connectivity, network, or external service issues
     :cvar CODE_RELATED: Syntax errors, runtime failures, or logical issues in generated code
     :cvar WORKFLOW: Service workflow control issues like timeouts or retry limits
     :cvar CONFIGURATION: Invalid or missing configuration settings
-    
+
     .. note::
        Error categories are used by the service's retry logic to determine the
        appropriate recovery strategy without requiring explicit error type checking.
-    
+
     .. seealso::
        :class:`PythonExecutorException` : Base exception class using these categories
        :meth:`PythonExecutorException.should_retry_execution` : Infrastructure retry logic
@@ -108,16 +108,16 @@ class ErrorCategory(Enum):
 
 class PythonExecutorException(Exception):
     """Base exception class for all Python executor service operations.
-    
+
     This abstract base class provides common functionality for all Python executor
     exceptions, including error categorization, context management, and retry logic
     determination. It serves as the foundation for the entire exception hierarchy
     and enables consistent error handling across the service.
-    
+
     The class implements a category-based approach to error handling that allows
     the service to automatically determine appropriate recovery strategies without
     requiring explicit exception type checking in the retry logic.
-    
+
     :param message: Human-readable error description
     :type message: str
     :param category: Error category that determines recovery strategy
@@ -126,17 +126,17 @@ class PythonExecutorException(Exception):
     :type technical_details: Dict[str, Any], optional
     :param folder_path: Path to execution folder if available for debugging
     :type folder_path: Path, optional
-    
+
     .. note::
        This base class should not be raised directly. Use specific exception
        subclasses that provide more detailed error information.
-    
+
     .. seealso::
        :class:`ErrorCategory` : Error categorization for recovery strategies
        :class:`ContainerConnectivityError` : Infrastructure error example
        :class:`CodeRuntimeError` : Code-related error example
     """
-    
+
     def __init__(
         self, 
         message: str,
@@ -149,20 +149,20 @@ class PythonExecutorException(Exception):
         self.category = category
         self.technical_details = technical_details or {}
         self.folder_path = folder_path
-    
+
     def is_infrastructure_error(self) -> bool:
         """Check if this is an infrastructure or connectivity error.
-        
+
         Infrastructure errors indicate problems with external dependencies like
         container connectivity, network issues, or service availability. These
         errors typically warrant retrying the same operation after a delay.
-        
+
         :return: True if this is an infrastructure error
         :rtype: bool
-        
+
         Examples:
             Checking error type for retry logic::
-            
+
                 >>> try:
                 ...     await execute_code(code)
                 ... except PythonExecutorException as e:
@@ -171,20 +171,20 @@ class PythonExecutorException(Exception):
                 ...         await execute_code(code)  # Retry same code
         """
         return self.category == ErrorCategory.INFRASTRUCTURE
-    
+
     def is_code_error(self) -> bool:
         """Check if this is a code-related error requiring code regeneration.
-        
+
         Code errors indicate problems with the generated or provided Python code,
         including syntax errors, runtime failures, or logical issues. These errors
         typically require regenerating the code with error feedback.
-        
+
         :return: True if this is a code-related error
         :rtype: bool
-        
+
         Examples:
             Handling code errors with regeneration::
-            
+
                 >>> try:
                 ...     await execute_code(code)
                 ... except PythonExecutorException as e:
@@ -193,20 +193,20 @@ class PythonExecutorException(Exception):
                 ...         await execute_code(new_code)
         """
         return self.category == ErrorCategory.CODE_RELATED
-    
+
     def is_workflow_error(self) -> bool:
         """Check if this is a workflow control error requiring special handling.
-        
+
         Workflow errors indicate issues with the service's execution workflow,
         such as timeouts, maximum retry limits, or approval requirements. These
         errors typically require user intervention or service configuration changes.
-        
+
         :return: True if this is a workflow control error
         :rtype: bool
-        
+
         Examples:
             Handling workflow errors with user notification::
-            
+
                 >>> try:
                 ...     await execute_code(code)
                 ... except PythonExecutorException as e:
@@ -214,39 +214,39 @@ class PythonExecutorException(Exception):
                 ...         await notify_user(f"Execution failed: {e.message}")
         """
         return self.category == ErrorCategory.WORKFLOW
-    
+
     def should_retry_execution(self) -> bool:
         """Determine if the same code execution should be retried.
-        
+
         Returns True for infrastructure errors where the code itself is likely
         correct but external dependencies (containers, network) caused the failure.
         This enables automatic retry of the same code without regeneration.
-        
+
         :return: True if execution should be retried with the same code
         :rtype: bool
-        
+
         Examples:
             Automatic retry logic based on error category::
-            
+
                 >>> if exception.should_retry_execution():
                 ...     logger.info("Infrastructure issue, retrying execution...")
                 ...     await retry_execution_with_backoff(code)
         """
         return self.category == ErrorCategory.INFRASTRUCTURE
-    
+
     def should_retry_code_generation(self) -> bool:
         """Determine if code should be regenerated and execution retried.
-        
+
         Returns True for code-related errors where the generated code has issues
         that require regeneration with error feedback. This enables automatic
         code improvement through iterative generation.
-        
+
         :return: True if code should be regenerated and execution retried
         :rtype: bool
-        
+
         Examples:
             Code regeneration retry logic::
-            
+
                 >>> if exception.should_retry_code_generation():
                 ...     logger.info("Code issue, regenerating with feedback...")
                 ...     improved_code = await regenerate_with_feedback(str(exception))
@@ -261,16 +261,16 @@ class PythonExecutorException(Exception):
 
 class ContainerConnectivityError(PythonExecutorException):
     """Exception raised when Jupyter container is unreachable or connection fails.
-    
+
     This infrastructure error indicates that the Python executor service cannot
     establish communication with the configured Jupyter container endpoint. This
     typically occurs due to network issues, container startup problems, or
     configuration mismatches.
-    
+
     The error provides both technical details for debugging and user-friendly
     messages that abstract the underlying infrastructure complexity while
     preserving essential information for troubleshooting.
-    
+
     :param message: Technical error description for debugging
     :type message: str
     :param host: Container host address that failed to connect
@@ -279,18 +279,18 @@ class ContainerConnectivityError(PythonExecutorException):
     :type port: int
     :param technical_details: Additional technical information for debugging
     :type technical_details: Dict[str, Any], optional
-    
+
     .. note::
        This error triggers automatic retry logic since the code itself is likely
        correct and the issue is with external infrastructure.
-    
+
     .. seealso::
        :class:`ContainerConfigurationError` : Configuration-related container issues
        :class:`PythonExecutorException.should_retry_execution` : Retry logic for infrastructure errors
-    
+
     Examples:
         Handling container connectivity issues::
-        
+
             >>> try:
             ...     result = await container_executor.execute_code(code)
             ... except ContainerConnectivityError as e:
@@ -298,7 +298,7 @@ class ContainerConnectivityError(PythonExecutorException):
             ...     # Automatic retry or fallback to local execution
             ...     result = await local_executor.execute_code(code)
     """
-    
+
     def __init__(
         self, 
         message: str,
@@ -309,20 +309,20 @@ class ContainerConnectivityError(PythonExecutorException):
         super().__init__(message, ErrorCategory.INFRASTRUCTURE, technical_details)
         self.host = host
         self.port = port
-    
+
     def get_user_message(self) -> str:
         """Get user-friendly error message abstracting technical details.
-        
+
         Provides a clear, non-technical explanation of the connectivity issue
         that users can understand without needing to know about container
         infrastructure details.
-        
+
         :return: User-friendly error description
         :rtype: str
-        
+
         Examples:
             Displaying user-friendly error messages::
-            
+
                 >>> error = ContainerConnectivityError(
                 ...     "Connection refused", "localhost", 8888
                 ... )
@@ -334,7 +334,7 @@ class ContainerConnectivityError(PythonExecutorException):
 
 class ContainerConfigurationError(PythonExecutorException):
     """Container configuration is invalid"""
-    
+
     def __init__(self, message: str, technical_details: Optional[Dict[str, Any]] = None):
         super().__init__(message, ErrorCategory.CONFIGURATION, technical_details)
 
@@ -345,7 +345,7 @@ class ContainerConfigurationError(PythonExecutorException):
 
 class CodeGenerationError(PythonExecutorException):
     """LLM failed to generate valid code"""
-    
+
     def __init__(
         self, 
         message: str,
@@ -360,7 +360,7 @@ class CodeGenerationError(PythonExecutorException):
 
 class CodeSyntaxError(PythonExecutorException):
     """Generated code has syntax errors"""
-    
+
     def __init__(
         self, 
         message: str,
@@ -373,7 +373,7 @@ class CodeSyntaxError(PythonExecutorException):
 
 class CodeRuntimeError(PythonExecutorException):
     """Code failed during execution due to runtime errors"""
-    
+
     def __init__(
         self, 
         message: str,
@@ -395,7 +395,7 @@ class CodeRuntimeError(PythonExecutorException):
 
 class ExecutionTimeoutError(PythonExecutorException):
     """Code execution exceeded timeout"""
-    
+
     def __init__(
         self, 
         timeout_seconds: int,
@@ -409,7 +409,7 @@ class ExecutionTimeoutError(PythonExecutorException):
 
 class MaxAttemptsExceededError(PythonExecutorException):
     """Maximum execution attempts exceeded"""
-    
+
     def __init__(
         self,
         operation_type: str,  # "code_generation", "execution", "connectivity"
@@ -427,7 +427,7 @@ class MaxAttemptsExceededError(PythonExecutorException):
 
 class WorkflowError(PythonExecutorException):
     """Unexpected workflow error (bugs in our code, not user code)"""
-    
+
     def __init__(
         self,
         message: str,
@@ -439,6 +439,6 @@ class WorkflowError(PythonExecutorException):
         super().__init__(message, ErrorCategory.WORKFLOW, technical_details, folder_path)
         self.stage = stage
         self.original_exception = original_exception
-    
+
     def get_user_message(self) -> str:
         return f"An unexpected error occurred in the Python executor during {self.stage}"

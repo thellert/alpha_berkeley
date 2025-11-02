@@ -33,7 +33,7 @@ the clean architecture principles of the Python executor service.
 
 Examples:
     The approval node is typically used within the service graph::
-    
+
         >>> # This is handled automatically by the service
         >>> workflow.add_node("python_approval_node", create_approval_node())
         >>> workflow.add_conditional_edges(
@@ -41,9 +41,9 @@ Examples:
         ...     analyzer_conditional_edge,
         ...     {"approve": "python_approval_node", ...}
         ... )
-        
+
     The node processes interrupt data created by the analyzer::
-    
+
         >>> # Analyzer creates interrupt data
         >>> interrupt_data = create_code_approval_interrupt(
         ...     code=generated_code,
@@ -65,36 +65,36 @@ logger = get_logger("python")
 
 def create_approval_node():
     """Create a pure approval node function for LangGraph integration.
-    
+
     This factory function creates a specialized approval node that serves as a
     clean interrupt handler within the Python executor service's workflow. The
     node is designed with a single responsibility: processing LangGraph interrupts
     for user approval without duplicating approval decision logic.
-    
+
     The created node follows a minimalist design pattern where all approval
     logic and interrupt data creation is handled by the analyzer node, ensuring
     clean separation of concerns and avoiding execution duplication that could
     occur if approval logic was spread across multiple nodes.
-    
+
     :return: Async function implementing the approval node logic
     :rtype: Callable[[PythonExecutionState], Awaitable[Dict[str, Any]]]
-    
+
     .. note::
        The returned function expects the state to contain pre-created interrupt
        data from the analyzer node. It will raise RuntimeError if this data
        is missing.
-    
+
     .. warning::
        This is a factory function that creates the actual node function. The
        returned function should be used as a LangGraph node, not this factory.
-    
+
     .. seealso::
        :func:`osprey.services.python_executor.analyzer_node.create_analyzer_node` : Creates interrupt data
        :class:`PythonExecutionState` : State structure containing interrupt data
-    
+
     Examples:
         Creating and using the approval node in a LangGraph workflow::
-        
+
             >>> approval_node_func = create_approval_node()
             >>> workflow.add_node("python_approval_node", approval_node_func)
             >>> 
@@ -105,33 +105,33 @@ def create_approval_node():
             >>> result = await approval_node_func(state)
             >>> print(f"Approved: {result['approved']}")
     """
-    
+
     async def approval_node(state: PythonExecutionState) -> Dict[str, Any]:
         """Process approval interrupt and return user response for workflow routing.
-        
+
         This function implements the core approval node logic, serving as a pure
         interrupt processor that handles user approval requests through LangGraph's
         native interrupt system. It processes pre-created interrupt data and
         returns the user's approval decision for workflow routing.
-        
+
         The function maintains minimal state and focuses solely on interrupt
         processing, delegating all approval logic to the analyzer node that
         created the interrupt data. This design ensures clean separation of
         concerns and prevents execution duplication.
-        
+
         :param state: Current execution state containing pre-created interrupt data
         :type state: PythonExecutionState
         :return: State updates containing approval result and routing information
         :rtype: Dict[str, Any]
         :raises RuntimeError: If approval_interrupt_data is missing from state
-        
+
         .. note::
            The function uses LangGraph's interrupt mechanism to pause execution
            and wait for user input, then processes the response for routing.
-        
+
         Examples:
             State processing with approval interrupt::
-            
+
                 >>> state = PythonExecutionState(
                 ...     approval_interrupt_data={
                 ...         "code": "import os; os.listdir('/')",
@@ -143,29 +143,29 @@ def create_approval_node():
                 >>> # Result contains approval decision for routing
                 >>> print(f"User approved: {result['approved']}")
         """
-        
+
         # Define streaming helper here for step awareness
         from osprey.utils.streaming import get_streamer
         streamer = get_streamer("python", state)
         streamer.status("Requesting human approval...")
-        
+
         # Get the pre-created interrupt data from analyzer
         interrupt_data = state.get("approval_interrupt_data")
         if not interrupt_data:
             raise RuntimeError("No approval interrupt data found in state")
-        
+
         logger.info("Requesting human approval for Python code execution")
-        
+
         # This is the ONLY critical line - everything else is routing
         human_response = interrupt(interrupt_data)
-        
+
         # Simple approval processing for routing
         approved = human_response.get("approved", False)
         logger.info(f"Approval result: {approved}")
-        
+
         return {
             "approval_result": human_response,
             "approved": approved
         }
-    
+
     return approval_node 

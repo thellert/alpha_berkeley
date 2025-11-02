@@ -48,7 +48,7 @@ class Action:
         """Get path to user's memory file with safe filename generation."""
         if not user_id or not user_id.strip():
             raise ValueError("User ID cannot be empty")
-        
+
         # Sanitize user_id for filename (same logic as existing memory manager)
         safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "-_")
         return Path(self.valves.memory_base_path) / f"{safe_user_id}.json"
@@ -61,17 +61,17 @@ class Action:
             logger.info(f"DEBUG: Current working directory: {os.getcwd()}")
             logger.info(f"DEBUG: Memory base path setting: {self.valves.memory_base_path}")
             logger.info(f"DEBUG: User ID received: '{user_id}'")
-            
+
             memory_file = self._get_memory_file_path(user_id)
             logger.info(f"DEBUG: Full memory file path: {memory_file}")
             logger.info(f"DEBUG: Memory file absolute path: {memory_file.absolute()}")
             logger.info(f"DEBUG: Memory file exists: {memory_file.exists()}")
-            
+
             # Check if directory exists
             memory_dir = memory_file.parent
             logger.info(f"DEBUG: Memory directory: {memory_dir}")
             logger.info(f"DEBUG: Memory directory exists: {memory_dir.exists()}")
-            
+
             # List contents of memory directory if it exists
             if memory_dir.exists():
                 try:
@@ -79,7 +79,7 @@ class Action:
                     logger.info(f"DEBUG: Memory directory contents: {[str(f) for f in dir_contents]}")
                 except Exception as dir_e:
                     logger.error(f"DEBUG: Error listing directory contents: {dir_e}")
-            
+
             if memory_file.exists():
                 logger.info(f"DEBUG: Memory file found, attempting to read...")
                 with open(memory_file, 'r', encoding='utf-8') as f:
@@ -106,17 +106,17 @@ class Action:
             # Check required fields
             if not isinstance(data, dict):
                 return False
-            
+
             required_fields = ["user_id", "entries"]
             for field in required_fields:
                 if field not in data:
                     return False
-            
+
             # Validate entries structure
             entries = data.get("entries", [])
             if not isinstance(entries, list):
                 return False
-            
+
             for entry in entries:
                 if not isinstance(entry, dict):
                     return False
@@ -124,7 +124,7 @@ class Action:
                     return False
                 if not isinstance(entry["timestamp"], str) or not isinstance(entry["content"], str):
                     return False
-            
+
             return True
         except Exception as e:
             logger.error(f"Error validating memory data: {e}")
@@ -137,25 +137,25 @@ class Action:
             if not self._validate_memory_data(data):
                 logger.error(f"Invalid memory data structure for user {user_id}")
                 return False
-            
+
             memory_file = self._get_memory_file_path(user_id)
             memory_file.parent.mkdir(exist_ok=True, parents=True)
-            
+
             # Update last_updated timestamp
             data["last_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-            
+
             # Add created timestamp if missing
             if "created" not in data:
                 data["created"] = data["last_updated"]
-            
+
             # Atomic write: write to temp file first, then rename
             temp_file = memory_file.with_suffix('.tmp')
             with open(temp_file, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2, ensure_ascii=False)
-            
+
             # Rename temp file to actual file (atomic operation on most filesystems)
             temp_file.rename(memory_file)
-            
+
             logger.info(f"Successfully saved memory for user {user_id} with {len(data.get('entries', []))} entries")
             return True
         except Exception as e:
@@ -174,7 +174,7 @@ class Action:
                 # Create .backups directory if it doesn't exist
                 backup_dir = memory_file.parent / ".backups"
                 backup_dir.mkdir(exist_ok=True)
-                
+
                 # Single backup file per user (overwrites previous backup)
                 backup_file = backup_dir / f"{memory_file.stem}.json"
                 shutil.copy2(memory_file, backup_file)
@@ -191,7 +191,7 @@ class Action:
             memory_file = self._get_memory_file_path(user_id)
             backup_dir = memory_file.parent / ".backups"
             backup_file = backup_dir / f"{memory_file.stem}.json"
-            
+
             if backup_file.exists():
                 shutil.copy2(backup_file, memory_file)
                 logger.info(f"Restored memory from backup: {backup_file}")
@@ -209,53 +209,53 @@ class Action:
         user_id = data.get("user_id", "Unknown")
         created = data.get("created", "Unknown")
         last_updated = data.get("last_updated", "Unknown")
-        
+
         markdown = f"# 🧠 Personal Memory Manager\n\n"
         markdown += f"**User ID:** `{user_id}`\n"
         markdown += f"**Created:** {created}\n"
         markdown += f"**Last Updated:** {last_updated}\n"
         markdown += f"**Total Memories:** {len(entries)}\n\n"
-        
+
         if not entries:
             markdown += "## 📝 No memories found\n\n"
             markdown += "Your memory file is empty. Memories you save will appear here.\n\n"
             if user_valves.enable_editing:
                 markdown += "💡 *Tip: Use the memory button to add your first memory!*\n"
             return markdown
-        
+
         markdown += "---\n\n"
-        
+
         # Display entries (limit based on user preference)
         display_count = min(len(entries), user_valves.max_display_entries)
         if display_count < len(entries):
             markdown += f"## 📋 Recent {display_count} of {len(entries)} Memories\n\n"
         else:
             markdown += f"## 📋 All {len(entries)} Memories\n\n"
-        
+
         # Sort entries by timestamp (newest first)
         sorted_entries = sorted(entries, key=lambda x: x.get("timestamp", ""), reverse=True)
-        
+
         for i, entry in enumerate(sorted_entries[:display_count], 1):
             timestamp = entry.get("timestamp", "Unknown time")
             content = entry.get("content", "").strip()
-            
+
             if user_valves.show_timestamps:
                 markdown += f"### 🕒 {timestamp}\n"
             else:
                 markdown += f"### 📌 Memory #{i}\n"
-            
+
             markdown += f"{content}\n\n"
-            
+
             if i < display_count:
                 markdown += "---\n\n"
-        
+
         if display_count < len(entries):
             markdown += f"\n💡 *Showing {display_count} of {len(entries)} total memories. Adjust max_display_entries to see more.*\n"
-        
+
         # Add edit hint
         if user_valves.enable_editing:
             markdown += f"\n\n🔧 **Want to edit your memories?** Click the memory button again to open the interactive editor.\n"
-        
+
         return markdown
 
     async def create_memory_editor_interface(
@@ -266,10 +266,10 @@ class Action:
         __event_call__=None,
     ) -> Optional[Dict]:
         """Create an interactive memory editing interface using JavaScript."""
-        
+
         entries = data.get("entries", [])
         entries_json = json.dumps(entries).replace('"', '\\"').replace('\n', '\\n')
-        
+
         await __event_emitter__(
             {
                 "type": "status",
@@ -294,7 +294,7 @@ class Action:
                 text: '#374151',         // Dark gray text
                 textLight: '#6b7280'     // Light gray text
             }};
-            
+
             // Remove any existing memory editor
             const existingEditor = document.getElementById('memory-editor-overlay');
             if (existingEditor) {{
@@ -333,20 +333,20 @@ class Action:
 
             // Parse the memories data
             let memories = JSON.parse("{entries_json}");
-            
+
             // Create editor HTML
             editor.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid ${{colors.border}};">
                     <h2 style="margin: 0; color: ${{colors.text}}; font-size: 24px; font-weight: bold;">Edit Memories for {user_id}</h2>
                     <button id="memory-close-btn" style="background: ${{colors.danger}}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.2s;">✕ Close</button>
                 </div>
-                
+
                 <div style="margin-bottom: 20px;">
                     <button id="memory-add-btn" style="background: ${{colors.success}}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 10px; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">+ Add Memory</button>
                     <button id="memory-save-btn" style="background: ${{colors.primary}}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 10px; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Save Changes</button>
                     <button id="memory-cancel-btn" style="background: ${{colors.secondary}}; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Cancel</button>
                 </div>
-                
+
                 <div id="memories-container"></div>
             `;
 
@@ -354,7 +354,7 @@ class Action:
             function renderMemories() {{
                 const container = document.getElementById('memories-container');
                 container.innerHTML = '';
-                
+
                 if (memories.length === 0) {{
                     container.innerHTML = '<p style="text-align: center; color: ' + colors.textLight + '; font-style: italic; padding: 40px;">No memories yet. Click "Add Memory" to create your first one!</p>';
                     return;
@@ -364,7 +364,7 @@ class Action:
                 const sortedMemories = [...memories].sort((a, b) => {{
                     return new Date(b.timestamp) - new Date(a.timestamp);
                 }});
-                
+
                 sortedMemories.forEach((memory, displayIndex) => {{
                     // Find the actual index in the original array for operations
                     const actualIndex = memories.findIndex(m => m === memory);
@@ -377,7 +377,7 @@ class Action:
                         background-color: #f9fafb;
                         position: relative;
                     `;
-                    
+
                     memoryDiv.innerHTML = `
                         <div style="display: flex; justify-content: flex-end; margin-bottom: 12px;">
                             <button onclick="deleteMemory(${{actualIndex}})" style="background: ${{colors.danger}}; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='${{colors.dangerHover}}'" onmouseout="this.style.backgroundColor='${{colors.danger}}'">Delete</button>
@@ -391,10 +391,10 @@ class Action:
                              <textarea onchange="updateContent(${{actualIndex}}, this.value)" oninput="autoResizeTextarea(this)" style="width: 100%; min-height: 40px; padding: 12px; border: 1px solid ${{colors.border}}; border-radius: 6px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.5; overflow: hidden;">${{memory.content}}</textarea>
                          </div>
                     `;
-                    
+
                     container.appendChild(memoryDiv);
                 }});
-                
+
                 // Auto-resize all textareas after rendering
                 container.querySelectorAll('textarea').forEach(textarea => {{
                     autoResizeTextarea(textarea);
@@ -405,18 +405,18 @@ class Action:
             window.updateTimestamp = function(index, value) {{
                 memories[index].timestamp = value;
             }};
-            
+
             window.updateContent = function(index, value) {{
                 memories[index].content = value;
             }};
-            
+
             window.deleteMemory = function(index) {{
                 if (confirm('Are you sure you want to delete this memory?')) {{
                     memories.splice(index, 1);
                     renderMemories();
                 }}
             }};
-            
+
             // Auto-resize textarea function
             window.autoResizeTextarea = function(textarea) {{
                 // Reset height to auto to get the correct scrollHeight
@@ -434,13 +434,13 @@ class Action:
                 const originalText = addBtn.innerHTML;
                 addBtn.innerHTML = '⏳ Creating...';
                 addBtn.disabled = true;
-                
+
                 // Create new memory popup
                 createNewMemoryPopup().then((newMemory) => {{
                     // Reset button
                     addBtn.innerHTML = originalText;
                     addBtn.disabled = false;
-                    
+
                     if (newMemory) {{
                         // Add new memory to the beginning of the list (newest first)
                         memories.unshift(newMemory);
@@ -448,7 +448,7 @@ class Action:
                     }}
                 }});
             }}
-            
+
             // Create new memory popup dialog
             function createNewMemoryPopup() {{
                 return new Promise((resolve) => {{
@@ -466,7 +466,7 @@ class Action:
                         justify-content: center;
                         align-items: center;
                     `;
-                    
+
                     // Create new memory dialog
                     const dialog = document.createElement('div');
                     dialog.style.cssText = `
@@ -479,7 +479,7 @@ class Action:
                         color: #333;
                         animation: slideIn 0.3s ease-out;
                     `;
-                    
+
                     // Add keyframe animation
                     if (!document.getElementById('memory-dialog-styles')) {{
                         const style = document.createElement('style');
@@ -492,85 +492,85 @@ class Action:
                         `;
                         document.head.appendChild(style);
                     }}
-                    
+
                     const now = new Date();
                     const currentTimestamp = now.getFullYear() + '-' + 
                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
                         String(now.getDate()).padStart(2, '0') + ' ' + 
                         String(now.getHours()).padStart(2, '0') + ':' + 
                         String(now.getMinutes()).padStart(2, '0');
-                    
+
                     dialog.innerHTML = `
                         <div style="text-align: center; margin-bottom: 24px;">
                             <h3 style="margin: 0; color: ${{colors.success}}; font-size: 20px; font-weight: bold;">✨ Create New Memory</h3>
                             <p style="margin: 8px 0 0 0; color: ${{colors.textLight}}; font-size: 14px;">Add a new memory to your personal collection</p>
                         </div>
-                        
+
                         <div style="margin-bottom: 20px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: ${{colors.text}};">Timestamp:</label>
                             <input type="text" id="new-memory-timestamp" value="${{currentTimestamp}}" style="width: 100%; padding: 12px; border: 2px solid ${{colors.border}}; border-radius: 8px; font-size: 14px; transition: border-color 0.2s;">
                         </div>
-                        
+
                         <div style="margin-bottom: 32px;">
                             <label style="display: block; font-weight: 600; margin-bottom: 8px; color: ${{colors.text}};">Memory Content:</label>
                             <textarea id="new-memory-content" placeholder="What would you like me to remember?" oninput="autoResizeTextarea(this)" style="width: 100%; min-height: 50px; padding: 12px; border: 2px solid ${{colors.border}}; border-radius: 8px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.5; transition: border-color 0.2s; overflow: hidden;"></textarea>
                         </div>
-                        
+
                         <div style="display: flex; gap: 12px; justify-content: flex-end;">
                             <button id="cancel-new-memory" style="background: ${{colors.secondary}}; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Cancel</button>
                             <button id="save-new-memory" style="background: ${{colors.success}}; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 14px; transition: background-color 0.2s;">Add Memory</button>
                         </div>
                     `;
-                    
+
                     // Add focus and hover effects
                     const timestampInput = dialog.querySelector('#new-memory-timestamp');
                     const contentTextarea = dialog.querySelector('#new-memory-content');
                     const saveBtn = dialog.querySelector('#save-new-memory');
                     const cancelBtn = dialog.querySelector('#cancel-new-memory');
-                    
+
                                          // Focus effects using color variables
                      [timestampInput, contentTextarea].forEach(input => {{
                          input.addEventListener('focus', () => input.style.borderColor = colors.success);
                          input.addEventListener('blur', () => input.style.borderColor = colors.border);
                      }});
-                    
+
                                          // Hover effects using color variables
                      saveBtn.addEventListener('mouseenter', () => saveBtn.style.backgroundColor = colors.successHover);
                      saveBtn.addEventListener('mouseleave', () => saveBtn.style.backgroundColor = colors.success);
                      cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.backgroundColor = colors.secondaryHover);
                      cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.backgroundColor = colors.secondary);
-                    
+
                     // Event handlers
                     function closeDialog(result) {{
                         newMemoryOverlay.remove();
                         resolve(result);
                     }}
-                    
+
                     cancelBtn.onclick = () => closeDialog(null);
-                    
+
                     saveBtn.onclick = () => {{
                         const timestamp = timestampInput.value.trim();
                         const content = contentTextarea.value.trim();
-                        
+
                                                  if (!content) {{
                              contentTextarea.style.borderColor = colors.danger;
                              contentTextarea.focus();
                              return;
                          }}
-                        
+
                         closeDialog({{
                             timestamp: timestamp || currentTimestamp,
                             content: content
                         }});
                     }};
-                    
+
                     // Close on overlay click
                     newMemoryOverlay.onclick = (e) => {{
                         if (e.target === newMemoryOverlay) {{
                             closeDialog(null);
                         }}
                     }};
-                    
+
                     // Close on Escape key
                     document.addEventListener('keydown', function escapeHandler(e) {{
                         if (e.key === 'Escape') {{
@@ -578,11 +578,11 @@ class Action:
                             closeDialog(null);
                         }}
                     }});
-                    
+
                                          // Append to document and focus
                      newMemoryOverlay.appendChild(dialog);
                      document.body.appendChild(newMemoryOverlay);
-                     
+
                      // Auto-resize the textarea and focus after a brief delay
                      setTimeout(() => {{
                          autoResizeTextarea(contentTextarea);
@@ -599,38 +599,38 @@ class Action:
                     const saveBtn = document.getElementById('memory-save-btn');
                     const cancelBtn = document.getElementById('memory-cancel-btn');
                     const closeBtn = document.getElementById('memory-close-btn');
-                    
+
                     // Set up click handlers
                     addBtn.onclick = addNewMemory;
-                    
+
                     closeBtn.onclick = function() {{
                         overlay.remove();
                         resolve({{ action: 'cancel' }});
                     }};
-                    
+
                     cancelBtn.onclick = function() {{
                         overlay.remove();
                         resolve({{ action: 'cancel' }});
                     }};
-                    
+
                     saveBtn.onclick = function() {{
                         overlay.remove();
                         resolve({{ action: 'save', memories: memories }});
                     }};
-                    
+
                     // Add hover effects to main buttons
                     addBtn.addEventListener('mouseover', () => addBtn.style.backgroundColor = colors.successHover);
                     addBtn.addEventListener('mouseout', () => addBtn.style.backgroundColor = colors.success);
-                    
+
                     saveBtn.addEventListener('mouseover', () => saveBtn.style.backgroundColor = colors.primaryHover);
                     saveBtn.addEventListener('mouseout', () => saveBtn.style.backgroundColor = colors.primary);
-                    
+
                     cancelBtn.addEventListener('mouseover', () => cancelBtn.style.backgroundColor = colors.secondaryHover);
                     cancelBtn.addEventListener('mouseout', () => cancelBtn.style.backgroundColor = colors.secondary);
-                    
+
                     closeBtn.addEventListener('mouseover', () => closeBtn.style.backgroundColor = colors.dangerHover);
                     closeBtn.addEventListener('mouseout', () => closeBtn.style.backgroundColor = colors.danger);
-                    
+
                     // Close on overlay click
                     overlay.onclick = function(e) {{
                         if (e.target === overlay) {{
@@ -645,10 +645,10 @@ class Action:
             overlay.appendChild(editor);
             document.body.appendChild(overlay);
             renderMemories();
-            
+
             // Return the promise that resolves when user interacts
             return await setupEventListeners();
-            
+
         }} catch (error) {{
             return {{ action: 'error', message: 'Error creating editor: ' + error.message }};
         }}
@@ -682,7 +682,7 @@ class Action:
 
         # Get user ID - use email prefix if available, otherwise use ID
         user_id = __user__.get("id")
-        
+
         if __user__.get("email"):
             user_email = __user__.get("email")
             if "@" in user_email:
@@ -692,9 +692,9 @@ class Action:
                 logger.warning(f"Email found but no @ symbol: {user_email}")
         else:
             logger.info(f"No email found, using user ID: {user_id}")
-        
+
         logger.info(f"Memory Manager - User: '{user_id}'")
-        
+
         if not user_id:
             await __event_emitter__(
                 {
@@ -713,7 +713,7 @@ class Action:
             )
 
             data = self._load_memory_data(user_id)
-            
+
             # Check if this is a second click (editing mode)
             # For now, we'll assume if they have memories and editing is enabled, they want to edit
             if data.get("entries") and user_valves.enable_editing:
@@ -732,12 +732,12 @@ class Action:
                 editor_result = await self.create_memory_editor_interface(
                     data, user_id, __event_emitter__, __event_call__
                 )
-                
+
                 if editor_result and editor_result.get("action") == "save":
                     # Save the updated memories
                     data["entries"] = editor_result.get("memories", [])
                     success = self._save_memory_data(user_id, data)
-                    
+
                     if success:
                         await __event_emitter__(
                             {
@@ -773,12 +773,12 @@ class Action:
                     editor_result = await self.create_memory_editor_interface(
                         data, user_id, __event_emitter__, __event_call__
                     )
-                    
+
                     if editor_result and editor_result.get("action") == "save":
                         # Save the updated memories
                         data["entries"] = editor_result.get("memories", [])
                         success = self._save_memory_data(user_id, data)
-                        
+
                         if success:
                             await __event_emitter__(
                                 {
@@ -807,7 +807,7 @@ class Action:
                             "data": {"type": "info", "content": "Memory editing is disabled"},
                         }
                     )
-            
+
             await __event_emitter__(
                 {
                     "type": "status",

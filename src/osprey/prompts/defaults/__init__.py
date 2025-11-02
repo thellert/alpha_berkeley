@@ -16,7 +16,7 @@ from ..base import FrameworkPromptBuilder
 
 class DefaultPromptProvider(FrameworkPromptProvider):
     """Default implementation of FrameworkPromptProvider using default builders."""
-    
+
     def __init__(self):
         # Infrastructure prompt builders
         self._orchestrator_builder = DefaultOrchestratorPromptBuilder()
@@ -25,16 +25,16 @@ class DefaultPromptProvider(FrameworkPromptProvider):
         self._classification_builder = DefaultClassificationPromptBuilder()
         self._error_analysis_builder = DefaultErrorAnalysisPromptBuilder()
         self._clarification_builder = DefaultClarificationPromptBuilder()
-        
+
         # Framework capability prompt builders
         self._memory_extraction_builder = DefaultMemoryExtractionPromptBuilder()
         self._time_range_parsing_builder = DefaultTimeRangeParsingPromptBuilder()
         self._python_builder = DefaultPythonPromptBuilder()
-    
+
     # =================================================================
     # Infrastructure prompts
     # =================================================================
-    
+
     def get_orchestrator_prompt_builder(self) -> 'FrameworkPromptBuilder':
         return self._orchestrator_builder
 
@@ -52,11 +52,11 @@ class DefaultPromptProvider(FrameworkPromptProvider):
 
     def get_clarification_prompt_builder(self) -> 'FrameworkPromptBuilder':
         return self._clarification_builder
-    
+
     # =================================================================
     # Framework capability prompts
     # =================================================================
-    
+
     def get_memory_extraction_prompt_builder(self) -> 'FrameworkPromptBuilder':
         return self._memory_extraction_builder
 

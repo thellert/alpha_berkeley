@@ -18,17 +18,17 @@ Key Components:
 
 Architecture Overview:
     The registry system uses a two-tier architecture:
-    
+
     1. **Framework Registry**: Core infrastructure components (nodes, base capabilities)
     2. **Application Registries**: Domain-specific components (capabilities, context classes)
-    
+
     Applications register components by implementing RegistryConfigProvider in their
     registry module (applications.{app_name}.registry), which the framework loads
     using convention-based patterns after applications are listed in configuration.
 
 Initialization Order:
     Components are loaded in dependency order to handle inter-component relationships:
-    
+
     1. Context classes (required by capabilities)
     2. Data sources (required by capabilities)
     3. Core nodes (infrastructure components)
@@ -46,7 +46,7 @@ Initialization Order:
 
 Examples:
     Basic registry usage::
-    
+
         >>> from osprey.registry import initialize_registry, get_registry
         >>> 
         >>> # Initialize the registry system
@@ -56,9 +56,9 @@ Examples:
         >>> registry = get_registry()
         >>> capability = registry.get_capability("pv_address_finding")
         >>> context_class = registry.get_context_class("PV_ADDRESSES")
-        
+
     Application registry implementation::
-    
+
         >>> from osprey.registry import RegistryConfigProvider, RegistryConfig
         >>> from osprey.registry import CapabilityRegistration, ContextClassRegistration
         >>> 
@@ -123,7 +123,7 @@ __all__ = [
     'initialize_registry',
     'reset_registry',
     'registry',
-    
+
     # Configuration classes for applications
     'RegistryConfigProvider',
     'NodeRegistration',
@@ -134,7 +134,7 @@ __all__ = [
     'FrameworkPromptProviderRegistration',
     'ProviderRegistration',
     'RegistryConfig',
-    
+
     # Helper functions (NEW - Phase 4.6)
     'extend_framework_registry',
     'get_framework_defaults',

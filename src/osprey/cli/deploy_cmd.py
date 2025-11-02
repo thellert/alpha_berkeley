@@ -55,12 +55,12 @@ console = Console()
 )
 def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
     """Manage Docker/Podman services for Osprey projects.
-    
+
     This command wraps the existing container management functionality,
     providing control over service deployment, status, and cleanup.
-    
+
     Actions:
-    
+
     \b
       up       - Start all configured services
       down     - Stop all services
@@ -69,10 +69,10 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
       build    - Build/prepare compose files without starting services
       clean    - Remove containers and volumes (WARNING: destructive)
       rebuild  - Clean, rebuild, and restart services
-    
+
     The services to deploy are defined in your config.yml under
     the 'deployed_services' key.
-    
+
     Examples:
 
     \b
@@ -111,27 +111,27 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
       $ osprey deploy rebuild --dev
     """
     from .project_utils import resolve_config_path
-    
+
     console.print(f"Service management: [bold]{action}[/bold]")
-    
+
     try:
         # Resolve config path from project and config args
         config_path = resolve_config_path(project, config)
-        
+
         # Dispatch to existing container_manager functions
         # These are the ORIGINAL functions from Phase 1.5, behavior unchanged
         if action == "up":
             deploy_up(config_path, detached=detached, dev_mode=dev)
-            
+
         elif action == "down":
             deploy_down(config_path, dev_mode=dev)
-            
+
         elif action == "restart":
             deploy_restart(config_path, detached=detached)
-            
+
         elif action == "status":
             show_status(config_path)
-            
+
         elif action == "build":
             # Just prepare compose files without starting services
             console.print("🔨 Building compose files...")
@@ -139,18 +139,18 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
             console.print("\n✅ Compose files built successfully:")
             for compose_file in compose_files:
                 console.print(f"  • {compose_file}")
-            
+
         elif action == "clean":
             # clean_deployment expects compose_files list, so prepare them first
             _, compose_files = prepare_compose_files(config_path, dev_mode=dev)
             clean_deployment(compose_files)
-            
+
         elif action == "rebuild":
             rebuild_deployment(config_path, detached=detached, dev_mode=dev)
-        
+
         # Note: The original functions handle all output and error messaging
         # We don't add extra output to avoid changing user experience
-        
+
     except KeyboardInterrupt:
         console.print("\n⚠️  Operation cancelled by user", style="yellow")
         raise click.Abort()

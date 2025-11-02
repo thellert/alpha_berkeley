@@ -14,7 +14,7 @@ QUICK START
 2. Implement your capabilities:
    → Copy capabilities/example_capability.py.j2
    → Add your API calls and logic
-   
+
 3. Register your components:
    → Edit registry.py
    → Add CapabilityRegistration and ContextClassRegistration entries
@@ -66,7 +66,7 @@ This template is optimized for:
   - Clear, descriptive names
   - Comprehensive inline documentation  
   - Self-documenting code patterns
-  
+
 ✓ Human Understanding
   - Progressive disclosure (simple → advanced)
   - Complete examples before abstractions

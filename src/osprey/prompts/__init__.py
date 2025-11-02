@@ -34,23 +34,23 @@ Architecture Benefits:
 
 Examples:
     Framework infrastructure accessing prompts::
-    
+
         # In orchestration_node.py
         from osprey.prompts import get_framework_prompts
-        
+
         prompt_provider = get_framework_prompts()
         orchestrator_builder = prompt_provider.get_orchestrator_prompt_builder()
         system_prompt = orchestrator_builder.get_system_instructions(
             capabilities=active_capabilities,
             context_manager=context_manager
         )
-    
+
     Application registering custom prompts::
-    
+
         # In application initialization
         from osprey.prompts.loader import register_framework_prompt_provider
         from applications.als_assistant.framework_prompts import ALSPromptProvider
-        
+
         register_framework_prompt_provider("als_assistant", ALSPromptProvider())
 
 .. seealso::

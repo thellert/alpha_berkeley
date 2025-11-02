@@ -12,7 +12,7 @@ from typing import Optional
 
 def resolve_project_path(project_arg: Optional[str] = None) -> Path:
     """Resolve project directory from multiple sources.
-    
+
     Resolution priority:
     1. --project CLI argument (if provided)
     2. OSPREY_PROJECT environment variable (if set)
@@ -46,7 +46,7 @@ def resolve_project_path(project_arg: Optional[str] = None) -> Path:
     env_project = os.environ.get('OSPREY_PROJECT')
     if env_project:
         return Path(env_project).expanduser().resolve()
-    
+
     # Priority 3: Current working directory
     return Path.cwd()
 
@@ -54,26 +54,26 @@ def resolve_project_path(project_arg: Optional[str] = None) -> Path:
 def resolve_config_path(project_arg: Optional[str] = None, 
                        config_arg: Optional[str] = None) -> str:
     """Resolve configuration file path.
-    
+
     If --config is provided, uses it directly.
     Otherwise, looks for config.yml in the resolved project directory.
-    
+
     Args:
         project_arg: Project directory from --project flag (optional)
         config_arg: Config file path from --config flag (optional)
-        
+
     Returns:
         Path to configuration file as string
-        
+
     Examples:
         >>> # Explicit config file
         >>> resolve_config_path(config_arg="custom.yml")
         'custom.yml'
-        
+
         >>> # Config in project directory
         >>> resolve_config_path(project_arg="~/my-project")
         '/Users/user/my-project/config.yml'
-        
+
         >>> # Default: ./config.yml
         >>> resolve_config_path()
         '/current/directory/config.yml'
@@ -81,10 +81,10 @@ def resolve_config_path(project_arg: Optional[str] = None,
     # If explicit config provided, use it
     if config_arg and config_arg != "config.yml":
         return config_arg
-    
+
     # Otherwise, resolve project and find config.yml in it
     project_path = resolve_project_path(project_arg)
     config_path = project_path / "config.yml"
-    
+
     return str(config_path)
 

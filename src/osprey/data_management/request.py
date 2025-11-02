@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class DataSourceRequester:
     """
     Information about the component requesting data from a data source.
-    
+
     Enables data sources to make decisions about whether to respond
     based on the requesting component and execution context.
     """
@@ -25,7 +25,7 @@ class DataSourceRequester:
 class DataSourceRequest:
     """
     Generic data source request with query and metadata support.
-    
+
     Provides flexible interface for data source providers to receive
     specific queries and contextual metadata for intelligent retrieval.
     """
@@ -42,13 +42,13 @@ def create_data_source_request(
 ) -> DataSourceRequest:
     """
     Create a data source request from AgentState and requester information.
-    
+
     Args:
         state: AgentState instance (TypedDict)
         requester: Information about the requesting component
         query: Optional specific query for the data source
         metadata: Optional metadata for provider-specific context
-        
+
     Returns:
         DataSourceRequest with user context and query information
     """
@@ -61,7 +61,7 @@ def create_data_source_request(
     except Exception:
         # Log but don't fail - some contexts might not have session info
         pass
-    
+
     return DataSourceRequest(
         user_id=user_id,
         requester=requester,

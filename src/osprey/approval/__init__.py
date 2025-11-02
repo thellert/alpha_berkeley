@@ -22,7 +22,7 @@ Key Features:
 
 Examples:
     Basic approval interrupt creation::
-    
+
         >>> from osprey.approval import create_code_approval_interrupt
         >>> interrupt_data = create_code_approval_interrupt(
         ...     code="print('Hello World')",
@@ -31,9 +31,9 @@ Examples:
         ...     safety_concerns=[]
         ... )
         >>> # interrupt_data contains structured data for LangGraph
-        
+
     Configuration management::
-    
+
         >>> from osprey.approval import get_approval_manager
         >>> manager = get_approval_manager()
         >>> config = manager.get_python_execution_config()
@@ -81,17 +81,17 @@ __all__ = [
     'get_approval_resume_data',
     'clear_approval_state',
     'handle_service_with_interrupts',
-    
+
     # Configuration and policy management
     'ApprovalManager',
     'get_approval_manager',
-    
+
     # Configuration models
     'ApprovalMode',
     'PythonExecutionApprovalConfig',
     'MemoryApprovalConfig',
     'GlobalApprovalConfig',
-    
+
     # Business logic evaluators
     'ApprovalDecision',
     'PythonExecutionApprovalEvaluator',

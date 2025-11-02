@@ -74,26 +74,26 @@ logger = get_logger("python_services")
 
 class NotebookType(Enum):
     """Enumeration of notebook types created during Python execution workflow.
-    
+
     This enum categorizes the different types of Jupyter notebooks that are
     created throughout the Python execution lifecycle. Each notebook type
     serves a specific purpose in the execution workflow and provides different
     levels of detail for debugging and audit purposes.
-    
+
     The notebooks are created at key stages to provide comprehensive visibility
     into the execution process, from initial code generation through final
     execution results or failure analysis.
-    
+
     :cvar CODE_GENERATION_ATTEMPT: Notebook created after code generation but before analysis
     :cvar PRE_EXECUTION: Notebook created after analysis approval but before execution
     :cvar EXECUTION_ATTEMPT: Notebook created during or immediately after code execution
     :cvar FINAL_SUCCESS: Final notebook created after successful execution completion
     :cvar FINAL_FAILURE: Final notebook created after execution failure for debugging
-    
+
     .. note::
        Each notebook type includes different metadata and context information
        appropriate for its stage in the execution workflow.
-    
+
     .. seealso::
        :class:`NotebookAttempt` : Tracks individual notebook creation attempts
        :class:`NotebookManager` : Manages notebook creation and lifecycle
@@ -108,16 +108,16 @@ class NotebookType(Enum):
 @dataclass
 class NotebookAttempt:
     """Tracks metadata for a single notebook creation attempt during execution workflow.
-    
+
     This dataclass captures comprehensive information about each notebook created
     during the Python execution process, including its type, creation context,
     file system location, and any associated error information. It provides
     audit trails and debugging support for the execution workflow.
-    
+
     The class supports serialization for persistence and provides structured
     access to notebook metadata for both internal tracking and external
     reporting purposes.
-    
+
     :param notebook_type: Type of notebook created (generation, execution, final, etc.)
     :type notebook_type: NotebookType
     :param attempt_number: Sequential attempt number for this execution session
@@ -132,11 +132,11 @@ class NotebookAttempt:
     :type error_context: str, optional
     :param created_at: Timestamp when notebook was created
     :type created_at: str, optional
-    
+
     .. note::
        The `notebook_link` provides direct access to view the notebook in the
        Jupyter interface, making it easy to inspect execution results.
-    
+
     .. seealso::
        :class:`NotebookType` : Enumeration of supported notebook types
        :class:`PythonExecutionContext` : Container for execution context and attempts
@@ -148,21 +148,21 @@ class NotebookAttempt:
     notebook_link: str
     error_context: Optional[str] = None
     created_at: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert notebook attempt to dictionary for serialization and storage.
-        
+
         Transforms the notebook attempt data into a serializable dictionary
         format suitable for JSON storage, logging, or transmission. All Path
         objects are converted to strings and enum values are converted to
         their string representations.
-        
+
         :return: Dictionary representation with all fields as serializable types
         :rtype: Dict[str, Any]
-        
+
         Examples:
             Converting attempt to dictionary for logging::
-            
+
                 >>> attempt = NotebookAttempt(
                 ...     notebook_type=NotebookType.FINAL_SUCCESS,
                 ...     attempt_number=1,
@@ -188,16 +188,16 @@ class NotebookAttempt:
 @dataclass
 class PythonExecutionContext:
     """Execution context container managing file system resources and notebook tracking.
-    
+
     This class provides a centralized container for managing all file system
     resources, paths, and metadata associated with a Python execution session.
     It tracks the execution folder structure, notebook creation attempts, and
     provides convenient access to execution artifacts.
-    
+
     The context maintains a flat, simple structure that can be easily serialized
     and passed between different components of the execution pipeline. It serves
     as the primary coordination point for file operations and artifact management.
-    
+
     :param folder_path: Main execution folder path where all artifacts are stored
     :type folder_path: Path, optional
     :param folder_url: Jupyter-accessible URL for the execution folder
@@ -208,12 +208,12 @@ class PythonExecutionContext:
     :type context_file_path: Path, optional
     :param notebook_attempts: List of all notebook creation attempts for this execution
     :type notebook_attempts: List[NotebookAttempt]
-    
+
     .. note::
        The context is typically created by the FileManager during execution
        folder setup and is passed through the execution pipeline to coordinate
        file operations.
-    
+
     .. seealso::
        :class:`FileManager` : Creates and manages execution contexts
        :class:`NotebookAttempt` : Individual notebook tracking records
@@ -223,21 +223,21 @@ class PythonExecutionContext:
     attempts_folder: Optional[Path] = None
     context_file_path: Optional[Path] = None
     notebook_attempts: List[NotebookAttempt] = field(default_factory=list)
-    
+
     @property
     def is_initialized(self) -> bool:
         """Check if execution folder has been properly initialized.
-        
+
         Determines whether the execution context has been set up with a valid
         folder path, indicating that the file system resources are ready for
         use by the execution pipeline.
-        
+
         :return: True if folder_path is set, False otherwise
         :rtype: bool
-        
+
         Examples:
             Checking context initialization before use::
-            
+
                 >>> context = PythonExecutionContext()
                 >>> print(f"Ready: {context.is_initialized}")
                 Ready: False
@@ -246,21 +246,21 @@ class PythonExecutionContext:
                 Ready: True
         """
         return self.folder_path is not None
-    
+
     def add_notebook_attempt(self, attempt: NotebookAttempt) -> None:
         """Add a notebook creation attempt to the tracking list.
-        
+
         Records a new notebook attempt in the execution context, maintaining
         a complete audit trail of all notebooks created during the execution
         session. This supports debugging and provides visibility into the
         execution workflow.
-        
+
         :param attempt: Notebook attempt metadata to add to tracking
         :type attempt: NotebookAttempt
-        
+
         Examples:
             Adding a notebook attempt to context::
-            
+
                 >>> context = PythonExecutionContext()
                 >>> attempt = NotebookAttempt(
                 ...     notebook_type=NotebookType.FINAL_SUCCESS,
@@ -274,20 +274,20 @@ class PythonExecutionContext:
                 Total attempts: 1
         """
         self.notebook_attempts.append(attempt)
-    
+
     def get_next_attempt_number(self) -> int:
         """Get the next sequential attempt number for notebook naming.
-        
+
         Calculates the next attempt number based on the current number of
         tracked notebook attempts. This ensures consistent, sequential
         numbering of notebooks throughout the execution session.
-        
+
         :return: Next attempt number (1-based indexing)
         :rtype: int
-        
+
         Examples:
             Getting attempt number for new notebook::
-            
+
                 >>> context = PythonExecutionContext()
                 >>> print(f"First attempt: {context.get_next_attempt_number()}")
                 First attempt: 1
@@ -300,21 +300,21 @@ class PythonExecutionContext:
 
 class PythonExecutionRequest(BaseModel):
     """Type-safe, serializable request model for Python code execution services.
-    
+
     This Pydantic model defines the complete interface for requesting Python code
     generation and execution through the Python executor service. It encapsulates
     all necessary information for the service to understand the user's intent,
     generate appropriate code, and execute it within the proper security context.
-    
+
     The request model is designed to be fully serializable and compatible with
     LangGraph's state management system. It separates serializable request data
     from configuration objects, which are accessed through LangGraph's configurable
     system for proper dependency injection and configuration management.
-    
+
     The model supports both fresh execution requests and continuation of existing
     execution sessions, with optional pre-approved code for bypassing the
     generation and analysis phases when code has already been validated.
-    
+
     :param user_query: The original user query or task description that initiated this request
     :type user_query: str
     :param task_objective: Clear, specific description of what needs to be accomplished
@@ -335,23 +335,23 @@ class PythonExecutionRequest(BaseModel):
     :type existing_execution_folder: str, optional
     :param session_context: Session metadata including user and chat identifiers
     :type session_context: Dict[str, Any], optional
-    
+
     .. note::
        The request model uses Pydantic for validation and serialization. All
        Path objects are represented as strings to ensure JSON compatibility.
-    
+
     .. warning::
        When providing `approved_code`, ensure it has been properly validated
        through appropriate security and policy checks before submission.
-    
+
     .. seealso::
        :class:`PythonExecutorService` : Service that processes these requests
        :class:`PythonExecutionState` : LangGraph state containing request data
        :class:`PythonServiceResult` : Structured response from successful execution
-    
+
     Examples:
         Basic execution request for data analysis::
-        
+
             >>> request = PythonExecutionRequest(
             ...     user_query="Analyze the sensor data trends",
             ...     task_objective="Calculate statistical trends and create visualization",
@@ -360,7 +360,7 @@ class PythonExecutionRequest(BaseModel):
             ... )
 
         Request with pre-approved code::
-        
+
             >>> request = PythonExecutionRequest(
             ...     user_query="Execute validated analysis code",
             ...     task_objective="Run pre-approved statistical analysis",
@@ -369,7 +369,7 @@ class PythonExecutionRequest(BaseModel):
             ... )
 
         Request with capability context integration::
-        
+
             >>> request = PythonExecutionRequest(
             ...     user_query="Process archiver data",
             ...     task_objective="Analyze retrieved EPICS data",
@@ -378,7 +378,7 @@ class PythonExecutionRequest(BaseModel):
             ...         "archiver_data": {"pv_data": [...], "timestamps": [...]}
             ...     }
             ... )
-    
+
     """
     user_query: str = Field(..., description="The user's query or task description")
     task_objective: str = Field(..., description="Clear description of what needs to be accomplished")
@@ -396,17 +396,17 @@ class PythonExecutionRequest(BaseModel):
 @dataclass
 class PythonExecutionSuccess:
     """Comprehensive result data from successful Python code execution.
-    
+
     This dataclass encapsulates all outputs and artifacts produced by successful
     Python code execution, including computational results, execution metadata,
     performance metrics, and file system artifacts. It serves as the primary
     payload within PythonServiceResult and provides capabilities with structured
     access to execution outcomes.
-    
+
     The class captures both the logical results (computed data) and physical
     artifacts (notebooks, figures) produced during execution, along with
     execution metadata for monitoring and debugging purposes.
-    
+
     :param results: Dictionary containing the main computational results from code execution
     :type results: Dict[str, Any]
     :param stdout: Complete stdout output captured during code execution
@@ -421,11 +421,11 @@ class PythonExecutionSuccess:
     :type notebook_link: str
     :param figure_paths: List of paths to any figures or plots generated during execution
     :type figure_paths: List[Path]
-    
+
     .. note::
        The `results` dictionary contains the primary computational outputs that
        other capabilities can use for further processing or analysis.
-    
+
     .. seealso::
        :class:`PythonServiceResult` : Container class that includes this execution data
        :class:`PythonExecutionEngineResult` : Internal engine result structure
@@ -437,25 +437,25 @@ class PythonExecutionSuccess:
     notebook_path: Path
     notebook_link: str  # Proper URL generated by FileManager
     figure_paths: List[Path] = field(default_factory=list)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert execution success data to dictionary for serialization and compatibility.
-        
+
         Transforms the execution result into a dictionary format suitable for
         JSON serialization, logging, or integration with systems that expect
         dictionary-based data structures. All Path objects are converted to
         strings for compatibility.
-        
+
         :return: Dictionary representation with standardized field names
         :rtype: Dict[str, Any]
-        
+
         .. note::
            This method provides backward compatibility with existing code that
            expects dictionary-based execution results.
-        
+
         Examples:
             Converting execution results for logging::
-            
+
                 >>> success = PythonExecutionSuccess(
                 ...     results={"mean": 42.0, "count": 100},
                 ...     stdout="Calculation completed successfully",
@@ -489,7 +489,7 @@ class PythonExecutionEngineResult:
     error_message: Optional[str] = None
     execution_time_seconds: Optional[float] = None
     captured_figures: List[Path] = field(default_factory=list)
-    
+
     def __post_init__(self):
         if self.captured_figures is None:
             self.captured_figures = []
@@ -503,16 +503,16 @@ class PythonExecutionEngineResult:
 class PythonServiceResult:
     """
     Structured, type-safe result from Python executor service.
-    
+
     This eliminates the need for validation and error checking in capabilities.
     The service guarantees this structure is always returned on success.
     On failure, the service raises appropriate exceptions.
-    
+
     Following LangGraph patterns with frozen dataclasses for immutable results.
     """
     execution_result: PythonExecutionSuccess
     generated_code: str
-    
+
     # Optional metadata
     generation_attempt: int = 1
     analysis_warnings: List[str] = field(default_factory=list)
@@ -531,7 +531,7 @@ class AnalysisResult:
     needs_approval: bool = False           # Whether code needs human approval before execution
     approval_reasoning: Optional[str] = None  # Detailed explanation of why approval is required
     execution_mode_config: Optional[Dict[str, Any]] = None
-    
+
     def __post_init__(self):
         # Import here to avoid circular imports
         if self.recommended_execution_mode is None:
@@ -562,7 +562,7 @@ class ContainerEndpointConfig:
     port: int
     kernel_name: str
     use_https: bool = False
-    
+
     @property
     def base_url(self) -> str:
         protocol = "https" if self.use_https else "http"
@@ -571,42 +571,42 @@ class ContainerEndpointConfig:
 
 def get_execution_control_config_from_configurable(configurable: Dict[str, Any]) -> 'ExecutionControlConfig':
     """Get execution control configuration from LangGraph configurable - raises exceptions on failure.
-    
+
     This provides a consistent way to access EPICS execution control settings from the configurable
     that is passed to the Python executor service, ensuring security-critical settings like
     epics_writes_enabled are accessed consistently.
-    
+
     Args:
         configurable: The LangGraph configurable dictionary
-        
+
     Returns:
         ExecutionControlConfig: Execution control configuration
-        
+
     Raises:
         ContainerConfigurationError: If configuration is missing or invalid
     """
     from .execution_control import ExecutionControlConfig
-    
+
     try:
         # Get agent control defaults from configurable (built by ConfigAdapter)
         agent_control_defaults = configurable.get('agent_control_defaults', {})
-        
+
         if not agent_control_defaults:
             raise ContainerConfigurationError(
                 "No agent_control_defaults found in configurable",
                 technical_details={"configurable_keys": list(configurable.keys())}
             )
-        
+
         # Extract EPICS execution control settings
         epics_writes_enabled = agent_control_defaults.get('epics_writes_enabled', False)
-        
+
         # Create execution control config
         config = ExecutionControlConfig(
             epics_writes_enabled=epics_writes_enabled
         )
-        
+
         return config
-        
+
     except ContainerConfigurationError:
         # Re-raise configuration errors
         raise
@@ -625,18 +625,18 @@ def get_execution_mode_config_from_configurable(configurable: Dict[str, Any], mo
         framework_config = configurable.get('framework', {})
         execution_config = framework_config.get('execution', {})
         modes_config = execution_config.get('modes', {})
-        
+
         mode_config = modes_config.get(mode_name)
         if not mode_config:
             # Try fallback path structure that might be in configurable
             mode_config = configurable.get('execution_modes', {}).get(mode_name)
-            
+
         if not mode_config:
             raise ContainerConfigurationError(
                 f"Execution mode '{mode_name}' not found in configuration",
                 technical_details={"mode_name": mode_name, "available_modes": list(modes_config.keys())}
             )
-        
+
         # Get EPICS gateway configuration if specified  
         gateway_config = None
         if mode_config.get('gateway'):
@@ -644,7 +644,7 @@ def get_execution_mode_config_from_configurable(configurable: Dict[str, Any], mo
             epics_config = execution_config.get('epics', {})
             gateways_config = epics_config.get('gateways', {})
             gateway_config = gateways_config.get(gateway_name)
-        
+
         # Create configuration with defaults
         config = ExecutionModeConfig(
             mode_name=mode_name,
@@ -655,7 +655,7 @@ def get_execution_mode_config_from_configurable(configurable: Dict[str, Any], mo
             environment=mode_config.get('environment', {}),
             epics_gateway=gateway_config
         )
-        
+
         # Add EPICS environment variables if gateway is specified
         if gateway_config:
             epics_env = {
@@ -664,9 +664,9 @@ def get_execution_mode_config_from_configurable(configurable: Dict[str, Any], mo
                 'EPICS_CA_AUTO_ADDR_LIST': 'NO'
             }
             config.environment.update(epics_env)
-        
+
         return config
-        
+
     except ContainerConfigurationError:
         raise
     except Exception as e:
@@ -684,20 +684,20 @@ def get_container_endpoint_config_from_configurable(configurable: Dict[str, Any]
     try:
         # Get execution mode config first
         mode_config = get_execution_mode_config_from_configurable(configurable, execution_mode)
-        
+
         # Find the container that supports this execution mode
         service_configs = configurable.get("service_configs", {})
         framework_services = service_configs.get("framework", {})
         jupyter_config = framework_services.get("jupyter", {})
         containers_config = jupyter_config.get("containers", {})
-        
+
         target_container = None
         for container_key, container_config in containers_config.items():
             execution_modes = container_config.get("execution_modes", [])
             if execution_mode in execution_modes:
                 target_container = container_config
                 break
-        
+
         if not target_container:
             raise ContainerConfigurationError(
                 f"No Jupyter container found supporting execution mode '{execution_mode}'",
@@ -706,11 +706,11 @@ def get_container_endpoint_config_from_configurable(configurable: Dict[str, Any]
                     "available_containers": list(containers_config.keys())
                 }
             )
-        
+
         # Extract container connection details
         hostname = target_container.get("hostname")
         port = target_container.get("port_host")
-        
+
         if not hostname or not port:
             raise ContainerConfigurationError(
                 f"Invalid container configuration for execution mode '{execution_mode}': missing hostname or port",
@@ -719,16 +719,16 @@ def get_container_endpoint_config_from_configurable(configurable: Dict[str, Any]
                     "container_config": target_container
                 }
             )
-        
+
         endpoint_config = ContainerEndpointConfig(
             host=hostname,
             port=port,
             kernel_name=mode_config.kernel_name,
             use_https=False
         )
-        
+
         return endpoint_config
-        
+
     except ContainerConfigurationError:
         # Re-raise configuration errors
         raise
@@ -751,32 +751,32 @@ def get_container_endpoint_config_from_configurable(configurable: Dict[str, Any]
 
 class PythonExecutionState(TypedDict):
     """LangGraph state for Python executor service.
-    
+
     This state is used internally by the service and includes both the
     original request and execution tracking fields.
-    
+
     CRITICAL: The 'request' field preserves the existing interface, allowing
     service nodes to access all original request data via state.request.field_name
-    
+
     NOTE: capability_context_data is extracted to top level for ContextManager compatibility
     """
     # Original request (preserves interface)
     request: PythonExecutionRequest
-    
+
     # Capability context data (extracted from request for ContextManager compatibility)
     capability_context_data: Optional[Dict[str, Dict[str, Dict[str, Any]]]]
-    
+
     # Execution tracking
     generation_attempt: int
     error_chain: List[str] 
     current_stage: str  # "generation", "analysis", "approval", "execution", "complete"
-    
+
     # Approval state (improved pattern)
     requires_approval: Optional[bool]
     approval_interrupt_data: Optional[Dict[str, Any]]  # LangGraph interrupt data with all approval details
     approval_result: Optional[Dict[str, Any]]   # Response from interrupt
     approved: Optional[bool]                    # Final approval status
-    
+
     # Runtime data
     generated_code: Optional[str]
     analysis_result: Optional[Any]
@@ -784,7 +784,7 @@ class PythonExecutionState(TypedDict):
     execution_failed: Optional[bool]
     execution_result: Optional[Any]
     execution_folder: Optional[Any]
-    
+
     # Control flags
     is_successful: bool
     is_failed: bool
@@ -798,10 +798,10 @@ class PythonExecutionState(TypedDict):
 def validate_result_structure(code: str) -> bool:
     """
     Validate that generated code has proper result structure.
-    
+
     Args:
         code: Python code to validate
-        
+
     Returns:
         bool: True if structure is valid
     """
@@ -810,4 +810,3 @@ def validate_result_structure(code: str) -> bool:
     return 'results' in code
 
 
- 

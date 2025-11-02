@@ -41,7 +41,7 @@ for manual control when needed.
 
 Examples:
     Basic execution control configuration::
-    
+
         >>> config = ExecutionControlConfig(epics_writes_enabled=False)
         >>> mode = config.get_execution_mode(
         ...     has_epics_writes=True,
@@ -49,9 +49,9 @@ Examples:
         ... )
         >>> print(f"Selected mode: {mode}")
         Selected mode: ExecutionMode.READ_ONLY
-        
+
     Enabling write operations with proper safeguards::
-    
+
         >>> write_config = ExecutionControlConfig(epics_writes_enabled=True)
         >>> mode = write_config.get_execution_mode(
         ...     has_epics_writes=True,
@@ -59,9 +59,9 @@ Examples:
         ... )
         >>> print(f"Write mode: {mode}")
         Write mode: ExecutionMode.WRITE_ACCESS
-        
+
     Configuration validation::
-    
+
         >>> warnings = config.validate()
         >>> if warnings:
         ...     print(f"Configuration warnings: {warnings}")
@@ -77,39 +77,39 @@ logger = logging.getLogger(__name__)
 
 class ExecutionMode(Enum):
     """Enumeration of Python execution environment modes with different security profiles.
-    
+
     This enum defines the available execution environments for Python code execution,
     each with different levels of system access and security constraints. The modes
     are designed to provide appropriate isolation and control for different types
     of operations, particularly in scientific and industrial control environments.
-    
+
     The execution modes form a security hierarchy from most restrictive (READ_ONLY)
     to least restrictive (WRITE_ACCESS), allowing fine-grained control over the
     capabilities available to executed code.
-    
+
     :cvar READ_ONLY: Safe, isolated environment for read-only operations and analysis
     :cvar WRITE_ACCESS: Full-access environment enabling system writes and control operations
-    
+
     .. note::
        Each execution mode corresponds to a specific Jupyter container configuration
        with appropriate kernel settings, environment variables, and access controls.
-    
+
     .. warning::
        WRITE_ACCESS mode can perform operations with real-world consequences in
        control system environments. Use with appropriate approval workflows.
-    
+
     .. seealso::
        :class:`ExecutionControlConfig` : Configuration logic for mode selection
        :class:`osprey.services.python_executor.models.ExecutionModeConfig` : Container settings
-    
+
     Examples:
         Mode selection based on operation requirements::
-        
+
             >>> # Safe analysis operations
             >>> mode = ExecutionMode.READ_ONLY
             >>> print(f"Safe mode: {mode.value}")
             Safe mode: read_only
-            
+
             >>> # Control operations requiring write access
             >>> mode = ExecutionMode.WRITE_ACCESS
             >>> print(f"Control mode: {mode.value}")
@@ -122,81 +122,81 @@ class ExecutionMode(Enum):
 @dataclass
 class ExecutionControlConfig:
     """Configuration class for EPICS execution control and security policy management.
-    
+
     This configuration class encapsulates the security policies and settings that
     determine how Python code execution is controlled within the system. It provides
     the logic for automatically selecting appropriate execution environments based
     on code analysis results and configured security policies.
-    
+
     The configuration implements a conservative security approach where write
     operations are only permitted when explicitly enabled and detected in the
     code. This ensures that potentially dangerous operations require both
     configuration permission and explicit code intent.
-    
+
     :param epics_writes_enabled: Whether EPICS write operations are permitted in this deployment
     :type epics_writes_enabled: bool
-    
+
     .. note::
        This configuration should be set based on the deployment environment and
        security requirements. Production control systems should carefully consider
        the implications of enabling write access.
-    
+
     .. warning::
        Enabling EPICS writes allows executed code to potentially affect physical
        systems. Ensure appropriate approval workflows and monitoring are in place.
-    
+
     .. seealso::
        :class:`ExecutionMode` : Available execution environment modes
        :func:`get_execution_control_config` : Factory function for creating configurations
-    
+
     Examples:
         Creating a read-only configuration for safe analysis::
-        
+
             >>> config = ExecutionControlConfig(epics_writes_enabled=False)
             >>> mode = config.get_execution_mode(has_epics_writes=True, has_epics_reads=True)
             >>> print(f"Mode: {mode}")  # Always READ_ONLY when writes disabled
             Mode: ExecutionMode.READ_ONLY
-            
+
         Enabling controlled write access::
-        
+
             >>> write_config = ExecutionControlConfig(epics_writes_enabled=True)
             >>> # Only grants write access when code actually contains write operations
             >>> read_mode = write_config.get_execution_mode(has_epics_writes=False, has_epics_reads=True)
             >>> write_mode = write_config.get_execution_mode(has_epics_writes=True, has_epics_reads=True)
             >>> print(f"Read mode: {read_mode}, Write mode: {write_mode}")
     """
-    
+
     # EPICS settings
     epics_writes_enabled: bool
-    
+
     def get_execution_mode(self, has_epics_writes: bool, has_epics_reads: bool) -> ExecutionMode:
         """Determine appropriate execution mode based on code analysis and security policy.
-        
+
         Analyzes the detected operations in the code (from static analysis) and
         applies the configured security policy to determine the most appropriate
         execution environment. The method implements a conservative approach where
         write access is only granted when both the code requires it and the
         configuration permits it.
-        
+
         The decision logic prioritizes security by defaulting to read-only access
         unless write operations are both detected in the code and explicitly
         enabled in the configuration.
-        
+
         :param has_epics_writes: Whether static analysis detected EPICS write operations in the code
         :type has_epics_writes: bool
         :param has_epics_reads: Whether static analysis detected EPICS read operations in the code
         :type has_epics_reads: bool
         :return: Execution mode appropriate for the detected operations and security policy
         :rtype: ExecutionMode
-        
+
         .. note::
            The has_epics_reads parameter is provided for future extensibility but
            currently does not affect mode selection since read operations are
            permitted in all execution modes.
-        
+
         Examples:
             Mode selection with different code patterns::
-            
+
                 >>> config = ExecutionControlConfig(epics_writes_enabled=True)
                 >>> 
                 >>> # Code with only read operations
@@ -208,9 +208,9 @@ class ExecutionControlConfig:
                 >>> mode = config.get_execution_mode(has_epics_writes=True, has_epics_reads=True)
                 >>> print(f"Write code: {mode}")
                 Write code: ExecutionMode.WRITE_ACCESS
-                
+
             Security policy enforcement::
-            
+
                 >>> secure_config = ExecutionControlConfig(epics_writes_enabled=False)
                 >>> # Write operations detected but not permitted by policy
                 >>> mode = secure_config.get_execution_mode(has_epics_writes=True, has_epics_reads=True)
@@ -221,59 +221,59 @@ class ExecutionControlConfig:
             return ExecutionMode.WRITE_ACCESS
         else:
             return ExecutionMode.READ_ONLY
-    
+
     def validate(self) -> list[str]:
         """
         Validate configuration for logical consistency.
-        
+
         Returns:
             List of validation warnings/errors
         """
         warnings = []
-            
+
         # Live writes are potentially dangerous - log warning
         if self.epics_writes_enabled:
             warnings.append(
                 "WARNING: epics.writes_enabled=true (live EPICS writes enabled!)"
             )
-            
+
         return warnings
 
 
 def get_execution_control_config() -> ExecutionControlConfig:
     """
     Get execution control configuration from global config.
-    
+
     This is the single entry point for getting execution control configuration.
-    
+
     Returns:
         ExecutionControlConfig instance with type-safe configuration
     """
     try:
         # Import here to avoid circular imports
         from osprey.utils.config import get_config_value
-        
+
         # Load from config.yml
         exec_config = get_config_value("execution_control", {})
-        
+
         # Build typed config with defaults
         execution_control = ExecutionControlConfig(
             epics_writes_enabled=exec_config.get("epics", {}).get("writes_enabled", False)
         )
-        
+
         # Validate configuration and log warnings
         warnings = execution_control.validate()
         if warnings:
             for warning in warnings:
                 logger.warning(f"Execution control config: {warning}")
-        
+
         logger.debug(f"Loaded execution control config: writes_enabled={execution_control.epics_writes_enabled}")
-        
+
         return execution_control
-        
+
     except Exception as e:
         logger.warning(f"Failed to load execution control config: {e}, using safe defaults")
-        
+
         # Return safe defaults
         return ExecutionControlConfig(
             epics_writes_enabled=False

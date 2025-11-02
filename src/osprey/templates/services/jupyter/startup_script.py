@@ -40,14 +40,14 @@ def print_environment_info():
     print("=" * 70)
     print("ALS Agent Jupyter Environment")
     print("=" * 70)
-    
+
     execution_mode = os.environ.get('EPICS_EXECUTION_MODE', 'unknown')
     epics_addr = os.environ.get('EPICS_CA_ADDR_LIST', 'Not configured')
     epics_port = os.environ.get('EPICS_CA_SERVER_PORT', 'Not configured')
-    
+
     print(f"📍 Current execution mode: {execution_mode}")
     print(f"🌐 EPICS Gateway: {epics_addr}:{epics_port}")
-    
+
     # Container-specific information
     if execution_mode == "read":
         print("🔒 READ CONTAINER: Read-only operations only")
@@ -57,7 +57,7 @@ def print_environment_info():
         print("   - Available kernels: Read-Only")
         print("   - EPICS write operations are BLOCKED for safety")
         print("")
-        
+
     elif execution_mode == "write_access":
         print("⚠️  WRITE CONTAINER: DEV ONLY - Can modify live systems!")
         print("")
@@ -65,13 +65,13 @@ def print_environment_info():
         print("   - Available kernels: Read-Only, Write Access")
         print("   - 💡 Start with Read-Only kernel for safety")
         print("")
-        
+
     print("📚 Execution modes:")
     print("   🔒 Read-Only: Safe for data analysis (caget commands)")
     print("   ⚠️  Write Access: Can modify control systems (caput commands) - USE WITH EXTREME CAUTION")
     print("")
     print("   Recommended workflow: Start with Read-Only → Use Write Access carefully when needed")
-    
+
     print("\n" + "="*80)
 
 # Make common imports available
@@ -103,13 +103,13 @@ def setup_epics():
     try:
         import epics
         execution_mode = os.environ.get('EPICS_EXECUTION_MODE', 'unknown')
-        
+
         # Store original caput function
         _original_caput = epics.caput
-        
+
         def enhanced_caput(pvname, value, wait=False, timeout=30, **kwargs):
             """Enhanced caput with user-friendly error messages."""
-            
+
             # Check if this is the read-only kernel (no simulation mode)
             if execution_mode == 'read':
                 # This is the read-only kernel
@@ -121,7 +121,7 @@ def setup_epics():
                     f"   Solution: Switch to '🧪 EPICS Simulation' kernel to test writes safely\n"
                     f"            or '⚠️ Write Access' kernel for real machine control"
                 ) from None  # Suppress original traceback
-            
+
             else:
                 # This is write-access kernel - use original function
                 try:
@@ -140,19 +140,19 @@ def setup_epics():
                     else:
                         # Re-raise other exceptions unchanged
                         raise
-        
+
         # Replace epics.caput with our enhanced version
         epics.caput = enhanced_caput
-        
+
         # Make it available globally
         globals()['caput'] = enhanced_caput
-        
+
         print(f"✓ EPICS configured with enhanced error handling (mode: {execution_mode})")
         if execution_mode == 'read':
             print("  🔒 Read-only mode - writes will be blocked with helpful messages")
         elif execution_mode == 'write_access':
             print("  ⚠️ Write access mode - REAL WRITES ENABLED (use with caution)")
-            
+
     except ImportError:
         print("⚠️ PyEPICS not available - skipping EPICS error handling setup")
     except Exception as e:
@@ -166,11 +166,11 @@ def kernel_info():
     execution_mode = os.environ.get('EPICS_EXECUTION_MODE', 'unknown')
     epics_addr = os.environ.get('EPICS_CA_ADDR_LIST', 'Not configured')
     epics_port = os.environ.get('EPICS_CA_SERVER_PORT', 'Not configured')
-    
+
     print("=" * 50)
     print("🔍 CURRENT KERNEL STATUS")
     print("=" * 50)
-    
+
     if execution_mode == 'read':
         print("🔒 KERNEL: Read-Only")
         print("📊 EPICS Reads: ✅ Real data from storage ring")
@@ -183,7 +183,7 @@ def kernel_info():
         print("🎯 Use Case: Actual machine control (DANGEROUS)")
     else:
         print(f"❓ KERNEL: Unknown mode ({execution_mode})")
-    
+
     print(f"🌐 EPICS Gateway: {epics_addr}:{epics_port}")
     print("=" * 50)
     print("💡 Call kernel_info() anytime to see this information")
@@ -201,17 +201,17 @@ print("   ✏️  epics.caput() or caput() - Enhanced with user-friendly error m
 
 try:
     logger.info("Attempting to add project root to sys.path and import 'get_archiver_data'.")
-    
-   
+
+
     # Print local directory structure
     logger.info("Local directory structure:")
     logger.info(f"Current working directory: {os.getcwd()}")
     logger.info(f"Contents of current directory: {os.listdir(os.getcwd())}")
-    
+
     # Check if /jupyter/repo_src exists (copied source during build)
     if Path("/jupyter/repo_src").exists():
         logger.info(f"Contents of /jupyter/repo_src: {os.listdir('/jupyter/repo_src')}")
-    
+
     # The project source is copied to /jupyter/repo_src via the build system
     repo_src = Path("/jupyter/repo_src").resolve()
     logger.debug(f"Target repo_src: {repo_src}")
@@ -219,13 +219,13 @@ try:
     if not repo_src.exists():
         logger.error(f"Project root {repo_src} does not exist. Cannot import 'get_archiver_data'.")
         logger.error("Looking for alternative paths...")
-        
+
         # Log what's available in /jupyter
         if Path("/jupyter").exists():
             logger.info(f"Contents of /jupyter: {os.listdir('/jupyter')}")
     else:
         logger.info(f"Project root exists. Contents: {os.listdir(repo_src)}")
-        
+
         if str(repo_src) not in sys.path:
             sys.path.insert(0, str(repo_src))
             logger.info(f"Project root '{repo_src}' ADDED to sys.path.")
@@ -241,7 +241,7 @@ try:
             logger.error(f"Failed to import 'nbformat': {nie}")
             logger.error(f"Detailed traceback for nbformat import error: {traceback.format_exc()}")
             logger.error("Please ensure 'nbformat' is listed in requirements_jupiter.txt and installed.")
-        
+
 except ImportError as e:
     logger.error(f"ImportError during startup: {e}")
     logger.error(f"Detailed traceback: {traceback.format_exc()}")

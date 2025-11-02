@@ -27,40 +27,40 @@ from .types import CommandContext
 
 class UnifiedCommandCompleter(Completer):
     """Unified completer for all slash commands with rich formatting and context awareness.
-    
+
     The UnifiedCommandCompleter provides intelligent autocompletion for slash commands
     in interactive interfaces. It integrates with the centralized command registry to
     offer context-aware suggestions, rich formatting, and real-time completion updates
     based on the current interface type and user context.
-    
+
     Key Features:
         - Context-aware filtering based on interface type and user permissions
         - Rich formatted completions with command descriptions and syntax hints
         - Intelligent argument completion for command options and parameters
         - Category-based organization for improved command discovery
         - Real-time completion updates with minimal latency
-    
+
     :param context: Command execution context for filtering and personalization
     :type context: CommandContext
     :param registry: Command registry instance for command lookup
     :type registry: CommandRegistry
-    
+
     .. note::
        The completer automatically filters commands based on the interface type
        specified in the CommandContext to show only relevant commands.
-    
+
     Examples:
         CLI integration::
-        
+
             context = CommandContext(interface_type="cli", console=console)
             completer = UnifiedCommandCompleter(context)
-            
+
             # Use with prompt_toolkit
             session = PromptSession(completer=completer)
             user_input = session.prompt("You: ")
-        
+
         Custom interface integration::
-        
+
             context = CommandContext(
                 interface_type="custom",
                 user_id="user123",
@@ -68,32 +68,32 @@ class UnifiedCommandCompleter(Completer):
             )
             completer = UnifiedCommandCompleter(context)
     """
-    
+
     def __init__(self, context: CommandContext):
         self.registry = get_command_registry()
         self.context = context
-    
+
     def get_completions(self, document: Document, complete_event) -> Iterable[Completion]:
         """Get completions for the current input."""
         text = document.text_before_cursor
-        
+
         # Find the current command being typed (could be after other commands)
         current_command = self._extract_current_command(text)
-        
+
         if not current_command:
             return
-        
+
         # Get matching commands from registry
         completions = self.registry.get_completions(current_command, self.context)
-        
+
         for completion in completions:
             # Calculate how much to replace (only the current command part)
             start_position = -len(current_command)
-            
+
             # Get the command for description and styling
             cmd_name = completion[1:]  # Remove leading /
             command = self.registry.get_command(cmd_name)
-            
+
             if command:
                 # Convert Rich colors to hex values that prompt_toolkit understands
                 category_colors = {
@@ -102,20 +102,20 @@ class UnifiedCommandCompleter(Completer):
                     "service": "#ffff5f",    # yellow equivalent
                     "custom": "#ff5fff"      # magenta equivalent
                 }
-                
+
                 color = category_colors.get(command.category.value, "#ffffff")
-                
+
                 # Use actual dim cyan hex color (#5f8787) instead of Rich color name
                 display_html = (
                     f'<completion style="fg:{color}">{completion}</completion> '
                     f'<description style="fg:#5f8787">- {command.description}</description>'
                 )
-                
+
                 # Add syntax hint using dim cyan hex color
                 if command.valid_options:
                     options_hint = f" [{'/'.join(command.valid_options[:2])}{'...' if len(command.valid_options) > 2 else ''}]"
                     display_html += f'<syntax style="fg:#5f8787 italic">{options_hint}</syntax>'
-                
+
                 yield Completion(
                     text=completion,
                     start_position=start_position,
@@ -130,10 +130,10 @@ class UnifiedCommandCompleter(Completer):
                     display=HTML(f'<completion>{completion}</completion>'),
                     style='class:completion'
                 )
-    
+
     def _extract_current_command(self, text: str) -> str:
         """Extract the current command being typed from the full text.
-        
+
         Handles cases like:
         - "/help" -> "/help"
         - "/task:off /plan" -> "/plan"
@@ -142,17 +142,17 @@ class UnifiedCommandCompleter(Completer):
         """
         if not text:
             return ""
-        
+
         # Split by spaces and find the last part that starts with /
         parts = text.split()
-        
+
         for part in reversed(parts):
             if part.startswith('/'):
                 return part
-        
+
         # If no slash command found, check if we're in the middle of typing one
         # This handles cases where cursor is right after a /
         if text.endswith('/'):
             return "/"
-        
+
         return ""

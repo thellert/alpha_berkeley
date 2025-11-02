@@ -25,27 +25,27 @@ try:
     framework_src = Path("/app/src")
     if framework_src.exists():
         sys.path.insert(0, str(framework_src))
-    
+
     from osprey.utils.config import get_agent_dir
-    
+
     def get_execution_plans_path() -> Path:
         """Get the execution plans directory path using config system.
-        
+
         This uses the exact same configuration system as the framework,
         ensuring complete consistency with the orchestrator.
-        
+
         Returns:
             Path to the execution plans directory
         """
         execution_plans_dir = get_agent_dir("execution_plans_dir")
         return Path(execution_plans_dir)
-    
+
     logger.info("Using config system for path resolution")
-    
+
 except ImportError as e:
     logger.warning(f"Could not import config system: {e}")
     logger.warning("Falling back to direct configuration loading")
-    
+
     def get_execution_plans_path() -> Path:
         """Fallback path resolution when config is not available."""
         # Use hardcoded path that matches standard framework configuration
@@ -55,10 +55,10 @@ except ImportError as e:
 def load_registry_data(agent_data_dir: str = None) -> dict:
     """
     Load registry data from JSON files exported by the registry system.
-    
+
     Args:
         agent_data_dir: Base directory for agent data (defaults to mounted path)
-        
+
     Returns:
         Dictionary containing success flag, data/error info, and capabilities/context types/templates
     """
@@ -74,21 +74,21 @@ def load_registry_data(agent_data_dir: str = None) -> dict:
                 # Fallback to standard path if config fails
                 agent_data_dir = "/app/_agent_data"
                 logger.warning(f"Using fallback path: {agent_data_dir}")
-            
+
         registry_exports_dir = Path(agent_data_dir) / "registry_exports"
-        
+
         # Load the complete registry export
         registry_export_file = registry_exports_dir / "registry_export.json"
-        
+
         if registry_export_file.exists():
             with open(registry_export_file, 'r', encoding='utf-8') as f:
                 registry_data = json.load(f)
-            
+
             logger.info(f"Loaded registry data from: {registry_export_file}")
             logger.info(f"Registry data contains: {len(registry_data.get('capabilities', []))} capabilities, "
                        f"{len(registry_data.get('context_types', []))} context types, "
                        f"{len(registry_data.get('templates', []))} templates")
-            
+
             return {
                 "success": True,
                 "capabilities": registry_data.get('capabilities', []),
@@ -105,7 +105,7 @@ def load_registry_data(agent_data_dir: str = None) -> dict:
                 "context_types": [],
                 "templates": []
             }
-            
+
     except Exception as e:
         error_msg = f"Failed to load registry data: {e}"
         logger.error(error_msg)
@@ -152,19 +152,19 @@ class Action:
 
     def extract_context_summary_from_messages(self, messages: list) -> Optional[Dict[str, Any]]:
         """Extract agent context summary from assistant messages."""
-        
+
         try:
             logger.info(f"Extracting context from {len(messages)} messages")
-            
+
             # Look through messages in reverse order (most recent first)
             for i, message in enumerate(reversed(messages)):
                 try:
                     logger.debug(f"Checking message {i}: role={message.get('role')}, has_info={message.get('info') is not None}")
-                    
+
                     if message.get("role") == "assistant" and message.get("info"):
                         info_keys = list(message["info"].keys())
                         logger.debug(f"Message {i} info keys: {info_keys}")
-                        
+
                         # Check for context summary (check both old and new key names for compatibility)
                         if "als_assistant_agent_context" in message["info"]:
                             context_data = message["info"]["als_assistant_agent_context"]
@@ -174,14 +174,14 @@ class Action:
                             context_data = message["info"]["als_assistant_context_summary"]
                             logger.info(f"Found agent context with {len(context_data.get('context_details', {}))} categories")
                             return context_data
-                            
+
                 except Exception as e:
                     logger.error(f"Error processing message {i}: {e}")
                     continue
-            
+
             logger.info("No agent context found in any message")
             return None
-            
+
         except Exception as e:
             logger.error(f"Error extracting context from messages: {e}")
             import traceback
@@ -191,23 +191,23 @@ class Action:
     def extract_available_context_keys(self, context_summary: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Extract available context keys from agent context summary."""
         available_contexts = []
-        
+
         try:
             # Handle both new and old data formats
             context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
-            
+
             if not context_data:
                 return available_contexts
-            
+
             # Process each context category
             for context_type, contexts_dict in context_data.items():
                 # Process each context item in this category
                 for context_key, context_info in contexts_dict.items():
                     context_type_name = context_info.get("type", "Unknown")
-                    
+
                     # Map context types to standard names
                     standard_type = self._map_context_type(context_type_name)
-                    
+
                     available_contexts.append({
                         "contextKey": context_key,
                         "contextType": standard_type,
@@ -215,10 +215,10 @@ class Action:
                         "description": context_info.get("description", ""),
                         "category": context_type
                     })
-            
+
             logger.info(f"Extracted {len(available_contexts)} context keys from agent context")
             return available_contexts
-            
+
         except Exception as e:
             logger.error(f"Error extracting context keys: {e}")
             return available_contexts
@@ -236,24 +236,24 @@ class Action:
             "Memory Context": "MEMORY_CONTEXT",
             "Conversation Results": "CONVERSATION_RESULTS"
         }
-        
+
         return type_mapping.get(context_type_name, context_type_name.upper().replace(" ", "_"))
 
     def _get_user_id(self, user_info: Dict) -> str:
         """Get user ID from user info, using email prefix if available."""
         if not user_info:
             raise ValueError("User information not available")
-        
+
         user_id = user_info.get("id")
-        
+
         if user_info.get("email"):
             user_email = user_info.get("email")
             if "@" in user_email:
                 user_id = user_email.split("@")[0]
-        
+
         if not user_id:
             raise ValueError("User ID not available")
-        
+
         return user_id
 
     def _get_user_plans_directory(self, user_id: str) -> Path:
@@ -266,14 +266,14 @@ class Action:
         """Enhanced validation of execution plan using registry data and agent context."""
         errors = []
         warnings = []
-        
+
         if not plan_steps:
             return {
                 "is_valid": False,
                 "errors": ["Plan cannot be empty"],
                 "warnings": []
             }
-        
+
         # Load registry data for validation
         registry_data = load_registry_data()
         if not registry_data["success"]:
@@ -283,44 +283,44 @@ class Action:
                 "errors": errors,
                 "warnings": warnings
             }
-        
+
         valid_capabilities = {cap["name"] for cap in registry_data.get('capabilities', [])}
         valid_context_types = {ctx["type_name"] for ctx in registry_data.get('context_types', [])}
-        
+
         # Track context keys and their types (including from agent context)
         context_key_types = {}
-        
+
         # Add available context keys from agent context
         if available_context_keys:
             for ctx in available_context_keys:
                 context_key_types[ctx["contextKey"]] = ctx["contextType"]
-        
+
         for i, step in enumerate(plan_steps):
             step_id = f"Step {i+1} ({step.get('context_key', 'unknown')})"
-            
+
             # Check required fields
             required_fields = ["context_key", "capability", "task_objective", "expected_output"]
             for field in required_fields:
                 if not step.get(field):
                     errors.append(f"{step_id}: Missing required field '{field}'")
-            
+
             # Check if capability exists
             capability = step.get("capability")
             if capability and capability not in valid_capabilities:
                 errors.append(f"{step_id}: Unknown capability '{capability}'")
-            
+
             # Check if expected output is valid
             expected_output = step.get("expected_output")
             if expected_output and expected_output not in valid_context_types:
                 errors.append(f"{step_id}: Unknown context type '{expected_output}'")
-            
+
             # Check if inputs reference valid context keys
             if step.get("inputs"):
                 for input_item in step["inputs"]:
                     for context_type, context_key in input_item.items():
                         if context_key not in context_key_types:
                             errors.append(f"{step_id}: Input references unknown context key '{context_key}'")
-            
+
             # Track context key from this step
             context_key = step.get("context_key")
             if context_key:
@@ -332,7 +332,7 @@ class Action:
                         errors.append(f"{step_id}: Duplicate context key '{context_key}'")
                 else:
                     context_key_types[context_key] = expected_output
-        
+
         return {
             "is_valid": len(errors) == 0,
             "errors": errors,
@@ -344,11 +344,11 @@ class Action:
         try:
             user_plans_dir = self._get_user_plans_directory(user_id)
             user_plans_dir.mkdir(parents=True, exist_ok=True)
-            
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"execution_plan_{timestamp}.json"
             file_path = user_plans_dir / filename
-            
+
             plan_data = {
                 "__metadata__": {
                     "version": "1.0",
@@ -358,10 +358,10 @@ class Action:
                 },
                 "steps": plan_steps
             }
-            
+
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(plan_data, f, indent=2, ensure_ascii=False)
-            
+
             return {
                 "success": True,
                 "filename": filename,
@@ -381,12 +381,12 @@ class Action:
             registry_data = load_registry_data()
             if not registry_data["success"]:
                 return {"has_pending": False, "error": "Registry data not available"}
-            
+
             # Use framework configuration for consistent paths
             execution_plans_dir = get_execution_plans_path()
             pending_plans_dir = execution_plans_dir / "pending_plans"
             plan_file = pending_plans_dir / "pending_execution_plan.json"
-            
+
             if plan_file.exists():
                 with open(plan_file, 'r', encoding='utf-8') as f:
                     plan_data = json.load(f)
@@ -397,7 +397,7 @@ class Action:
                 }
             else:
                 return {"has_pending": False}
-                
+
         except Exception as e:
             logger.error(f"Error checking for pending plan: {e}")
             return {"has_pending": False, "error": str(e)}
@@ -409,9 +409,9 @@ class Action:
             execution_plans_dir = get_execution_plans_path()
             pending_plans_dir = execution_plans_dir / "pending_plans"
             pending_plans_dir.mkdir(parents=True, exist_ok=True)
-            
+
             modified_plan_file = pending_plans_dir / "modified_execution_plan.json"
-            
+
             # Ensure plan_data has the correct format
             if 'steps' not in plan_data or '__metadata__' not in plan_data:
                 # If it's just a steps array, wrap it properly
@@ -434,12 +434,12 @@ class Action:
             else:
                 # Update existing metadata
                 plan_data["__metadata__"]["modified_at"] = datetime.now().isoformat()
-            
+
             with open(modified_plan_file, 'w', encoding='utf-8') as f:
                 json.dump(plan_data, f, indent=2, ensure_ascii=False)
-            
+
             return {"success": True, "message": f"Modified plan saved with {len(plan_data.get('steps', []))} steps"}
-            
+
         except Exception as e:
             logger.error(f"Error saving modified plan: {e}")
             return {"success": False, "error": str(e)}
@@ -452,39 +452,39 @@ class Action:
         body: dict = None
     ) -> Optional[Dict]:
         """Create interactive execution plan editor using JavaScript."""
-        
+
         # Check for pending plan first
         pending_check = await self.check_pending_plan(__event_emitter__, __event_call__)
-        
+
         # Load real registry data
         registry_data = load_registry_data()
-        
+
         # Set up registry data - use empty arrays if not available
         has_registry_data = registry_data["success"]
-        
+
         # Extract agent context from messages
         agent_context_summary = None
         available_context_keys = []
-        
+
         if body and body.get("messages"):
             agent_context_summary = self.extract_context_summary_from_messages(body.get("messages", []))
             if agent_context_summary:
                 available_context_keys = self.extract_available_context_keys(agent_context_summary)
                 logger.info(f"Found {len(available_context_keys)} context keys from agent context")
-        
+
         # Prepare JSON data for the editor (empty arrays if no data)
         capabilities_json = json.dumps(registry_data.get('capabilities', [])).replace('"', '\\"')
         context_types_json = json.dumps(registry_data.get('context_types', [])).replace('"', '\\"')
         templates_json = json.dumps(registry_data.get('templates', [])).replace('"', '\\"')
         available_context_keys_json = json.dumps(available_context_keys).replace('"', '\\"')
-        
+
         # Prepare pending plan data
         pending_plan_json = "null"
         editor_mode = "normal"
         if pending_check.get("has_pending"):
             pending_plan_json = json.dumps(pending_check["plan_data"]).replace('"', '\\"')
             editor_mode = "approval_review"
-        
+
         # Prepare error message if registry data is missing
         error_message = ""
         if not has_registry_data:
@@ -519,9 +519,9 @@ Error: {escaped_error}
 Please reload the page after fixing the registry data.`);
             }}, 500);
             '''
-        
+
         try:
-            
+
             # Emit status
             await __event_emitter__(
                 {
@@ -533,9 +533,9 @@ Please reload the page after fixing the registry data.`);
             editor_js = f"""
             try {{
                 {error_message}
-                
+
                 // ===== PROFESSIONAL SCIENTIFIC INTERFACE DESIGN CONFIGURATION =====
-                
+
                 // COLOR PALETTE - Professional Scientific Interface
                 const colors = {{
                     primary: '#9eb0af',        // Muted blue-gray - primary actions, main borders
@@ -557,7 +557,7 @@ Please reload the page after fixing the registry data.`);
                     accent: '#95a4b8',         // Steel blue - highlights, badges
                     accentHover: '#7a8aa0'     // Accent hover states
                 }};
-                
+
                 // LAYOUT DIMENSIONS - Main Interface Structure
                 const layout = {{
                     // Main Container
@@ -566,23 +566,23 @@ Please reload the page after fixing the registry data.`);
                     containerMaxHeight: '90vh',       // Maximum editor height
                     containerPadding: '32px',         // Main container internal padding
                     containerBorderWidth: '2px',      // Main container border thickness
-                    
+
                     // Header Section
                     headerBottomMargin: '32px',       // Space below header
                     headerBottomPadding: '20px',      // Header internal bottom padding
                     headerBorderWidth: '1px',         // Header divider line thickness
-                    
+
                     // Control Panel (buttons area)
                     controlPanelPadding: '20px',      // Control panel internal padding
                     controlPanelBottomMargin: '24px', // Space below control panel
                     controlPanelGap: '24px',          // Gap between left and right button groups
                     buttonSpacing: '12px',            // Space between individual buttons
-                    
+
                     // Main Content Area
                     contentGap: '28px',               // Gap between steps and capabilities panels
                     sectionHeaderBottomMargin: '16px', // Space below section headers
                     sectionHeaderBottomPadding: '8px', // Section header internal bottom padding
-                    
+
                     // Steps Container
                     stepsContainerMinHeight: '300px', // Minimum height for steps area
                     stepsContainerPadding: '20px',    // Steps container internal padding
@@ -591,19 +591,19 @@ Please reload the page after fixing the registry data.`);
                     stepCardHeaderBottomMargin: '16px', // Space below step card header
                     stepCardHeaderBottomPadding: '12px', // Step card header internal bottom padding
                     stepCardContentGap: '16px',       // Gap between step card content columns
-                    
+
                     // Capabilities Panel
                     capabilitiesPanelMaxHeight: '500px', // Maximum height for capabilities list
                     capabilitiesPanelPadding: '20px',    // Capabilities panel internal padding
                     capabilityCardBottomMargin: '12px',  // Space between capability cards
                     capabilityCardPadding: '16px',       // Capability card internal padding
-                    
+
                     // Validation Status
                     validationStatusPadding: '16px',     // Validation message internal padding
                     validationStatusBottomMargin: '20px', // Space below validation message
                     validationStatusBorderWidth: '1px'    // Validation message border thickness
                 }};
-                
+
                 // COMPONENT SIZING - Individual Interface Elements
                 const sizing = {{
                     // Buttons
@@ -611,18 +611,18 @@ Please reload the page after fixing the registry data.`);
                     buttonMinWidth: '120px',          // Minimum button width for consistency
                     buttonBorderWidth: '1px',         // Button border thickness
                     stepButtonPadding: '6px 12px',    // Smaller buttons in step cards
-                    
+
                     // Form Fields
                     fieldPadding: '8px',              // Input/select field internal padding
                     fieldBottomMargin: '6px',         // Space below field labels
                     fieldContentPadding: '8px',       // Content area padding in fields
                     fieldMinHeight: '36px',           // Minimum height for input fields
-                    
+
                     // Input Badges
                     badgePadding: '4px 8px',          // Input badge internal padding
                     badgeSpacing: '6px',              // Space between input badges
                     badgeBottomMargin: '4px',         // Bottom margin for input badges
-                    
+
                     // Modal Dialogs
                     modalWidth: '90%',                // Modal dialog width percentage
                     modalMaxWidth: '600px',           // Maximum modal dialog width
@@ -631,7 +631,7 @@ Please reload the page after fixing the registry data.`);
                     modalFieldBottomMargin: '16px',   // Space between modal form fields
                     modalButtonGap: '12px'            // Gap between modal buttons
                 }};
-                
+
                 // TYPOGRAPHY - Text Styling and Spacing
                 const typography = {{
                     // Main Headers
@@ -639,13 +639,13 @@ Please reload the page after fixing the registry data.`);
                     mainHeaderLetterSpacing: '0.5px', // Main header letter spacing
                     sectionHeaderFontSize: '16px',    // Section headers (Steps, Capabilities)
                     sectionHeaderLetterSpacing: '0.5px', // Section header letter spacing
-                    
+
                     // Body Text
                     bodyFontSize: '14px',             // General body text
                     bodyLineHeight: '1.5',            // Body text line height
                     smallTextFontSize: '13px',        // Smaller text in cards
                     smallTextLineHeight: '1.5',       // Small text line height
-                    
+
                     // Labels and Buttons
                     labelFontSize: '12px',            // Field labels
                     labelLetterSpacing: '0.5px',      // Label letter spacing
@@ -653,7 +653,7 @@ Please reload the page after fixing the registry data.`);
                     buttonLetterSpacing: '0.5px',     // Button letter spacing
                     stepButtonFontSize: '11px',       // Smaller buttons in step cards
                     stepButtonLetterSpacing: '0.5px', // Step button letter spacing
-                    
+
                     // Capability Cards
                     capabilityTitleFontSize: '13px',  // Capability card titles
                     capabilityTitleLetterSpacing: '0.5px', // Capability title letter spacing
@@ -661,27 +661,27 @@ Please reload the page after fixing the registry data.`);
                     capabilityDescLineHeight: '1.4',  // Capability description line height
                     capabilityMetaFontSize: '11px',   // Capability provides/requires text
                     capabilityMetaLineHeight: '1.4',  // Capability meta text line height
-                    
+
                     // Step Cards
                     stepTitleFontSize: '11px',        // Step number badge
                     stepTitleLetterSpacing: '0.5px',  // Step badge letter spacing
                     stepCapabilityFontSize: '14px',   // Step capability name
                     stepCapabilityLetterSpacing: '0.3px', // Step capability letter spacing
-                    
+
                     // Input Badges
                     badgeFontSize: '11px',            // Input badge text
                     badgeLetterSpacing: '0.3px',      // Input badge letter spacing
-                    
+
                     // Validation and Status
                     validationFontSize: '13px',       // Validation message text
                     validationLetterSpacing: '0.3px', // Validation message letter spacing
-                    
+
                     // Misc
                     subtitleFontSize: '13px',         // Subtitle text
                     noInputsFontSize: '11px',         // "No inputs configured" text
                     noInputsLetterSpacing: '0.3px'    // "No inputs" letter spacing
                 }};
-                
+
                 // BORDER RADIUS - Corner Rounding (Professional = Minimal)
                 const borderRadius = {{
                     container: '4px',                 // Main container corners
@@ -690,7 +690,7 @@ Please reload the page after fixing the registry data.`);
                     field: '3px',                     // Input field corners
                     badge: '3px'                      // Badge corners
                 }};
-                
+
                 // SHADOWS - Subtle Depth Effects
                 const shadows = {{
                     container: '0 8px 16px rgba(0, 0, 0, 0.1)',     // Main container shadow
@@ -698,23 +698,23 @@ Please reload the page after fixing the registry data.`);
                     cardHover: '0 4px 8px rgba(0,0,0,0.1)',         // Card hover shadow
                     modal: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'  // Modal dialog shadow
                 }};
-                
+
                 // TRANSITIONS - Smooth Animations
                 const transitions = {{
                     default: 'all 0.2s',             // Standard transition for most elements
                     fast: '0.15s',                    // Fast transitions
                     slow: '0.3s'                      // Slower transitions for complex changes
                 }};
-                
+
                 // ===== ======================== =====
                 // ===== END DESIGN CONFIGURATION =====
-                
+
                 // Remove any existing editor
                 const existingEditor = document.getElementById('plan-editor-overlay');
                 if (existingEditor) {{
                     existingEditor.remove();
                 }}
-                
+
                 // Create overlay
                 const overlay = document.createElement('div');
                 overlay.id = 'plan-editor-overlay';
@@ -730,7 +730,7 @@ Please reload the page after fixing the registry data.`);
                     justify-content: center;
                     align-items: center;
                 `;
-                
+
                 // Create editor container - professional scientific interface
                 const editor = document.createElement('div');
                 editor.style.cssText = `
@@ -748,7 +748,7 @@ Please reload the page after fixing the registry data.`);
                     font-size: ${{typography.bodyFontSize}};
                     line-height: ${{typography.bodyLineHeight}};
                 `;
-                
+
                 // Parse embedded data
                 const capabilities = JSON.parse("{capabilities_json}");
                 const contextTypes = JSON.parse("{context_types_json}");
@@ -756,16 +756,16 @@ Please reload the page after fixing the registry data.`);
                 const availableContextKeys = JSON.parse("{available_context_keys_json}");
                 const pendingPlan = JSON.parse("{pending_plan_json}");
                 const editorMode = "{editor_mode}";
-                
+
                 let currentPlan = [];
-                
+
                 // Create step counter for unique IDs
                 let stepCounter = 0;
-                
+
                 // Detect editor mode and setup accordingly
                 let isReviewMode = (editorMode === "approval_review" && pendingPlan);
                 let reviewModeData = null;
-                
+
                 if (isReviewMode) {{
                     reviewModeData = {{
                         originalTask: pendingPlan.__metadata__?.original_task || "Unknown task",
@@ -775,7 +775,7 @@ Please reload the page after fixing the registry data.`);
                     currentPlan = pendingPlan.steps || [];
                     stepCounter = currentPlan.length;
                 }}
-                
+
                 // Populate template dropdown
                 function populateTemplateDropdown() {{
                     const templateSelect = document.getElementById('plan-template-select');
@@ -788,12 +788,12 @@ Please reload the page after fixing the registry data.`);
                         }});
                     }}
                 }}
-                
+
                 // Create main editor HTML based on mode
                 function createEditorHTML() {{
                     let headerHTML = '';
                     let controlPanelHTML = '';
-                    
+
                     if (isReviewMode) {{
                         // Review mode header
                         headerHTML = `
@@ -805,7 +805,7 @@ Please reload the page after fixing the registry data.`);
                                 <button id="plan-close-btn" style="background: ${{colors.danger}}; color: white; border: ${{sizing.buttonBorderWidth}} solid ${{colors.danger}}; padding: ${{sizing.buttonPadding}}; border-radius: ${{borderRadius.button}}; cursor: pointer; font-weight: 500; font-size: ${{typography.buttonFontSize}}; text-transform: uppercase; letter-spacing: ${{typography.buttonLetterSpacing}}; transition: ${{transitions.default}}; min-width: 80px;">Close</button>
                             </div>
                         `;
-                        
+
                         // Review mode control panel
                         controlPanelHTML = `
                             <div style="background: ${{colors.warning}}; color: white; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
@@ -813,7 +813,7 @@ Please reload the page after fixing the registry data.`);
                                 <div style="font-size: 14px; opacity: 0.9;">${{reviewModeData.originalTask}}</div>
                                 <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">Created: ${{reviewModeData.createdAt}} • Context: ${{reviewModeData.contextKey}}</div>
                             </div>
-                            
+
                             <div style="display: flex; gap: 16px; margin-bottom: 24px; padding: 20px; background: ${{colors.panelBackground}}; border: 1px solid ${{colors.borderLight}}; border-radius: 3px; align-items: center; flex-wrap: nowrap;">
                                 <button id="save-as-is-btn" style="background: ${{colors.success}}; color: white; border: 1px solid ${{colors.success}}; padding: 10px 16px; border-radius: 3px; cursor: pointer; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; min-width: 120px;">💾 Use Plan As-Is</button>
                                 <button id="save-modified-btn" style="background: ${{colors.primary}}; color: white; border: 1px solid ${{colors.primary}}; padding: 10px 16px; border-radius: 3px; cursor: pointer; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; min-width: 140px;">✏️ Save Modifications</button>
@@ -833,7 +833,7 @@ Please reload the page after fixing the registry data.`);
                                 <button id="plan-close-btn" style="background: ${{colors.danger}}; color: white; border: ${{sizing.buttonBorderWidth}} solid ${{colors.danger}}; padding: ${{sizing.buttonPadding}}; border-radius: ${{borderRadius.button}}; cursor: pointer; font-weight: 500; font-size: ${{typography.buttonFontSize}}; text-transform: uppercase; letter-spacing: ${{typography.buttonLetterSpacing}}; transition: ${{transitions.default}}; min-width: 80px;">Close</button>
                             </div>
                         `;
-                        
+
                         // Normal mode control panel
                         controlPanelHTML = `
                             <div style="display: flex; gap: 20px; margin-bottom: 24px; padding: 20px; background: ${{colors.panelBackground}}; border: 1px solid ${{colors.borderLight}}; border-radius: 3px; align-items: center; flex-wrap: nowrap;">
@@ -850,10 +850,10 @@ Please reload the page after fixing the registry data.`);
                             </div>
                         `;
                     }}
-                    
+
                     return headerHTML + controlPanelHTML + `
                         <div id="validation-status" style="display: none; padding: 16px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; font-weight: 500; border: 1px solid; letter-spacing: 0.3px;"></div>
-                        
+
                         <div style="display: flex; gap: 28px;">
                             <div style="flex: 2;">
                                 <h3 style="margin: 0 0 16px 0; color: ${{colors.text}}; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid ${{colors.borderLight}}; padding-bottom: 8px;">Execution Steps</h3>
@@ -862,23 +862,23 @@ Please reload the page after fixing the registry data.`);
                             <div style="flex: 1;">
                                 <h3 style="margin: 0 0 16px 0; color: ${{colors.text}}; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid ${{colors.borderLight}}; padding-bottom: 8px;">Available Context</h3>
                                 <div id="context-panel" style="border: 1px solid ${{colors.border}}; border-radius: 3px; max-height: 200px; overflow-y: auto; padding: 20px; background: ${{colors.background}}; margin-bottom: 20px;"></div>
-                                
+
                                 <h3 style="margin: 0 0 16px 0; color: ${{colors.text}}; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid ${{colors.borderLight}}; padding-bottom: 8px;">Available Capabilities</h3>
                                 <div id="capabilities-panel" style="border: 1px solid ${{colors.border}}; border-radius: 3px; max-height: 300px; overflow-y: auto; padding: 20px; background: ${{colors.background}};"></div>
                             </div>
                         </div>
                     `;
                 }}
-                
+
                 // Set editor HTML
                 editor.innerHTML = createEditorHTML();
-                
+
                 // For review mode, we'll show instructions instead of trying to save directly
                 function showSaveInstructions(action) {{
                     let message = '';
                     if (action === 'save_as_is') {{
                         message = `✅ Original Plan Ready for Approval!
-                        
+
 Return to chat and respond with "yes" to approve the original execution plan.
 
 No modifications were made - the original plan will be used as-is.`;
@@ -894,10 +894,10 @@ To save your modifications and proceed with approval:
 
 Note: Your modifications are preserved in this session until you reload the page.`;
                     }}
-                    
+
                     alert(message);
                 }}
-                
+
                 // Review mode success notification
                 function showReviewModeSuccess(message) {{
                     const notification = document.createElement('div');
@@ -921,13 +921,13 @@ Note: Your modifications are preserved in this session until you reload the page
                     `;
                     notification.textContent = message;
                     document.body.appendChild(notification);
-                    
+
                     // Animate in
                     setTimeout(() => {{
                         notification.style.opacity = '1';
                         notification.style.transform = 'translateX(0)';
                     }}, 10);
-                    
+
                     // Auto-remove after 5 seconds
                     setTimeout(() => {{
                         notification.style.opacity = '0';
@@ -939,12 +939,12 @@ Note: Your modifications are preserved in this session until you reload the page
                         }}, 300);
                     }}, 5000);
                 }}
-                
+
                 // Setup review mode event handlers
                 function setupReviewModeHandlers() {{
                     const saveAsIsBtn = document.getElementById('save-as-is-btn');
                     const saveModifiedBtn = document.getElementById('save-modified-btn');
-                    
+
                     if (saveAsIsBtn) {{
                         saveAsIsBtn.onclick = async () => {{
                             try {{
@@ -956,7 +956,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             }}
                         }};
                     }}
-                    
+
                     if (saveModifiedBtn) {{
                         saveModifiedBtn.onclick = async () => {{
                             try {{
@@ -970,10 +970,10 @@ Note: Your modifications are preserved in this session until you reload the page
                                     }},
                                     "steps": currentPlan
                                 }};
-                                
+
                                 // Store modifications in sessionStorage for persistence within this session
                                 sessionStorage.setItem('pendingModifications', JSON.stringify(planData));
-                                
+
                                 showSaveInstructions('save_modified');
                                 setTimeout(() => overlay.remove(), 500);
                             }} catch (error) {{
@@ -983,12 +983,12 @@ Note: Your modifications are preserved in this session until you reload the page
                         }};
                     }}
                 }}
-                
+
                 // Render available context panel
                 function renderAvailableContextPanel() {{
                     const panel = document.getElementById('context-panel');
                     let html = '';
-                    
+
                     if (availableContextKeys.length === 0) {{
                         html = `
                             <div style="text-align: center; padding: 20px; color: ${{colors.textLight}}; font-style: italic; font-size: 12px;">
@@ -1001,7 +1001,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 📊 ${{availableContextKeys.length}} Available Context Keys
                             </div>
                         `;
-                        
+
                         availableContextKeys.forEach(ctx => {{
                             const categoryEmoji = getCategoryEmoji(ctx.category);
                             html += `
@@ -1020,10 +1020,10 @@ Note: Your modifications are preserved in this session until you reload the page
                             `;
                         }});
                     }}
-                    
+
                     panel.innerHTML = html;
                 }}
-                
+
                 // Get category emoji for context display
                 function getCategoryEmoji(category) {{
                     const emojiMap = {{
@@ -1039,16 +1039,16 @@ Note: Your modifications are preserved in this session until you reload the page
                     }};
                     return emojiMap[category] || "📁";
                 }}
-                
+
                 // Render capabilities panel
                 function renderCapabilitiesPanel() {{
                     const panel = document.getElementById('capabilities-panel');
                     let html = '';
-                    
+
                     capabilities.forEach(cap => {{
                         const providesText = cap.provides && cap.provides.length > 0 ? cap.provides.join(', ') : 'Any';
                         const requiresText = cap.requires && cap.requires.length > 0 ? cap.requires.join(', ') : 'None';
-                        
+
                         html += `
                             <div style="border: 1px solid ${{colors.borderLight}}; border-radius: 3px; padding: 16px; margin-bottom: 12px; background: ${{colors.panelBackground}}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" 
                                  onmouseover="this.style.borderColor='${{colors.primary}}'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" 
@@ -1063,15 +1063,15 @@ Note: Your modifications are preserved in this session until you reload the page
                             </div>
                         `;
                     }});
-                    
+
                     panel.innerHTML = html;
                 }}
-                
+
                 // Add step from capability
                 window.addStepFromCapability = function(capabilityName) {{
                     const capability = capabilities.find(cap => cap.name === capabilityName);
                     if (!capability) return;
-                    
+
                     const newStep = {{
                         context_key: `${{capability.name.replace(/_/g, '_')}}_${{stepCounter++}}`,
                         capability: capability.name,
@@ -1080,16 +1080,16 @@ Note: Your modifications are preserved in this session until you reload the page
                         parameters: null,
                         inputs: []
                     }};
-                    
+
                     currentPlan.push(newStep);
                     renderSteps();
                     autoValidate();
                 }};
-                
+
                 // Render steps
                 function renderSteps() {{
                     const container = document.getElementById('steps-container');
-                    
+
                     if (currentPlan.length === 0) {{
                         container.innerHTML = `
                             <div style="text-align: center; padding: 40px; color: ${{colors.textLight}}; font-style: italic;">
@@ -1098,7 +1098,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         `;
                         return;
                     }}
-                    
+
                     let html = '';
                     currentPlan.forEach((step, index) => {{
                         // Create inputs display
@@ -1112,7 +1112,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         }} else {{
                             inputsHtml = '<span style="color: ${{colors.textLight}}; font-style: italic; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px;">No inputs configured</span>';
                         }}
-                        
+
                         html += `
                             <div style="border: 1px solid ${{colors.borderLight}}; border-radius: 3px; padding: 20px; margin-bottom: 16px; background: ${{colors.panelBackground}}; position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid ${{colors.borderLight}};">
@@ -1126,7 +1126,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                         <button onclick="deleteStep(${{index}})" style="background: ${{colors.danger}}; color: white; border: 1px solid ${{colors.danger}}; padding: 6px 12px; border-radius: 3px; cursor: pointer; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s;">Delete</button>
                                     </div>
                                 </div>
-                                
+
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                                     <div style="grid-column: 1 / -1;">
                                         <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 6px; color: ${{colors.text}}; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -1153,7 +1153,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             </div>
                         `;
                     }});
-                    
+
                     // Add "Add Step" button at the bottom
                     if (currentPlan.length > 0) {{
                         html += `
@@ -1167,20 +1167,20 @@ Note: Your modifications are preserved in this session until you reload the page
                             </div>
                         `;
                     }}
-                    
+
                     container.innerHTML = html;
                 }}
-                
+
                 // Auto-update context key references in subsequent steps
                 function updateContextKeyReferences(oldContextKey, newContextKey, changedStepIndex) {{
                     let updatedStepsCount = 0;
                     const updatedStepNumbers = [];
-                    
+
                     // Look through all steps after the changed step
                     for (let i = changedStepIndex + 1; i < currentPlan.length; i++) {{
                         const laterStep = currentPlan[i];
                         let stepWasUpdated = false;
-                        
+
                         // Check if this step has inputs that reference the old context key
                         if (laterStep.inputs && laterStep.inputs.length > 0) {{
                             laterStep.inputs.forEach((input, inputIndex) => {{
@@ -1193,18 +1193,18 @@ Note: Your modifications are preserved in this session until you reload the page
                                 }});
                             }});
                         }}
-                        
+
                         if (stepWasUpdated) {{
                             updatedStepsCount++;
                             updatedStepNumbers.push(i + 1);
                         }}
                     }}
-                    
+
                     // Show notification if any references were updated
                     if (updatedStepsCount > 0) {{
                         const stepsList = updatedStepNumbers.join(', ');
                         const message = `✅ Auto-updated ${{updatedStepsCount}} reference${{updatedStepsCount > 1 ? 's' : ''}} to "${{oldContextKey}}" → "${{newContextKey}}" in step${{updatedStepsCount > 1 ? 's' : ''}} ${{stepsList}}`;
-                        
+
                         // Create temporary notification
                         const notification = document.createElement('div');
                         notification.style.cssText = `
@@ -1227,13 +1227,13 @@ Note: Your modifications are preserved in this session until you reload the page
                         `;
                         notification.textContent = message;
                         document.body.appendChild(notification);
-                        
+
                         // Animate in
                         setTimeout(() => {{
                             notification.style.opacity = '1';
                             notification.style.transform = 'translateX(0)';
                         }}, 10);
-                        
+
                         // Auto-remove after 4 seconds
                         setTimeout(() => {{
                             notification.style.opacity = '0';
@@ -1246,7 +1246,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         }}, 4000);
                     }}
                 }}
-                
+
                 // Add new step at bottom (same as top button)
                 window.addNewStepAtBottom = function() {{
                     const firstCapability = capabilities[0];
@@ -1258,11 +1258,11 @@ Note: Your modifications are preserved in this session until you reload the page
                         parameters: null,
                         inputs: []
                     }};
-                    
+
                     currentPlan.push(newStep);
                     renderSteps();
                     autoValidate();
-                    
+
                     // Scroll to the new step (last one)
                     setTimeout(() => {{
                         const stepsContainer = document.getElementById('steps-container');
@@ -1272,11 +1272,11 @@ Note: Your modifications are preserved in this session until you reload the page
                         }}
                     }}, 100);
                 }};
-                
+
                 // Edit step
                 window.editStep = function(index) {{
                     const step = currentPlan[index];
-                    
+
                     // Create edit modal
                     const editModal = document.createElement('div');
                     editModal.style.cssText = `
@@ -1291,7 +1291,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         justify-content: center;
                         align-items: center;
                     `;
-                    
+
                     const editForm = document.createElement('div');
                     editForm.style.cssText = `
                         background: white;
@@ -1304,20 +1304,20 @@ Note: Your modifications are preserved in this session until you reload the page
                         color: #333;
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                     `;
-                    
+
                     // Generate capability options
                     const capabilityOptions = capabilities.map(cap => 
                         `<option value="${{cap.name}}" ${{cap.name === step.capability ? 'selected' : ''}}>${{cap.name}} - ${{cap.description}}</option>`
                     ).join('');
-                    
+
                     // Generate context type options for expected output
                     const contextTypeOptions = contextTypes.map(ctx =>
                         `<option value="${{ctx.type_name}}" ${{ctx.type_name === step.expected_output ? 'selected' : ''}}>${{ctx.type_name}} - ${{ctx.description}}</option>`
                     ).join('');
-                    
+
                     editForm.innerHTML = `
                         <h3 style="margin: 0 0 20px 0; color: ${{colors.text}};">Edit Step ${{index + 1}}</h3>
-                        
+
                         <div style="margin-bottom: 16px;">
                             <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 4px; color: ${{colors.text}};">
                                 Context Key:
@@ -1326,7 +1326,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             <input type="text" id="edit-context-key" value="${{step.context_key}}" style="width: 100%; padding: 8px; border: 1px solid ${{colors.border}}; border-radius: 4px; font-size: 14px; box-sizing: border-box;" placeholder="e.g., pv_search, time_range, analysis_result">
                             <div id="context-key-warning" style="margin-top: 4px; font-size: 12px; color: ${{colors.danger}}; display: none;"></div>
                         </div>
-                        
+
                         <div style="margin-bottom: 16px;">
                             <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 4px; color: ${{colors.text}};">
                                 Capability:
@@ -1336,7 +1336,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 ${{capabilityOptions}}
                             </select>
                         </div>
-                        
+
                         <div style="margin-bottom: 16px;">
                             <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 4px; color: ${{colors.text}};">
                                 Task Objective:
@@ -1344,7 +1344,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             </label>
                             <textarea id="edit-task-objective" style="width: 100%; height: 80px; padding: 8px; border: 1px solid ${{colors.border}}; border-radius: 4px; font-size: 14px; resize: vertical; box-sizing: border-box;" placeholder="Describe exactly what this step should accomplish...">${{step.task_objective}}</textarea>
                         </div>
-                        
+
                         <div style="margin-bottom: 16px;">
                             <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 4px; color: ${{colors.text}};">
                                 Expected Output:
@@ -1354,7 +1354,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 ${{contextTypeOptions}}
                             </select>
                         </div>
-                        
+
                         <div style="margin-bottom: 20px;">
                             <label style="display: flex; align-items: center; font-weight: 600; margin-bottom: 4px; color: ${{colors.text}};">
                                 Inputs:
@@ -1365,17 +1365,17 @@ Note: Your modifications are preserved in this session until you reload the page
                                 <button type="button" id="add-input-btn" style="background: ${{colors.success}}; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 8px;">+ Add Input</button>
                             </div>
                         </div>
-                        
+
                         <div style="display: flex; gap: 12px; justify-content: flex-end;">
                             <button id="edit-cancel-btn" style="background: ${{colors.secondary}}; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Cancel</button>
                             <button id="edit-save-btn" style="background: ${{colors.primary}}; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">Save Changes</button>
                         </div>
                     `;
-                    
+
                     // Get available context types and keys from previous steps and agent context
                     function getAvailableContextData() {{
                         const availableContexts = [];
-                        
+
                         // Add agent context keys first
                         availableContextKeys.forEach(ctx => {{
                             availableContexts.push({{
@@ -1386,7 +1386,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 description: ctx.description
                             }});
                         }});
-                        
+
                         // Look at all steps before the current one
                         for (let i = 0; i < index; i++) {{
                             const prevStep = currentPlan[i];
@@ -1400,26 +1400,26 @@ Note: Your modifications are preserved in this session until you reload the page
                                 }});
                             }}
                         }}
-                        
+
                         return availableContexts;
                     }}
-                    
+
                     // Render current inputs
                     function renderEditInputs() {{
                         const inputsList = document.getElementById('inputs-list');
                         const availableContexts = getAvailableContextData();
-                        
+
                         // Get current capability requirements
                         const selectedCapability = document.getElementById('edit-capability').value;
                         const selectedCap = capabilities.find(cap => cap.name === selectedCapability);
-                        
+
                         let html = '';
-                        
+
                         if (step.inputs && step.inputs.length > 0) {{
                             step.inputs.forEach((input, inputIndex) => {{
                                 const key = Object.keys(input)[0];
                                 const value = input[key];
-                                
+
                                 // Filter context types based on capability requirements
                                 let validContextTypes = availableContexts.map(ctx => ctx.contextType);
                                 if (selectedCap && selectedCap.requires && selectedCap.requires.length > 0) {{
@@ -1427,15 +1427,15 @@ Note: Your modifications are preserved in this session until you reload the page
                                         .filter(ctx => selectedCap.requires.includes(ctx.contextType))
                                         .map(ctx => ctx.contextType);
                                 }}
-                                
+
                                 // Remove duplicates
                                 validContextTypes = [...new Set(validContextTypes)];
-                                
+
                                 // Generate context type options (filtered by capability requirements)
                                 const contextTypeOptions = validContextTypes.map(contextType => 
                                     `<option value="${{contextType}}" ${{contextType === key ? 'selected' : ''}}>${{contextType}}</option>`
                                 ).join('');
-                                
+
                                 // Generate context key options (from available previous steps and agent context that match requirements)
                                 const validContextsForKey = availableContexts.filter(ctx => validContextTypes.includes(ctx.contextType));
                                 const contextKeyOptions = validContextsForKey.map(ctx => {{
@@ -1443,7 +1443,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                     const sourceIcon = ctx.source === "agent_context" ? "🧠" : "📋";
                                     return `<option value="${{ctx.contextKey}}" ${{ctx.contextKey === value ? 'selected' : ''}}>${{sourceIcon}} ${{sourceLabel}}: ${{ctx.contextKey}} (${{ctx.contextType}})</option>`;
                                 }}).join('');
-                                
+
                                 html += `
                                     <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items: center;">
                                         <select data-input-index="${{inputIndex}}" data-field="key" style="flex: 1; padding: 4px 8px; border: 1px solid ${{colors.border}}; border-radius: 3px; font-size: 12px;">
@@ -1465,18 +1465,18 @@ Note: Your modifications are preserved in this session until you reload the page
                             }}
                             html = `<div style="color: ${{colors.textLight}}; font-style: italic; font-size: 12px; text-align: center; padding: 20px;">${{helpText}}</div>`;
                         }}
-                        
+
                         inputsList.innerHTML = html;
-                        
+
                         // Add event listeners for input changes
                         inputsList.querySelectorAll('select').forEach(select => {{
                             select.onchange = function() {{
                                 const inputIndex = parseInt(this.dataset.inputIndex);
                                 const field = this.dataset.field;
-                                
+
                                 if (!step.inputs) step.inputs = [];
                                 if (!step.inputs[inputIndex]) step.inputs[inputIndex] = {{}};
-                                
+
                                 if (field === 'key') {{
                                     const oldKey = Object.keys(step.inputs[inputIndex])[0];
                                     const value = step.inputs[inputIndex][oldKey];
@@ -1488,35 +1488,35 @@ Note: Your modifications are preserved in this session until you reload the page
                                 }}
                             }};
                         }});
-                        
+
                         // Add smart filtering: when context type changes, filter available source steps
                         inputsList.querySelectorAll('select[data-field="key"]').forEach(contextTypeSelect => {{
                             contextTypeSelect.onchange = function() {{
                                 const inputIndex = parseInt(this.dataset.inputIndex);
                                 const selectedContextType = this.value;
                                 const sourceStepSelect = inputsList.querySelector(`select[data-input-index="${{inputIndex}}"][data-field="value"]`);
-                                
+
                                 // Filter source steps to only show those that produce the selected context type
                                 const filteredContexts = availableContexts.filter(ctx => ctx.contextType === selectedContextType);
-                                
+
                                 let newOptions = '<option value="">Select Source Step</option>';
                                 filteredContexts.forEach(ctx => {{
                                     const sourceLabel = ctx.source === "agent_context" ? "Agent Context" : `Step ${{ctx.stepNumber}}`;
                                     const sourceIcon = ctx.source === "agent_context" ? "🧠" : "📋";
                                     newOptions += `<option value="${{ctx.contextKey}}">${{sourceIcon}} ${{sourceLabel}}: ${{ctx.contextKey}} (${{ctx.contextType}})</option>`;
                                 }});
-                                
+
                                 sourceStepSelect.innerHTML = newOptions;
-                                
+
                                 // Update the step data
                                 if (!step.inputs) step.inputs = [];
                                 if (!step.inputs[inputIndex]) step.inputs[inputIndex] = {{}};
-                                
+
                                 const oldKey = Object.keys(step.inputs[inputIndex])[0];
                                 const value = step.inputs[inputIndex][oldKey] || '';
                                 delete step.inputs[inputIndex][oldKey];
                                 step.inputs[inputIndex][selectedContextType] = value;
-                                
+
                                 // Re-add the change listener for the source step select
                                 sourceStepSelect.onchange = function() {{
                                     step.inputs[inputIndex][selectedContextType] = this.value;
@@ -1524,29 +1524,29 @@ Note: Your modifications are preserved in this session until you reload the page
                             }};
                         }});
                     }}
-                    
+
                     window.removeEditInput = function(inputIndex) {{
                         step.inputs.splice(inputIndex, 1);
                         renderEditInputs();
                     }};
-                    
+
                     // Setup event handlers
                     editModal.appendChild(editForm);
                     document.body.appendChild(editModal);
-                    
+
                     renderEditInputs();
-                    
+
                     // Add real-time validation for context key
                     document.getElementById('edit-context-key').oninput = function() {{
                         const newContextKey = this.value.trim();
                         const warningDiv = document.getElementById('context-key-warning');
                         const currentContextKey = step.context_key;
-                        
+
                         // Check for duplicate context keys
                         const existingKeys = currentPlan
                             .filter((s, i) => i !== index) // Exclude current step
                             .map(s => s.context_key);
-                        
+
                         if (newContextKey && existingKeys.includes(newContextKey)) {{
                             warningDiv.textContent = `⚠️ Context key "${{newContextKey}}" already exists in another step`;
                             warningDiv.style.display = 'block';
@@ -1565,7 +1565,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                     }}
                                 }}
                             }}
-                            
+
                             if (referencingSteps.length > 0) {{
                                 warningDiv.textContent = `ℹ️ This will auto-update references in step${{referencingSteps.length > 1 ? 's' : ''}} ${{referencingSteps.join(', ')}}`;
                                 warningDiv.style.color = '${{colors.accent}}';
@@ -1580,20 +1580,20 @@ Note: Your modifications are preserved in this session until you reload the page
                             this.style.borderColor = '${{colors.border}}';
                         }}
                     }};
-                    
+
                     document.getElementById('add-input-btn').onclick = function() {{
                         if (!step.inputs) step.inputs = [];
                         const availableContexts = getAvailableContextData();
-                        
+
                         if (availableContexts.length === 0) {{
                             alert('No inputs available from previous steps. Add some steps first!');
                             return;
                         }}
-                        
+
                         // Get the selected capability to check its requirements
                         const selectedCapability = document.getElementById('edit-capability').value;
                         const selectedCap = capabilities.find(cap => cap.name === selectedCapability);
-                        
+
                         // Filter available contexts based on capability requirements
                         let validContexts = availableContexts;
                         if (selectedCap && selectedCap.requires && selectedCap.requires.length > 0) {{
@@ -1602,7 +1602,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 selectedCap.requires.includes(ctx.contextType)
                             );
                         }}
-                        
+
                         if (validContexts.length === 0) {{
                             if (selectedCap && selectedCap.requires && selectedCap.requires.length > 0) {{
                                 alert(`This capability requires: ${{selectedCap.requires.join(', ')}}. No previous steps provide these context types.`);
@@ -1611,63 +1611,63 @@ Note: Your modifications are preserved in this session until you reload the page
                             }}
                             return;
                         }}
-                        
+
                         // Add a new input with the first valid context type and key
                         const firstValidContext = validContexts[0];
                         step.inputs.push({{ [firstValidContext.contextType]: firstValidContext.contextKey }});
                         renderEditInputs();
                     }};
-                    
+
                     document.getElementById('edit-cancel-btn').onclick = function() {{
                         editModal.remove();
                     }};
-                    
+
                     document.getElementById('edit-save-btn').onclick = function() {{
                         // Get the old and new context keys to check for changes
                         const oldContextKey = step.context_key;
                         const newContextKey = document.getElementById('edit-context-key').value.trim();
-                        
+
                         // Check for duplicate context keys before saving
                         const existingKeys = currentPlan
                             .filter((s, i) => i !== index) // Exclude current step
                             .map(s => s.context_key);
-                        
+
                         if (newContextKey && existingKeys.includes(newContextKey)) {{
                             alert(`❌ Cannot save: Context key "${{newContextKey}}" already exists in another step. Please choose a unique context key.`);
                             return;
                         }}
-                        
+
                         if (!newContextKey) {{
                             alert('❌ Context key cannot be empty. Please provide a valid context key.');
                             return;
                         }}
-                        
+
                         // Update step with form values
                         step.context_key = newContextKey;
                         step.capability = document.getElementById('edit-capability').value;
                         step.task_objective = document.getElementById('edit-task-objective').value;
                         step.expected_output = document.getElementById('edit-expected-output').value;
-                        
+
                         // Auto-update references in subsequent steps if context key changed
                         if (oldContextKey !== newContextKey && oldContextKey && newContextKey) {{
                             updateContextKeyReferences(oldContextKey, newContextKey, index);
                         }}
-                        
+
                         editModal.remove();
                         renderSteps();
                         autoValidate();
                     }};
-                    
+
                     // Update expected output and input constraints when capability changes
                     document.getElementById('edit-capability').onchange = function() {{
                         const selectedCap = capabilities.find(cap => cap.name === this.value);
                         const expectedOutputSelect = document.getElementById('edit-expected-output');
-                        
+
                         // Update Expected Output dropdown to only show what this capability provides
                         if (selectedCap) {{
                             // Clear existing options
                             expectedOutputSelect.innerHTML = '';
-                            
+
                             if (selectedCap.provides && selectedCap.provides.length > 0) {{
                                 // Add only the context types this capability can provide
                                 selectedCap.provides.forEach(contextType => {{
@@ -1688,13 +1688,13 @@ Note: Your modifications are preserved in this session until you reload the page
                                     expectedOutputSelect.appendChild(option);
                                 }});
                             }}
-                            
+
                             // Clear existing inputs since capability changed
                             step.inputs = [];
                             renderEditInputs();
                         }}
                     }};
-                    
+
                     // Close on backdrop click
                     editModal.onclick = function(e) {{
                         if (e.target === editModal) {{
@@ -1702,7 +1702,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         }}
                     }};
                 }};
-                
+
                 // Delete step
                 window.deleteStep = function(index) {{
                     if (confirm('Are you sure you want to delete this step?')) {{
@@ -1711,55 +1711,55 @@ Note: Your modifications are preserved in this session until you reload the page
                         autoValidate();
                     }}
                 }};
-                
+
                 // Auto validation
                 function autoValidate() {{
                     const statusDiv = document.getElementById('validation-status');
-                    
+
                     if (currentPlan.length === 0) {{
                         statusDiv.style.display = 'none';
                         return;
                     }}
-                    
+
                     // Enhanced validation with agent context
                     let hasErrors = false;
                     let hasWarnings = false;
                     const validCapabilities = capabilities.map(cap => cap.name);
                     const contextKeys = currentPlan.map(step => step.context_key);
                     const duplicateKeys = contextKeys.filter((key, index) => contextKeys.indexOf(key) !== index);
-                    
+
                     // Build available context keys (from agent context + previous steps)
                     const availableContextKeysMap = {{}};
-                    
+
                     // Add agent context keys
                     availableContextKeys.forEach(ctx => {{
                         availableContextKeysMap[ctx.contextKey] = ctx.contextType;
                     }});
-                    
+
                     // Add plan step context keys
                     currentPlan.forEach(step => {{
                         if (step.context_key) {{
                             availableContextKeysMap[step.context_key] = step.expected_output;
                         }}
                     }});
-                    
+
                     // Check for duplicate keys in plan
                     if (duplicateKeys.length > 0) {{
                         hasErrors = true;
                     }}
-                    
+
                     // Validate each step
                     currentPlan.forEach((step, index) => {{
                         // Check capability validity
                         if (!validCapabilities.includes(step.capability)) {{
                             hasErrors = true;
                         }}
-                        
+
                         // Check if context key conflicts with agent context
                         if (step.context_key && availableContextKeys.some(ctx => ctx.contextKey === step.context_key)) {{
                             hasWarnings = true;
                         }}
-                        
+
                         // Check if inputs reference valid context keys
                         if (step.inputs && step.inputs.length > 0) {{
                             step.inputs.forEach(input => {{
@@ -1771,7 +1771,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             }});
                         }}
                     }});
-                    
+
                     statusDiv.style.display = 'block';
                     if (hasErrors) {{
                         statusDiv.style.background = '#fef2f2';
@@ -1790,11 +1790,11 @@ Note: Your modifications are preserved in this session until you reload the page
                         statusDiv.innerHTML = `<strong>✅ Plan Ready</strong> - ${{currentPlan.length}} steps configured`;
                     }}
                 }}
-                
+
                 // Load template from dropdown selection
                 function loadTemplate(templateIndex) {{
                     if (templateIndex === '' || templateIndex === null) return;
-                    
+
                     const index = parseInt(templateIndex);
                     if (index >= 0 && index < templates.length) {{
                         if (currentPlan.length > 0) {{
@@ -1804,35 +1804,35 @@ Note: Your modifications are preserved in this session until you reload the page
                                 return;
                             }}
                         }}
-                        
+
                         const template = templates[index];
                         currentPlan = template.steps.map(step => ({{ ...step }}));
                         stepCounter = currentPlan.length;
-                        
+
                         renderSteps();
                         autoValidate();
-                        
+
                         // Reset dropdown to default after loading
                         document.getElementById('plan-template-select').value = '';
                     }}
                 }}
-                
+
                 // Clear the entire plan
                 function clearPlan() {{
                     if (currentPlan.length === 0) {{
                         alert('Plan is already empty.');
                         return;
                     }}
-                    
+
                     if (confirm('This will delete all steps in your plan. Are you sure?')) {{
                         currentPlan = [];
                         stepCounter = 0;
-                        
+
                         renderSteps();
                         autoValidate();
                     }}
                 }}
-                
+
                 // Setup event listeners
                 function setupEventListeners() {{
                     if (isReviewMode) {{
@@ -1842,7 +1842,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         // Setup normal mode handlers
                         setupNormalModeHandlers();
                     }}
-                    
+
                     // Common close handler
                     const closeBtn = document.getElementById('plan-close-btn');
                     if (closeBtn) {{
@@ -1850,7 +1850,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             overlay.remove();
                         }};
                     }}
-                    
+
                     // Close on overlay click
                     overlay.onclick = (e) => {{
                         if (e.target === overlay) {{
@@ -1858,7 +1858,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         }}
                     }};
                 }}
-                
+
                 // Setup normal mode event handlers
                 function setupNormalModeHandlers() {{
                     // Main buttons
@@ -1868,7 +1868,7 @@ Note: Your modifications are preserved in this session until you reload the page
                     const validateBtn = document.getElementById('plan-validate-btn');
                     const saveBtn = document.getElementById('plan-save-btn');
                     const cancelBtn = document.getElementById('plan-cancel-btn');
-                    
+
                     if (addStepBtn) {{
                         addStepBtn.onclick = () => {{
                             const firstCapability = capabilities[0];
@@ -1880,27 +1880,27 @@ Note: Your modifications are preserved in this session until you reload the page
                                 parameters: null,
                                 inputs: []
                             }};
-                            
+
                             currentPlan.push(newStep);
                             renderSteps();
                             autoValidate();
                         }};
                     }}
-                    
+
                     if (templateSelect) {{
                         templateSelect.onchange = function() {{
                             loadTemplate(this.value);
                         }};
                     }}
-                    
+
                     if (clearBtn) {{
                         clearBtn.onclick = clearPlan;
                     }}
-                    
+
                     if (validateBtn) {{
                         validateBtn.onclick = autoValidate;
                     }}
-                    
+
                     if (saveBtn) {{
                         saveBtn.onclick = () => {{
                             overlay.remove();
@@ -1908,7 +1908,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             return {{ action: 'save', plan: currentPlan }};
                         }};
                     }}
-                    
+
                     if (cancelBtn) {{
                         cancelBtn.onclick = () => {{
                             overlay.remove();
@@ -1916,23 +1916,23 @@ Note: Your modifications are preserved in this session until you reload the page
                         }};
                     }}
                 }}
-                
+
                 // Initialize
                 overlay.appendChild(editor);
                 document.body.appendChild(overlay);
-                
+
                 populateTemplateDropdown();
                 renderAvailableContextPanel();
                 renderCapabilitiesPanel();
                 renderSteps();
                 autoValidate();
-                
+
                 // Setup event listeners without waiting for them
                 setupEventListeners();
-                
+
                 // Return immediately - the editor is now interactive
                 return {{ action: 'editor_opened', mode: editorMode }};
-                
+
             }} catch (error) {{
                 return {{ action: 'error', message: 'Error creating plan editor: ' + error.message }};
             }}
@@ -1945,9 +1945,9 @@ Note: Your modifications are preserved in this session until you reload the page
                     "data": {"code": editor_js},
                 }
             )
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"Error creating plan editor interface: {e}")
             return {"action": "error", "message": str(e)}
@@ -1960,16 +1960,16 @@ Note: Your modifications are preserved in this session until you reload the page
         __event_call__=None,
     ) -> Optional[dict]:
         """Main action handler for execution plan editor."""
-        
+
         try:
             # Get user info
             user_id = self._get_user_id(__user__)
             logger.info(f"Execution Plan Editor - User: {user_id}")
-            
+
             user_valves = __user__.get("valves")
             if not user_valves:
                 user_valves = self.UserValves()
-            
+
             # Emit initial status
             await __event_emitter__(
                 {
@@ -1977,33 +1977,33 @@ Note: Your modifications are preserved in this session until you reload the page
                     "data": {"description": "Initializing execution plan editor...", "done": False},
                 }
             )
-            
+
             # Create editor interface
             editor_result = await self.create_plan_editor_interface(
                 __event_emitter__, __event_call__, user_id, body
             )
-            
+
             if editor_result and editor_result.get("action") == "save":
                 # Save the execution plan
                 plan_data = editor_result.get("plan", [])
-                
+
                 if plan_data:
                     # Extract agent context for validation
                     agent_context_summary = None
                     available_context_keys = []
-                    
+
                     if body and body.get("messages"):
                         agent_context_summary = self.extract_context_summary_from_messages(body.get("messages", []))
                         if agent_context_summary:
                             available_context_keys = self.extract_available_context_keys(agent_context_summary)
-                    
+
                     # Validate the plan with agent context
                     validation_result = self._validate_plan(plan_data, available_context_keys)
-                    
+
                     if validation_result["is_valid"]:
                         # Save to file
                         save_result = self._save_plan(plan_data, user_id)
-                        
+
                         if save_result["success"]:
                             await __event_emitter__(
                                 {
@@ -2023,7 +2023,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         error_msg = "# ⚠️ Plan Validation Failed\\n\\n**Errors:**\\n" + "\\n".join([f"- {error}" for error in validation_result["errors"]])
                         if validation_result["warnings"]:
                             error_msg += "\\n\\n**Warnings:**\\n" + "\\n".join([f"- {warning}" for warning in validation_result["warnings"]])
-                        
+
                         await __event_emitter__(
                             {
                                 "type": "message",
@@ -2037,14 +2037,14 @@ Note: Your modifications are preserved in this session until you reload the page
                             "data": {"content": "# 📝 Empty Plan\\n\\nNo steps were defined in the execution plan."},
                         }
                     )
-            
+
             elif editor_result and editor_result.get("action") == "save_modified":
                 # Save modified execution plan for approval processing
                 plan_data = editor_result.get("plan_data", {})
-                
+
                 if plan_data:
                     save_result = await self.save_modified_plan(plan_data, __event_emitter__, __event_call__)
-                    
+
                     if save_result["success"]:
                         await __event_emitter__(
                             {
@@ -2066,7 +2066,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             "data": {"content": "# ❌ Error Saving Modified Plan\\n\\nNo plan data received."},
                         }
                     )
-            
+
             elif editor_result and editor_result.get("action") == "save_as_is":
                 # User wants to use the original plan as-is
                 await __event_emitter__(
@@ -2075,7 +2075,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         "data": {"content": "# ✅ Original Plan Ready for Approval\\n\\n**Next Steps:**\\nReturn to chat and respond with **'yes'** to approve the original execution plan."},
                     }
                 )
-            
+
             elif editor_result and editor_result.get("action") == "editor_opened":
                 # Editor was successfully opened
                 mode = editor_result.get("mode", "normal")
@@ -2093,7 +2093,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             "data": {"content": "# 📋 Execution Plan Editor\\n\\n**Create and configure your multi-step execution plan above.**\\n\\n- Add steps by clicking capabilities or using the **Add Step** button\\n- Configure inputs and outputs for each step\\n- Use **Save Plan** to save your configuration\\n\\nThe editor will validate your plan and show any issues before saving."},
                         }
                     )
-            
+
             elif editor_result and editor_result.get("action") == "error":
                 await __event_emitter__(
                     {
@@ -2101,7 +2101,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         "data": {"content": f"# ❌ Editor Error\\n\\n{editor_result.get('message', 'Unknown error occurred')}"},
                     }
                 )
-            
+
             else:
                 # Editor was opened and closed normally - no specific message needed
                 await __event_emitter__(
@@ -2110,7 +2110,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         "data": {"content": "# 📋 Execution Plan Editor\\n\\nEditor opened successfully. Use the interface above to create or review execution plans."},
                     }
                 )
-            
+
             # Final status
             await __event_emitter__(
                 {
@@ -2118,7 +2118,7 @@ Note: Your modifications are preserved in this session until you reload the page
                     "data": {"description": "Execution plan editor completed", "done": True},
                 }
             )
-            
+
         except Exception as e:
             logger.error(f"Execution Plan Editor error: {e}")
             await __event_emitter__(

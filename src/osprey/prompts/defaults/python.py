@@ -17,17 +17,17 @@ from osprey.registry import get_registry
 
 class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
     """Default Python capability prompt builder."""
-    
+
     PROMPT_TYPE = "python"
-    
+
     def get_role_definition(self) -> str:
         """Get the role definition for Python code generation."""
         return "You are a Python code generator that creates clean, simple, and effective Python code for computational tasks."
-    
+
     def get_task_definition(self) -> str:
         """Get the task definition for Python code generation."""
         return "TASK: Generate minimal, working Python code to accomplish computational tasks and basic data processing."
-    
+
     def get_instructions(self) -> str:
         """Get the instructions for Python code generation."""
         return textwrap.dedent("""
@@ -38,30 +38,30 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             4. Print results clearly with descriptive output
             5. Keep code simple, readable, and well-commented
             6. Focus on the core computational task without over-engineering
-            
+
             CODE REQUIREMENTS:
             - Use clear variable names
             - Include comments for complex logic
             - Print intermediate steps for debugging if helpful
             - Handle common edge cases (division by zero, empty lists, etc.)
             - Structure code logically with proper indentation
-            
+
             EXAMPLE OUTPUT FORMAT:
             ```python
             # Brief comment explaining the task
             import math  # Only import what's needed
-            
+
             # Main computation
             radius = 5
             area = math.pi * radius ** 2
             print(f"Area of circle with radius {radius}: {area:.2f}")
             ```
             """).strip()
-    
+
     def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
         """Create orchestrator guide for Python capability."""
         registry = get_registry()
-        
+
         # Define structured examples
         calculation_example = OrchestratorExample(
             step=PlannedStep(
@@ -75,7 +75,7 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Simple mathematical calculations using Python",
             notes=f"Output stored under {registry.context_types.PYTHON_RESULTS} context type. Generated code, execution output, and any errors are captured."
         )
-        
+
         data_processing_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="processing_results",
@@ -88,7 +88,7 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Basic data processing and statistical calculations",
             notes=f"Output stored under {registry.context_types.PYTHON_RESULTS} context type. Demonstrates data manipulation and statistical functions."
         )
-        
+
         utility_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="utility_results",
@@ -101,7 +101,7 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Utility functions like random number generation and basic algorithms",
             notes=f"Output stored under {registry.context_types.PYTHON_RESULTS} context type. Shows how to handle randomization and list operations."
         )
-        
+
         return OrchestratorGuide(
             instructions=textwrap.dedent(f"""
                 **When to plan "python" steps:**
@@ -115,7 +115,7 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
                 - context_key: Unique identifier for output (e.g., "calculation_results", "processing_output")
                 - task_objective: Clear description of the computational task to perform
                 - inputs: Optional, can work standalone for most simple tasks
-                
+
                 **Output: {registry.context_types.PYTHON_RESULTS}**
                 - Contains: Generated Python code, execution output, and any errors
                 - Available to downstream steps via context system
@@ -127,20 +127,20 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
                 - Basic computational tasks (random numbers, algorithms)
                 - Code generation and mock execution
                 - Utility functions and helper calculations
-                
+
                 **Dependencies and sequencing:**
                 1. Often used as a standalone capability for simple tasks
                 2. Can consume data from other capabilities if needed
                 3. Results can feed into visualization or analysis steps
                 4. Lightweight alternative to complex data analysis workflows
-                
+
                 ALWAYS prefer this capability for simple computational tasks that don't require
                 sophisticated data analysis or complex external dependencies.
                 """),
             examples=[calculation_example, data_processing_example, utility_example],
             priority=40
         )
-    
+
     def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
         """Create classifier guide for Python capability."""
         return TaskClassifierGuide(

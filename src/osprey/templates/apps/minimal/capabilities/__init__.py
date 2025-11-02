@@ -96,18 +96,18 @@ class WeatherAPICapability(BaseCapability):
     description = "Fetch weather data from external API"
     provides = ["WEATHER_DATA"]
     requires = []  # No dependencies
-    
+
     @staticmethod
     async def execute(state: AgentState, **kwargs):
         # Call external API
         response = await weather_client.get_current_weather(city="SF")
-        
+
         # Convert to context object
         weather_data = WeatherDataContext(
             temperature=response['temp'],
             conditions=response['conditions']
         )
-        
+
         # Store and return
         return StateManager.store_context(
             state, "WEATHER_DATA", 
@@ -134,7 +134,7 @@ class DataAnalyzerCapability(BaseCapability):
     description = "Analyze weather patterns from historical data"
     provides = ["ANALYSIS_RESULTS"]
     requires = ["WEATHER_DATA"]  # Needs weather data first!
-    
+
     @staticmethod
     async def execute(state: AgentState, **kwargs):
         # Extract required input
@@ -145,17 +145,17 @@ class DataAnalyzerCapability(BaseCapability):
             constraint_mode="hard"
         )
         weather_data = contexts["WEATHER_DATA"]
-        
+
         # Perform analysis
         avg_temp = calculate_average(weather_data.temperatures)
         trend = detect_trend(weather_data.temperatures)
-        
+
         # Create results context
         results = AnalysisResultsContext(
             average_temperature=avg_temp,
             trend=trend
         )
-        
+
         # Store and return
         return StateManager.store_context(
             state, "ANALYSIS_RESULTS",
@@ -182,23 +182,23 @@ class KnowledgeRetrievalCapability(BaseCapability):
     description = "Retrieve relevant documentation from knowledge base"
     provides = ["KNOWLEDGE_CONTEXT"]
     requires = []
-    
+
     @staticmethod
     async def execute(state: AgentState, **kwargs):
         # Get query from task objective
         step = StateManager.get_current_step(state)
         query = step.get("task_objective", "")
-        
+
         # Query knowledge base
         docs = await knowledge_base.search(query, top_k=5)
-        
+
         # Format as context
         knowledge = KnowledgeContext(
             query=query,
             documents=[doc.content for doc in docs],
             sources=[doc.source for doc in docs]
         )
-        
+
         # Store and return
         return StateManager.store_context(
             state, "KNOWLEDGE_CONTEXT",
@@ -223,15 +223,15 @@ User Query: "Analyze weather trends and predict tomorrow"
 
 1. time_range_parser (framework built-in)
    provides: TIME_RANGE
-   
+
 2. weather_api (your capability)
    requires: TIME_RANGE
    provides: WEATHER_DATA
-   
+
 3. data_analyzer (your capability)
    requires: WEATHER_DATA
    provides: ANALYSIS_RESULTS
-   
+
 4. ml_predictor (your capability)
    requires: ANALYSIS_RESULTS
    provides: PREDICTION_RESULTS

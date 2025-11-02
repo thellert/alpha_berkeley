@@ -33,10 +33,10 @@ logger = get_logger("message_generator")
 @dataclass
 class ResponseContext:
     """Container for all information needed for response generation.
-    
+
     Aggregates all relevant information from the agent state for
     comprehensive response generation.
-    
+
     :param current_task: The current task being addressed
     :type current_task: str
     :param execution_history: List of executed steps
@@ -87,55 +87,55 @@ class ResponseContext:
 @capability_node
 class RespondCapability(BaseCapability):
     """Respond to user queries with appropriate response strategy.
-    
+
     Generates comprehensive responses for both technical queries requiring
     execution context and conversational queries. Adapts response strategy
     based on available context and execution history.
     """
-    
+
     name = "respond"
     description = "Respond to user queries by generating appropriate responses for both technical and conversational questions"
     provides = ["FINAL_RESPONSE"]
     requires = []  # Can work with any previous context, or none at all
-    
+
     @staticmethod
     async def execute(state: AgentState, **kwargs):
         """Generate appropriate response using unified dynamic prompt construction.
-        
+
         :param state: Current agent state
         :type state: AgentState
         :param kwargs: Additional parameters (may include step)
         :return: State update with generated response
         :rtype: Dict[str, Any]
         """
-        
+
         # Explicit logger retrieval - professional practice
         logger = get_logger("respond")
-        
+
         # Use StateManager to get the current step
         step = StateManager.get_current_step(state)
-        
+
         # Define streaming helper here for step awareness
         streamer = get_streamer("respond", state)
-        
+
         try:
             streamer.status("Gathering information for response...")
-            
+
             # Gather all available information
             response_context = _gather_information(state)
-            
+
             streamer.status("Generating response...")
-            
+
             # Build prompt dynamically based on available information
             prompt = _get_base_system_prompt(response_context.current_task, response_context)
-            
+
             # Single LLM call - run in thread pool to avoid blocking event loop for streaming
             response = await asyncio.to_thread(
                 get_chat_completion,
                 model_config=get_model_config("osprey", "response"),
                 message=prompt,
             )
-            
+
             # Handle different response types from get_chat_completion
             if isinstance(response, str):
                 response_text = response
@@ -145,9 +145,9 @@ class RespondCapability(BaseCapability):
                 response_text = "\n".join(text_parts) if text_parts else str(response)
             else:
                 raise Exception("No response from LLM, please try again.")
-            
+
             streamer.status("Response generated")
-            
+
             # Use actual task objective if available, otherwise describe response mode
             if step and step.get('task_objective'):
                 task_objective = step.get('task_objective')
@@ -155,19 +155,19 @@ class RespondCapability(BaseCapability):
                 # Use response context to determine correct mode description
                 task_objective = 'conversational query' if response_context.execution_history == [] else 'technical query'
             logger.info(f"Generated response for: '{task_objective}'")
-            
+
             # Return native LangGraph pattern: AIMessage added to messages list
             return {
                 "messages": [AIMessage(content=response_text)]
             }
-                
+
         except Exception as e:
             logger.error(f"Error in response generation: {e}")
-            
+
             # Since respond node goes directly to END (bypasses router error handling),
             # we need to handle errors internally and provide a fallback response
             error_message = str(e)
-            
+
             # Generic error fallback - avoid hardcoding specific error codes or providers
             fallback_response = (
                 "❌ **Response Generation Failed**\n\n"
@@ -182,7 +182,7 @@ class RespondCapability(BaseCapability):
                 "• If the problem persists, please contact support\n\n"
                 f"**Technical details:** {error_message}"
             )
-            
+
             # Return the fallback response as an AIMessage instead of raising
             return {
                 "messages": [AIMessage(content=fallback_response)]
@@ -200,18 +200,18 @@ class RespondCapability(BaseCapability):
 
     def _create_orchestrator_guide(self):
         """Get orchestrator guide from prompt builder."""
-        
+
         prompt_provider = get_framework_prompts()  # Registry will determine the right provider
         response_builder = prompt_provider.get_response_generation_prompt_builder()
-        
+
         return response_builder.get_orchestrator_guide()
-    
+
     def _create_classifier_guide(self):
         """Get classifier guide from prompt builder."""
-        
+
         prompt_provider = get_framework_prompts()  # Registry will determine the right provider
         response_builder = prompt_provider.get_response_generation_prompt_builder()
-        
+
         return response_builder.get_classifier_guide()
 
 
@@ -219,21 +219,21 @@ class RespondCapability(BaseCapability):
 
 def _gather_information(state: AgentState) -> ResponseContext:
     """Gather all relevant information for response generation.
-    
+
     :param state: Current agent state
     :type state: AgentState
     :return: Complete response context
     :rtype: ResponseContext
     """
-    
+
     # Extract context data and determine response mode
     context_manager = ContextManager(state)
     current_step = StateManager.get_current_step(state)
     relevant_context = context_manager.get_summaries(current_step)
-    
+
     # Determine response mode and prepare appropriate data
     response_mode = _determine_response_mode(state, current_step)
-    
+
     if response_mode == "conversational":
         execution_history = []
         capabilities_overview = _get_capabilities_overview()
@@ -242,26 +242,26 @@ def _gather_information(state: AgentState) -> ResponseContext:
         execution_history = _get_execution_history(state)
         capabilities_overview = None
         logger.info(f"Using technical response mode (context type: {response_mode})")
-    
+
     # Get figure information from centralized registry
     ui_figures = state.get("ui_captured_figures", [])
     figures_available = len(ui_figures)
-    
+
     # Get command information from centralized registry
     ui_commands = state.get("ui_launchable_commands", [])
     commands_available = len(ui_commands)
-    
+
     # Get notebook information from centralized registry
     ui_notebooks = state.get("ui_captured_notebooks", [])
     notebooks_available = len(ui_notebooks)
-    
+
     # Log notebook availability for debugging
     logger.debug(f"Respond node found {len(ui_notebooks)} notebook links")
-    
+
     # Get interface context from configurable
     from osprey.utils.config import get_interface_context
     interface_context = get_interface_context()
-    
+
     return ResponseContext(
         current_task=state.get("task_current_task", "General information request"),
         execution_history=execution_history,
@@ -282,21 +282,21 @@ def _gather_information(state: AgentState) -> ResponseContext:
 
 def _determine_response_mode(state: AgentState, current_step: Dict[str, Any]) -> str:
     """Determine the appropriate response mode based on available context.
-    
+
     Args:
         state: Current agent state
         current_step: Current execution step
-        
+
     Returns:
         Response mode: "conversational", "specific_context", or "general_context"
     """
-    
+
     # Check if current step has specific context inputs assigned
     has_step_inputs = current_step and current_step.get("inputs")
-    
+
     # Check if any capability context data exists in the system
     has_capability_data = bool(state.get("capability_context_data", {}))
-    
+
     if not has_step_inputs and not has_capability_data:
         return "conversational"
     elif has_step_inputs:
@@ -322,7 +322,7 @@ def _get_execution_history(state: AgentState) -> List[Dict[str, Any]]:
 
 def _get_base_system_prompt(current_task: str, info=None) -> str:
     """Get the base system prompt with task context.
-    
+
     :param current_task: The current task being addressed
     :type current_task: str
     :param info: Optional response context information
@@ -330,10 +330,10 @@ def _get_base_system_prompt(current_task: str, info=None) -> str:
     :return: Complete system prompt
     :rtype: str
     """
-    
+
     prompt_provider = get_framework_prompts()
     response_builder = prompt_provider.get_response_generation_prompt_builder()
-    
+
     return response_builder.get_system_instructions(
         current_task=current_task,
         info=info

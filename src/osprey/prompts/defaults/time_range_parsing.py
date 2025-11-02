@@ -17,17 +17,17 @@ from osprey.registry import get_registry
 
 class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
     """Default time range parsing prompt builder."""
-    
+
     PROMPT_TYPE = "time_range_parsing"
-    
+
     def get_role_definition(self) -> str:
         """Get the role definition for time range parsing."""
         return "You are an expert time range parser that converts natural language time expressions into precise datetime ranges."
-    
+
     def get_task_definition(self) -> str:
         """Get the task definition for time range parsing."""
         return "TASK: Parse time references from user queries and convert them to absolute datetime ranges."
-    
+
     def get_instructions(self) -> str:
         """Get the instructions for time range parsing."""
         return textwrap.dedent("""
@@ -37,17 +37,17 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             3. Ensure start_date is always before end_date
             4. Use current time as reference for relative expressions
             5. Return structured datetime objects in YYYY-MM-DD HH:MM:SS format
-            
+
             SUPPORTED PATTERNS:
             - Relative: "last X hours/days", "yesterday", "this week"
             - Absolute: "from YYYY-MM-DD to YYYY-MM-DD" 
             - Implicit: "current", "recent" (default to last few minutes)
             """).strip()
-    
+
     def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
         """Create orchestrator guide for time range parsing."""
         registry = get_registry()
-        
+
         # Define structured examples using simplified dict format
         relative_time_example = OrchestratorExample(
             step=PlannedStep(
@@ -61,7 +61,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Parsing relative time references like 'last hour', 'yesterday'",
             notes=f"Output stored under {registry.context_types.TIME_RANGE} context type as datetime objects with full datetime functionality."
         )
-        
+
         absolute_time_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="explicit_timerange",
@@ -74,7 +74,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Parsing explicit time ranges in YYYY-MM-DD HH:MM:SS format",
             notes=f"Output stored under {registry.context_types.TIME_RANGE} context type. Validates and converts user-provided time ranges to datetime objects"
         )
-        
+
         implicit_time_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="current_data_timerange",
@@ -87,7 +87,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Inferring time ranges for 'current' or 'recent' data requests",
             notes=f"Output stored under {registry.context_types.TIME_RANGE} context type. Provides sensible defaults (e.g., last few minutes) as datetime objects"
         )
-        
+
         return OrchestratorGuide(
             instructions=textwrap.dedent(f"""
                 **When to plan "time_range_parsing" steps:**
@@ -98,7 +98,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
                 **Step Structure:**
                 - context_key: Unique identifier for output (e.g., "last_week_timerange", "explicit_timerange")
                 - task_objective: The specific and self-contained time range parsing task to perform
-                
+
                 **Output: {registry.context_types.TIME_RANGE}**
                 - Contains: start_date and end_date as datetime objects with full datetime functionality
                 - Available to downstream steps via context system
@@ -108,20 +108,20 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
                 - Relative: "last X hours/minutes/days", "yesterday", "this week", "last week"
                 - Absolute: "from YYYY-MM-DD HH:MM:SS to YYYY-MM-DD HH:MM:SS"
                 - Implicit: "current", "recent" (defaults to last few minutes)
-                
+
                 **Dependencies and sequencing:**
                 1. This step typically comes early when time-based data operations are needed
                 2. Results feed into subsequent data retrieval capabilities that require time ranges
                 3. Uses LLM to handle complex relative time references and natural language time expressions
                 4. Downstream steps can use datetime objects directly without string parsing
-                
+
                 ALWAYS plan this step when any time-based data operations are needed,
                 regardless of whether the user provides explicit time ranges or relative time descriptions.
                 """),
             examples=[relative_time_example, absolute_time_example, implicit_time_example],
             priority=5
         )
-    
+
     def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
         """Create classifier guide for time range parsing."""
         return TaskClassifierGuide(

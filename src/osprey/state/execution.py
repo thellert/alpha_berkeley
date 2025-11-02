@@ -62,30 +62,30 @@ from osprey.utils.config import get_config_value
 @dataclass
 class ApprovalRequest:
     """Comprehensive approval request data structure for human-in-the-loop workflows.
-    
+
     This dataclass represents a complete approval request that tracks all necessary
     context for human decision-making in sensitive operations. The approval system
     uses these requests to manage pending approvals, track approval decisions, and
     provide audit trails for security-sensitive operations.
-    
+
     **Approval Workflow:**
-    
+
     1. **Request Creation**: Created when a capability encounters an approval requirement
     2. **Context Capture**: Records step context, capability, and operation details
     3. **Human Review**: Presented to users through UI for approval decision
     4. **Decision Tracking**: Records approval/rejection with timestamp
     5. **Execution Control**: Controls whether operation proceeds or is blocked
-    
+
     **Security Integration:**
 
     ApprovalRequest integrates with the framework security model to provide
     controlled access to sensitive operations including:
-    
+
     - Python code execution with potential system access
     - Memory operations that could store sensitive information
     - EPICS write operations that could affect accelerator systems
     - Custom capability-specific sensitive operations
-    
+
     :param step_objective: Human-readable description of the step requiring approval
     :type step_objective: str
     :param capability: Name of the capability requesting approval for identification
@@ -98,20 +98,20 @@ class ApprovalRequest:
     :type approved: bool
     :param approval_data: Original approval exception or additional context data
     :type approval_data: Optional[Any]
-    
+
     .. note::
        The approval_data field can contain the original approval exception or
        additional context needed for the approval decision. This enables
        capability-specific approval handling and rich context presentation.
-    
+
     .. warning::
        ApprovalRequest instances should be treated as immutable once created,
        except for the approved field which is updated when decisions are made.
        This ensures audit trail integrity.
-    
+
     Examples:
         Python code execution approval::
-        
+
             >>> import time
             >>> request = ApprovalRequest(
             ...     step_objective="Execute data analysis script",
@@ -122,9 +122,9 @@ class ApprovalRequest:
             ... )
             >>> request.is_pending
             True
-        
+
         Memory operation approval::
-        
+
             >>> request = ApprovalRequest(
             ...     step_objective="Save user preferences",
             ...     capability="memory_manager",
@@ -133,15 +133,15 @@ class ApprovalRequest:
             ...     approved=False,
             ...     approval_data={"memory_type": "user_preferences"}
             ... )
-        
+
         Approval decision handling::
-        
+
             >>> request.approve()
             >>> request.is_approved
             True
             >>> request.is_pending
             False
-    
+
     .. seealso::
        :mod:`osprey.approval` : Approval system implementation
        :class:`osprey.state.AgentState` : State containing pending approvals
@@ -153,28 +153,28 @@ class ApprovalRequest:
     timestamp: float
     approved: bool = False
     approval_data: Optional[Any] = None  # Store original approval exception for capability-specific access
-    
+
     @property
     def is_approved(self) -> bool:
         """Check if this approval request has been approved.
-        
+
         :return: True if the request has been approved
         :rtype: bool
         """
         return self.approved
-    
+
     @property
     def is_pending(self) -> bool:
         """Check if this approval request is still pending.
-        
+
         :return: True if the request is still awaiting approval
         :rtype: bool
         """
         return not self.approved
-    
+
     def approve(self) -> None:
         """Mark this approval request as approved.
-        
+
         Sets the approved flag to True, indicating that the request has been
         granted approval and execution can proceed.
         """
@@ -183,13 +183,13 @@ class ApprovalRequest:
 
 class PlanningState(TypedDict, total=False):
     """Planning and orchestration state with execution plan management.
-    
+
     Manages the planning phase of execution including capability selection,
     execution plan creation, and step tracking. The orchestrator agent is
     created fresh when needed rather than stored in state.
-    
+
     All fields are optional to support partial updates in LangGraph.
-    
+
     Default values (when not provided):
     - active_capabilities: []
     - execution_plan: None
@@ -202,13 +202,13 @@ class PlanningState(TypedDict, total=False):
 
 class ExecutionState(TypedDict, total=False):
     """Tracks execution progress, results, and accumulated context.
-    
+
     Maintains the state of execution including step results, execution history,
     accumulated context, and pending approvals. This class provides the core
     execution tracking functionality for the agent framework.
-    
+
     All fields are optional to support partial updates in LangGraph.
-    
+
     Default values (when not provided):
     - step_results: {}
     - execution_history: []
@@ -225,13 +225,13 @@ class ExecutionState(TypedDict, total=False):
 
 class ControlFlowState(TypedDict, total=False):
     """Manages reclassification logic and execution flow control.
-    
+
     Controls the execution flow including reclassification logic, retry behavior,
     execution limits, and validation workflows. Provides safety mechanisms to
     prevent infinite loops and excessive resource consumption.
-    
+
     All fields are optional to support partial updates in LangGraph.
-    
+
     Default values (when not provided):
     - reclassification_reason: None
     - max_reclassifications: 1
@@ -252,18 +252,18 @@ class ControlFlowState(TypedDict, total=False):
     reclassification_reason: Optional[str]          # Reason for requesting reclassification
     max_reclassifications: int                      # Maximum number of reclassifications allowed
     reclassification_count: int                     # Current number of reclassifications performed
-    
+
     # Step retry tracking to prevent infinite loops
     current_step_retry_count: int                   # Number of retries for the current step
     max_step_retries: int                          # Maximum retries allowed per step
-    
+
     # Execution safety and loop prevention  
     execution_start_time: Optional[float]          # Unix timestamp when execution started
     total_execution_time: Optional[float]          # Total execution time in seconds
     max_execution_time_seconds: int                # Maximum execution time allowed
     is_killed: bool                                # Whether execution has been killed
     kill_reason: Optional[str]                     # Reason for killing execution
-    
+
     # Human-in-the-loop validation state
     is_awaiting_validation: bool                   # Whether execution is awaiting human validation
     validation_context: Optional[Dict[str, Any]]   # Store context about what needs validation
@@ -272,17 +272,17 @@ class ControlFlowState(TypedDict, total=False):
 
 def create_control_flow_state_from_config() -> ControlFlowState:
     """Create ControlFlowState with limits from configuration.
-    
+
     Initializes a ControlFlowState instance with execution limits extracted
     from the configuration. Provides safe defaults if configuration
     values are not available.
-    
+
     :return: ControlFlowState instance with configured limits
     :rtype: ControlFlowState
     """
     # Get execution limits from config, with fallback defaults
     limits = get_config_value('execution_control.limits', {})
-    
+
     return ControlFlowState(
         max_reclassifications=limits.get('max_reclassifications', 1),
         max_step_retries=limits.get('max_step_retries', 0),
@@ -293,10 +293,10 @@ def create_control_flow_state_from_config() -> ControlFlowState:
 @dataclass
 class ClassificationResult:
     """Result of task classification and graph building phase.
-    
+
     Contains the output of task classification including identified requirements,
     active capabilities, and the dynamically built execution graph.
-    
+
     :param requirements: Dictionary of boolean requirements identified for the task
     :type requirements: dict[str, bool]
     :param active_capabilities: List of capability names selected for task execution

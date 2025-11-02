@@ -12,7 +12,7 @@ management, and __all__ declarations for explicit public API definition.
 
 Architecture Integration:
     This module integrates with the framework's capability system by:
-    
+
     1. **Capability Export**: Provides clean import paths for capability classes
     2. **Module Organization**: Maintains clear separation between different capabilities
     3. **Public API**: Defines explicit public interface through __all__ declaration
@@ -21,7 +21,7 @@ Architecture Integration:
 
 Capability Overview:
     The module exports the following weather capabilities:
-    
+
     - **CurrentWeatherCapability**: Retrieves current weather conditions for
       supported locations using mock weather service integration
 
@@ -62,19 +62,19 @@ Exported Capabilities:
 
 Examples:
     Importing specific capabilities::
-    
+
         >>> from hello_world_weather.capabilities import CurrentWeatherCapability
         >>> capability = CurrentWeatherCapability()
         >>> print(capability.name)
         current_weather
-    
+
     Importing all public capabilities::
-    
+
         >>> from hello_world_weather.capabilities import *
         >>> # Only CurrentWeatherCapability is imported due to __all__ declaration
-    
+
     Framework registry integration::
-    
+
         >>> # In registry.py
         >>> from hello_world_weather.capabilities import CurrentWeatherCapability
         >>> # Capability is available for registration and framework integration

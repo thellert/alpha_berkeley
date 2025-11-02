@@ -7,16 +7,16 @@ import httpx
 
 class BaseProvider(ABC):
     """Abstract base class for AI model providers.
-    
+
     All provider implementations must inherit from this class and implement
     the three core methods: create_model, execute_completion, and check_health.
-    
+
     **Metadata as Class Attributes** (SINGLE SOURCE OF TRUTH):
     Subclasses define provider metadata as class attributes. The registry
     introspects these attributes after loading the class, avoiding duplication
     between ProviderRegistration and the class itself. This follows the same
     pattern as capabilities and context classes in the framework.
-    
+
     Metadata Attributes (define on subclass):
         name: Provider identifier (e.g., "anthropic", "openai")
         description: User-friendly description for display in TUI (e.g., "Anthropic (Claude models)")
@@ -28,11 +28,11 @@ class BaseProvider(ABC):
         default_model_id: Default model recommended for general use (used in templates)
         health_check_model_id: Cheapest/fastest model for health checks
         available_models: List of available model IDs for this provider (for TUI/selection)
-    
+
     This interface ensures consistent provider behavior across the framework
     while allowing provider-specific implementations.
     """
-    
+
     # Metadata - subclasses MUST override these class attributes
     name: str = NotImplemented  # Provider identifier (e.g., "anthropic")
     description: str = NotImplemented  # User-friendly description (e.g., "Anthropic (Claude models)")
@@ -44,7 +44,7 @@ class BaseProvider(ABC):
     default_model_id: Optional[str] = None  # Default model for templates/general use
     health_check_model_id: Optional[str] = None  # Cheapest model for health checks
     available_models: list[str] = []  # List of available models for this provider
-    
+
     @abstractmethod
     def create_model(
         self,
@@ -55,19 +55,19 @@ class BaseProvider(ABC):
         http_client: Optional[httpx.AsyncClient]
     ) -> Any:
         """Create a model instance for PydanticAI.
-        
+
         :param model_id: Model identifier for this provider
         :param api_key: API authentication key
         :param base_url: Custom API endpoint URL
         :param timeout: Request timeout in seconds
         :param http_client: Pre-configured HTTP client (caller owns lifecycle)
         :return: Configured model instance
-        
+
         Note: If http_client is provided, the CALLER is responsible for
         closing it. Providers should not close or manage client lifecycle.
         """
         pass
-    
+
     @abstractmethod
     def execute_completion(
         self,
@@ -83,7 +83,7 @@ class BaseProvider(ABC):
         **kwargs
     ) -> Union[str, Any]:
         """Execute a direct chat completion.
-        
+
         :param message: User message to send
         :param model_id: Model identifier
         :param api_key: API authentication key
@@ -97,7 +97,7 @@ class BaseProvider(ABC):
         :return: Model response text or structured output
         """
         pass
-    
+
     @abstractmethod
     def check_health(
         self,
@@ -107,10 +107,10 @@ class BaseProvider(ABC):
         model_id: Optional[str] = None
     ) -> tuple[bool, str]:
         """Test provider connectivity and authentication.
-        
+
         Makes a minimal API call to verify the API key works. For paid providers,
         uses the cheapest available model with minimal tokens (~$0.0001 per check).
-        
+
         :param api_key: API authentication key
         :param base_url: Custom API endpoint URL
         :param timeout: Request timeout in seconds

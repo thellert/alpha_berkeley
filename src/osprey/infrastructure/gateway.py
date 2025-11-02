@@ -49,23 +49,23 @@ logger = get_logger("gateway")
 @dataclass 
 class GatewayResult:
     """Result of gateway message processing.
-    
+
     This is the interface between Gateway and all other components.
     """
     # For normal conversation flow
     agent_state: Optional[Dict[str, Any]] = None
-    
+
     # For interrupt/approval flow  
     resume_command: Optional[Command] = None
-    
+
     # Processing metadata
     slash_commands_processed: List[str] = None
     approval_detected: bool = False
     is_interrupt_resume: bool = False
-    
+
     # Error handling
     error: Optional[str] = None
-    
+
     def __post_init__(self):
         if self.slash_commands_processed is None:
             self.slash_commands_processed = []
@@ -74,43 +74,43 @@ class GatewayResult:
 class Gateway:
     """
     Gateway - Single Entry Point for All Message Processing
-    
+
     This is the only component that interfaces should call for message processing.
     All state management, slash commands, and approval handling is centralized here.
-    
+
     Usage::
-    
+
         gateway = Gateway()
         result = await gateway.process_message(user_input, graph, config)
-        
+
         # Execute the result
         if result.resume_command:
             await graph.ainvoke(result.resume_command, config=config)
         elif result.state_updates:
             await graph.ainvoke(result.state_updates, config=config)
     """
-    
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """Initialize the gateway.
-        
+
         Args:
             config: Optional configuration dictionary
         """
         self.config = config or {}
         self.logger = logger
-        
+
         # Initialize global configuration
         try:
             # Using config - no need to store config instance
             pass
         except Exception as e:
             self.logger.warning(f"Could not load config system: {e}")
-        
+
         # Register agent control commands in centralized registry
         self._register_agent_commands()
-        
+
         self.logger.info("Gateway initialized")
-    
+
     def _register_agent_commands(self):
         """Register agent control commands with the centralized registry."""
         try:
@@ -120,7 +120,7 @@ class Gateway:
             self.logger.debug("Registered agent control commands")
         except Exception as e:
             self.logger.warning(f"Could not register agent control commands: {e}")
-    
+
     async def process_message(
         self, 
         user_input: str,
@@ -129,37 +129,37 @@ class Gateway:
     ) -> GatewayResult:
         """
         Single entry point for all message processing.
-        
+
         This method handles the complete message processing flow:
         1. Check for pending interrupts (approval flow)
         2. Process new messages (normal flow)
         3. Apply state reset and slash commands
         4. Return complete result ready for execution
-        
+
         Args:
             user_input: The raw user message
             compiled_graph: The compiled LangGraph instance
             config: LangGraph execution configuration
-            
+
         Returns:
             GatewayResult: Complete processing result ready for execution
         """
         self.logger.info(f"Processing message: '{user_input[:50]}...'")
-        
+
         try:
             # Check for pending interrupts first
             if self._has_pending_interrupts(compiled_graph, config):
                 self.logger.info("Pending interrupt detected - processing as approval response")
                 return await self._handle_interrupt_flow(user_input, compiled_graph, config)
-            
+
             # Process as new conversation turn
             self.logger.info("Processing as new conversation turn")
             return await self._handle_new_message_flow(user_input, compiled_graph, config)
-            
+
         except Exception as e:
             self.logger.exception(f"Error in message processing: {e}")
             return GatewayResult(error=str(e))
-    
+
     async def _handle_interrupt_flow(
         self, 
         user_input: str, 
@@ -167,23 +167,23 @@ class Gateway:
         config: Dict[str, Any]
     ) -> GatewayResult:
         """Handle interrupt/approval flow generically.
-        
+
         Gateway detects approval/rejection and uses Command(update=...) to inject 
         interrupt payload into agent state while resuming execution.
         """
-        
+
         # Detect approval or rejection
         approval_data = self._detect_approval_response(user_input)
-        
+
         if approval_data:
             self.logger.key_info(f"Detected {approval_data['type']} response")
-            
+
             # Get interrupt payload and extract just the business data
             success, interrupt_payload = self._extract_resume_payload(compiled_graph, config)
-            
+
             if success:
                 resume_payload = interrupt_payload.get("resume_payload", {})
-                
+
                 # Create resume command that injects approval data into agent state
                 resume_command = Command(
                     update={
@@ -191,7 +191,7 @@ class Gateway:
                         "approved_payload": resume_payload if approval_data["approved"] else None
                     }
                 )
-                
+
                 return GatewayResult(
                     resume_command=resume_command,
                     approval_detected=True,
@@ -207,7 +207,7 @@ class Gateway:
             return GatewayResult(
                 error="Please provide a clear approval (yes/ok/approve) or rejection (no/cancel/reject) response"
             )
-    
+
     async def _handle_new_message_flow(
         self, 
         user_input: str,
@@ -215,10 +215,10 @@ class Gateway:
         config: Optional[Dict[str, Any]] = None
     ) -> GatewayResult:
         """Handle new message flow with fresh state creation."""
-        
+
         # Parse and execute slash commands using centralized system
         slash_commands, cleaned_message = await self._process_slash_commands(user_input, config)
-        
+
         # Get current state if available to preserve persistent fields
         current_state = None
         if compiled_graph and config:
@@ -231,18 +231,18 @@ class Gateway:
                     self.logger.debug(f"Previous state has {len(exec_history)} execution records")
             except Exception as e:
                 self.logger.warning(f"Could not get current state: {e}")
-        
+
         # Create completely fresh state (not partial updates)
         message_content = cleaned_message.strip() if cleaned_message.strip() else user_input
         fresh_state = StateManager.create_fresh_state(
             user_input=message_content,
             current_state=current_state
         )
-        
+
         # Show fresh state execution history
         fresh_exec_history = fresh_state.get("execution_history", [])
         self.logger.debug(f"Fresh state created with {len(fresh_exec_history)} execution records")
-        
+
         # Apply agent control changes from slash commands if any
         if slash_commands:
             from osprey.state import apply_slash_commands_to_agent_control_state
@@ -250,12 +250,12 @@ class Gateway:
                 fresh_state['agent_control'], slash_commands
             )
             self.logger.info(f"Applied agent control changes from slash commands")
-        
+
         # Add execution metadata
         fresh_state["execution_start_time"] = time.time()
-        
+
         self.logger.info("Created fresh state for new conversation turn")
-        
+
         # Create readable command list for user feedback with detailed changes
         processed_commands = []
         if slash_commands:
@@ -263,31 +263,31 @@ class Gateway:
             for key, value in slash_commands.items():
                 change_descriptions.append(f"{key}={value}")
             processed_commands = [f"Applied agent control changes: {', '.join(change_descriptions)}"]
-        
+
         return GatewayResult(
             agent_state=fresh_state,
             slash_commands_processed=processed_commands
         )
-    
+
     def _has_pending_interrupts(self, compiled_graph: Any, config: Optional[Dict[str, Any]]) -> bool:
         """Check if there are pending interrupts.
-        
+
         CRITICAL: Check state.interrupts (actual pending human approvals) 
         NOT state.next (scheduled nodes to execute).
-        
+
         When graphs crash during routing, state.next can remain populated with 
         failed transitions, causing false interrupt detection.
         """
         if not compiled_graph or not config:
             return False
-            
+
         try:
             graph_state = compiled_graph.get_state(config)
             return bool(graph_state and graph_state.interrupts)
         except Exception as e:
             self.logger.warning(f"Could not check graph interrupts: {e}")
             return False
-    
+
     def _detect_approval_response(self, user_input: str) -> Optional[Dict[str, Any]]:
         """Detect approval or rejection in user input using LLM classification."""
         try:
@@ -301,7 +301,7 @@ class Gateway:
                     "message": user_input,
                     "timestamp": time.time()
                 }
-            
+
             # Create minimal prompt for approval detection
             prompt = f"""Analyze this user message and determine if it indicates approval or rejection of a request.
 
@@ -316,7 +316,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 output_model=ApprovalResponse,
                 max_tokens=10  # Very short response needed
             )
-            
+
             # Convert to expected format
             return {
                 "type": "approval" if result.approved else "rejection",
@@ -324,7 +324,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 "message": user_input,
                 "timestamp": time.time()
             }
-                
+
         except Exception as e:
             self.logger.warning(f"Approval detection failed: {e} - defaulting to not approved")
             return {
@@ -333,17 +333,17 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 "message": user_input,
                 "timestamp": time.time()
             }
-    
+
     def _extract_resume_payload(self, compiled_graph: Any, config: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         """Extract interrupt payload from current LangGraph state.
-        
+
         Gets the interrupt data from graph state and extracts the payload
         that contains the execution plan or other approval data.
-        
+
         Args:
             compiled_graph: The compiled LangGraph instance
             config: LangGraph configuration
-            
+
         Returns:
             Tuple of (success, payload) where success indicates if extraction worked
             and payload contains interrupt data or empty dict if failed
@@ -351,38 +351,38 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
         try:
             # Get current graph state
             graph_state = compiled_graph.get_state(config)
-            
+
             if not graph_state or not hasattr(graph_state, 'interrupts'):
                 self.logger.debug("No graph state or interrupts available")
                 return False, {}
-            
+
             # Check if there are any interrupts in the graph state
             if graph_state.interrupts:
                 # Get the latest interrupt
                 latest_interrupt = graph_state.interrupts[-1]
-                
+
                 if hasattr(latest_interrupt, 'value') and latest_interrupt.value:
                     interrupt_payload = latest_interrupt.value
-                    
+
                     self.logger.info(f"Successfully extracted interrupt payload: {list(interrupt_payload.keys())}")
                     return True, interrupt_payload
                 else:
                     self.logger.debug("No value found in interrupt data")
                     return False, {}
-            
+
             self.logger.debug("No interrupts found in graph state")
             return False, {}
-            
+
         except Exception as e:
             self.logger.error(f"Failed to extract resume payload: {e}")
             return False, {}
 
     def _clear_approval_state(self) -> Dict[str, Any]:
         """Clear approval state to prevent pollution in subsequent interrupts.
-        
+
         This utility ensures that approval state from previous interrupts
         doesn't leak into subsequent operations, maintaining clean state hygiene.
-        
+
         Returns:
             Dictionary with approval state fields set to None
         """
@@ -390,45 +390,45 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
             "approval_approved": None,
             "approved_payload": None
         }
-    
+
     async def _process_slash_commands(self, user_input: str, config: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], str]:
         """Process slash commands using the centralized command system.
-        
+
         Returns:
             Tuple of (agent_control_changes, remaining_message)
         """
         if not user_input.startswith('/'):
             return {}, user_input
-        
+
         # Create command context for gateway execution
         context = CommandContext(
             interface_type="gateway",
             config=config,
             gateway=self
         )
-        
+
         registry = get_command_registry()
         agent_control_changes = {}
         remaining_parts = []
         processed_commands = []
-        
+
         # Split message into parts to handle multiple commands
         parts = user_input.split()
-        
+
         for part in parts:
             if part.startswith('/'):
                 try:
                     result = await registry.execute(part, context)
-                    
+
                     if isinstance(result, dict):
                         # Agent control command returned state changes
                         agent_control_changes.update(result)
                         processed_commands.append(part)
-                        
+
                         # Verbose logging for each specific change
                         for key, value in result.items():
                             self.logger.info(f"Set {key} = {value} via slash command {part}")
-                        
+
                     elif result == CommandResult.AGENT_STATE_CHANGED:
                         processed_commands.append(part)
                         self.logger.info(f"Agent state changed by command: {part}")
@@ -437,19 +437,18 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                         self.logger.debug(f"Command handled: {part}")
                     else:
                         self.logger.warning(f"Unexpected command result for {part}: {result}")
-                        
+
                 except Exception as e:
                     self.logger.error(f"Error processing command {part}: {e}")
                     remaining_parts.append(part)  # Keep invalid commands in message
             else:
                 remaining_parts.append(part)
-        
+
         # Log summary of processed commands
         if processed_commands:
             self.logger.info(f"Processing slash commands: {processed_commands}")
-        
+
         remaining_message = ' '.join(remaining_parts)
         return agent_control_changes, remaining_message
-    
-    
- 
+
+

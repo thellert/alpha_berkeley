@@ -9,15 +9,15 @@ from osprey.base import OrchestratorGuide, OrchestratorExample, PlannedStep, Tas
 
 class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
     """Default clarification prompt builder."""
-       
+
     def get_role_definition(self) -> str:
         """Get the generic role definition."""
         return "You are helping to clarify ambiguous user queries for the assistant system."
-    
+
     def get_task_definition(self) -> str:
         """Get the task definition."""
         return "Your task is to generate specific, targeted questions that will help clarify what the user needs."
-    
+
     def get_instructions(self) -> str:
         """Get the generic clarification instructions."""
         return textwrap.dedent("""
@@ -31,10 +31,10 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
 
             Generate targeted questions that will help get the specific information needed to provide accurate assistance.
             """).strip()
-    
+
     def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
         """Create generic orchestrator guide for clarification capability."""
-        
+
         ambiguous_system_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="data_clarification",
@@ -46,7 +46,7 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
             ),
             scenario_description="Vague data request needing system and parameter clarification", 
         )
-        
+
         return OrchestratorGuide(
             instructions="""
                 Plan "clarify" when user queries lack specific details needed for execution.
@@ -56,23 +56,23 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
             examples=[ambiguous_system_example],
             priority=99  # Should come near the end, but before respond
         )
-    
+
     def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
         """Clarify has no classifier guide - it's orchestrator-driven."""
         return None  # Always available, not detected from user intent
-    
 
-    
+
+
     def build_clarification_query(self, chat_history: str, task_objective: str) -> str:
         """Build clarification query for generating questions based on conversation context.
-        
+
         Used by the clarification infrastructure to generate specific questions
         when information is missing from user requests.
-        
+
         Args:
             chat_history: Formatted conversation history
             task_objective: Extracted task objective from user request
-            
+
         Returns:
             Complete query for question generation with automatic debug printing
         """
@@ -89,8 +89,8 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
             - Avoid asking for information already provided earlier in the conversation
             - Focus on the most critical missing information that would enable accurate assistance
             """).strip()
-        
+
         # Automatic debug printing for framework helper prompts
         self.debug_print_prompt(prompt, "clarification_query")
-        
+
         return prompt

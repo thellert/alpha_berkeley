@@ -15,20 +15,20 @@ from osprey.base import BaseExample
 @dataclass
 class TaskExtractionExample(BaseExample):
     """Example for task extraction prompt."""
-    
+
     def __init__(self, messages: List[BaseMessage], user_memory: UserMemories, expected_output: 'ExtractedTask'):
         self.messages = messages
         self.user_memory = user_memory
         self.expected_output = expected_output
-    
+
     def format_for_prompt(self) -> str:
         """Format this example for inclusion in prompts."""
         # Format chat history using native message formatter
         chat_formatted = ChatHistoryFormatter.format_for_llm(self.messages)
-        
+
         # Format user memory
         memory_formatted = self.user_memory.format_for_prompt()
-        
+
         return f"""
 **Chat History:**
 {chat_formatted}
@@ -45,7 +45,7 @@ class ExtractedTask(BaseModel):
     task: str = Field(description="The actionable task extracted from the conversation")
     depends_on_chat_history: bool = Field(description="Whether the task depends on previous conversation context")
     depends_on_user_memory: bool = Field(description="Whether the task depends on stored user memory")
-    
+
     def format_for_prompt(self) -> str:
         return f"""
 Task: {self.task}
@@ -55,17 +55,17 @@ Depends on User Memory: {self.depends_on_user_memory}
 
 class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
     """Framework prompt builder for task extraction."""
-    
+
     def __init__(self):
         super().__init__()
         self.examples = []
         self._load_examples()
-    
+
     def _load_examples(self):
         """Load task extraction examples with native LangGraph messages."""
-        
+
         # Examples without memory first
-        
+
         # Simple follow-up question requiring temporal reference resolution
         self.examples.append(TaskExtractionExample(
             messages=[
@@ -159,7 +159,7 @@ class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
         ))
 
         # Examples with memory
-        
+
         # Memory-informed request referring to previously saved information
         self.examples.append(TaskExtractionExample(
             messages=[
@@ -227,11 +227,11 @@ class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
                 depends_on_user_memory=True
             )
         ))
-    
+
     def get_role_definition(self) -> str:
         """Get the role definition (generic for task extraction)."""
         return "Convert chat conversations into actionable task descriptions."
-    
+
     def get_instructions(self) -> str:
         """Get the generic task extraction instructions."""
         return """
@@ -243,10 +243,10 @@ Core requirements:
 • Consider available data sources when interpreting requests
 • Set depends_on_user_memory=true only when the task directly incorporates specific information from user memory
         """.strip()
-    
+
     def get_system_instructions(self, messages: List[BaseMessage], retrieval_result=None) -> str:
         """Get system instructions for task extraction agent configuration.
-        
+
         :param messages: Native LangGraph messages to extract task from
         :param retrieval_result: Optional data retrieval result
         :return: Complete prompt for task extraction
@@ -255,10 +255,10 @@ Core requirements:
             f"## Example {i+1}:\n{example.format_for_prompt()}"
             for i, example in enumerate(self.examples)
         ])
-        
+
         # Format the actual chat history using native message formatter
         chat_formatted = ChatHistoryFormatter.format_for_llm(messages)
-        
+
         # Add data source context if available
         data_context = ""
         if retrieval_result and retrieval_result.has_data:
@@ -273,17 +273,17 @@ Core requirements:
                     except Exception as e:
                         # Log error but continue with other sources
                         pass
-                
+
                 if formatted_contexts:
                     data_context = f"\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
                 else:
                     # Fallback to summary if no content could be formatted
                     data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
-                    
+
             except Exception:
                 # Fallback to summary on any error
                 data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
-        
+
         return f"""
 You are a task extraction system that analyzes chat history and user memory to extract actionable tasks.
 

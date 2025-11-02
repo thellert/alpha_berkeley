@@ -44,7 +44,7 @@ The state system operates on a conversation-turn basis where:
 Basic state creation::
 
     from osprey.state import StateManager
-    
+
     # Create fresh state for new conversation
     state = StateManager.create_fresh_state(
         user_input="Find beam current PV addresses",
@@ -54,7 +54,7 @@ Basic state creation::
 Context storage in capabilities::
 
     from osprey.state import StateManager
-    
+
     # Store capability results
     return StateManager.store_context(
         state, "PV_ADDRESSES", context_key, pv_data
@@ -63,7 +63,7 @@ Context storage in capabilities::
 Message handling::
 
     from osprey.state import MessageUtils
-    
+
     # Create properly formatted messages
     user_msg = MessageUtils.create_user_message(user_input)
     response_msg = MessageUtils.create_assistant_message(response)
@@ -96,24 +96,24 @@ __all__ = [
     "AgentState",
     "StateUpdate",
     "StateManager",
-    
+
     # Utility functions
     "create_status_update",
     "create_progress_event",
     "get_execution_steps_summary",
     "merge_capability_context_data",
-    
+
     # Session management (simplified)
     "SessionContext",
-    
+
     # Execution components (keep as dataclasses)
     "ApprovalRequest",
-    
+
     # Message utilities
     "MessageUtils",
     "ChatHistoryFormatter",
     "UserMemories",
-    
+
     # Control state (simplified)
     "AgentControlState",
     "apply_slash_commands_to_agent_control_state",

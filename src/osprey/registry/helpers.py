@@ -35,18 +35,18 @@ def extend_framework_registry(
     override_nodes: Optional[List[NodeRegistration]] = None,
 ) -> RegistryConfig:
     """Create application registry configuration that extends the framework.
-    
+
     This is the recommended way to create application registries. It simplifies
     registry creation by automatically handling framework component exclusions
     and overrides through clean, declarative parameters.
-    
+
     The function returns an application registry configuration that will be
     merged with the framework registry by the RegistryManager. You only need
     to specify your application-specific components and any framework components
     you want to exclude or replace.
-    
+
     Most applications will only need to specify capabilities and context_classes.
-    
+
     Args:
         capabilities: Application capabilities to add to framework defaults
         context_classes: Application context classes to add to framework defaults
@@ -59,13 +59,13 @@ def extend_framework_registry(
         exclude_data_sources: Names of framework data sources to exclude
         override_capabilities: Capabilities that replace framework versions (by name)
         override_nodes: Nodes that replace framework versions (by name)
-        
+
     Returns:
         Complete RegistryConfig with framework + application components
-        
+
     Examples:
         Simple application (most common)::
-        
+
             def get_registry_config(self) -> RegistryConfig:
                 return extend_framework_registry(
                     capabilities=[
@@ -86,17 +86,17 @@ def extend_framework_registry(
                         ),
                     ]
                 )
-        
+
         Exclude framework component::
-        
+
             def get_registry_config(self) -> RegistryConfig:
                 return extend_framework_registry(
                     capabilities=[...],
                     exclude_capabilities=["python"],  # Don't need framework Python
                 )
-        
+
         Override framework component::
-        
+
             def get_registry_config(self) -> RegistryConfig:
                 return extend_framework_registry(
                     capabilities=[...],
@@ -111,41 +111,41 @@ def extend_framework_registry(
                         ),
                     ]
                 )
-    
+
     .. note::
        The returned configuration contains only application components. The
        framework registry system automatically merges this with framework defaults
        during initialization. Exclusions are handled internally via the
        framework_exclusions field.
-       
+
     .. seealso::
        :func:`get_framework_defaults` : Inspect framework components
        :class:`RegistryConfig` : The returned configuration structure
     """
     # Build framework exclusions dict for the merge process
     framework_exclusions = {}
-    
+
     if exclude_capabilities:
         framework_exclusions["capabilities"] = exclude_capabilities
-    
+
     if exclude_nodes:
         framework_exclusions["nodes"] = exclude_nodes
-    
+
     if exclude_context_classes:
         framework_exclusions["context_classes"] = exclude_context_classes
-    
+
     if exclude_data_sources:
         framework_exclusions["data_sources"] = exclude_data_sources
-    
+
     # Combine override and regular components
     all_capabilities = list(capabilities or [])
     if override_capabilities:
         all_capabilities.extend(override_capabilities)
-    
+
     all_nodes = list(core_nodes or [])
     if override_nodes:
         all_nodes.extend(override_nodes)
-    
+
     # Return APPLICATION-ONLY config (framework will be merged by RegistryManager)
     return RegistryConfig(
         core_nodes=all_nodes,
@@ -160,24 +160,24 @@ def extend_framework_registry(
 
 def get_framework_defaults() -> RegistryConfig:
     """Get the default framework registry configuration.
-    
+
     This function returns the complete framework registry without any
     application modifications. Useful for inspecting what components
     the framework provides or for manual registry merging.
-    
+
     Returns:
         Complete framework RegistryConfig with all core components
-        
+
     Examples:
         Inspect framework components::
-        
+
             >>> framework = get_framework_defaults()
             >>> print(f"Framework provides {len(framework.capabilities)} capabilities")
             >>> for cap in framework.capabilities:
             ...     print(f"  - {cap.name}: {cap.description}")
-        
+
         Manual merging (advanced)::
-        
+
             >>> framework = get_framework_defaults()
             >>> my_config = RegistryConfig(
             ...     core_nodes=framework.core_nodes,
@@ -188,12 +188,12 @@ def get_framework_defaults() -> RegistryConfig:
             ...     framework_prompt_providers=framework.framework_prompt_providers,
             ...     initialization_order=framework.initialization_order
             ... )
-    
+
     .. note::
        Most applications should use :func:`extend_framework_registry` instead
        of manually merging. This function is provided for inspection and
        advanced use cases.
-       
+
     .. seealso::
        :func:`extend_framework_registry` : Recommended way to extend framework
        :class:`FrameworkRegistryProvider` : The provider that generates this config

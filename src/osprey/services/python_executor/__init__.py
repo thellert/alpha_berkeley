@@ -56,16 +56,16 @@ Core Components:
 
 Exception Hierarchy:
     The package provides a comprehensive exception system organized by error category:
-    
+
     - **Infrastructure Errors**: Container connectivity and configuration issues
         - :exc:`ContainerConnectivityError`: Container unreachable or connection failed
         - :exc:`ContainerConfigurationError`: Invalid container configuration
-    
+
     - **Code-Related Errors**: Issues requiring code regeneration
         - :exc:`CodeGenerationError`: LLM failed to generate valid code
         - :exc:`CodeSyntaxError`: Generated code has syntax errors
         - :exc:`CodeRuntimeError`: Code execution failed with runtime errors
-    
+
     - **Workflow Errors**: Service workflow and control issues
         - :exc:`ExecutionTimeoutError`: Code execution exceeded timeout limits
         - :exc:`MaxAttemptsExceededError`: Exceeded maximum retry attempts
@@ -235,16 +235,16 @@ from .exceptions import (
     # Base
     PythonExecutorException,
     ErrorCategory,
-    
+
     # Infrastructure errors (retry execution)
     ContainerConnectivityError,
     ContainerConfigurationError,
-    
+
     # Code errors (retry code generation)
     CodeGenerationError,
     CodeSyntaxError,
     CodeRuntimeError,
-    
+
     # Workflow errors (special handling)
     ExecutionTimeoutError,
     MaxAttemptsExceededError,
@@ -255,27 +255,27 @@ from .exceptions import (
 __all__ = [
     # Main interface
     "PythonExecutorService",
-    
+
     # Core types
     "PythonExecutionRequest",
     "PythonExecutionSuccess",
     "PythonExecutionState",
     "PythonServiceResult",
-    
+
     # Execution context and notebook management
     "NotebookAttempt",
     "NotebookType", 
     "PythonExecutionContext",
     "FileManager",
     "NotebookManager",
-    
+
     # Configuration utilities
     "ExecutionModeConfig",
     "ContainerEndpointConfig",
     "ExecutionMode",
     "ExecutionControlConfig",
     "get_execution_control_config",
-    
+
     # Exception hierarchy
     "PythonExecutorException",
     "ErrorCategory",
@@ -287,7 +287,7 @@ __all__ = [
     "ExecutionTimeoutError",
     "MaxAttemptsExceededError",
     "WorkflowError",
-    
+
     # Serialization utilities
     "make_json_serializable",
     "serialize_results_to_file"

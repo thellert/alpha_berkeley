@@ -36,7 +36,7 @@ class Action:
 
     def extract_execution_history_from_messages(self, messages: list):
         """Extract execution history data from assistant messages."""
-        
+
         # Look through messages in reverse order (most recent first)
         for message in reversed(messages):
             if message.get("role") == "assistant" and message.get("info"):
@@ -45,14 +45,14 @@ class Action:
                     execution_data = message["info"]["als_assistant_execution_history_raw"]
                     logger.info(f"Found execution history: {len(execution_data)} records")
                     return execution_data
-        
+
         return None
 
     def format_execution_history_html(self, execution_history, user_valves) -> str:
         """Format the execution history as HTML for popup display."""
         if not execution_history:
             return '<div style="text-align: center; padding: 40px; color: #6b7280; font-style: italic;">No execution history available.</div>'
-        
+
         # Header with summary
         html = f"""
         <div style="margin-bottom: 24px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -66,7 +66,7 @@ class Action:
                     <div style="font-size: 13px; color: #6b7280; font-weight: 500;">Total Steps</div>
                 </div>
         """
-        
+
         # Calculate step execution time (sum of individual step durations)
         step_duration = 0
         for record in execution_history:
@@ -79,7 +79,7 @@ class Action:
                     step_duration += (end_time - start_time).total_seconds()
                 except:
                     pass  # Skip if datetime parsing fails
-        
+
         html += f"""
                 <div style="text-align: center; padding: 12px; background: white; border-radius: 6px; border: 1px solid #e2e8f0;">
                     <div style="font-size: 24px; font-weight: 700; color: #059669;">{step_duration:.2f}s</div>
@@ -88,18 +88,18 @@ class Action:
             </div>
         </div>
         """
-        
+
         # Process each step
         for i, record in enumerate(execution_history, 1):
             step = record.get('step', {})
             result = record.get('result', {})
-            
+
             # Step header with status
             success = result.get('success', False)
             status_emoji = "✅" if success else "❌"
             status_color = "#059669" if success else "#dc2626"
             description = step.get('description', 'Unknown step')
-            
+
             html += f"""
             <div style="margin-bottom: 24px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
                 <div style="background: {'#f0f9ff' if success else '#fef2f2'}; padding: 16px; border-bottom: 1px solid #e2e8f0;">
@@ -112,7 +112,7 @@ class Action:
                 </div>
                 <div style="padding: 20px;">
             """
-            
+
             # Summary table
             html += """
             <div style="overflow-x: auto; margin-bottom: 16px;">
@@ -125,7 +125,7 @@ class Action:
                     </thead>
                     <tbody>
             """
-            
+
             # Basic info
             html += f"""
                         <tr>
@@ -137,7 +137,7 @@ class Action:
                             <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: {status_color}; font-weight: 600;">{status_emoji} {'Success' if success else 'Failed'}</td>
                         </tr>
             """
-            
+
             # Success criteria
             success_criteria = step.get('success_criteria')
             if success_criteria:
@@ -147,7 +147,7 @@ class Action:
                             <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{success_criteria}</td>
                         </tr>
                 """
-            
+
             # Timestamps
             if user_valves.show_timestamps:
                 start_time_str = record.get('start_time')
@@ -160,7 +160,7 @@ class Action:
                             <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{start_time.strftime('%H:%M:%S')}</td>
                         </tr>
                         """
-                        
+
                         end_time_str = record.get('end_time')
                         if end_time_str:
                             end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00'))
@@ -173,9 +173,9 @@ class Action:
                             """
                     except:
                         pass  # Skip if datetime parsing fails
-            
+
             html += '</tbody></table></div>'
-            
+
             # Input requirements
             input_requirements = step.get('input_requirements', [])
             if input_requirements and user_valves.show_detailed_steps:
@@ -187,7 +187,7 @@ class Action:
                     </div>
                 </div>
                 """
-            
+
             # Parameters
             parameters = step.get('parameters', {})
             if parameters and user_valves.show_detailed_steps:
@@ -199,7 +199,7 @@ class Action:
                     </div>
                 </div>
                 """
-            
+
             # Error details if failed
             if not success:
                 error = result.get('error')
@@ -213,7 +213,7 @@ class Action:
                         </div>
                     </div>
                     """
-            
+
             # Result data if requested and available
             if user_valves.show_step_results:
                 result_data = result.get('data')
@@ -226,9 +226,9 @@ class Action:
                         </div>
                     </div>
                     """
-            
+
             html += '</div></div>'
-        
+
         return html
 
     async def action(
@@ -256,10 +256,10 @@ class Action:
             # Log debug information about the request
             logger.info(f"Processing execution history request for user {__user__.get('name', 'unknown')}")
             logger.info(f"Message count: {len(body.get('messages', []))}")
-            
+
             # Extract execution history from the last assistant message
             execution_history = self.extract_execution_history_from_messages(body.get("messages", []))
-            
+
             if not execution_history:
                 logger.info("No execution history found in messages")
                 # Show no history popup
@@ -270,7 +270,7 @@ class Action:
                     if (existingPopup) {
                         existingPopup.remove();
                     }
-                    
+
                     // Create overlay
                     const overlay = document.createElement('div');
                     overlay.id = 'execution-history-popup';
@@ -286,7 +286,7 @@ class Action:
                         justify-content: center;
                         align-items: center;
                     `;
-                    
+
                     // Create popup content
                     const popup = document.createElement('div');
                     popup.style.cssText = `
@@ -301,13 +301,13 @@ class Action:
                         color: #333;
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                     `;
-                    
+
                     popup.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                             <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Assistant Execution History</h2>
                             <button id="history-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                         </div>
-                        
+
                         <div style="text-align: center; padding: 40px 20px; color: #6b7280; font-size: 16px; line-height: 1.6;">
                             <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
                             <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px; font-weight: 600;">No Execution History Available</h3>
@@ -322,36 +322,36 @@ class Action:
                             <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Assistant query to generate execution history.</p>
                         </div>
                     `;
-                    
+
                     // Add event listeners
                     overlay.appendChild(popup);
                     document.body.appendChild(overlay);
-                    
+
                     // Close button
                     document.getElementById('history-close-btn').onclick = function() {
                         overlay.remove();
                     };
-                    
+
                     // Close on overlay click
                     overlay.onclick = function(e) {
                         if (e.target === overlay) {
                             overlay.remove();
                         }
                     };
-                    
+
                 } catch (error) {
                     console.error('Error creating execution history popup:', error);
                     alert('Error displaying execution history');
                 }
                 """
-                
+
                 await __event_call__(
                     {
                         "type": "execute",
                         "data": {"code": no_history_js},
                     }
                 )
-                
+
                 await __event_emitter__(
                     {
                         "type": "status",
@@ -359,19 +359,19 @@ class Action:
                     }
                 )
                 return
-            
+
             logger.info(f"Found execution history: {len(execution_history)} steps")
-            
+
             await __event_emitter__(
                 {
                     "type": "status",
                     "data": {"description": "Formatting execution history...", "done": False},
                 }
             )
-            
+
             # Format the execution history as HTML for the popup
             formatted_history = self.format_execution_history_html(execution_history, user_valves)
-            
+
             # Create JavaScript to show popup with execution history
             history_js = f"""
             try {{
@@ -380,7 +380,7 @@ class Action:
                 if (existingPopup) {{
                     existingPopup.remove();
                 }}
-                
+
                 // Create overlay
                 const overlay = document.createElement('div');
                 overlay.id = 'execution-history-popup';
@@ -396,7 +396,7 @@ class Action:
                     justify-content: center;
                     align-items: center;
                 `;
-                
+
                 // Create popup content
                 const popup = document.createElement('div');
                 popup.style.cssText = `
@@ -411,59 +411,59 @@ class Action:
                     color: #333;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 `;
-                
+
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                         <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">📋 ALS Assistant Execution History</h2>
                         <button id="history-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
-                    
+
                     <div style="line-height: 1.6;">
                         {formatted_history}
                     </div>
                 `;
-                
+
                 // Add event listeners
                 overlay.appendChild(popup);
                 document.body.appendChild(overlay);
-                
+
                 // Close button
                 document.getElementById('history-close-btn').onclick = function() {{
                     overlay.remove();
                 }};
-                
+
                 // Close on overlay click
                 overlay.onclick = function(e) {{
                     if (e.target === overlay) {{
                         overlay.remove();
                     }}
                 }};
-                
+
             }} catch (error) {{
                 console.error('Error creating execution history popup:', error);
                 alert('Error displaying execution history: ' + error.message);
             }}
             """
-            
+
             await __event_call__(
                 {
                     "type": "execute",
                     "data": {"code": history_js},
                 }
             )
-            
+
             await __event_emitter__(
                 {
                     "type": "status",
                     "data": {"description": "Execution history displayed", "done": True},
                 }
             )
-            
+
             logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Execution history popup displayed successfully ({len(execution_history)} steps)")
 
         except Exception as e:
             logger.error(f"Error processing execution history: {e}")
-            
+
             error_js = f"""
             try {{
                 // Remove any existing history popup
@@ -471,7 +471,7 @@ class Action:
                 if (existingPopup) {{
                     existingPopup.remove();
                 }}
-                
+
                 // Create overlay
                 const overlay = document.createElement('div');
                 overlay.id = 'execution-history-popup';
@@ -487,7 +487,7 @@ class Action:
                     justify-content: center;
                     align-items: center;
                 `;
-                
+
                 // Create popup content
                 const popup = document.createElement('div');
                 popup.style.cssText = `
@@ -502,49 +502,49 @@ class Action:
                     color: #333;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 `;
-                
+
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                         <h2 style="margin: 0; color: #dc2626; font-size: 20px; font-weight: 600;">❌ Error Processing Execution History</h2>
                         <button id="history-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
-                    
+
                     <div style="padding: 20px; background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca;">
                         <p style="margin: 0 0 16px 0; color: #dc2626; font-weight: 500;">An error occurred while processing the execution history:</p>
                         <pre style="margin: 0; font-family: monospace; background: #fff; padding: 12px; border-radius: 4px; border: 1px solid #e5e7eb; color: #374151; font-size: 13px; overflow-x: auto;">{str(e)}</pre>
                         <p style="margin: 16px 0 0 0; color: #6b7280; font-size: 14px;">Please check the logs for more details.</p>
                     </div>
                 `;
-                
+
                 // Add event listeners
                 overlay.appendChild(popup);
                 document.body.appendChild(overlay);
-                
+
                 // Close button
                 document.getElementById('history-close-btn').onclick = function() {{
                     overlay.remove();
                 }};
-                
+
                 // Close on overlay click
                 overlay.onclick = function(e) {{
                     if (e.target === overlay) {{
                         overlay.remove();
                     }}
                 }};
-                
+
             }} catch (error) {{
                 console.error('Error creating error popup:', error);
                 alert('Error displaying execution history error: ' + error.message);
             }}
             """
-            
+
             await __event_call__(
                 {
                     "type": "execute",
                     "data": {"code": error_js},
                 }
             )
-            
+
             await __event_emitter__(
                 {
                     "type": "status",

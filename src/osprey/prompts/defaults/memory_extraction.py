@@ -27,20 +27,20 @@ class MemoryContentExtraction(BaseModel):
 @dataclass
 class MemoryExtractionExample(BaseExample):
     """Example for memory extraction prompt."""
-    
+
     def __init__(self, messages: List[BaseMessage], expected_output: MemoryContentExtraction):
         self.messages = messages
         self.expected_output = expected_output
-    
+
     def format_for_prompt(self) -> str:
         """Format this example for inclusion in prompts."""
         # Format chat history using native message formatter
         chat_formatted = ChatHistoryFormatter.format_for_llm(self.messages)
-        
+
         return textwrap.dedent(f"""
             **Chat History:**
             {textwrap.indent(chat_formatted, "  ")}
-                        
+
             **Expected Output:**
             {{
                 "content": "{self.expected_output.content}",
@@ -52,17 +52,17 @@ class MemoryExtractionExample(BaseExample):
 
 class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
     """Framework prompt builder for memory extraction."""
-    
+
     PROMPT_TYPE = "memory_extraction"
-    
+
     def __init__(self):
         super().__init__()
         self.examples = []
         self._load_examples()
-    
+
     def _load_examples(self):
         """Load memory extraction examples with native LangGraph messages."""
-        
+
         # Explicit save instruction with quoted content
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -74,7 +74,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="User explicitly requested to save a specific finding with quantitative thresholds"
             )
         ))
-        
+
         # Technical insight with specific parameters
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -88,7 +88,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="Technical insight with specific performance metrics and timing patterns"
             )
         ))
-        
+
         # Procedural discovery with workflow details
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -100,7 +100,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="Detailed procedural workflow with timing and sequencing requirements"
             )
         ))
-        
+
         # Configuration insight with mixed save/don't save instructions
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -112,7 +112,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="User explicitly requested to save specific configuration finding while excluding incident details"
             )
         ))
-        
+
         # Negative example - routine status check (should not save)
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -126,7 +126,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="This is routine operational status checking and acknowledgment, not content intended for permanent memory"
             )
         ))
-        
+
         # Negative example - procedural question (should not save)
         self.examples.append(MemoryExtractionExample(
             messages=[
@@ -138,15 +138,15 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 explanation="This is a procedural question about system configuration, not content to be saved to memory"
             )
         ))
-    
+
     def get_role_definition(self) -> str:
         """Get the role definition."""
         return "You are an expert content extraction assistant. Your task is to identify and extract content that a user wants to save to their memory from their message."
-    
+
     def get_task_definition(self) -> str:
         """Get the task definition."""
         return "TASK: Extract content from the user's message that they want to save/store/remember."
-    
+
     def get_instructions(self) -> str:
         """Get the memory extraction instructions."""
         return textwrap.dedent("""
@@ -170,15 +170,15 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             - Extract the pure content to be remembered
             - Be conservative - if unclear, set found=false
             """).strip()
-    
+
     def _get_examples(self, **kwargs) -> List[MemoryExtractionExample]:
         """Get generic memory extraction examples."""
         return self.examples
-    
+
     def _format_examples(self, examples: List[MemoryExtractionExample]) -> str:
         """Format multiple MemoryExtractionExample objects for inclusion in prompts."""
         return MemoryExtractionExample.join(examples, add_numbering=True)
-    
+
     def _get_dynamic_context(self, **kwargs) -> str:
         """Build the response format section."""
         return textwrap.dedent("""
@@ -188,16 +188,16 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 "found": true/false,
                 "explanation": "brief explanation of your decision"
             }
-            
+
             You will be provided with a chat history. Extract the content to save from the user message in that chat history.
             """).strip()
-    
 
-    
+
+
     def get_orchestrator_guide(self) -> Optional[Any]:
         """Create generic orchestrator guide for memory operations."""
         registry = get_registry()
-        
+
         # Define structured examples
         save_memory_example = OrchestratorExample(
             step=PlannedStep(
@@ -211,7 +211,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Saving important information to user memory",
             notes=f"Content is persisted to memory file and provided as {registry.context_types.MEMORY_CONTEXT} context for response confirmation."
         )
-        
+
         show_memory_example = OrchestratorExample(
             step=PlannedStep(
                 context_key="memory_display",
@@ -224,33 +224,33 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             scenario_description="Displaying stored memory content",
             notes=f"Retrieves memory content as {registry.context_types.MEMORY_CONTEXT}. Typically followed by respond step to present results to user."
         )
-        
+
         return OrchestratorGuide(
             instructions=textwrap.dedent(f"""
                 **When to plan "memory" steps:**
                 - When the user explicitly asks to save, store, or remember something for later
                 - When the user asks to show, display, or view their saved memory
                 - When the user explicitly mentions memory operations
-                
+
                 **IMPORTANT**: This capability has a VERY STRICT classifier. Only use when users 
                 explicitly mention memory-related operations. Do NOT use for general information 
                 storage or context management.
-                
+
                 **Step Structure:**
                 - context_key: Unique identifier for output (e.g., "memory_save", "memory_display")
                 - task_objective: The specific memory operation to perform
-                
+
                 **Output: {registry.context_types.MEMORY_CONTEXT}**
                 - Save operations: Contains saved content for response confirmation
                 - Retrieve operations: Contains stored memory content for use by respond step
                 - Available to downstream steps via context system
-                
+
                 Only plan this step when users explicitly request memory operations.
                 """),
             examples=[save_memory_example, show_memory_example],
             priority=10  # Later in the prompt ordering since it's specialized
         )
-    
+
     def get_classifier_guide(self) -> Optional[Any]:
         """Create generic classifier guide for memory operations."""
         # Create generic memory-specific examples
@@ -281,19 +281,19 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 reason="Explicit store request with specific technical procedure to save"
             )
         ]
-        
+
         return TaskClassifierGuide(
             instructions="Determine if the task involves saving content to memory or retrieving content from memory.",
             examples=memory_examples,
             actions_if_true=ClassifierActions()
         )
-    
+
     def get_memory_classification_prompt(self) -> str:
         """Get prompt for classifying memory operations as SAVE or RETRIEVE.
-        
+
         Returns the system prompt used by LLM to classify user tasks into
         memory operation types. Includes automatic debug printing.
-        
+
         Returns:
             System prompt string for memory operation classification
         """
@@ -304,8 +304,8 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
 
             Focus on the user's intent, not just keyword matching. Context matters.
             """).strip()
-        
+
         # Automatic debug printing for framework helper prompts
         self.debug_print_prompt(prompt, "memory_operation_classification")
-        
+
         return prompt

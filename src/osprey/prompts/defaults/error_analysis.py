@@ -8,17 +8,17 @@ from osprey.prompts.base import FrameworkPromptBuilder
 
 class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
     """Default error analysis prompt builder."""
-    
+
     PROMPT_TYPE = "error_analysis"
-    
+
     def get_role_definition(self) -> str:
         """Get the generic role definition."""
         return "You are providing error analysis for the assistant system."
-    
+
     def get_task_definition(self) -> Optional[str]:
         """Task definition is embedded in instructions."""
         return None
-    
+
     def get_instructions(self) -> str:
         """Get the error analysis instructions."""
         return textwrap.dedent("""
@@ -28,9 +28,9 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
             - Error message and technical details
             - Execution statistics and summary
             - Capability-specific recovery options
-            
+
             Your role is to provide a brief explanation that adds value beyond the structured data:
-            
+
             Requirements:
             - Write 2-3 sentences explaining what likely went wrong
             - Focus on the "why" rather than repeating the "what" 
@@ -40,18 +40,18 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
             - Keep it under 100 words
             - Use a professional, technical tone
             """).strip()
-    
+
     def _get_dynamic_context(self, 
                           capabilities_overview: str = "",
                           error_context=None,
                           **kwargs) -> str:
         """Build dynamic context with capabilities and error information."""
         sections = []
-        
+
         # System capabilities
         if capabilities_overview:
             sections.append(f"SYSTEM CAPABILITIES:\n{capabilities_overview}")
-        
+
         # Error context
         if error_context:
             error_info = textwrap.dedent(f"""
@@ -62,6 +62,6 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
                 - Error message: {getattr(error_context, 'error_message', 'Unknown')}
                 """).strip()
             sections.append(error_info)
-        
+
         return "\n\n".join(sections)
-    
+

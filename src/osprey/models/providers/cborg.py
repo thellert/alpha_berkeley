@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class CBorgProviderAdapter(BaseProvider):
     """CBORG (LBNL) provider implementation - OpenAI-compatible."""
-    
+
     # Metadata (single source of truth)
     name = "cborg"
     description = "LBNL CBorg proxy (supports multiple models)"
@@ -33,7 +33,7 @@ class CBorgProviderAdapter(BaseProvider):
         "openai/gpt-4o",
         "openai/gpt-4o-mini"
     ]
-    
+
     def create_model(
         self,
         model_id: str,
@@ -58,14 +58,14 @@ class CBorgProviderAdapter(BaseProvider):
                 "base_url": base_url
             }
             openai_client = openai.AsyncOpenAI(**client_args)
-        
+
         model = OpenAIModel(
             model_name=model_id,
             provider=PydanticOpenAIProvider(openai_client=openai_client),
         )
         model.model_id = model_id
         return model
-    
+
     def execute_completion(
         self,
         message: str,
@@ -83,22 +83,22 @@ class CBorgProviderAdapter(BaseProvider):
         # Check for thinking parameters (not supported by CBORG)
         enable_thinking = kwargs.get("enable_thinking", False)
         budget_tokens = kwargs.get("budget_tokens")
-        
+
         if enable_thinking or budget_tokens is not None:
             logger.warning("enable_thinking and budget_tokens are not used for CBORG provider.")
-        
+
         # Get http_client if provided
         http_client = kwargs.get("http_client")
-        
+
         client = openai.OpenAI(
             api_key=api_key,
             base_url=base_url,
             http_client=http_client,
         )
-        
+
         # Handle typed dict output flag
         is_typed_dict_output = kwargs.get("is_typed_dict_output", False)
-        
+
         if output_format is not None:
             # Use structured outputs with Pydantic model
             response = client.beta.chat.completions.parse(
@@ -110,7 +110,7 @@ class CBorgProviderAdapter(BaseProvider):
             if not response.choices:
                 raise ValueError("CBORG API returned empty choices list")
             result = response.choices[0].message.parsed
-            
+
             # Handle TypedDict conversion
             if is_typed_dict_output and hasattr(result, 'model_dump'):
                 return result.model_dump()
@@ -125,7 +125,7 @@ class CBorgProviderAdapter(BaseProvider):
             if not response.choices:
                 raise ValueError("CBORG API returned empty choices list")
             return response.choices[0].message.content
-    
+
     def check_health(
         self,
         api_key: Optional[str],
@@ -135,26 +135,26 @@ class CBorgProviderAdapter(BaseProvider):
     ) -> tuple[bool, str]:
         """Check CBORG API health by testing /v1/models endpoint."""
         import requests
-        
+
         if not api_key:
             return False, "API key not set"
-        
+
         if not base_url:
             return False, "Base URL not configured"
-        
+
         try:
             test_url = base_url.rstrip('/') + '/models'
             headers = {"Authorization": f"Bearer {api_key}"}
-            
+
             response = requests.get(test_url, headers=headers, timeout=timeout)
-            
+
             if response.status_code == 200:
                 return True, "API accessible and authenticated"
             elif response.status_code == 401:
                 return False, "Authentication failed (invalid API key?)"
             else:
                 return False, f"API returned status {response.status_code}"
-                
+
         except requests.Timeout:
             return False, "Connection timeout"
         except requests.RequestException as e:

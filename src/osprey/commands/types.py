@@ -24,17 +24,17 @@ from typing import Dict, List, Optional, Callable, Any, Union, Protocol
 
 class CommandCategory(Enum):
     """Categories of slash commands for organization and interface validation.
-    
+
     Command categories provide hierarchical organization and enable interface-specific
     command filtering. Each category represents a distinct functional domain with
     specific execution contexts and validation requirements.
-    
+
     Categories:
         CLI: Interface and user experience commands (help, clear, exit, history)
         AGENT_CONTROL: Agent behavior and execution control (planning, approval, debug)
         SERVICE: Framework service management (status, logs, metrics, restart)
         CUSTOM: Application-specific and user-defined extensions
-    
+
     .. note::
        Categories are used for command discovery, autocompletion filtering,
        and interface-specific command availability validation.
@@ -47,17 +47,17 @@ class CommandCategory(Enum):
 
 class CommandResult(Enum):
     """Standardized result types for command execution flow control.
-    
+
     Command results enable interfaces to coordinate execution flow and handle
     different command outcomes appropriately. Results provide clear semantics
     for command processing continuation, state changes, and interface control.
-    
+
     Results:
         CONTINUE: Command processed, continue with normal message flow
         HANDLED: Command fully processed, stop further message processing
         EXIT: Request interface termination (CLI exit, session end)
         AGENT_STATE_CHANGED: Agent control state modified, may affect execution
-    
+
     .. note::
        Interfaces should handle each result type appropriately based on their
        execution model and user experience requirements.
@@ -71,19 +71,19 @@ class CommandResult(Enum):
 @dataclass
 class CommandContext:
     """Execution context information available to command handlers.
-    
+
     CommandContext provides rich contextual information to command handlers,
     enabling context-aware command execution with access to interface state,
     agent configuration, and service instances. The context supports multiple
     interface types while maintaining type safety and extensibility.
-    
+
     Context Categories:
         Interface Context: Interface type, user identification, session management
         CLI Context: CLI instance access, console output, terminal control
         Agent Context: Current agent state, gateway access, configuration
         Service Context: Service instance access, deployment information
         Extension Context: Custom context data for application-specific commands
-    
+
     :param interface_type: Interface identifier ("cli", "openwebui", "api", etc.)
     :type interface_type: str
     :param user_id: User identifier for multi-user interfaces
@@ -104,23 +104,23 @@ class CommandContext:
     :type service_instance: Optional[Any]
     :param extra: Additional context data for custom extensions
     :type extra: Dict[str, Any]
-    
+
     .. note::
        Context fields are populated based on the executing interface and
        command category. Not all fields are available in all contexts.
-    
+
     Examples:
         CLI command context::
-        
+
             context = CommandContext(
                 interface_type="cli",
                 cli_instance=cli,
                 console=rich_console,
                 agent_state=current_state
             )
-        
+
         Service command context::
-        
+
             context = CommandContext(
                 interface_type="api",
                 service_instance=jupyter_service,
@@ -131,53 +131,53 @@ class CommandContext:
     interface_type: str = "unknown"  # "cli", "openwebui", "api", etc.
     user_id: Optional[str] = None
     session_id: Optional[str] = None
-    
+
     # CLI-specific context
     cli_instance: Optional[Any] = None
     console: Optional[Any] = None
-    
+
     # Agent context
     agent_state: Optional[Dict[str, Any]] = None
     gateway: Optional[Any] = None
     config: Optional[Dict[str, Any]] = None
-    
+
     # Service context
     service_instance: Optional[Any] = None
-    
+
     # Additional context data
     extra: Dict[str, Any] = field(default_factory=dict)
 
 
 class CommandHandler(Protocol):
     """Protocol for type-safe command handler function signatures.
-    
+
     CommandHandler defines the interface contract for all command handler
     functions, ensuring consistent signatures and return types across
     the command system. Handlers receive parsed arguments and execution
     context, returning standardized results or state changes.
-    
+
     Handler Contract:
         - Accept string arguments and CommandContext
         - Return CommandResult or Dict[str, Any] for state changes
         - Handle errors gracefully with appropriate user feedback
         - Support both synchronous and asynchronous execution
-    
+
     .. note::
        Agent control commands may return dictionaries representing
        state changes instead of CommandResult values.
     """
-    
+
     async def __call__(
         self, 
         args: str, 
         context: CommandContext
     ) -> Union[CommandResult, Dict[str, Any]]:
         """Execute the command.
-        
+
         Args:
             args: Command arguments as string
             context: Execution context
-            
+
         Returns:
             CommandResult or dict of state changes for agent control commands
         """
@@ -187,26 +187,26 @@ class CommandHandler(Protocol):
 @dataclass
 class Command:
     """Complete specification for a slash command with metadata and execution constraints.
-    
+
     The Command class provides a comprehensive definition for slash commands in the
     Osprey Framework. It includes execution handlers, validation constraints,
     interface restrictions, and rich metadata for help generation and autocompletion.
-    
+
     Command Lifecycle:
-    
+
     1. **Definition**: Command created with required fields and optional metadata
     2. **Registration**: Command registered in CommandRegistry with validation
     3. **Discovery**: Command discovered through registry lookup and filtering
     4. **Execution**: Command executed with context and argument validation
     5. **Completion**: Command provides autocompletion suggestions
-    
+
     **Core Components:**
-    
+
     - **Required Fields**: name, category, description, handler for basic functionality
     - **Metadata**: aliases, help_text, syntax for user experience and documentation
     - **Constraints**: requires_args, valid_options, interface_restrictions for validation
     - **Display**: hidden, deprecated flags for command visibility and lifecycle
-    
+
     :param name: Unique command identifier used for registration and execution
     :type name: str
     :param category: Command category for organization and filtering
@@ -231,19 +231,19 @@ class Command:
     :type hidden: bool
     :param deprecated: Whether command is deprecated (shown with warning)
     :type deprecated: bool
-       
+
     Examples:
         Simple command definition::
-        
+
             command = Command(
                 name="status",
                 category=CommandCategory.SERVICE,
                 description="Show service status",
                 handler=status_handler
             )
-        
+
         Command with validation and help::
-        
+
             command = Command(
                 name="planning",
                 category=CommandCategory.AGENT_CONTROL,
@@ -254,9 +254,9 @@ class Command:
                 help_text="Enable or disable planning mode.\\n\\nOptions:\\n  on/enabled - Enable planning\\n  off/disabled - Disable planning",
                 interface_restrictions=["cli", "openwebui"]
             )
-        
+
         Hidden administrative command::
-        
+
             command = Command(
                 name="internal_debug",
                 category=CommandCategory.CUSTOM,
@@ -270,53 +270,53 @@ class Command:
     category: CommandCategory
     description: str
     handler: CommandHandler
-    
+
     # Command metadata
     aliases: List[str] = field(default_factory=list)
     help_text: Optional[str] = None
     syntax: Optional[str] = None
-    
+
     # Execution constraints
     requires_args: bool = False
     valid_options: Optional[List[str]] = None
     interface_restrictions: Optional[List[str]] = None  # ["cli", "openwebui"]
-    
+
     # Display properties
     hidden: bool = False
     deprecated: bool = False
-    
+
     def __post_init__(self):
         """Initialize computed fields and auto-generate missing metadata.
-        
+
         Automatically generates help_text from description if not provided,
         and creates syntax patterns based on valid_options and requires_args
         settings for consistent command documentation and validation.
         """
         if self.help_text is None:
             self.help_text = self.description
-        
+
         if self.syntax is None:
             if self.valid_options:
                 options = "|".join(self.valid_options)
                 self.syntax = f"/{self.name}:{options}" if self.requires_args else f"/{self.name}[:{options}]"
             else:
                 self.syntax = f"/{self.name}:<value>" if self.requires_args else f"/{self.name}"
-    
+
     def is_valid_for_interface(self, interface_type: str) -> bool:
         """Check if command is valid for the given interface type.
-        
+
         Validates whether the command can be executed in the specified interface
         based on interface_restrictions. Commands without restrictions are
         available in all interfaces.
-        
+
         :param interface_type: Interface identifier ("cli", "openwebui", "api", etc.)
         :type interface_type: str
         :return: True if command is available in the interface, False otherwise
         :rtype: bool
-        
+
         Examples:
             Check CLI availability::
-            
+
                 if command.is_valid_for_interface("cli"):
                     # Command can be used in CLI
                     pass
@@ -324,27 +324,27 @@ class Command:
         if self.interface_restrictions is None:
             return True
         return interface_type in self.interface_restrictions
-    
+
     def validate_option(self, option: Optional[str]) -> bool:
         """Validate command arguments against defined constraints.
-        
+
         Performs validation of command arguments based on requires_args and
         valid_options settings. Used by the command registry to ensure
         proper command usage before execution.
-        
+
         :param option: Command argument to validate (None if no argument provided)
         :type option: Optional[str]
         :return: True if argument is valid, False if validation fails
         :rtype: bool
-        
+
         Validation Rules:
             - If requires_args=True, option cannot be None
             - If valid_options is set, option must be in the list
             - If no constraints, any option (including None) is valid
-        
+
         Examples:
             Validate planning command::
-            
+
                 # Command with valid_options=["on", "off"]
                 command.validate_option("on")    # True
                 command.validate_option("invalid")  # False
@@ -369,7 +369,7 @@ class ParsedCommand:
 
 class CommandExecutionError(Exception):
     """Exception raised during command execution."""
-    
+
     def __init__(self, message: str, command_name: str, suggestion: Optional[str] = None):
         super().__init__(message)
         self.command_name = command_name

@@ -37,16 +37,16 @@ from osprey.utils.config import get_provider_config
 
 def _is_typed_dict(cls) -> bool:
     """Check if a class is a TypedDict by examining its attributes.
-    
+
     TypedDict classes have specific attributes that distinguish them from regular
     classes and Pydantic models. This function performs a lightweight check
     without importing typing_extensions unnecessarily.
-    
+
     :param cls: Class to check for TypedDict characteristics
     :type cls: type
     :return: True if the class appears to be a TypedDict, False otherwise
     :rtype: bool
-    
+
     .. note::
        This check is based on the presence of __annotations__ and __total__
        attributes which are characteristic of TypedDict classes.
@@ -56,69 +56,69 @@ def _is_typed_dict(cls) -> bool:
 
 def _convert_typed_dict_to_pydantic(typed_dict_cls) -> Type[BaseModel]:
     """Convert a TypedDict class to a dynamically created Pydantic BaseModel.
-    
+
     This function enables seamless integration between TypedDict-based type hints
     and Pydantic-based structured output generation. It preserves field names and
     types while adding Pydantic validation and serialization capabilities.
-    
+
     The conversion process:
     1. Extracts field annotations from the TypedDict
     2. Creates Pydantic field definitions with descriptions
     3. Dynamically generates a new BaseModel class
     4. Preserves type information for validation
-    
+
     :param typed_dict_cls: TypedDict class to convert to Pydantic model
     :type typed_dict_cls: type
     :raises ValueError: If the provided class is not a valid TypedDict
     :return: Dynamically created Pydantic BaseModel with equivalent structure
     :rtype: Type[BaseModel]
-    
+
     .. note::
        All fields in the generated Pydantic model include basic descriptions.
        The original TypedDict class name is preserved with a "Pydantic" suffix.
-    
+
     .. seealso::
        :func:`_is_typed_dict` : TypedDict detection utility
        :func:`_handle_output_conversion` : Convert results back to dict format
     """
     if not _is_typed_dict(typed_dict_cls):
         raise ValueError(f"Expected TypedDict, got {type(typed_dict_cls)}")
-    
+
     # Get the annotations from the TypedDict
     annotations = getattr(typed_dict_cls, '__annotations__', {})
-    
+
     # Convert to Pydantic field definitions
     field_definitions = {}
     for field_name, field_type in annotations.items():
         # Create Pydantic fields - all optional for TypedDict compatibility
         field_definitions[field_name] = (field_type, Field(description=f"Field {field_name}"))
-    
+
     # Create the Pydantic model dynamically
     model_name = f"{typed_dict_cls.__name__}Pydantic"
     pydantic_model = create_model(model_name, **field_definitions)
-    
+
     return pydantic_model
 
 
 def _handle_output_conversion(result, is_typed_dict_output: bool):
     """Convert Pydantic model results back to dictionary format when appropriate.
-    
+
     This function handles the final step of TypedDict integration by converting
     Pydantic model instances back to plain dictionaries when the original
     output_model parameter was a TypedDict. This maintains API consistency
     and expected return types for users.
-    
+
     :param result: Model inference result, potentially a Pydantic model instance
     :type result: Any
     :param is_typed_dict_output: Whether original output_model was a TypedDict
     :type is_typed_dict_output: bool
     :return: Result converted to dict if needed, otherwise unchanged
     :rtype: Any
-    
+
     .. note::
        Only Pydantic BaseModel instances are converted to dictionaries.
        Other result types (strings, lists) are returned unchanged.
-    
+
     .. seealso::
        :func:`_convert_typed_dict_to_pydantic` : Initial TypedDict conversion
        :meth:`pydantic.BaseModel.model_dump` : Pydantic serialization method
@@ -133,11 +133,11 @@ logger = logging.getLogger(__name__)
 
 def _validate_proxy_url(proxy_url: str) -> bool:
     """Validate HTTP proxy URL format and accessibility.
-    
+
     Performs basic validation of proxy URL format to ensure it follows
     standard HTTP/HTTPS proxy URL patterns. This helps catch common
     configuration errors early and provides clear feedback.
-    
+
     :param proxy_url: Proxy URL to validate
     :type proxy_url: str
     :return: True if proxy URL appears valid, False otherwise
@@ -145,7 +145,7 @@ def _validate_proxy_url(proxy_url: str) -> bool:
     """
     if not proxy_url:
         return False
-    
+
     try:
         parsed = urlparse(proxy_url)
         # Check for valid scheme and netloc (host:port)
@@ -172,25 +172,25 @@ def get_chat_completion(
     temperature: float = 0.0,
 ) -> Union[str, BaseModel, list]:
     """Execute direct chat completion requests across multiple AI providers.
-    
+
     This function provides immediate access to LLM model inference with support for
     advanced features including extended thinking, structured outputs, and automatic
     TypedDict conversion. It handles provider-specific API differences, credential
     management, and HTTP proxy configuration transparently.
-    
+
     The function supports multiple interaction patterns:
     - Simple text-to-text completion for basic use cases
     - Structured output generation with Pydantic models or TypedDict
     - Extended thinking workflows for complex reasoning tasks
     - Enterprise proxy and timeout configuration
-    
+
     Provider-specific features:
     - **Anthropic**: Extended thinking with budget_tokens, content block responses
     - **Google**: Thinking configuration for enhanced reasoning
     - **OpenAI**: Structured outputs with beta chat completions API
     - **Ollama**: Local model inference with JSON schema validation
     - **CBORG**: OpenAI-compatible API with custom endpoints (LBNL-provided service)
-    
+
     :param message: Input prompt or message for the LLM model
     :type message: str
     :param max_tokens: Maximum tokens to generate in the response
@@ -219,20 +219,20 @@ def get_chat_completion(
     :raises ollama.ResponseError: For Ollama API-specific errors
     :return: Model response in format determined by provider and output_model settings
     :rtype: Union[str, BaseModel, list]
-    
+
     .. note::
        Extended thinking is currently supported by Anthropic (with budget_tokens)
        and Google (with thinking_config). Other providers will log warnings if
        thinking parameters are provided.
-    
+
     .. warning::
        When using structured outputs, ensure your prompt guides the model toward
        generating the expected structure. Not all models handle schema constraints
        equally well.
-    
+
     Examples:
         Simple text completion::
-        
+
             >>> from osprey.models import get_chat_completion
             >>> response = get_chat_completion(
             ...     message="Explain quantum computing in simple terms",
@@ -241,9 +241,9 @@ def get_chat_completion(
             ...     max_tokens=500
             ... )
             >>> print(response)
-            
+
         Extended thinking with Anthropic::
-        
+
             >>> response = get_chat_completion(
             ...     message="Solve this complex reasoning problem...",
             ...     provider="anthropic",
@@ -253,9 +253,9 @@ def get_chat_completion(
             ...     max_tokens=2000
             ... )
             >>> # Response includes thinking process and final answer
-            
+
         Structured output with Pydantic model::
-        
+
             >>> from pydantic import BaseModel
             >>> class AnalysisResult(BaseModel):
             ...     summary: str
@@ -269,9 +269,9 @@ def get_chat_completion(
             ...     output_model=AnalysisResult
             ... )
             >>> print(f"Confidence: {result.confidence}")
-            
+
         Using configuration dictionary::
-        
+
             >>> config = {
             ...     "provider": "ollama",
             ...     "model_id": "llama3.1:8b",
@@ -282,22 +282,22 @@ def get_chat_completion(
             ...     model_config=config,
             ...     base_url="http://localhost:11434"
             ... )
-    
+
     .. seealso::
        :func:`~factory.get_model` : Create model instances for PydanticAI agents
        :func:`configs.config.get_provider_config` : Provider configuration loading
        :class:`pydantic.BaseModel` : Base class for structured output models
        :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Complete model configuration and usage guide
     """
-    
+
     # Handle TypedDict to Pydantic conversion automatically
     original_output_model = output_model
     is_typed_dict_output = False
-    
+
     if output_model is not None and _is_typed_dict(output_model):
         is_typed_dict_output = True
         output_model = _convert_typed_dict_to_pydantic(output_model)
-    
+
     # Configuration setup - handle both model_config set and not set cases
     if model_config is not None:
         provider = model_config.get("provider", provider)
@@ -325,10 +325,10 @@ def get_chat_completion(
     from osprey.registry import get_registry
     registry = get_registry()
     provider_class = registry.get_provider(provider)
-    
+
     if not provider_class:
         raise ValueError(f"Unknown provider: {provider}")
-    
+
     # Validate requirements using provider metadata
     if provider_class.requires_api_key and not api_key:
         raise ValueError(f"API key required for {provider}")
@@ -336,7 +336,7 @@ def get_chat_completion(
         raise ValueError(f"Base URL required for {provider}")
     if provider_class.requires_model_id and not model_id:
         raise ValueError(f"Model ID required for {provider}")
-    
+
     # Set up HTTP client with proxy if needed
     http_client = None
     if provider_class.supports_proxy:
@@ -346,10 +346,10 @@ def get_chat_completion(
         else:
             if proxy_url:
                 logger.warning(f"Invalid HTTP_PROXY URL format '{proxy_url}', ignoring proxy configuration")
-    
+
     # Execute completion using provider adapter
     provider_instance = provider_class()
-    
+
     # Build kwargs for provider
     completion_kwargs = {
         "enable_thinking": enable_thinking,
@@ -359,7 +359,7 @@ def get_chat_completion(
         "http_client": http_client,
         "is_typed_dict_output": is_typed_dict_output,
     }
-    
+
     result = provider_instance.execute_completion(
         message=message,
         model_id=model_id,
@@ -369,6 +369,6 @@ def get_chat_completion(
         temperature=temperature,
         **completion_kwargs
     )
-    
+
     # Result is already handled by provider (TypedDict conversion if needed)
     return result 

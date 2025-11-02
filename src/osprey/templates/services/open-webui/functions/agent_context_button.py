@@ -36,19 +36,19 @@ class Action:
 
     def extract_context_summary_from_messages(self, messages: list) -> Optional[Dict[str, Any]]:
         """Extract agent context summary from assistant messages."""
-        
+
         try:
             logger.info(f"Extracting context from {len(messages)} messages")
-            
+
             # Look through messages in reverse order (most recent first)
             for i, message in enumerate(reversed(messages)):
                 try:
                     logger.debug(f"Checking message {i}: role={message.get('role')}, has_info={message.get('info') is not None}")
-                    
+
                     if message.get("role") == "assistant" and message.get("info"):
                         info_keys = list(message["info"].keys())
                         logger.debug(f"Message {i} info keys: {info_keys}")
-                        
+
                         # Check for context summary (check both old and new key names for compatibility)
                         if "als_assistant_agent_context" in message["info"]:
                             context_data = message["info"]["als_assistant_agent_context"]
@@ -58,14 +58,14 @@ class Action:
                             context_data = message["info"]["als_assistant_context_summary"]
                             logger.info(f"Found agent context with {len(context_data.get('context_details', {}))} categories")
                             return context_data
-                            
+
                 except Exception as e:
                     logger.error(f"Error processing message {i}: {e}")
                     continue
-            
+
             logger.info("No agent context found in any message")
             return None
-            
+
         except Exception as e:
             logger.error(f"Error extracting context from messages: {e}")
             import traceback
@@ -76,48 +76,48 @@ class Action:
         """Format the agent context summary as a well-structured markdown string."""
         # Handle both new and old data formats
         context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
-        
+
         if not context_summary or not context_data:
             return "# 🧠 ALS Assistant Agent Context\n\n> No context data available. The agent has not yet collected or processed any data."
-        
+
         # Header with overview - handle both new and old formats
         total_categories = context_summary.get("context_types_count") or len(context_data)
         total_items = context_summary.get("total_context_items", 0)
-        
+
         markdown = "# 🧠 ALS Assistant Agent Context\n\n"
         markdown += f"📊 **Available Context Categories:** {total_categories}\n"
         markdown += f"📋 **Total Context Items:** {total_items}\n\n"
-        
+
         categories = list(context_data.keys())
         if categories:
             markdown += f"**Categories:** {', '.join(categories)}\n\n"
-        
+
         markdown += "---\n\n"
-        
+
         # Process each context category
         for context_type, contexts_dict in context_data.items():
             # Category header
             category_emoji = self._get_category_emoji(context_type)
             markdown += f"## {category_emoji} {context_type.replace('_', ' ').title()}\n\n"
-            
+
             # Process each context item in this category
             for context_key, context_info in contexts_dict.items():
                 context_type_name = context_info.get("type", "Unknown")
                 markdown += f"### 🔹 {context_key}\n\n"
                 markdown += f"**Type:** {context_type_name}\n\n"
-                
+
                 # Create summary table
                 markdown = self._add_context_summary_table(markdown, context_info, user_valves)
-                
+
                 # Add detailed values if requested
                 if user_valves.show_detailed_values:
                     markdown = self._add_detailed_values(markdown, context_info, user_valves)
-                
+
                 markdown += "\n---\n\n"
-        
+
         # Footer
         markdown += "✨ *Agent context data available for use in subsequent queries*"
-        
+
         return markdown
 
     def _get_category_emoji(self, context_type: str) -> str:
@@ -139,16 +139,16 @@ class Action:
         """Add a summary table for the context item."""
         # Common fields
         summary_table = "| Field | Value |\n|-------|-------|\n"
-        
+
         # Type-specific summary information
         context_type = context_info.get("type", "Unknown")
-        
+
         if context_type == "PV Addresses":
             total_pvs = context_info.get("total_pvs", 0)
             summary_table += f"| **Total PVs** | {total_pvs} |\n"
             description = context_info.get("description", "N/A")
             summary_table += f"| **Description** | {description} |\n"
-            
+
         elif context_type == "Time Range":
             start_time = context_info.get("start_time", "N/A")
             end_time = context_info.get("end_time", "N/A")
@@ -156,11 +156,11 @@ class Action:
             summary_table += f"| **Start Time** | {start_time} |\n"
             summary_table += f"| **End Time** | {end_time} |\n"
             summary_table += f"| **Duration** | {duration} |\n"
-            
+
         elif context_type == "PV Values":
             pv_data = context_info.get("pv_data", {})
             summary_table += f"| **PV Count** | {len(pv_data)} |\n"
-            
+
         elif context_type == "Archiver Data":
             total_points = context_info.get("total_points", 0)
             pv_count = context_info.get("pv_count", 0)
@@ -168,7 +168,7 @@ class Action:
             summary_table += f"| **Total Points** | {total_points:,} |\n"
             summary_table += f"| **PV Count** | {pv_count} |\n"
             summary_table += f"| **Time Info** | {time_info} |\n"
-            
+
         elif context_type in ["Analysis Results", "Visualization Results", "Operation Results"]:
             field_count = context_info.get("field_count", 0)
             summary_table += f"| **Field Count** | {field_count} |\n"
@@ -178,7 +178,7 @@ class Action:
                 if len(available_fields) > 5:
                     fields_str += f" (and {len(available_fields) - 5} more)"
                 summary_table += f"| **Available Fields** | {fields_str} |\n"
-            
+
         elif context_type == "Memory Context":
             memory_count = context_info.get("memory_count", 0)
             oldest_memory = context_info.get("oldest_memory", "N/A")
@@ -186,17 +186,17 @@ class Action:
             summary_table += f"| **Memory Count** | {memory_count} |\n"
             summary_table += f"| **Oldest Memory** | {oldest_memory} |\n"
             summary_table += f"| **Newest Memory** | {newest_memory} |\n"
-            
+
         elif context_type == "Conversation Results":
             message_type = context_info.get("message_type", "N/A")
             summary_table += f"| **Message Type** | {message_type} |\n"
-        
+
         return markdown + summary_table + "\n"
 
     def _add_detailed_values(self, markdown: str, context_info: Dict[str, Any], user_valves) -> str:
         """Add detailed values section."""
         context_type = context_info.get("type", "Unknown")
-        
+
         if context_type == "PV Addresses":
             pv_list = context_info.get("pv_list", [])
             if pv_list:
@@ -206,7 +206,7 @@ class Action:
                 if len(pv_list) > user_valves.max_sample_items:
                     markdown += f"- *(and {len(pv_list) - user_valves.max_sample_items} more)*\n"
                 markdown += "\n"
-                
+
         elif context_type == "PV Values":
             pv_data = context_info.get("pv_data", {})
             if pv_data:
@@ -223,11 +223,11 @@ class Action:
                 if len(pv_data) > user_valves.max_sample_items:
                     markdown += f"- *(and {len(pv_data) - user_valves.max_sample_items} more)*\n"
                 markdown += "\n"
-                
+
         elif context_type == "Archiver Data":
             pv_names = context_info.get("pv_names", [])
             sample_values = context_info.get("sample_values", {})
-            
+
             if pv_names:
                 markdown += "**Available PVs:**\n"
                 for pv in pv_names[:user_valves.max_sample_items]:
@@ -240,7 +240,7 @@ class Action:
                 if len(pv_names) > user_valves.max_sample_items:
                     markdown += f"- *(and {len(pv_names) - user_valves.max_sample_items} more)*\n"
                 markdown += "\n"
-                
+
         elif context_type in ["Analysis Results", "Visualization Results", "Operation Results"]:
             results = context_info.get("results", {})
             if results:
@@ -257,7 +257,7 @@ class Action:
                 if len(results) > user_valves.max_sample_items:
                     markdown += f"- *(and {len(results) - user_valves.max_sample_items} more)*\n"
                 markdown += "\n"
-                
+
         elif context_type == "Memory Context":
             memories = context_info.get("memories", [])
             if memories:
@@ -269,14 +269,14 @@ class Action:
                 if len(memories) > user_valves.max_sample_items:
                     markdown += f"- *(and {len(memories) - user_valves.max_sample_items} more)*\n"
                 markdown += "\n"
-                
+
         elif context_type == "Conversation Results":
             full_response = context_info.get("full_response", "N/A")
             if full_response and len(full_response) > 200:
                 markdown += f"**Response Preview:** {full_response[:200]}...\n\n"
             elif full_response:
                 markdown += f"**Full Response:** {full_response}\n\n"
-        
+
         return markdown
 
     async def action(
@@ -304,10 +304,10 @@ class Action:
             # Log debug information about the request
             logger.info(f"Processing agent context request for user {__user__.get('name', 'unknown')}")
             logger.info(f"Message count: {len(body.get('messages', []))}")
-            
+
             # Extract context summary from the last assistant message
             context_summary = self.extract_context_summary_from_messages(body.get("messages", []))
-            
+
             if not context_summary:
                 logger.info("No agent context found in messages")
                 # Show no context popup
@@ -318,7 +318,7 @@ class Action:
                     if (existingPopup) {
                         existingPopup.remove();
                     }
-                    
+
                     // Create overlay
                     const overlay = document.createElement('div');
                     overlay.id = 'agent-context-popup';
@@ -334,7 +334,7 @@ class Action:
                         justify-content: center;
                         align-items: center;
                     `;
-                    
+
                     // Create popup content
                     const popup = document.createElement('div');
                     popup.style.cssText = `
@@ -349,13 +349,13 @@ class Action:
                         color: #333;
                         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                     `;
-                    
+
                     popup.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                             <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Assistant Agent Context</h2>
                             <button id="context-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                         </div>
-                        
+
                         <div style="text-align: center; padding: 40px 20px; color: #6b7280; font-size: 16px; line-height: 1.6;">
                             <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
                             <h3 style="margin: 0 0 16px 0; color: #374151; font-size: 18px; font-weight: 600;">No Agent Context Available</h3>
@@ -370,36 +370,36 @@ class Action:
                             <p style="margin: 0; color: #6b7280; font-style: italic;">Execute an ALS Assistant query that involves data collection or analysis to populate the agent context.</p>
                         </div>
                     `;
-                    
+
                     // Add event listeners
                     overlay.appendChild(popup);
                     document.body.appendChild(overlay);
-                    
+
                     // Close button
                     document.getElementById('context-close-btn').onclick = function() {
                         overlay.remove();
                     };
-                    
+
                     // Close on overlay click
                     overlay.onclick = function(e) {
                         if (e.target === overlay) {
                             overlay.remove();
                         }
                     };
-                    
+
                 } catch (error) {
                     console.error('Error creating context popup:', error);
                     alert('Error displaying agent context');
                 }
                 """
-                
+
                 await __event_call__(
                     {
                         "type": "execute",
                         "data": {"code": no_context_js},
                     }
                 )
-                
+
                 await __event_emitter__(
                     {
                         "type": "status",
@@ -407,19 +407,19 @@ class Action:
                     }
                 )
                 return
-            
+
             logger.info(f"Found agent context: {list(context_summary.keys())}")
-            
+
             await __event_emitter__(
                 {
                     "type": "status",
                     "data": {"description": "Formatting agent context...", "done": False},
                 }
             )
-            
+
             # Format the context summary as HTML for the popup
             formatted_context = self.format_context_summary_html(context_summary, user_valves)
-            
+
             # Create JavaScript to show popup with context
             context_js = f"""
             try {{
@@ -428,7 +428,7 @@ class Action:
                 if (existingPopup) {{
                     existingPopup.remove();
                 }}
-                
+
                 // Create overlay
                 const overlay = document.createElement('div');
                 overlay.id = 'agent-context-popup';
@@ -444,7 +444,7 @@ class Action:
                     justify-content: center;
                     align-items: center;
                 `;
-                
+
                 // Create popup content
                 const popup = document.createElement('div');
                 popup.style.cssText = `
@@ -459,60 +459,60 @@ class Action:
                     color: #333;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 `;
-                
+
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                         <h2 style="margin: 0; color: #374151; font-size: 20px; font-weight: 600;">🧠 ALS Assistant Agent Context</h2>
                         <button id="context-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
-                    
+
                     <div style="line-height: 1.6;">
                         {formatted_context}
                     </div>
                 `;
-                
+
                 // Add event listeners
                 overlay.appendChild(popup);
                 document.body.appendChild(overlay);
-                
+
                 // Close button
                 document.getElementById('context-close-btn').onclick = function() {{
                     overlay.remove();
                 }};
-                
+
                 // Close on overlay click
                 overlay.onclick = function(e) {{
                     if (e.target === overlay) {{
                         overlay.remove();
                     }}
                 }};
-                
+
             }} catch (error) {{
                 console.error('Error creating context popup:', error);
                 alert('Error displaying agent context: ' + error.message);
             }}
             """
-            
+
             await __event_call__(
                 {
                     "type": "execute",
                     "data": {"code": context_js},
                 }
             )
-            
+
             await __event_emitter__(
                 {
                     "type": "status",
                     "data": {"description": "Agent context displayed", "done": True},
                 }
             )
-            
+
             context_categories = len(context_summary.get("context_details", {}))
             logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Agent context popup displayed successfully ({context_categories} categories)")
 
         except Exception as e:
             logger.error(f"Error processing agent context: {e}")
-            
+
             error_js = f"""
             try {{
                 // Remove any existing context popup
@@ -520,7 +520,7 @@ class Action:
                 if (existingPopup) {{
                     existingPopup.remove();
                 }}
-                
+
                 // Create overlay
                 const overlay = document.createElement('div');
                 overlay.id = 'agent-context-popup';
@@ -536,7 +536,7 @@ class Action:
                     justify-content: center;
                     align-items: center;
                 `;
-                
+
                 // Create popup content
                 const popup = document.createElement('div');
                 popup.style.cssText = `
@@ -551,49 +551,49 @@ class Action:
                     color: #333;
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
                 `;
-                
+
                 popup.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                         <h2 style="margin: 0; color: #dc2626; font-size: 20px; font-weight: 600;">❌ Error Processing Agent Context</h2>
                         <button id="context-close-btn" style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">Close</button>
                     </div>
-                    
+
                     <div style="padding: 20px; background: #fef2f2; border-radius: 6px; border: 1px solid #fecaca;">
                         <p style="margin: 0 0 16px 0; color: #dc2626; font-weight: 500;">An error occurred while processing the agent context:</p>
                         <pre style="margin: 0; font-family: monospace; background: #fff; padding: 12px; border-radius: 4px; border: 1px solid #e5e7eb; color: #374151; font-size: 13px; overflow-x: auto;">{str(e)}</pre>
                         <p style="margin: 16px 0 0 0; color: #6b7280; font-size: 14px;">Please check the logs for more details.</p>
                     </div>
                 `;
-                
+
                 // Add event listeners
                 overlay.appendChild(popup);
                 document.body.appendChild(overlay);
-                
+
                 // Close button
                 document.getElementById('context-close-btn').onclick = function() {{
                     overlay.remove();
                 }};
-                
+
                 // Close on overlay click
                 overlay.onclick = function(e) {{
                     if (e.target === overlay) {{
                         overlay.remove();
                     }}
                 }};
-                
+
             }} catch (error) {{
                 console.error('Error creating error popup:', error);
                 alert('Error displaying agent context error: ' + error.message);
             }}
             """
-            
+
             await __event_call__(
                 {
                     "type": "execute",
                     "data": {"code": error_js},
                 }
             )
-            
+
             await __event_emitter__(
                 {
                     "type": "status",
@@ -605,14 +605,14 @@ class Action:
         """Format the agent context summary as HTML for the popup display."""
         # Handle both new and old data formats
         context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
-        
+
         if not context_summary or not context_data:
             return '<div style="text-align: center; padding: 40px; color: #6b7280; font-style: italic;">No context data available.</div>'
-        
+
         # Header with overview - handle both new and old formats
         total_categories = context_summary.get("context_types_count") or len(context_data)
         total_items = context_summary.get("total_context_items", 0)
-        
+
         html = f"""
         <div style="margin-bottom: 24px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -630,13 +630,13 @@ class Action:
                 </div>
             </div>
         """
-        
+
         categories = list(context_data.keys())
         if categories:
             html += f'<div style="font-size: 14px; color: #4b5563;"><strong>Categories:</strong> {", ".join(categories)}</div>'
-        
+
         html += '</div>'
-        
+
         # Process each context category
         for context_type, contexts_dict in context_data.items():
             # Category header
@@ -650,7 +650,7 @@ class Action:
                 </div>
                 <div style="padding: 20px;">
             """
-            
+
             # Process each context item in this category
             for context_key, context_info in contexts_dict.items():
                 context_type_name = context_info.get("type", "Unknown")
@@ -663,18 +663,18 @@ class Action:
                         <strong>Type:</strong> {context_type_name}
                     </div>
                 """
-                
+
                 # Create summary table
                 html += self._add_context_summary_table_html(context_info, user_valves)
-                
+
                 # Add detailed values if requested
                 if user_valves.show_detailed_values:
                     html += self._add_detailed_values_html(context_info, user_valves)
-                
+
                 html += '</div>'
-            
+
             html += '</div></div>'
-        
+
         return html
 
     def _add_context_summary_table_html(self, context_info: Dict[str, Any], user_valves) -> str:
@@ -691,10 +691,10 @@ class Action:
                 </thead>
                 <tbody>
         """
-        
+
         # Type-specific summary information
         context_type = context_info.get("type", "Unknown")
-        
+
         if context_type == "PV Addresses":
             total_pvs = context_info.get("total_pvs", 0)
             description = context_info.get("description", "N/A")
@@ -708,7 +708,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{description}</td>
                 </tr>
             """
-            
+
         elif context_type == "Time Range":
             start_time = context_info.get("start_time", "N/A")
             end_time = context_info.get("end_time", "N/A")
@@ -727,7 +727,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{duration}</td>
                 </tr>
             """
-            
+
         elif context_type == "PV Values":
             pv_data = context_info.get("pv_data", {})
             summary_html += f"""
@@ -736,7 +736,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{len(pv_data)}</td>
                 </tr>
             """
-            
+
         elif context_type == "Archiver Data":
             total_points = context_info.get("total_points", 0)
             pv_count = context_info.get("pv_count", 0)
@@ -755,7 +755,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{time_info}</td>
                 </tr>
             """
-            
+
         elif context_type in ["Analysis Results", "Visualization Results", "Operation Results"]:
             field_count = context_info.get("field_count", 0)
             summary_html += f"""
@@ -775,7 +775,7 @@ class Action:
                         <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{fields_str}</td>
                     </tr>
                 """
-            
+
         elif context_type == "Memory Context":
             memory_count = context_info.get("memory_count", 0)
             oldest_memory = context_info.get("oldest_memory", "N/A")
@@ -794,7 +794,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{newest_memory}</td>
                 </tr>
             """
-            
+
         elif context_type == "Conversation Results":
             message_type = context_info.get("message_type", "N/A")
             summary_html += f"""
@@ -803,7 +803,7 @@ class Action:
                     <td style="padding: 8px 12px; border: 1px solid #cbd5e1; color: #1f2937;">{message_type}</td>
                 </tr>
             """
-        
+
         summary_html += '</tbody></table></div>'
         return summary_html
 
@@ -811,7 +811,7 @@ class Action:
         """Add detailed values section in HTML format."""
         context_type = context_info.get("type", "Unknown")
         html = ""
-        
+
         if context_type == "PV Addresses":
             pv_list = context_info.get("pv_list", [])
             if pv_list:
@@ -825,7 +825,7 @@ class Action:
                 if len(pv_list) > user_valves.max_sample_items:
                     html += f'<div style="color: #6b7280; font-style: italic;">• (and {len(pv_list) - user_valves.max_sample_items} more)</div>'
                 html += '</div></div>'
-                
+
         elif context_type == "PV Values":
             pv_data = context_info.get("pv_data", {})
             if pv_data:
@@ -846,11 +846,11 @@ class Action:
                 if len(pv_data) > user_valves.max_sample_items:
                     html += f'<div style="color: #6b7280; font-style: italic; text-align: center; margin-top: 8px;">• (and {len(pv_data) - user_valves.max_sample_items} more)</div>'
                 html += '</div></div>'
-                
+
         elif context_type == "Archiver Data":
             pv_names = context_info.get("pv_names", [])
             sample_values = context_info.get("sample_values", {})
-            
+
             if pv_names:
                 html += """
                 <div style="margin-top: 16px;">
@@ -867,7 +867,7 @@ class Action:
                 if len(pv_names) > user_valves.max_sample_items:
                     html += f'<div style="color: #6b7280; font-style: italic; text-align: center; margin-top: 8px;">• (and {len(pv_names) - user_valves.max_sample_items} more)</div>'
                 html += '</div></div>'
-                
+
         elif context_type in ["Analysis Results", "Visualization Results", "Operation Results"]:
             results = context_info.get("results", {})
             if results:
@@ -889,7 +889,7 @@ class Action:
                 if len(results) > user_valves.max_sample_items:
                     html += f'<div style="color: #6b7280; font-style: italic; text-align: center; margin-top: 8px;">• (and {len(results) - user_valves.max_sample_items} more)</div>'
                 html += '</div></div>'
-                
+
         elif context_type == "Memory Context":
             memories = context_info.get("memories", [])
             if memories:
@@ -905,7 +905,7 @@ class Action:
                 if len(memories) > user_valves.max_sample_items:
                     html += f'<div style="color: #6b7280; font-style: italic; text-align: center; margin-top: 8px;">• (and {len(memories) - user_valves.max_sample_items} more)</div>'
                 html += '</div></div>'
-                
+
         elif context_type == "Conversation Results":
             full_response = context_info.get("full_response", "N/A")
             if full_response:
@@ -919,7 +919,7 @@ class Action:
                 else:
                     html += f'<div style="color: #1f2937; line-height: 1.4;"><strong>Full Response:</strong> {full_response}</div>'
                 html += '</div></div>'
-        
+
         return html
 
 

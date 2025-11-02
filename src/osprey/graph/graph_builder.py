@@ -69,9 +69,9 @@ def create_graph(
         - async for chunk in graph.astream(input, config, stream_mode="custom"):
     # OR for multiple modes: stream_mode=["custom", "values"]
     """
-    
+
     logger.info("Creating framework graph using registry components")
-        
+
     # Create default checkpointer if none provided
     if checkpointer is None:
         if use_postgres:
@@ -92,64 +92,64 @@ def create_graph(
         # User provided checkpointer
         checkpointer_type = type(checkpointer).__name__
         logger.info(f"Using provided {checkpointer_type} checkpointer")
-    
+
     # Get all nodes from registry (infrastructure + capabilities)
     all_nodes = registry.get_all_nodes().items()  # Get (name, callable) pairs
-    
+
     logger.info(f"Building graph with {len(all_nodes)} nodes from registry")
-    
+
     # Validate registry has required nodes
     if len(all_nodes) == 0:
         raise GraphBuildError(
             "Registry contains no nodes. Please ensure applications are properly configured and loaded."
         )
-    
+
     node_names = [name for name, _ in all_nodes]
-    
+
     # Check for task_extraction node (required for entry point)
     if "task_extraction" not in node_names:
         raise GraphBuildError(
             f"Registry missing required 'task_extraction' node. Available nodes: {node_names}"
         )
-    
+
     # Create StateGraph with LangGraph-native TypedDict state
     workflow = StateGraph(AgentState)
-    
+
     # Add all nodes to workflow - registry provides (name, callable) pairs
     for name, node_callable in all_nodes:
         # All node callables from registry are functions (from decorators)
         workflow.add_node(name, node_callable)
         logger.debug(f"Added node: {name}")
-    
+
     # Set up routing - router handles everything
     _setup_router_controlled_flow(workflow, node_names)
-    
+
     # Compile with LangGraph native features - async checkpointing always enabled
     compile_kwargs = {
         "debug": enable_debug,
         "checkpointer": checkpointer
     }
-    
+
     compiled_graph = workflow.compile(**compile_kwargs)
-    
+
     # Final success message with correct checkpointer type
     checkpointer_type = type(checkpointer).__name__
     mode = "production" if use_postgres or checkpointer_type == "PostgresSaver" else "R&D"
     logger.success(f"Successfully created async framework graph with {len(all_nodes)} nodes and {checkpointer_type} checkpointing enabled ({mode} mode)")
-    
+
     return compiled_graph
 
 
 def _setup_router_controlled_flow(workflow: StateGraph, node_names):
     """Set up router-controlled execution flow with router as central decision authority."""
-    
+
     # Entry point is router - the central decision-making authority
     workflow.set_entry_point("router")
-    
+
     # Build routing map from all node names (router can route to any registered node)
     routing_map = {name: name for name in node_names}
     routing_map["END"] = END
-    
+
     # Add routing logic - router is the central hub
     for name in node_names:
         if name == "router":
@@ -161,7 +161,7 @@ def _setup_router_controlled_flow(workflow: StateGraph, node_names):
         else:
             # All business logic nodes route back to router for next decision
             workflow.add_edge(name, "router")
-    
+
     logger.debug("Set up router-controlled execution flow with router as central decision authority")
 
 
@@ -174,21 +174,21 @@ def _setup_router_controlled_flow(workflow: StateGraph, node_names):
 def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseCheckpointSaver:
     """
     Create async PostgreSQL checkpointer for production use.
-    
+
     This is the default production checkpointer.
-    
+
     Args:
         db_uri: PostgreSQL connection URI. If None, attempts to get from environment
                 or uses local development database.
-    
+
     Returns:
         BaseCheckpointSaver: Configured async PostgreSQL checkpointer
-        
+
     Raises:
         ImportError: If required dependencies are not installed
         Exception: If connection fails
     """
-    
+
     # Get database URI from parameter, environment, or default
     if db_uri is None:
         db_uri = os.getenv('POSTGRESQL_URI')
@@ -196,7 +196,7 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
             # Default to local development database
             db_uri = "postgresql://postgres:postgres@localhost:5432/alpha_berkeley"
             logger.warning(f"No PostgreSQL URI provided, using default: {db_uri}")
-    
+
     # Import required components
     try:
         from langgraph.checkpoint.postgres import PostgresSaver
@@ -207,7 +207,7 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
             f"Required PostgreSQL dependencies not installed: {e}. "
             "Install with: pip install langgraph-checkpoint-postgres psycopg[pool]"
         )
-    
+
     # Create sync connection pool for PostgresSaver
     try:
         # Use sync connection pool with proper configuration
@@ -221,16 +221,16 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
                 "prepare_threshold": 0,
             }
         )
-        
+
         # Create PostgresSaver with sync connection (works with async graphs)
         checkpointer = PostgresSaver(conn=sync_pool)
-        
+
         # Setup tables on first use
         checkpointer.setup()
-        
+
         logger.info(f"Created PostgreSQL checkpointer with sync connection pool")
         return checkpointer
-        
+
     except Exception as e:
         logger.error(f"Failed to create PostgreSQL checkpointer: {e}")
         raise
@@ -251,13 +251,13 @@ def create_memory_checkpointer() -> BaseCheckpointSaver:
 async def setup_postgres_checkpointer(checkpointer: BaseCheckpointSaver) -> None:
     """
     Set up PostgreSQL checkpointer by creating required tables.
-    
+
     This should be called once during application startup.
     """
     try:
         from langgraph.checkpoint.postgres import PostgresSaver
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-        
+
         if isinstance(checkpointer, PostgresSaver):
             # Sync checkpointer - setup is already called in create function
             logger.info("PostgreSQL checkpoint tables already set up (sync)")
@@ -267,7 +267,7 @@ async def setup_postgres_checkpointer(checkpointer: BaseCheckpointSaver) -> None
             logger.info("PostgreSQL checkpoint tables created/verified (async)")
         else:
             logger.warning("Checkpointer is not a PostgresSaver, skipping table creation")
-            
+
     except Exception as e:
         logger.error(f"Failed to set up PostgreSQL checkpointer: {e}")
         raise
