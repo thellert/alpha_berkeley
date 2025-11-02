@@ -9,8 +9,8 @@ import pytest
 from pathlib import Path
 from click.testing import CliRunner
 
-from framework.cli.templates import TemplateManager
-from framework.cli.init_cmd import init
+from osprey.cli.templates import TemplateManager
+from osprey.cli.init_cmd import init
 
 
 class TestTemplateManager:
@@ -123,7 +123,7 @@ class TestGeneratedRegistries:
         content = registry_file.read_text()
         
         # Should import helper
-        assert "from framework.registry import" in content
+        assert "from osprey.registry import" in content
         assert "extend_framework_registry" in content
         
         # Should use helper

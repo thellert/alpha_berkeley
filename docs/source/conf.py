@@ -60,9 +60,9 @@ def get_version_from_git():
         print("⚠️  Git not available, using fallback version")
         return '0.0.0-dev'
 
-project = 'Alpha Berkeley Framework'
-copyright = '2025, ALS Team'
-author = 'ALS Team'
+project = 'Osprey Framework'
+copyright = '2025, Osprey Developer Team'
+author = 'Osprey Developer Team'
 release = get_version_from_git()
 
 # -- General configuration ---------------------------------------------------
@@ -95,13 +95,13 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/thellert/alpha_berkeley",
+            "url": "https://github.com/als-apg/osprey",
             "icon": "fa-brands fa-github",
         },
     ],
     # Using clean text-only logo for proper spacing
     "logo": {
-        "text": "Alpha Berkeley Framework",
+        "text": "Osprey Framework",
     },
     "show_toc_level": 2,
     "navbar_align": "left",

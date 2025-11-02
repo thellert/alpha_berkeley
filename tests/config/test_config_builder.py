@@ -10,7 +10,7 @@ import tempfile
 import yaml
 from pathlib import Path
 
-from framework.utils.config import ConfigBuilder, get_config_value
+from osprey.utils.config import ConfigBuilder, get_config_value
 
 
 class TestConfigBuilder:

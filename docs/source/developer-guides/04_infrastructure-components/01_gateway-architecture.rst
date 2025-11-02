@@ -1,7 +1,7 @@
 Gateway Architecture
 ====================
 
-.. currentmodule:: framework.infrastructure.gateway
+.. currentmodule:: osprey.infrastructure.gateway
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -32,7 +32,7 @@ Architecture
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway
+   from osprey.infrastructure.gateway import Gateway
    
    # Universal pattern for all interfaces
    gateway = Gateway()
@@ -230,10 +230,10 @@ Approval Workflow Integration
 Gateway automatically detects approval responses using LLM classification and creates resume commands:
 
 **LLM-Powered Approval Detection:**
-   Uses the configured ``approval`` model from ``framework.models`` to classify user responses as approval or rejection.
+   Uses the configured ``approval`` model from ``osprey.models`` to classify user responses as approval or rejection.
 
 **Approval Model Configuration:**
-   Configured in ``src/framework/config.yml`` under ``framework.models.approval`` (Ollama with Mistral 7B by default).
+   Configured in ``src/osprey/config.yml`` under ``osprey.models.approval`` (Ollama with Mistral 7B by default).
 
 **Fail-Safe Behavior:**
    If LLM classification fails for any reason, the system defaults to "not approved" and logs a clear warning message.
@@ -267,7 +267,7 @@ Validation
 
 The Gateway pattern is validated by existing interfaces:
 
-- **CLI Interface** (``interfaces/CLI/direct_conversation.py``)
+- **CLI Interface** (``interfaces/cli/direct_conversation.py``)
 - **OpenWebUI Pipeline** (``interfaces/openwebui/main.py``)
 
 Both follow the documented patterns exactly, providing real-world validation.
@@ -321,7 +321,7 @@ Complete CLI interface using Gateway:
                
                print(f"Agent: {self._extract_message(response)}")
 
-Gateway Architecture provides the foundation for consistent, reliable message processing across all interfaces in the Alpha Berkeley Framework.
+Gateway Architecture provides the foundation for consistent, reliable message processing across all interfaces in the Osprey Framework.
 
 .. seealso::
 

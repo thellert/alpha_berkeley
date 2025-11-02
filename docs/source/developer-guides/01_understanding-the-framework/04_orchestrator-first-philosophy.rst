@@ -19,7 +19,7 @@ Orchestrator-First Architecture: Upfront Planning in Practice
 The Orchestrator-First Approach
 ===============================
 
-The Alpha Berkeley Framework implements an **orchestrator-first architecture** where execution plans are created upfront before any capability execution begins. This contrasts with reactive agentic patterns that make decisions step-by-step during execution.
+The Osprey Framework implements an **orchestrator-first architecture** where execution plans are created upfront before any capability execution begins. This contrasts with reactive agentic patterns that make decisions step-by-step during execution.
 
 **Core Components:**
 
@@ -36,8 +36,8 @@ Basic Structure
 
 .. code-block:: python
 
-   from framework.infrastructure.orchestration_node import OrchestrationNode
-   from framework.base.planning import ExecutionPlan, PlannedStep
+   from osprey.infrastructure.orchestration_node import OrchestrationNode
+   from osprey.base.planning import ExecutionPlan, PlannedStep
    
    @infrastructure_node
    class OrchestrationNode(BaseInfrastructureNode):
@@ -75,8 +75,8 @@ The orchestrator uses LLM calls to create structured execution plans:
 
    # Real implementation from orchestration_node.py
    async def create_system_prompt() -> str:
-       # Get framework prompt builder
-       prompt_provider = get_framework_prompts()
+       # Get osprey prompt builder
+       prompt_provider = get_osprey_prompts()
        orchestrator_builder = prompt_provider.get_orchestrator_prompt_builder()
        
        # Create context-aware system instructions
@@ -90,7 +90,7 @@ The orchestrator uses LLM calls to create structured execution plans:
        return system_instructions
 
    # Generate plan with single LLM call
-   model_config = get_model_config("framework", "orchestrator")
+   model_config = get_model_config("osprey", "orchestrator")
    message = f"{system_prompt}\n\nTASK TO PLAN: {current_task}"
    
    execution_plan = await asyncio.to_thread(

@@ -4,7 +4,7 @@ Registry System
 
 Centralized component registry with configuration-driven application loading, convention-based module discovery, and explicit component registration.
 
-.. currentmodule:: framework.registry
+.. currentmodule:: osprey.registry
 
 Core Registry Classes
 =====================
@@ -310,7 +310,7 @@ Registry Architecture
 
 The registry system uses a two-tier architecture with configuration-driven application loading:
 
-**Framework Registry:** Core infrastructure loaded from ``framework.registry.registry``
+**Framework Registry:** Core infrastructure loaded from ``osprey.registry.registry``
 
 **Application Registries:** Domain-specific components from ``applications.{app}.registry`` (applications must be listed in global configuration)
 

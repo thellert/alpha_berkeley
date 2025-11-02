@@ -1,7 +1,7 @@
 Orchestrator Planning
 =====================
 
-.. currentmodule:: framework.infrastructure.orchestration_node
+.. currentmodule:: osprey.infrastructure.orchestration_node
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -145,7 +145,7 @@ Orchestrator generates plans using comprehensive prompts with capability context
        execution_plan = await asyncio.to_thread(
            get_chat_completion,
            message=f"{system_instructions}\n\nTASK TO PLAN: {current_task}",
-           model_config=get_model_config("framework", "orchestrator"),
+           model_config=get_model_config("osprey", "orchestrator"),
            output_model=ExecutionPlan
        )
        

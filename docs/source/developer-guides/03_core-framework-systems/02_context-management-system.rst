@@ -2,9 +2,9 @@
 Context Management System
 =========================
 
-.. currentmodule:: framework.context
+.. currentmodule:: osprey.context
 
-The Alpha Berkeley Framework's context management system provides type-safe data sharing between capabilities using Pydantic for automatic serialization and LangGraph-native dictionary storage.
+The Osprey Framework's context management system provides type-safe data sharing between capabilities using Pydantic for automatic serialization and LangGraph-native dictionary storage.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -60,7 +60,7 @@ Context classes define the structure of data shared between capabilities:
 
 .. code-block:: python
 
-   from framework.context import CapabilityContext
+   from osprey.context import CapabilityContext
    from typing import List, Optional, ClassVar
    
    class PVAddresses(CapabilityContext):
@@ -244,11 +244,11 @@ Common Issues
 **Context Window Management:**
 - Use ``recursively_summarize_data()`` utility function for large nested data structures
 - Automatically truncates large lists and dictionaries to prevent LLM context window overflow
-- Available from ``framework.context.context_manager`` for use in ``get_summary()`` methods
+- Available from ``osprey.context.context_manager`` for use in ``get_summary()`` methods
 
 .. code-block:: python
 
-   from framework.context.context_manager import recursively_summarize_data
+   from osprey.context.context_manager import recursively_summarize_data
    
    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
        """Human-readable summary with automatic data truncation."""

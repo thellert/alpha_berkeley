@@ -25,8 +25,8 @@ Here's a minimal example of creating a custom prompt provider:
 
 .. code-block:: python
 
-   from framework.prompts import FrameworkPromptBuilder, FrameworkPromptProvider
-   from framework.prompts.defaults import DefaultPromptProvider
+   from osprey.prompts import FrameworkPromptBuilder, FrameworkPromptProvider
+   from osprey.prompts.defaults import DefaultPromptProvider
    
    class MyDomainPromptBuilder(FrameworkPromptBuilder):
        def get_role_definition(self) -> str:
@@ -271,48 +271,48 @@ The framework provides individual default prompt builder implementations organiz
       :class: natural-width
 
       .. tab-item:: Orchestrator
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/orchestrator.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/orchestrator.py
             :language: python
 
       .. tab-item:: Task Extraction
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/task_extraction.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/task_extraction.py
             :language: python
 
       .. tab-item:: Classification
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/classification.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/classification.py
             :language: python
 
       .. tab-item:: Response Generation
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/response_generation.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/response_generation.py
             :language: python
 
       .. tab-item:: Error Analysis
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/error_analysis.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/error_analysis.py
             :language: python
 
       .. tab-item:: Clarification
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/clarification.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/clarification.py
             :language: python
 
       .. tab-item:: Memory Extraction
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/memory_extraction.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/memory_extraction.py
             :language: python
 
       .. tab-item:: Time Range Parsing
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/time_range_parsing.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/time_range_parsing.py
             :language: python
 
       .. tab-item:: Python
-      
-         .. literalinclude:: ../../../../src/framework/prompts/defaults/python.py
+
+         .. literalinclude:: ../../../../src/osprey/prompts/defaults/python.py
             :language: python
 
 Registration Patterns
@@ -325,7 +325,7 @@ Basic Registration
 
 .. code-block:: python
 
-   from framework.prompts.loader import register_framework_prompt_provider
+   from osprey.prompts.loader import register_framework_prompt_provider
    from applications.myapp.framework_prompts import MyAppPromptProvider
    
    # During application initialization
@@ -339,7 +339,7 @@ For automatic discovery, include prompt providers in your application registry:
 .. code-block:: python
 
    # In applications/myapp/registry.py
-   from framework.registry import RegistryConfig, FrameworkPromptProviderRegistration
+   from osprey.registry import RegistryConfig, FrameworkPromptProviderRegistration
    
    class MyAppRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
@@ -370,7 +370,7 @@ For deployments with multiple applications, you can access specific providers:
 
 .. code-block:: python
 
-   from framework.prompts import get_framework_prompts
+   from osprey.prompts import get_framework_prompts
    
    # Access specific application's prompts
    als_provider = get_framework_prompts("als_assistant")
@@ -386,7 +386,7 @@ Override only specific builders while inheriting others:
 
 .. code-block:: python
 
-   from framework.prompts.defaults import DefaultPromptProvider
+   from osprey.prompts.defaults import DefaultPromptProvider
    
    class MyAppPromptProvider(DefaultPromptProvider):
        def __init__(self):

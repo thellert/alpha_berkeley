@@ -11,7 +11,7 @@ Configuration System
 
 Configuration system with YAML loading, environment resolution, and seamless LangGraph integration.
 
-.. currentmodule:: framework.utils.config
+.. currentmodule:: osprey.utils.config
 
 Core Classes
 ============
@@ -39,11 +39,11 @@ Primary Access Functions
 
    .. code-block:: python
 
-      from framework.utils.config import get_model_config
-      
+      from osprey.utils.config import get_model_config
+
       # Use specific project's config
       model = get_model_config("orchestrator", config_path="~/project/config.yml")
-      
+
       # Default behavior (searches current directory)
       model = get_model_config("orchestrator")
 
@@ -134,7 +134,7 @@ Internal Implementation
 Configuration Sections Reference
 =================================
 
-This section provides a complete reference for all configuration sections available in the Alpha Berkeley Framework.
+This section provides a complete reference for all configuration sections available in the Osprey Framework.
 
 .. admonition:: 📖 Understanding Configuration Architecture
    :class: note
@@ -607,7 +607,7 @@ Services use simple names that match their configuration keys:
 **Details:**
 
 - Services listed in ``deployed_services`` must be defined in the ``services:`` section
-- Only listed services will be deployed when running ``framework deploy up``
+- Only listed services will be deployed when running ``osprey deploy up``
 - Service names are simple strings matching configuration keys
 - See :doc:`../../developer-guides/05_production-systems/05_container-and-deployment` for complete deployment guide
 
@@ -703,13 +703,13 @@ Framework Models
 
 **Type:** Object (nested)
 
-**Location:** ``src/framework/config.yml`` (defaults), can override in root or application
+**Location:** ``src/osprey/config.yml`` (defaults), can override in root or application
 
 **Purpose:** Model configurations for framework infrastructure components.
 
 .. code-block:: yaml
 
-   # In src/framework/config.yml
+   # In src/osprey/config.yml
    framework:
      models:
        orchestrator:
@@ -972,7 +972,7 @@ logging Colors
 
 .. code-block:: yaml
 
-   # Framework colors (src/framework/config.yml)
+   # Framework colors (src/osprey/config.yml)
    logging:
      framework:
        logging_colors:
@@ -1015,7 +1015,7 @@ Container service definitions.
 Framework Services
 ------------------
 
-**Location:** ``src/framework/config.yml``
+**Location:** ``src/osprey/config.yml``
 
 **Purpose:** Define framework infrastructure services.
 
@@ -1024,7 +1024,7 @@ Framework Services
    framework:
      services:
        jupyter:
-         path: ./services/framework/jupyter
+         path: ./services/osprey/jupyter
          containers:
            read:
              name: jupyter-read
@@ -1042,13 +1042,13 @@ Framework Services
          render_kernel_templates: true
        
        open_webui:
-         path: ./services/framework/open-webui
+         path: ./services/osprey/open-webui
          hostname: appsdev2
          port_host: 8080
          port_container: 8080
        
        pipelines:
-         path: ./services/framework/pipelines
+         path: ./services/osprey/pipelines
          port_host: 9099
          port_container: 9099
          copy_src: true
@@ -1333,12 +1333,12 @@ Application Configuration Example
 
    :doc:`../../developer-guides/03_core-framework-systems/06_configuration-architecture`
        Complete guide to configuration architecture, flat structure, and best practices
-   
-   :class:`framework.state.StateManager`
+
+   :class:`osprey.state.StateManager`
        State management utilities that use configuration
-   
+
    :doc:`02_state_and_context`
        State and context systems that depend on configuration
-   
+
    :doc:`../../developer-guides/05_production-systems/05_container-and-deployment`
        Container deployment and service configuration

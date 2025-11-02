@@ -2,9 +2,9 @@
 State Management Architecture
 =============================
 
-.. currentmodule:: framework.state
+.. currentmodule:: osprey.state
 
-The Alpha Berkeley Framework implements a sophisticated state management system built on LangGraph's native patterns for optimal performance and compatibility.
+The Osprey Framework implements a sophisticated state management system built on LangGraph's native patterns for optimal performance and compatibility.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -106,7 +106,7 @@ StateManager provides the primary interface for state creation and management th
 
 .. code-block:: python
 
-   from framework.state import StateManager
+   from osprey.state import StateManager
    
    # Create fresh state for new conversation
    fresh_state = StateManager.create_fresh_state(
@@ -230,8 +230,8 @@ Working Example
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway
-   from framework.graph import create_graph
+   from osprey.infrastructure.gateway import Gateway
+   from osprey.graph import create_graph
    
    async def process_message():
        gateway = Gateway()

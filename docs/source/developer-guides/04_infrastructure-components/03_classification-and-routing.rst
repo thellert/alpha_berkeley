@@ -1,7 +1,7 @@
 Classification and Routing
 ===========================
 
-.. currentmodule:: framework.infrastructure.classifier
+.. currentmodule:: osprey.infrastructure.classifier
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary

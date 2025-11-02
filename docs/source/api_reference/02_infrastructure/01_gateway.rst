@@ -1,9 +1,9 @@
 Gateway
 =======
 
-.. currentmodule:: framework.infrastructure.gateway
+.. currentmodule:: osprey.infrastructure.gateway
 
-The Gateway provides the single entry point for all message processing in the Alpha Berkeley Framework. All interfaces (CLI, OpenWebUI, etc.) should call ``Gateway.process_message()``.
+The Gateway provides the single entry point for all message processing in the Osprey Framework. All interfaces (CLI, OpenWebUI, etc.) should call ``Gateway.process_message()``.
 
 .. note::
    The Gateway operates external to the compiled graph by design, enabling it to perform
@@ -75,9 +75,9 @@ The Gateway handles:
 - Clean separation of concerns with single responsibility
 
 .. seealso::
-   
-   :class:`~framework.state.AgentState`
+
+   :class:`~osprey.state.AgentState`
        Core state management system used by Gateway
-   
-   :class:`~framework.state.StateManager`
+
+   :class:`~osprey.state.StateManager`
        Factory functions for creating fresh state instances

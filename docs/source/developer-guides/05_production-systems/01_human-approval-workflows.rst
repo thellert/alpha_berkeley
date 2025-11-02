@@ -99,10 +99,10 @@ Integrate approval workflows into capabilities using the framework's approval fu
 
 .. code-block:: python
 
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
-   from framework.context import ContextManager
-   from framework.approval import (
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState
+   from osprey.context import ContextManager
+   from osprey.approval import (
        create_code_approval_interrupt,
        get_approval_resume_data,
        get_python_execution_evaluator
@@ -310,10 +310,10 @@ Troubleshooting
 
    # Enable detailed approval logging
    import logging
-   logging.getLogger("framework.approval").setLevel(logging.DEBUG)
+   logging.getLogger("osprey.approval").setLevel(logging.DEBUG)
    
    # Check approval configuration
-   from framework.approval import get_approval_manager
+   from osprey.approval import get_approval_manager
    manager = get_approval_manager()
    config_summary = manager.get_config_summary()
    print(f"Approval config: {config_summary}")

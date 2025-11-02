@@ -74,7 +74,7 @@ This production deployment demonstrates our proposed architecture for advanced a
    * **Complex Control Systems**: Facilities with large numbers of controllable parameters and monitoring points
    * **Time-Critical Decision Making**: Operations requiring rapid response to changing conditions
 
-   The Alpha Berkeley Framework's architecture ensures that these patterns can be implemented across diverse scientific domains while maintaining the transparency, safety, and reliability demonstrated at the ALS. In practice, deploying the ALS Assistant to a new facility primarily involves adapting the PV Address Finder's data sources and query resolution logic—the vast majority of the system's capabilities, user interfaces, and orchestration components should transfer directly without modification.
+   The Osprey Framework's architecture ensures that these patterns can be implemented across diverse scientific domains while maintaining the transparency, safety, and reliability demonstrated at the ALS. In practice, deploying the ALS Assistant to a new facility primarily involves adapting the PV Address Finder's data sources and query resolution logic—the vast majority of the system's capabilities, user interfaces, and orchestration components should transfer directly without modification.
 
 
 
@@ -230,7 +230,7 @@ This approach provides **auditability** through bounded tool access while **grou
 
    **Setting Up PV Finder MCP Service through the Framework's Container Deployment System**
 
-   The Alpha Berkeley Framework includes integrated deployment for the PV Finder MCP service alongside other application services.
+   The Osprey Framework includes integrated deployment for the PV Finder MCP service alongside other application services.
 
    1. **Add PV Finder MCP Service to Configuration**: Include the service in your ``config.yml``:
 
@@ -295,7 +295,7 @@ This approach provides **auditability** through bounded tool access while **grou
 
    **Setting Up Langfuse through the Framework's Container Deployment System**
 
-   The Alpha Berkeley Framework includes a production-ready Langfuse deployment with enterprise features including ClickHouse for high-performance analytics, Redis for caching, and MinIO for object storage.
+   The Osprey Framework includes a production-ready Langfuse deployment with enterprise features including ClickHouse for high-performance analytics, Redis for caching, and MinIO for object storage.
 
    1. **Add Langfuse to Configuration**: Include the Langfuse service in your ``config.yml``:
 

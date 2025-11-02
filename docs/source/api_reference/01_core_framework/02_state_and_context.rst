@@ -4,7 +4,7 @@ State and Context Management
 
 LangGraph-native state management with context persistence and sophisticated data management using Pydantic for automatic serialization, validation, and type safety.
 
-.. currentmodule:: framework.state
+.. currentmodule:: osprey.state
 
 Core State System
 =================
@@ -77,7 +77,7 @@ StateManager
 Context Management System
 =========================
 
-.. currentmodule:: framework.context
+.. currentmodule:: osprey.context
 
 The context management system provides sophisticated functionality over dictionary data while maintaining LangGraph-compatible storage using Pydantic's built-in serialization capabilities.
 
@@ -173,7 +173,7 @@ This structure enables efficient context storage, retrieval, and merging while m
 Context Utilities
 =================
 
-.. currentmodule:: framework.context
+.. currentmodule:: osprey.context
 
 Context Loading
 ---------------
@@ -193,7 +193,7 @@ Namespace Access
 State Utilities
 ===============
 
-.. currentmodule:: framework.state
+.. currentmodule:: osprey.state
 
 Custom Reducer Functions
 ------------------------
@@ -222,10 +222,10 @@ Type Aliases
 
 .. seealso::
 
-   :class:`framework.base.planning.ExecutionPlan`
+   :class:`osprey.base.planning.ExecutionPlan`
        Execution planning structures used in state
-   
-   :class:`framework.registry.RegistryManager`
+
+   :class:`osprey.registry.RegistryManager`
        Component registry that manages context classes
    
    :doc:`03_registry_system`

@@ -1,7 +1,7 @@
 Classification
 ==============
 
-.. currentmodule:: framework.infrastructure.classification_node
+.. currentmodule:: osprey.infrastructure.classification_node
 
 Infrastructure node that handles task classification and capability selection by analyzing user tasks against available capabilities using parallel processing with semaphore-controlled concurrency.
 
@@ -36,16 +36,16 @@ Classification uses models defined in the core framework:
 
 .. seealso::
    
-   :class:`~framework.base.CapabilityMatch`
+   :class:`~osprey.base.CapabilityMatch`
        Classification results for capability selection
-   
-   :class:`~framework.base.TaskClassifierGuide`
+
+   :class:`~osprey.base.TaskClassifierGuide`
        Classification guidance structure
-   
-   :class:`~framework.base.ClassifierExample`
+
+   :class:`~osprey.base.ClassifierExample`
        Few-shot examples for classification
-   
-   :class:`~framework.base.BaseInfrastructureNode`
+
+   :class:`~osprey.base.BaseInfrastructureNode`
        Base class for infrastructure components
 
 Registration
@@ -55,7 +55,7 @@ Automatically registered as::
 
     NodeRegistration(
         name="classifier",
-        module_path="framework.infrastructure.classification_node",
+        module_path="osprey.infrastructure.classification_node",
         function_name="ClassificationNode",
         description="Task classification and capability selection"
     )

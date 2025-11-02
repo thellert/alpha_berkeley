@@ -34,7 +34,7 @@ The Infrastructure Components provide the intelligent processing core that makes
 Architecture Overview
 =====================
 
-The Alpha Berkeley Framework implements a **Gateway-First, Three-Pillar Architecture** that eliminates the fragility and inefficiency of traditional reactive agentic systems:
+The Osprey Framework implements a **Gateway-First, Three-Pillar Architecture** that eliminates the fragility and inefficiency of traditional reactive agentic systems:
 
 **Traditional Approach:**
 

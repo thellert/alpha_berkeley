@@ -17,4 +17,4 @@ __version__ = "0.7.8"
 __all__ = ['__version__']
 
 # Framework is designed for on-demand imports to avoid circular dependencies
-# Use specific imports like: from framework.state import AgentState
+# Use specific imports like: from osprey.state import AgentState

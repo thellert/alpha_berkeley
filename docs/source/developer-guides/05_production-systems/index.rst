@@ -29,7 +29,7 @@ Production Systems
    
    **Target Audience:** DevOps engineers, system administrators, and architects deploying agentic systems in production environments
 
-The Alpha Berkeley Framework offers enterprise-grade infrastructure components designed for secure and scalable deployment of agentic systems. These production-ready systems ensure human oversight, data integration, secure execution, and orchestration capabilities essential for high-stakes environments. By implementing a Security-First, Approval-Centric Architecture, the framework delivers robust capabilities while maintaining the flexibility needed for diverse deployment scenarios.
+The Osprey Framework offers enterprise-grade infrastructure components designed for secure and scalable deployment of agentic systems. These production-ready systems ensure human oversight, data integration, secure execution, and orchestration capabilities essential for high-stakes environments. By implementing a Security-First, Approval-Centric Architecture, the framework delivers robust capabilities while maintaining the flexibility needed for diverse deployment scenarios.
 
 Core Production Components
 ==========================
@@ -181,12 +181,12 @@ Production Integration Patterns
       .. code-block:: python
 
          # Container management using the function-based system
-         from framework.deployment.container_manager import find_service_config, setup_build_dir
-         
+         from osprey.deployment.container_manager import find_service_config, setup_build_dir
+
          # Deploy services by configuring them in deployed_services list
          deployed_services = [
-             "framework.pipelines",
-             "framework.jupyter"
+             "osprey.pipelines",
+             "osprey.jupyter"
          ]
          
          # Services are deployed through container_manager.py script
@@ -198,7 +198,7 @@ Production Integration Patterns
              if service_config and template_path:
                  compose_file = setup_build_dir(template_path, config, service_config)
 
-      - **Hierarchical service discovery** through framework.* and applications.* naming
+      - **Hierarchical service discovery** through osprey.* and applications.* naming
       - **Template-based configuration** for environment-specific deployments  
       - **Podman Compose orchestration** with multi-file support
 

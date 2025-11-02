@@ -2,7 +2,7 @@
 Container Deployment
 ====================
 
-**What you'll learn:** How to deploy and manage containerized services using the Alpha Berkeley Framework's deployment CLI
+**What you'll learn:** How to deploy and manage containerized services using the Osprey Framework's deployment CLI
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -10,7 +10,7 @@ Container Deployment
 
    **Key Concepts:**
    
-   - Using ``framework deploy`` CLI for service deployment and orchestration
+   - Using ``osprey deploy`` CLI for service deployment and orchestration
    - Configuring services in your project's ``config.yml``
    - Managing Jinja2 template rendering with ``docker-compose.yml.j2`` files
    - Understanding build directory management and source code copying
@@ -23,7 +23,7 @@ Container Deployment
 Overview
 ========
 
-The Alpha Berkeley Framework provides a container management system for deploying services. The system handles service discovery, Docker Compose template rendering, and container orchestration through Podman Compose.
+The Osprey Framework provides a container management system for deploying services. The system handles service discovery, Docker Compose template rendering, and container orchestration through Podman Compose.
 
 **Core Features:**
 
@@ -176,7 +176,7 @@ The container management system supports both development and production deploym
 .. admonition:: New in v0.7+: Framework CLI Commands
    :class: version-07plus-change
 
-   Service deployment is now managed through the ``framework deploy`` CLI command.
+   Service deployment is now managed through the ``osprey deploy`` CLI command.
 
 Development Pattern
 -------------------
@@ -194,7 +194,7 @@ For development and debugging, start services incrementally:
 
    .. code-block:: bash
 
-      framework deploy up
+      osprey deploy up
 
 3. **Add additional services** after verifying each one works correctly
 
@@ -216,7 +216,7 @@ For production deployment:
 
    .. code-block:: bash
 
-      framework deploy up --detached
+      osprey deploy up --detached
 
 3. **Verify services are running**:
 
@@ -227,7 +227,7 @@ For production deployment:
 Development Mode
 ----------------
 
-**Development mode** enables testing framework changes in containers without publishing to PyPI. When enabled with the ``--dev`` flag, containers use your locally installed framework instead of the PyPI version.
+**Development mode** enables testing Osprey framework changes in containers without publishing to PyPI. When enabled with the ``--dev`` flag, containers use your locally installed Osprey instead of the PyPI version.
 
 **When to Use:**
 
@@ -250,10 +250,10 @@ The deployment system automatically:
 .. code-block:: bash
 
    # Deploy with local framework (foreground)
-   framework deploy up --dev
-   
+   osprey deploy up --dev
+
    # Deploy with local framework (background)
-   framework deploy up --detached --dev
+   osprey deploy up --detached --dev
 
 **Verification:**
 
@@ -261,8 +261,8 @@ After deploying in development mode, verify the framework source was copied:
 
 .. code-block:: bash
 
-   # Check for framework override directory
-   ls build/services/jupyter/framework_override/
+   # Check for osprey override directory
+   ls build/services/jupyter/osprey_override/
    
    # Check environment variable in container
    podman exec jupyter-read env | grep DEV_MODE
@@ -310,7 +310,7 @@ Templates are located at ``{service_path}/docker-compose.yml.j2``. Here's a comp
          - HTTP_PROXY=${HTTP_PROXY}
          - NO_PROXY=${NO_PROXY}
        networks:
-         - alpha-berkeley-network
+         - osprey-network
 
 **Template Features:**
 
@@ -323,7 +323,7 @@ Templates are located at ``{service_path}/docker-compose.yml.j2``. Here's a comp
 
 - **Environment Variables**: Reference host environment via ``${VAR_NAME}``
 
-- **Networking**: All services automatically join the ``alpha-berkeley-network``
+- **Networking**: All services automatically join the ``osprey-network``
 
 - **Volume Management**: Dynamic volume mounting based on configuration
 
@@ -356,7 +356,7 @@ Common template patterns for accessing configuration:
 Deployment CLI Usage
 ====================
 
-Deploy services using the ``framework deploy`` command.
+Deploy services using the ``osprey deploy`` command.
 
 Basic Commands
 --------------
@@ -364,25 +364,25 @@ Basic Commands
 .. code-block:: bash
 
    # Start services in foreground (see logs in terminal)
-   framework deploy up
-   
+   osprey deploy up
+
    # Start services in background (detached mode)
-   framework deploy up --detached
-   
+   osprey deploy up --detached
+
    # Stop services
-   framework deploy down
-   
+   osprey deploy down
+
    # Restart services
-   framework deploy restart
-   
+   osprey deploy restart
+
    # Show service status
-   framework deploy status
-   
+   osprey deploy status
+
    # Clean deployment (remove containers and volumes)
-   framework deploy clean
-   
+   osprey deploy clean
+
    # Rebuild containers from scratch
-   framework deploy rebuild
+   osprey deploy rebuild
 
 Service Status Display
 ----------------------
@@ -391,7 +391,7 @@ The ``status`` command displays detailed information about all deployed services
 
 .. code-block:: bash
 
-   framework deploy status
+   osprey deploy status
 
 **Example Output:**
 
@@ -424,11 +424,11 @@ You can check status for specific projects using the ``--project`` flag:
 .. code-block:: bash
 
    # Check status of specific project
-   framework deploy status --project ~/projects/weather-agent
-   
+   osprey deploy status --project ~/projects/weather-agent
+
    # Check multiple projects
-   framework deploy status --project ~/projects/agent1
-   framework deploy status --project ~/projects/agent2
+   osprey deploy status --project ~/projects/agent1
+   osprey deploy status --project ~/projects/agent2
 
 Command Options
 ---------------
@@ -436,21 +436,21 @@ Command Options
 .. code-block:: bash
 
    # Use custom configuration file
-   framework deploy up --config my-config.yml
-   
+   osprey deploy up --config my-config.yml
+
    # Deploy with local framework (development mode)
-   framework deploy up --dev
-   
+   osprey deploy up --dev
+
    # Restart in detached mode
-   framework deploy restart --detached
-   
+   osprey deploy restart --detached
+
    # Rebuild and start in detached mode with local framework
-   framework deploy rebuild --detached --dev
+   osprey deploy rebuild --detached --dev
 
 Deployment Workflow Details
 ----------------------------
 
-When you run ``framework deploy up``, the container manager follows this workflow:
+When you run ``osprey deploy up``, the container manager follows this workflow:
 
 1. **Configuration Loading**: Load and merge configuration files
 2. **Service Discovery**: Read ``deployed_services`` list to identify active services  
@@ -605,15 +605,15 @@ Copy extra directories into service build environments:
            dst: "agent_data"
          
          # Copy framework source (useful during development)
-         - src: ../alpha_berkeley/src/framework
-           dst: framework_src/src/framework
+         - src: ../osprey/src/osprey
+           dst: osprey_src/src/osprey
 
 This is commonly used for:
 
 - Documentation that services need
 - Data directories
 - Configuration files
-- Framework source during development (before framework is pip-installable)
+- Osprey source during development (before osprey is pip-installable)
 
 Build Directory Management
 ==========================
@@ -713,8 +713,8 @@ Deploy this configuration:
 
 .. code-block:: bash
 
-   framework deploy up --detached
-   
+   osprey deploy up --detached
+
    # Services available:
    # - OpenWebUI: http://localhost:8080
    # - Jupyter Read: http://localhost:8088
@@ -748,7 +748,7 @@ Troubleshooting
       1. Verify service names match configuration
       2. Use container network names (e.g., ``pipelines``) not ``localhost``
       3. Check firewall settings if accessing from external systems
-      4. Ensure all services use the ``alpha-berkeley-network``
+      4. Ensure all services use the ``osprey-network``
 
       **Template rendering errors:**
 
@@ -777,11 +777,11 @@ Troubleshooting
 
       **Development mode issues:**
 
-      - Verify framework is installed in your active virtual environment
-      - Check that ``framework_override/`` directory exists in build after deployment
+      - Verify osprey is installed in your active virtual environment
+      - Check that ``osprey_override/`` directory exists in build after deployment
       - Confirm ``DEV_MODE=true`` is set in container environment
-      - If framework source not found, containers will fall back to PyPI version
-      - Review console output for framework copy warnings during deployment
+      - If osprey source not found, containers will fall back to PyPI version
+      - Review console output for osprey copy warnings during deployment
 
    .. tab-item:: Debugging Commands
 
@@ -809,7 +809,7 @@ Troubleshooting
       .. code-block:: bash
 
          podman network ls
-         podman network inspect alpha-berkeley-network
+         podman network inspect osprey-network
 
       **Check generated configuration:**
 
@@ -841,24 +841,24 @@ Troubleshooting
       .. code-block:: bash
 
          # Full rebuild (safest after config changes)
-         framework deploy clean
-         framework deploy up --detached
-         
+         osprey deploy clean
+         osprey deploy up --detached
+
          # Or use rebuild command (clean + up in one step)
-         framework deploy rebuild --detached
+         osprey deploy rebuild --detached
 
       **Verify development mode:**
 
       .. code-block:: bash
 
-         # Check if framework override was copied
-         ls -la build/services/jupyter/framework_override/
-         
+         # Check if osprey override was copied
+         ls -la build/services/jupyter/osprey_override/
+
          # Verify DEV_MODE environment variable in container
          podman exec jupyter-read env | grep DEV_MODE
-         
-         # Check framework installation in container
-         podman exec jupyter-read pip show framework
+
+         # Check osprey installation in container
+         podman exec jupyter-read pip show osprey-framework
 
    .. tab-item:: Quick Reference
 
@@ -867,14 +867,14 @@ Troubleshooting
       .. code-block:: bash
 
          # Start services
-         framework deploy up
-         framework deploy up --detached
+         osprey deploy up
+         osprey deploy up --detached
 
          # Stop services
-         framework deploy down
+         osprey deploy down
 
          # Check status
-         framework deploy status
+         osprey deploy status
          podman ps
 
          # View logs
@@ -882,8 +882,8 @@ Troubleshooting
          podman logs -f <container_name>
 
          # Clean restart
-         framework deploy clean
-         framework deploy up --detached
+         osprey deploy clean
+         osprey deploy up --detached
 
       **Common Service Names:**
 
@@ -908,16 +908,16 @@ Troubleshooting
       **Development:**
 
       - **Start minimal**: Begin with one service, verify it works, then add more
-      - **Use foreground mode**: Run ``framework deploy up`` (not detached) during development to see logs
+      - **Use foreground mode**: Run ``osprey deploy up`` (not detached) during development to see logs
       - **Test services individually**: Deploy services one at a time to isolate issues
       - **Keep build directory in .gitignore**: Build artifacts shouldn't be version controlled
       - **Use meaningful container names**: Makes logs and debugging easier
-      - **Use development mode for framework changes**: Run ``framework deploy up --dev`` when testing framework modifications
-      - **Verify development mode**: Check console output for framework copy messages
+      - **Use development mode for framework changes**: Run ``osprey deploy up --dev`` when testing osprey modifications
+      - **Verify development mode**: Check console output for osprey copy messages
 
       **Production:**
 
-      - **Use detached mode**: Run ``framework deploy up --detached`` for production
+      - **Use detached mode**: Run ``osprey deploy up --detached`` for production
       - **Monitor container resources**: Use ``podman stats`` to watch resource usage
       - **Implement health checks**: Add health check configurations to your docker-compose templates
       - **Plan restart policies**: Use ``restart: unless-stopped`` in production templates

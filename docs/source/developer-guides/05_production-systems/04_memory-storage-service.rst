@@ -87,10 +87,10 @@ Access memory through the storage manager:
 
    """Basic Memory Usage in Capabilities"""
    
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
-   from framework.context import ContextManager
-   from framework.services.memory_storage import get_memory_storage_manager, MemoryContent
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState
+   from osprey.context import ContextManager
+   from osprey.services.memory_storage import get_memory_storage_manager, MemoryContent
    from datetime import datetime
    from typing import Dict, Any
    import logging
@@ -156,7 +156,7 @@ Memory is automatically available through the data source system:
 
    """Accessing Memory Through Data Sources"""
    
-   from framework.data_management import get_data_source_manager, create_data_source_request, DataSourceRequester
+   from osprey.data_management import get_data_source_manager, create_data_source_request, DataSourceRequester
    
    async def get_user_memory_context(state):
        """Retrieve memory through data source system."""
@@ -231,7 +231,7 @@ Testing Memory Integration
 
    """Test Memory Storage Integration"""
    
-   from framework.services.memory_storage import get_memory_storage_manager, MemoryContent
+   from osprey.services.memory_storage import get_memory_storage_manager, MemoryContent
    from datetime import datetime
    
    async def test_memory_operations():
@@ -299,17 +299,17 @@ Troubleshooting
 .. code-block:: python
 
    # Test memory manager availability
-   from framework.services.memory_storage import get_memory_storage_manager
+   from osprey.services.memory_storage import get_memory_storage_manager
    manager = get_memory_storage_manager()
    print(f"Memory manager available: {manager is not None}")
    
    # Check memory directory
-   from framework.utils.config import get_agent_dir
+   from osprey.utils.config import get_agent_dir
    memory_dir = get_agent_dir('user_memory_dir')
    print(f"Memory directory: {memory_dir}")
    
    # Test data source registration
-   from framework.data_management import get_data_source_manager
+   from osprey.data_management import get_data_source_manager
    data_manager = get_data_source_manager()
    provider = data_manager.get_provider("core_user_memory")
    print(f"Memory provider registered: {provider is not None}")

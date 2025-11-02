@@ -1,7 +1,7 @@
 Command System
 ==============
 
-.. currentmodule:: framework.commands
+.. currentmodule:: osprey.commands
 
 The centralized command system provides unified slash command processing across all interfaces (CLI, OpenWebUI, etc.) with extensible command categories and rich autocompletion.
 
@@ -69,7 +69,7 @@ Basic Command Execution
 
 .. code-block:: python
 
-   from framework.commands import get_command_registry, CommandContext
+   from osprey.commands import get_command_registry, CommandContext
    
    # Get the global registry
    registry = get_command_registry()
@@ -88,7 +88,7 @@ Custom Command Registration
 
 .. code-block:: python
 
-   from framework.commands import Command, CommandCategory, CommandResult
+   from osprey.commands import Command, CommandCategory, CommandResult
    
    def my_handler(args: str, context: CommandContext) -> CommandResult:
        context.console.print(f"Custom command executed with args: {args}")

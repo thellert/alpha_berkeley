@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 from click.testing import CliRunner
 
-from framework.cli.init_cmd import init
-from framework.utils.config import ConfigBuilder
-from framework.registry.manager import RegistryManager
+from osprey.cli.init_cmd import init
+from osprey.utils.config import ConfigBuilder
+from osprey.registry.manager import RegistryManager
 
 
 class TestE2EWorkflow:

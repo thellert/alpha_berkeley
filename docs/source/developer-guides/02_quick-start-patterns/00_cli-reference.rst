@@ -2,7 +2,7 @@
 CLI Reference
 =============
 
-**What you'll learn:** Complete reference for all Alpha Berkeley Framework CLI commands
+**What you'll learn:** Complete reference for all Osprey Framework CLI commands
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -10,20 +10,20 @@ CLI Reference
 
    **Key Concepts:**
    
-   - Using ``framework`` CLI for all framework operations
-   - Creating projects with ``framework init``
-   - Managing deployments with ``framework deploy``
-   - Running interactive sessions with ``framework chat``
-   - Exporting configuration with ``framework export-config``
+   - Using ``osprey`` CLI for all framework operations
+   - Creating projects with ``osprey init``
+   - Managing deployments with ``osprey deploy``
+   - Running interactive sessions with ``osprey chat``
+   - Exporting configuration with ``osprey export-config``
 
-   **Prerequisites:** Framework installed (``pip install alpha-berkeley-framework``)
+   **Prerequisites:** Framework installed (``pip install osprey-framework``)
    
    **Time Investment:** 10 minutes for quick reference
 
 Overview
 ========
 
-The Alpha Berkeley Framework provides a unified CLI for all framework operations. All commands are accessed through the ``framework`` command with subcommands for specific operations.
+The Osprey Framework provides a unified CLI for all framework operations. All commands are accessed through the ``osprey`` command with subcommands for specific operations.
 
 .. admonition:: New in v0.7+: Unified CLI
    :class: version-07plus-change
@@ -34,22 +34,22 @@ The Alpha Berkeley Framework provides a unified CLI for all framework operations
 
 .. code-block:: bash
 
-   framework                    # Launch interactive menu (NEW in v0.7.7)
-   framework --version          # Show framework version
-   framework --help             # Show available commands
-   framework init PROJECT       # Create new project
-   framework deploy COMMAND     # Manage services
-   framework chat               # Start interactive chat
-   framework export-config      # Export configuration
+   osprey                    # Launch interactive menu (NEW in v0.7.7)
+   osprey --version          # Show framework version
+   osprey --help             # Show available commands
+   osprey init PROJECT       # Create new project
+   osprey deploy COMMAND     # Manage services
+   osprey chat               # Start interactive chat
+   osprey export-config      # Export configuration
 
 Interactive Mode
 ================
 
-The framework provides an interactive terminal UI (TUI) that automatically launches when you run ``framework`` without any arguments:
+The framework provides an interactive terminal UI (TUI) that automatically launches when you run ``osprey`` without any arguments:
 
 .. code-block:: bash
 
-   framework
+   osprey
 
 The TUI is **completely optional** - all existing direct commands continue to work exactly as before. Use whichever approach fits your workflow:
 
@@ -119,7 +119,7 @@ If you prefer to only use direct commands, you can bypass the interactive menu b
 Global Options
 ==============
 
-These options work with all ``framework`` commands.
+These options work with all ``osprey`` commands.
 
 ``--project`` / ``-p``
 ----------------------
@@ -128,7 +128,7 @@ The ``--project`` flag allows you to specify the project directory for commands 
 
 .. code-block:: bash
 
-   framework COMMAND --project /path/to/project
+   osprey COMMAND --project /path/to/project
 
 **Project Resolution Priority:**
 
@@ -143,17 +143,17 @@ When determining which project to use, the framework checks in this order:
 .. code-block:: bash
 
    # Work with specific project from anywhere
-   framework chat --project ~/projects/weather-agent
-   framework deploy status --project ~/projects/turbine-monitor
-   
+   osprey chat --project ~/projects/weather-agent
+   osprey deploy status --project ~/projects/turbine-monitor
+
    # Use environment variable for a session
-   export FRAMEWORK_PROJECT=~/projects/my-agent
-   framework chat              # Uses ~/projects/my-agent
-   framework deploy status     # Uses ~/projects/my-agent
-   
+   export OSPREY_PROJECT=~/projects/my-agent
+   osprey chat              # Uses ~/projects/my-agent
+   osprey deploy status     # Uses ~/projects/my-agent
+
    # CLI flag overrides environment variable
-   export FRAMEWORK_PROJECT=~/projects/agent1
-   framework chat --project ~/projects/agent2  # Uses agent2, not agent1
+   export OSPREY_PROJECT=~/projects/agent1
+   osprey chat --project ~/projects/agent2  # Uses agent2, not agent1
 
 **Use Cases:**
 
@@ -164,12 +164,12 @@ When determining which project to use, the framework checks in this order:
 
 **Commands supporting ``--project``:**
 
-- ``framework chat --project PATH``
-- ``framework deploy COMMAND --project PATH``
-- ``framework health --project PATH``
-- ``framework export-config --project PATH``
+- ``osprey chat --project PATH``
+- ``osprey deploy COMMAND --project PATH``
+- ``osprey health --project PATH``
+- ``osprey export-config --project PATH``
 
-**Note**: The ``framework init`` command does not use ``--project`` because it creates a new project. Use ``--output-dir`` instead to specify where the new project should be created.
+**Note**: The ``osprey init`` command does not use ``--project`` because it creates a new project. Use ``--output-dir`` instead to specify where the new project should be created.
 
 ``--version``
 -------------
@@ -178,13 +178,13 @@ Show framework version and exit.
 
 .. code-block:: bash
 
-   framework --version
+   osprey --version
 
 Output:
 
 .. code-block:: text
 
-   Alpha Berkeley Framework version 0.7.0
+   Osprey Framework version 0.7.0
 
 ``--help``
 ----------
@@ -193,16 +193,16 @@ Show help message for any command.
 
 .. code-block:: bash
 
-   framework --help
-   framework init --help
-   framework deploy --help
-   framework chat --help
-   framework export-config --help
+   osprey --help
+   osprey init --help
+   osprey deploy --help
+   osprey chat --help
+   osprey export-config --help
 
 Commands
 ========
 
-framework init
+osprey init
 ==============
 
 Create a new project from a template.
@@ -212,7 +212,7 @@ Syntax
 
 .. code-block:: bash
 
-   framework init [OPTIONS] PROJECT_NAME
+   osprey init [OPTIONS] PROJECT_NAME
 
 Arguments
 ---------
@@ -247,30 +247,30 @@ Examples
 
 .. code-block:: bash
 
-   framework init my-agent
+   osprey init my-agent
 
 **Create from hello_world_weather template:**
 
 .. code-block:: bash
 
-   framework init weather-demo --template hello_world_weather
+   osprey init weather-demo --template hello_world_weather
 
 **Create with explicit registry style:**
 
 .. code-block:: bash
 
-   framework init my-agent --template minimal --registry-style explicit
+   osprey init my-agent --template minimal --registry-style explicit
 
 **Create advanced agent:**
 
 .. code-block:: bash
 
-   framework init turbine-monitor --template wind_turbine
+   osprey init turbine-monitor --template wind_turbine
 
 Generated Structure
 -------------------
 
-The ``framework init`` command creates a complete, self-contained project:
+The ``osprey init`` command creates a complete, self-contained project:
 
 .. code-block:: text
 
@@ -289,7 +289,7 @@ The ``framework init`` command creates a complete, self-contained project:
    ├── .env.example           # Environment template
    └── README.md              # Project documentation
 
-framework deploy
+osprey deploy
 ================
 
 Manage containerized services (Jupyter, OpenWebUI, Pipelines).
@@ -299,21 +299,21 @@ Syntax
 
 .. code-block:: bash
 
-   framework deploy COMMAND [OPTIONS]
+   osprey deploy COMMAND [OPTIONS]
 
 Global Options
 --------------
 
 ``--project PATH`` / ``-p PATH``
-   Project directory to use. If not specified, uses ``FRAMEWORK_PROJECT`` environment variable or current directory.
-   
+   Project directory to use. If not specified, uses ``OSPREY_PROJECT`` environment variable or current directory.
+
    This option works with all deploy subcommands (``up``, ``down``, ``status``, etc.).
-   
+
    Example:
       .. code-block:: bash
 
-         framework deploy status --project ~/projects/my-agent
-         framework deploy up --project ~/projects/my-agent --detached
+         osprey deploy status --project ~/projects/my-agent
+         osprey deploy up --project ~/projects/my-agent --detached
 
 Commands
 --------
@@ -329,10 +329,10 @@ Commands
    Examples:
       .. code-block:: bash
 
-         framework deploy up                    # Start in foreground
-         framework deploy up --detached         # Start in background
-         framework deploy up --dev              # Start with local framework
-         framework deploy up --detached --dev   # Background with local framework
+         osprey deploy up                    # Start in foreground
+         osprey deploy up --detached         # Start in background
+         osprey deploy up --dev              # Start with local framework
+         osprey deploy up --detached --dev   # Background with local framework
 
 ``down``
    Stop all running services.
@@ -340,7 +340,7 @@ Commands
    Example:
       .. code-block:: bash
 
-         framework deploy down
+         osprey deploy down
 
 ``restart``
    Restart all services.
@@ -348,7 +348,7 @@ Commands
    Example:
       .. code-block:: bash
 
-         framework deploy restart
+         osprey deploy restart
 
 ``status``
    Show status of deployed services.
@@ -356,7 +356,7 @@ Commands
    Example:
       .. code-block:: bash
 
-         framework deploy status
+         osprey deploy status
 
 ``clean``
    Stop services and remove containers and volumes.
@@ -364,7 +364,7 @@ Commands
    Example:
       .. code-block:: bash
 
-         framework deploy clean
+         osprey deploy clean
 
 ``rebuild``
    Rebuild containers from scratch (useful after Dockerfile changes).
@@ -377,9 +377,9 @@ Commands
    Examples:
       .. code-block:: bash
 
-         framework deploy rebuild                    # Rebuild and start
-         framework deploy rebuild --detached         # Rebuild in background
-         framework deploy rebuild --detached --dev   # Rebuild with local framework
+         osprey deploy rebuild                    # Rebuild and start
+         osprey deploy rebuild --detached         # Rebuild in background
+         osprey deploy rebuild --detached --dev   # Rebuild with local framework
 
 Configuration
 -------------
@@ -389,9 +389,9 @@ Services are configured in ``config.yml`` under ``deployed_services``:
 .. code-block:: yaml
 
    deployed_services:
-     - framework.jupyter        # Jupyter development environment
-     - framework.open-webui     # Web chat interface
-     - framework.pipelines      # Processing pipeline
+     - osprey.jupyter        # Jupyter development environment
+     - osprey.open-webui     # Web chat interface
+     - osprey.pipelines      # Processing pipeline
 
 Workflow
 --------
@@ -401,26 +401,26 @@ Workflow
 .. code-block:: bash
 
    # Start services in foreground to monitor logs
-   framework deploy up
-   
+   osprey deploy up
+
    # When done, stop with Ctrl+C or:
-   framework deploy down
+   osprey deploy down
 
 **Production workflow:**
 
 .. code-block:: bash
 
    # Start services in background
-   framework deploy up --detached
-   
+   osprey deploy up --detached
+
    # Check status
-   framework deploy status
-   
+   osprey deploy status
+
    # View logs with podman
    podman logs <container_name>
-   
+
    # Stop when needed
-   framework deploy down
+   osprey deploy down
 
 Service Access
 --------------
@@ -432,7 +432,7 @@ Once deployed, services are available at:
 - **Jupyter (write)**: http://localhost:8089
 - **Pipelines**: http://localhost:9099
 
-framework chat
+osprey chat
 ==============
 
 Start an interactive CLI conversation interface with your agent.
@@ -442,7 +442,7 @@ Syntax
 
 .. code-block:: bash
 
-   framework chat [OPTIONS]
+   osprey chat [OPTIONS]
 
 Options
 -------
@@ -463,20 +463,20 @@ Examples
 .. code-block:: bash
 
    # Start chat in current directory
-   framework chat
-   
+   osprey chat
+
    # Start chat in specific project
-   framework chat --project ~/projects/my-agent
-   
+   osprey chat --project ~/projects/my-agent
+
    # Use custom config
-   framework chat --config my-config.yml
-   
+   osprey chat --config my-config.yml
+
    # Combine project and config
-   framework chat --project ~/agent --config custom.yml
-   
+   osprey chat --project ~/agent --config custom.yml
+
    # Use environment variable for project
-   export FRAMEWORK_PROJECT=~/projects/my-agent
-   framework chat
+   export OSPREY_PROJECT=~/projects/my-agent
+   osprey chat
 
 Usage
 -----
@@ -538,7 +538,7 @@ Before using ``framework chat``:
 2. Configuration must be valid: ``config.yml`` with proper model settings
 3. API keys must be set: ``.env`` file with required credentials
 
-framework export-config
+osprey export-config
 =======================
 
 Export the framework's default configuration for reference.
@@ -548,14 +548,14 @@ Syntax
 
 .. code-block:: bash
 
-   framework export-config [OPTIONS]
+   osprey export-config [OPTIONS]
 
 Options
 -------
 
 ``--project PATH`` / ``-p PATH``
-   Project directory to use. If not specified, uses ``FRAMEWORK_PROJECT`` environment variable or current directory.
-   
+   Project directory to use. If not specified, uses ``OSPREY_PROJECT`` environment variable or current directory.
+
    This affects which project's configuration is exported.
 
 ``--output PATH`` / ``-o PATH``
@@ -568,33 +568,33 @@ Examples
 
 .. code-block:: bash
 
-   framework export-config
+   osprey export-config
 
 **View specific project's configuration:**
 
 .. code-block:: bash
 
-   framework export-config --project ~/projects/my-agent
+   osprey export-config --project ~/projects/my-agent
 
 **Save to file:**
 
 .. code-block:: bash
 
-   framework export-config --output framework-defaults.yml
+   osprey export-config --output osprey-defaults.yml
 
 **Export from specific project and save:**
 
 .. code-block:: bash
 
-   framework export-config --project ~/agent --output agent-config.yml
+   osprey export-config --project ~/agent --output agent-config.yml
 
 **Use as reference when customizing:**
 
 .. code-block:: bash
 
    # Export defaults
-   framework export-config --output reference.yml
-   
+   osprey export-config --output reference.yml
+
    # Compare with your config
    diff reference.yml config.yml
 
@@ -634,7 +634,7 @@ For a **complete list of all supported environment variables** with descriptions
    OPENAI_API_KEY=sk-...          # Or ANTHROPIC_API_KEY, GOOGLE_API_KEY, CBORG_API_KEY
    
    # Optional - Multi-project support (New in v0.7.7)
-   FRAMEWORK_PROJECT=/path/to/project
+   OSPREY_PROJECT=/path/to/project
    
    # Optional - Other settings
    LOCAL_PYTHON_VENV=/path/to/venv
@@ -645,7 +645,7 @@ For a **complete list of all supported environment variables** with descriptions
    HTTP_PROXY=http://proxy:8080
    NO_PROXY=localhost,127.0.0.1
 
-``FRAMEWORK_PROJECT``
+``OSPREY_PROJECT``
    Default project directory for all commands. Allows working with a specific project from any location without using the ``--project`` flag on every command.
 
    **Priority:** Lower than ``--project`` flag, higher than current directory.
@@ -654,9 +654,9 @@ For a **complete list of all supported environment variables** with descriptions
 
    .. code-block:: bash
 
-      export FRAMEWORK_PROJECT=~/projects/my-agent
-      framework chat           # Uses ~/projects/my-agent
-      framework deploy status  # Uses ~/projects/my-agent
+      export OSPREY_PROJECT=~/projects/my-agent
+      osprey chat           # Uses ~/projects/my-agent
+      osprey deploy status  # Uses ~/projects/my-agent
 
 Common Workflows
 ================
@@ -667,24 +667,24 @@ Complete Project Setup
 .. code-block:: bash
 
    # 1. Install framework
-   pip install framework
-   
+   pip install osprey-framework
+
    # 2. Create project
-   framework init weather-agent --template hello_world_weather
+   osprey init weather-agent --template hello_world_weather
    cd weather-agent
-   
+
    # 3. Configure environment
    cp .env.example .env
    # Edit .env with your API keys
-   
+
    # 4. Update config (optional)
    # Edit config.yml as needed
-   
+
    # 5. Deploy services
-   framework deploy up --detached
-   
+   osprey deploy up --detached
+
    # 6. Start chat
-   framework chat
+   osprey chat
 
 Development Workflow
 --------------------
@@ -692,17 +692,17 @@ Development Workflow
 .. code-block:: bash
 
    # Start services for development
-   framework deploy up
-   
+   osprey deploy up
+
    # In another terminal, make changes to your code
    # Test with chat interface
-   framework chat
-   
+   osprey chat
+
    # Rebuild containers if needed
-   framework deploy rebuild
-   
+   osprey deploy rebuild
+
    # Clean up
-   framework deploy clean
+   osprey deploy clean
 
 Framework Development Workflow
 ------------------------------
@@ -712,14 +712,14 @@ If you're developing the framework itself:
 .. code-block:: bash
 
    # Start services with local framework
-   framework deploy up --dev
-   
+   osprey deploy up --dev
+
    # Make changes to framework code
    # Rebuild to test changes
-   framework deploy rebuild --dev
-   
+   osprey deploy rebuild --dev
+
    # Verify local framework is used
-   podman exec jupyter-read pip show framework
+   podman exec jupyter-read pip show osprey
 
 Multi-Project Workflows
 -----------------------
@@ -736,12 +736,12 @@ Work on multiple projects from a central location:
 .. code-block:: bash
 
    # Check status of all projects
-   framework deploy status --project ~/projects/weather-agent
-   framework deploy status --project ~/projects/turbine-monitor
-   framework deploy status --project ~/projects/als-assistant
-   
+   osprey deploy status --project ~/projects/weather-agent
+   osprey deploy status --project ~/projects/turbine-monitor
+   osprey deploy status --project ~/projects/als-assistant
+
    # Start chat with specific project
-   framework chat --project ~/projects/weather-agent
+   osprey chat --project ~/projects/weather-agent
 
 **Scenario 2: Dedicated Terminal per Project**
 
@@ -750,18 +750,18 @@ Use environment variables for persistent project selection:
 .. code-block:: bash
 
    # Terminal 1: Weather Agent
-   export FRAMEWORK_PROJECT=~/projects/weather-agent
-   framework deploy up --detached
-   framework chat
-   
+   export OSPREY_PROJECT=~/projects/weather-agent
+   osprey deploy up --detached
+   osprey chat
+
    # Terminal 2: Turbine Monitor
-   export FRAMEWORK_PROJECT=~/projects/turbine-monitor
-   framework deploy up --detached
-   framework health
-   
+   export OSPREY_PROJECT=~/projects/turbine-monitor
+   osprey deploy up --detached
+   osprey health
+
    # Terminal 3: Jump between projects
-   framework chat --project ~/projects/weather-agent
-   framework chat --project ~/projects/turbine-monitor
+   osprey chat --project ~/projects/weather-agent
+   osprey chat --project ~/projects/turbine-monitor
 
 **Scenario 3: CI/CD Pipeline**
 
@@ -780,8 +780,8 @@ Automate deployment and testing across multiple projects:
    
    for project in "${PROJECTS[@]}"; do
        echo "Deploying $project..."
-       framework deploy up --detached --project "$project"
-       framework health --project "$project"
+       osprey deploy up --detached --project "$project"
+       osprey health --project "$project"
    done
 
 **Scenario 4: Development + Production**
@@ -791,11 +791,11 @@ Work with development and production configurations:
 .. code-block:: bash
 
    # Development environment
-   export FRAMEWORK_PROJECT=~/dev/my-agent
-   framework deploy up
-   
+   export OSPREY_PROJECT=~/dev/my-agent
+   osprey deploy up
+
    # In another terminal, check production
-   framework deploy status --project /opt/production/my-agent
+   osprey deploy status --project /opt/production/my-agent
 
 Configuration Reference
 -----------------------
@@ -803,13 +803,13 @@ Configuration Reference
 .. code-block:: bash
 
    # View framework defaults
-   framework export-config
-   
+   osprey export-config
+
    # Export to file for reference
-   framework export-config --output defaults.yml
-   
+   osprey export-config --output defaults.yml
+
    # Create new project and compare configs
-   framework init test-project
+   osprey init test-project
    diff defaults.yml test-project/config.yml
 
 Troubleshooting
@@ -818,18 +818,18 @@ Troubleshooting
 Command Not Found
 -----------------
 
-If ``framework`` command is not found:
+If ``osprey`` command is not found:
 
 .. code-block:: bash
 
    # Verify installation
-   pip show framework
-   
+   pip show osprey-framework
+
    # Reinstall if needed
-   pip install --upgrade framework
-   
+   pip install --upgrade osprey-framework
+
    # Check pip bin directory is in PATH
-   python -m pip show framework
+   python -m pip show osprey-framework
 
 Services Won't Start
 --------------------
@@ -843,9 +843,9 @@ Services Won't Start
    # Check for port conflicts
    lsof -i :8080
    lsof -i :9099
-   
+
    # Try starting services in foreground to see errors
-   framework deploy up
+   osprey deploy up
 
 Configuration Errors
 --------------------
@@ -853,11 +853,11 @@ Configuration Errors
 .. code-block:: bash
 
    # Validate against framework defaults
-   framework export-config --output defaults.yml
-   
+   osprey export-config --output defaults.yml
+
    # Check your config syntax
    cat config.yml
-   
+
    # Ensure environment variables are set
    cat .env
 
@@ -867,12 +867,12 @@ Chat Not Responding
 .. code-block:: bash
 
    # Verify services are running
-   framework deploy status
+   osprey deploy status
    podman ps
-   
+
    # Check API keys are set
    cat .env
-   
+
    # Verify model configuration
    grep -A 10 "models:" config.yml
 

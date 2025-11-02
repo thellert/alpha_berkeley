@@ -41,7 +41,7 @@ This document provides the **definitive workflow** for creating releases that en
 **⚠️ IMPORTANT**: Update all version numbers BEFORE creating the GitHub release/tag.
 
 1. **Update Version Numbers** (see checklist below)
-   - Update `pyproject.toml`, `src/framework/__init__.py`, `src/framework/cli/main.py`
+   - Update `pyproject.toml`, `src/osprey/__init__.py`, `src/osprey/cli/main.py`
    - Update `RELEASE_NOTES.md`, `CHANGELOG.md`, `README.md`
    - Verify documentation files
 
@@ -50,8 +50,8 @@ This document provides the **definitive workflow** for creating releases that en
    # Check all version references
    echo "=== VERSION CONSISTENCY CHECK ==="
    echo "pyproject.toml:        $(grep 'version = ' pyproject.toml)"
-   echo "framework/__init__.py: $(grep '__version__ = ' src/framework/__init__.py)"
-   echo "cli/main.py:          $(grep '__version__ = ' src/framework/cli/main.py)"
+   echo "osprey/__init__.py: $(grep '__version__ = ' src/osprey/__init__.py)"
+   echo "cli/main.py:          $(grep '__version__ = ' src/osprey/cli/main.py)"
    echo "RELEASE_NOTES.md:     $(head -1 RELEASE_NOTES.md)"
    echo "README.md:            $(grep 'Latest Release:' README.md)"
    echo "CHANGELOG.md:         $(grep -m1 '## \[' CHANGELOG.md)"
@@ -59,7 +59,7 @@ This document provides the **definitive workflow** for creating releases that en
 
 3. **Commit Version Updates**
    ```bash
-   git add pyproject.toml src/framework/__init__.py src/framework/cli/main.py RELEASE_NOTES.md CHANGELOG.md README.md
+   git add pyproject.toml src/osprey/__init__.py src/osprey/cli/main.py RELEASE_NOTES.md CHANGELOG.md README.md
    git commit -m "release: Bump version to 0.7.3"
    git push origin main
    ```
@@ -110,7 +110,7 @@ If you have GitHub Actions set up for PyPI publishing:
 
 1. **Tag Creation** automatically triggers PyPI publish workflow
 2. **Verify GitHub Actions** completed successfully
-3. **Check PyPI** - Package should appear at: `https://pypi.org/project/alpha-berkeley-framework/0.7.3/`
+3. **Check PyPI** - Package should appear at: `https://pypi.org/project/osprey-framework/0.7.3/`
 
 ## 🔧 Technical Implementation
 
@@ -155,8 +155,8 @@ Before creating a release, ensure these files have the correct version. **All ve
 
 ### 🔧 Core Package Files (CRITICAL)
 - [ ] **`pyproject.toml`** - Line 7: `version = "0.7.3"`
-- [ ] **`src/framework/__init__.py`** - Line 15: `__version__ = "0.7.3"`
-- [ ] **`src/framework/cli/main.py`** - Line 20: `__version__ = "0.7.3"` (fallback version)
+- [ ] **`src/osprey/__init__.py`** - Line 15: `__version__ = "0.7.3"`
+- [ ] **`src/osprey/cli/main.py`** - Line 20: `__version__ = "0.7.3"` (fallback version)
 
 ### 📝 Documentation & Release Notes
 - [ ] **`RELEASE_NOTES.md`** - Line 1: `# Alpha Berkeley Framework - Latest Release (v0.7.3)`

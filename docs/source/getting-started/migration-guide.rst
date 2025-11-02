@@ -20,7 +20,7 @@ pip-installable dependency model, enabling independent application development.
 
    alpha_berkeley/
    ├── src/
-   │   ├── framework/              # Core framework
+   │   ├── osprey/                 # Core framework
    │   └── applications/           # ❌ All apps embedded here
    │       ├── als_assistant/
    │       ├── wind_turbine/
@@ -32,7 +32,7 @@ pip-installable dependency model, enabling independent application development.
 **New Structure (v0.7.0+)**::
 
    # Framework is pip-installable
-   pip install alpha-berkeley-framework
+   pip install osprey-framework
    
    # Each application is now separate
    my-project/
@@ -72,10 +72,10 @@ New unified CLI with lazy loading:
    # OLD ❌
    python -m interfaces.CLI.direct_conversation
    python -m deployment.container_manager deploy_up
-   
+
    # NEW ✅
-   framework chat
-   framework deploy up
+   osprey chat
+   osprey deploy up
 
 See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for complete command reference.
 
@@ -126,9 +126,9 @@ Framework components moved:
 .. code-block:: text
 
    OLD                          NEW
-   interfaces/        →         src/framework/interfaces/
-   deployment/        →         src/framework/deployment/
-   src/configs/       →         src/framework/utils/
+   interfaces/        →         src/osprey/interfaces/
+   deployment/        →         src/osprey/deployment/
+   src/configs/       →         src/osprey/utils/
 
 These are now pip-installed and not directly visible in application repos.
 
@@ -147,11 +147,11 @@ For applications with independent development teams (e.g., ``als_assistant``):
 .. code-block:: bash
 
    # Install as dependency
-   pip install alpha-berkeley-framework
-   
+   pip install osprey-framework
+
    # Verify installation
-   framework --version
-   framework --help
+   osprey --version
+   osprey --help
 
 **Step 2: Create New Repository**
 
@@ -159,7 +159,7 @@ Option A - Use scaffolding (recommended):
 
 .. code-block:: bash
 
-   framework init my-app --template minimal
+   osprey init my-app --template minimal
    cd my-app
 
 Option B - Manual setup:
@@ -224,7 +224,7 @@ Replace verbose registry with helper function:
 .. code-block:: python
 
    # src/my_app/registry.py
-   from framework.registry import (
+   from osprey.registry import (
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
@@ -269,7 +269,7 @@ Generate base configuration:
 .. code-block:: bash
 
    # Export framework defaults as starting point
-   framework export-config > config.yml
+   osprey export-config > config.yml
 
 Edit ``config.yml`` to customize:
 
@@ -322,8 +322,8 @@ Edit ``config.yml`` to customize:
 .. code-block:: bash
 
    # Run health check
-   framework health
-   
+   osprey health
+
    # Should report:
    # ✅ Python version
    # ✅ Framework installed
@@ -336,11 +336,11 @@ Edit ``config.yml`` to customize:
 .. code-block:: bash
 
    # Test CLI
-   framework chat
+   osprey chat
    # > "Hello, can you help me test?"
 
    # Start services (optional)...
-   framework deploy up
+   osprey deploy up
 
    # ...and test web interface
    # Browse to http://localhost:8080
@@ -366,11 +366,11 @@ For tutorial applications (``hello_world_weather``, ``wind_turbine``), **regener
 .. code-block:: bash
 
    # Weather tutorial
-   framework init my-weather --template hello_world_weather
+   osprey init my-weather --template hello_world_weather
    cd my-weather
-   
-   # Turbine tutorial  
-   framework init my-turbine --template wind_turbine
+
+   # Turbine tutorial
+   osprey init my-turbine --template wind_turbine
    cd my-turbine
 
 Templates are kept up-to-date with framework changes and use latest patterns.
@@ -391,11 +391,11 @@ Unified CLI
 
 .. code-block:: bash
 
-   framework init <name>        # Create new project
-   framework deploy up          # Start services
-   framework chat               # Interactive conversation
-   framework health             # System diagnostics
-   framework export-config      # View framework defaults
+   osprey init <name>        # Create new project
+   osprey deploy up          # Start services
+   osprey chat               # Interactive conversation
+   osprey health             # System diagnostics
+   osprey export-config      # View framework defaults
 
 See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference`.
 
@@ -406,7 +406,7 @@ Simplify registry creation with helpers:
 
 .. code-block:: python
 
-   from framework.registry import extend_framework_registry
+   from osprey.registry import extend_framework_registry
    
    # 70% less code, automatic framework updates
    return extend_framework_registry(
@@ -491,5 +491,5 @@ After successful migration:
 6. **Set Up CI/CD** - Configure automated testing in new repo
 7. **Share Feedback** - Report issues or suggest improvements
 
-**Happy coding with Alpha Berkeley Framework v0.7.0!** 🚀
+**Happy coding with Osprey Framework v0.7.0!** 🚀
 

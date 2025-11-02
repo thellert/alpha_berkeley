@@ -11,7 +11,7 @@ API Reference
 
    We welcome feedback! If you find issues or have suggestions, please open an issue on our GitHub page.
 
-**Complete technical reference** for all public APIs in the Alpha Berkeley Framework. This is your authoritative source for classes, methods, functions, and their precise interfaces. See also the :doc:`../developer-guides/index` for learning-oriented content, then return here when you need specific implementation details.
+**Complete technical reference** for all public APIs in the Osprey Framework. This is your authoritative source for classes, methods, functions, and their precise interfaces. See also the :doc:`../developer-guides/index` for learning-oriented content, then return here when you need specific implementation details.
 
 .. dropdown:: 🎯 API Learning Paths & Quick Navigation
    :color: primary
@@ -31,10 +31,10 @@ API Reference
          
          **Core API Patterns:**
          
-         * :class:`framework.base.BaseCapability` with :func:`@capability_node <framework.base.capability_node>` decorator
-         * :class:`framework.state.AgentState` for LangGraph-native state management
-         * :class:`framework.context.ContextManager` for type-safe data exchange
-         * :class:`framework.registry.RegistryManager` for component discovery
+         * :class:`osprey.base.BaseCapability` with :func:`@capability_node <osprey.base.capability_node>` decorator
+         * :class:`osprey.state.AgentState` for LangGraph-native state management
+         * :class:`osprey.context.ContextManager` for type-safe data exchange
+         * :class:`osprey.registry.RegistryManager` for component discovery
 
       .. tab-item:: Production Integration
          :class-content: advanced-tab
@@ -49,10 +49,10 @@ API Reference
          
          **Production-Ready APIs:**
          
-        * :class:`framework.approval.ApprovalManager` - LangGraph-native approval workflows
-        * :class:`framework.data_management.DataSourceManager` - Provider discovery and retrieval
-        * :mod:`framework.deployment.container_manager` - Service orchestration and deployment
-        * :func:`framework.models.get_chat_completion` - Multi-provider LLM management
+        * :class:`osprey.approval.ApprovalManager` - LangGraph-native approval workflows
+        * :class:`osprey.data_management.DataSourceManager` - Provider discovery and retrieval
+        * :mod:`osprey.deployment.container_manager` - Service orchestration and deployment
+        * :func:`osprey.models.get_chat_completion` - Multi-provider LLM management
         * :doc:`01_core_framework/04_configuration_system` - Environment and settings management
         * :doc:`05_framework_utilities/index` - Logging, streaming, and observability
 
@@ -61,25 +61,25 @@ API Reference
 
          **Implementation Shortcuts**
          
-         **Build a new capability** → :class:`~framework.base.BaseCapability` + :func:`~framework.base.decorators.capability_node`
-         
-         **Add approval workflows** → :class:`~framework.approval.ApprovalManager` + :doc:`03_production_systems/01_human-approval`
-         
-         **Execute Python code safely** → :class:`~framework.services.python_executor.PythonExecutorService`
-         
-         **Store user context** → :class:`~framework.context.ContextManager` + :doc:`01_core_framework/02_state_and_context`
-         
-        **Deploy with containers** → :mod:`~framework.deployment.container_manager` + :doc:`03_production_systems/05_container-management`
-        
-        **Handle complex data flows** → :class:`~framework.data_management.DataSourceManager`
-        
-        **Integrate external data** → :class:`~framework.data_management.DataSourceProvider` + provider patterns
-        
-        **Manage LLM models** → :func:`~framework.models.get_model` + :func:`~framework.models.get_chat_completion`
-        
-        **Configure logging** → :func:`~framework.utils.logger.get_logger` + :class:`~framework.utils.logger.ComponentLogger`
-        
-        **Stream responses** → :func:`~framework.utils.streaming.get_streamer` + :class:`~framework.utils.streaming.StreamWriter`
+         **Build a new capability** → :class:`~osprey.base.BaseCapability` + :func:`~osprey.base.decorators.capability_node`
+
+         **Add approval workflows** → :class:`~osprey.approval.ApprovalManager` + :doc:`03_production_systems/01_human-approval`
+
+         **Execute Python code safely** → :class:`~osprey.services.python_executor.PythonExecutorService`
+
+         **Store user context** → :class:`~osprey.context.ContextManager` + :doc:`01_core_framework/02_state_and_context`
+
+        **Deploy with containers** → :mod:`~osprey.deployment.container_manager` + :doc:`03_production_systems/05_container-management`
+
+        **Handle complex data flows** → :class:`~osprey.data_management.DataSourceManager`
+
+        **Integrate external data** → :class:`~osprey.data_management.DataSourceProvider` + provider patterns
+
+        **Manage LLM models** → :func:`~osprey.models.get_model` + :func:`~osprey.models.get_chat_completion`
+
+        **Configure logging** → :func:`~osprey.utils.logger.get_logger` + :class:`~osprey.utils.logger.ComponentLogger`
+
+        **Stream responses** → :func:`~osprey.utils.streaming.get_streamer` + :class:`~osprey.utils.streaming.StreamWriter`
 
       .. tab-item:: By System Component
          :class-content: component-tab

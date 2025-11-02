@@ -112,8 +112,8 @@ Create a data source provider by extending the base provider interface:
    """Custom Data Source Provider Example"""
    
    from typing import Optional
-   from framework.data_management.providers import DataSourceProvider, DataSourceContext
-   from framework.data_management.request import DataSourceRequest
+   from osprey.data_management.providers import DataSourceProvider, DataSourceContext
+   from osprey.data_management.request import DataSourceRequest
    import logging
    
    logger = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ Register your provider in your application's registry:
 
    """Provider Registration in Application Registry"""
    
-   from framework.registry.base import (
+   from osprey.registry.base import (
        RegistryConfig, RegistryConfigProvider, DataSourceRegistration
    )
    
@@ -233,10 +233,10 @@ Access your data sources through the unified manager:
 
    """Using Data Sources in Capabilities"""
    
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
-   from framework.context import ContextManager
-   from framework.data_management import (
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState
+   from osprey.context import ContextManager
+   from osprey.data_management import (
        get_data_source_manager, create_data_source_request, DataSourceRequester
    )
    from typing import Dict, Any
@@ -328,10 +328,10 @@ Complete working example:
 
 .. code-block:: python
 
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
-   from framework.context import ContextManager
-   from framework.data_management import (
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState
+   from osprey.context import ContextManager
+   from osprey.data_management import (
        get_data_source_manager, create_data_source_request, DataSourceRequester
    )
    
@@ -365,10 +365,10 @@ Test your data source integration:
 
    async def test_data_source():
        """Test data source integration."""
-       from framework.data_management import (
+       from osprey.data_management import (
            get_data_source_manager, create_data_source_request, DataSourceRequester
        )
-       from framework.state import AgentState
+       from osprey.state import AgentState
        
        # Create test state and request
        state: AgentState = {"messages": []}

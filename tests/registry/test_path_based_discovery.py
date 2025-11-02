@@ -13,14 +13,14 @@ from pathlib import Path
 import tempfile
 import sys
 
-from framework.registry.manager import RegistryManager
-from framework.registry.base import (
+from osprey.registry.manager import RegistryManager
+from osprey.registry.base import (
     RegistryConfigProvider,
     RegistryConfig,
     CapabilityRegistration,
     ContextClassRegistration
 )
-from framework.registry.helpers import (
+from osprey.registry.helpers import (
     extend_framework_registry,
     get_framework_defaults
 )
@@ -37,7 +37,7 @@ class TestPathBasedLoading:
         registry_file = registry_dir / "registry.py"
         
         registry_file.write_text("""
-from framework.registry import (
+from osprey.registry import (
     RegistryConfigProvider,
     RegistryConfig,
     CapabilityRegistration
@@ -83,7 +83,7 @@ class TestRegistryProvider(RegistryConfigProvider):
         registry_file = registry_dir / "registry.py"
         
         registry_file.write_text("""
-from framework.registry import (
+from osprey.registry import (
     RegistryConfigProvider,
     RegistryConfig
 )
@@ -105,7 +105,7 @@ class TestRegistryProvider(RegistryConfigProvider):
     
     def test_load_missing_file_raises_error(self, tmp_path):
         """Test that missing registry file raises clear error."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Error is raised during __init__ when config is built
         with pytest.raises(RegistryError, match="Registry file not found"):
@@ -113,7 +113,7 @@ class TestRegistryProvider(RegistryConfigProvider):
     
     def test_load_invalid_python_raises_error(self, tmp_path):
         """Test that invalid Python file raises clear error."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Create invalid Python file
         registry_file = tmp_path / "bad_registry.py"
@@ -125,7 +125,7 @@ class TestRegistryProvider(RegistryConfigProvider):
     
     def test_load_no_provider_raises_error(self, tmp_path):
         """Test that registry without RegistryConfigProvider raises error."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Create valid Python file but no provider
         registry_file = tmp_path / "no_provider.py"
@@ -141,12 +141,12 @@ def some_function():
     
     def test_load_multiple_providers_raises_error(self, tmp_path):
         """Test that registry with multiple providers raises error."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Create file with two providers
         registry_file = tmp_path / "multi_provider.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class Provider1(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -168,7 +168,7 @@ class Provider2(RegistryConfigProvider):
         app1_dir.mkdir(parents=True)
         app1_file = app1_dir / "registry.py"
         app1_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig, CapabilityRegistration
+from osprey.registry import RegistryConfigProvider, RegistryConfig, CapabilityRegistration
 
 class App1Provider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -191,7 +191,7 @@ class App1Provider(RegistryConfigProvider):
         app2_dir.mkdir(parents=True)
         app2_file = app2_dir / "registry.py"
         app2_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig, CapabilityRegistration
+from osprey.registry import RegistryConfigProvider, RegistryConfig, CapabilityRegistration
 
 class App2Provider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -386,7 +386,7 @@ class TestConfigFormats:
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class AppProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -404,7 +404,7 @@ class AppProvider(RegistryConfigProvider):
         app1_file = tmp_path / "app1" / "registry.py"
         app1_file.parent.mkdir(parents=True)
         app1_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class App1Provider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -414,7 +414,7 @@ class App1Provider(RegistryConfigProvider):
         app2_file = tmp_path / "app2" / "registry.py"
         app2_file.parent.mkdir(parents=True)
         app2_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class App2Provider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -434,7 +434,7 @@ class TestErrorHandling:
     
     def test_missing_file_error_message(self, tmp_path):
         """Test error message for missing registry file."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Error is raised during __init__
         with pytest.raises(RegistryError) as exc_info:
@@ -446,7 +446,7 @@ class TestErrorHandling:
     
     def test_no_provider_error_message(self, tmp_path):
         """Test error message when no provider found."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         registry_file = tmp_path / "registry.py"
         registry_file.write_text("# No provider here\n")
@@ -461,7 +461,7 @@ class TestErrorHandling:
     
     def test_invalid_directory_path_raises_error(self, tmp_path):
         """Test that passing a directory instead of file raises error."""
-        from framework.registry.manager import RegistryError
+        from osprey.registry.manager import RegistryError
         
         # Create a directory
         registry_dir = tmp_path / "app"
@@ -498,7 +498,7 @@ class TestHelperIntegration:
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from framework.registry import (
+from osprey.registry import (
     RegistryConfigProvider,
     RegistryConfig,
     extend_framework_registry,
@@ -534,7 +534,7 @@ class AppProvider(RegistryConfigProvider):
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from framework.registry import (
+from osprey.registry import (
     RegistryConfigProvider,
     RegistryConfig,
     extend_framework_registry,
@@ -585,7 +585,7 @@ class TestSysPathManagement:
         # Create registry that references app modules
         registry_file = app_dir / "registry.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig, ContextClassRegistration
+from osprey.registry import RegistryConfigProvider, RegistryConfig, ContextClassRegistration
 
 class TestProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -604,7 +604,7 @@ class TestProvider(RegistryConfigProvider):
         # Create the referenced module
         context_file = app_dir / "context_classes.py"
         context_file.write_text("""
-from framework.context import BaseContext
+from osprey.context import BaseContext
 
 class TestContext(BaseContext):
     def __init__(self):
@@ -637,7 +637,7 @@ class TestContext(BaseContext):
         
         registry_file = app_dir / "registry.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class TestProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -665,7 +665,7 @@ class TestProvider(RegistryConfigProvider):
         
         registry_file = app_dir / "registry.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class TestProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -715,7 +715,7 @@ models:
         # Create context_classes module
         context_file = app_dir / "context_classes.py"
         context_file.write_text("""
-from framework.context.base import CapabilityContext
+from osprey.context.base import CapabilityContext
 
 class WeatherContext(CapabilityContext):
     def __init__(self):
@@ -726,7 +726,7 @@ class WeatherContext(CapabilityContext):
         # Create registry that references it
         registry_file = app_dir / "registry.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig, ContextClassRegistration
+from osprey.registry import RegistryConfigProvider, RegistryConfig, ContextClassRegistration
 
 class WeatherProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:
@@ -775,7 +775,7 @@ class WeatherProvider(RegistryConfigProvider):
         
         registry_file = config_dir / "registry.py"
         registry_file.write_text("""
-from framework.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, RegistryConfig
 
 class TestProvider(RegistryConfigProvider):
     def get_registry_config(self) -> RegistryConfig:

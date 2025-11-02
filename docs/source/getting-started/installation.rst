@@ -26,10 +26,10 @@ This installation guide covers the complete framework setup process:
    - **Disk space:** At least 5GB free for containers and dependencies
    
    **What You'll Install:**
-   
+
    - Podman 5.0.0+ (container runtime)
    - Python 3.11 (programming language)
-   - Alpha Berkeley Framework (pip package)
+   - Osprey Framework (pip package)
    
    **Time estimate:** 30-60 minutes for complete setup
 
@@ -91,7 +91,7 @@ After creating and activating the virtual environment, install the framework pac
    pip install --upgrade pip
    
    # Install the framework
-   pip install alpha-berkeley-framework
+   pip install osprey-framework
 
 .. admonition:: New in v0.7+: Pip-Installable Architecture
    :class: version-07plus-change
@@ -118,13 +118,13 @@ After creating and activating the virtual environment, install the framework pac
    .. code-block:: bash
 
       # Recommended: Core + scientific computing
-      pip install alpha-berkeley-framework[scientific]
-      
+      pip install osprey-framework[scientific]
+
       # Core + documentation
-      pip install alpha-berkeley-framework[docs]
-      
+      pip install osprey-framework[docs]
+
       # Everything (includes docs, dev tools, etc.)
-      pip install alpha-berkeley-framework[all]
+      pip install osprey-framework[all]
 
 **Creating a New Project**
 
@@ -137,11 +137,11 @@ Once the framework is installed, you can create a new project using either the i
 
 **Method 1: Interactive Mode (Recommended for New Users)**
 
-Simply run ``framework`` without any arguments to launch the interactive menu:
+Simply run ``osprey`` without any arguments to launch the interactive menu:
 
 .. code-block:: bash
 
-   framework
+   osprey
 
 The interactive menu will:
 
@@ -153,12 +153,12 @@ The interactive menu will:
 
 **Method 2: Direct CLI Command**
 
-For automation or if you prefer direct commands, use ``framework init``:
+For automation or if you prefer direct commands, use ``osprey init``:
 
 .. code-block:: bash
 
    # Create a project with the hello_world_weather template
-   framework init my-weather-agent --template hello_world_weather
+   osprey init my-weather-agent --template hello_world_weather
    
    # Navigate to your project
    cd my-weather-agent
@@ -282,10 +282,10 @@ The generated project includes both a ``config.yml`` configuration file and a ``
            # These are already in your shell environment
            export ANTHROPIC_API_KEY=sk-ant-...
            export CBORG_API_KEY=...
-           
+
            # When you create a project, the framework automatically creates .env with them!
-           framework init my-agent
-           # or use interactive mode: framework
+           osprey init my-agent
+           # or use interactive mode: osprey
 
         The framework will create a ``.env`` file automatically with your detected keys.
 
@@ -332,11 +332,11 @@ The generated project includes both a ``config.yml`` configuration file and a ``
 
         **Optional Variables:**
 
-        ``FRAMEWORK_PROJECT``
+        ``OSPREY_PROJECT``
            Default project directory for CLI commands (new in v0.7.7). Allows working with specific projects without changing directories.
-           
+
            Example: ``/home/user/projects/my-agent``
-           
+
            See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for multi-project workflow examples.
 
         ``LOCAL_PYTHON_VENV``
@@ -407,7 +407,7 @@ The framework CLI provides convenient commands for managing services. For detail
 .. admonition:: New in v0.7+: Framework CLI Commands
    :class: version-07plus-change
 
-   Service management is now handled through the :doc:`framework deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>` command instead of running Python scripts directly.
+   Service management is now handled through the :doc:`osprey deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>` command instead of running Python scripts directly.
 
 .. tab-set::
 
@@ -420,7 +420,7 @@ The framework CLI provides convenient commands for managing services. For detail
 
         .. code-block:: bash
 
-           framework deploy up
+           osprey deploy up
 
         3. Monitor the logs to ensure it starts correctly
         4. Once stable, stop with ``Ctrl+C`` and uncomment the next service
@@ -434,7 +434,7 @@ The framework CLI provides convenient commands for managing services. For detail
 
         .. code-block:: bash
 
-           framework deploy up --detached
+           osprey deploy up --detached
 
         This runs all services in the background, suitable for production deployments where you don't need to monitor individual service logs.
 
@@ -442,11 +442,11 @@ The framework CLI provides convenient commands for managing services. For detail
 
 .. code-block:: bash
 
-   framework deploy down      # Stop all services
-   framework deploy restart   # Restart services
-   framework deploy status    # Show service status
-   framework deploy clean     # Clean deployment
-   framework deploy rebuild   # Rebuild containers
+   osprey deploy down      # Stop all services
+   osprey deploy restart   # Restart services
+   osprey deploy status    # Show service status
+   osprey deploy clean     # Clean deployment
+   osprey deploy rebuild   # Rebuild containers
 
 **Verify Services are Running**
 
@@ -465,7 +465,7 @@ Once services are running, access the web interface at:
 OpenWebUI Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Language Models that provides a ChatGPT-like experience with extensive customization options. The framework's integration provides real-time progress tracking during agent execution, automatic display of :func:`registered figures <framework.state.StateManager.register_figure>` and :func:`notebooks <framework.state.StateManager.register_notebook>`, and session continuity across conversations.
+`OpenWebUI <https://openwebui.com/>`_ is a feature-rich, self-hosted web interface for Language Models that provides a ChatGPT-like experience with extensive customization options. The framework's integration provides real-time progress tracking during agent execution, automatic display of :func:`registered figures <osprey.state.StateManager.register_figure>` and :func:`notebooks <osprey.state.StateManager.register_notebook>`, and session continuity across conversations.
 
 .. _Ollama Connection:
 
@@ -477,7 +477,7 @@ Once the correct URL is configured and Ollama is serving, `OpenWebUI <https://op
 
 **Pipeline Connection:**
 
-The Alpha Berkeley framework provides a pipeline connection to the OpenWebUI service.
+The Osprey framework provides a pipeline connection to the OpenWebUI service.
 
 .. dropdown:: Understanding Pipelines
    :color: info
@@ -496,7 +496,7 @@ The Alpha Berkeley framework provides a pipeline connection to the OpenWebUI ser
 3. Configure the pipeline connection with these details:
    
    - **URL**: ``http://pipelines:9099`` (if using default configuration)
-   - **API Key**: Found in ``services/framework/pipelines/docker-compose.yml.j2`` under ``PIPELINES_API_KEY`` (default ``0p3n-w3bu!``)
+   - **API Key**: Found in ``services/osprey/pipelines/docker-compose.yml.j2`` under ``PIPELINES_API_KEY`` (default ``0p3n-w3bu!``)
    
    **Note**: The URL uses ``pipelines:9099`` instead of ``localhost:9099`` because OpenWebUI runs inside a container and communicates with the pipelines service through the container network.
 
@@ -555,7 +555,7 @@ For optimal performance and user experience, consider these additional configura
 
         **Available Functions in Repository:**
 
-        The framework includes several pre-built functions located in ``services/framework/open-webui/functions/``:
+        The framework includes several pre-built functions located in ``services/osprey/open-webui/functions/``:
 
         - ``execution_history_button.py`` - View and manage execution history
         - ``agent_context_button.py`` - Access agent context information  

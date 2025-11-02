@@ -49,13 +49,13 @@ Configure your Python execution system with environment settings and approval po
 .. code-block:: yaml
 
    # config.yml - Python Execution Configuration
-   framework:
+   osprey:
      # Python Executor Service Configuration
      python_executor:
        max_generation_retries: 3      # Maximum retries for code generation failures
        max_execution_retries: 3       # Maximum retries for execution failures
        execution_timeout_seconds: 600 # Execution timeout in seconds (default: 10 minutes)
-     
+
      execution:
        execution_method: "container"  # or "local"
        modes:
@@ -64,16 +64,16 @@ Configure your Python execution system with environment settings and approval po
            allows_writes: false
            requires_approval: false
          write_access:
-           kernel_name: "python3-epics-write" 
+           kernel_name: "python3-epics-write"
            allows_writes: true
            requires_approval: true
-       
+
        # Container execution settings
        container:
          jupyter_host: "localhost"
          jupyter_port: 8888
-         
-       # Local execution settings  
+
+       # Local execution settings
        local:
          python_env_path: "${LOCAL_PYTHON_VENV}"
 
@@ -108,17 +108,17 @@ Use the Python execution service directly in your capabilities with proper appro
 
 .. code-block:: python
 
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState, StateManager
-   from framework.registry import get_registry
-   from framework.services.python_executor import PythonExecutionRequest
-   from framework.approval import (
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState, StateManager
+   from osprey.registry import get_registry
+   from osprey.services.python_executor import PythonExecutionRequest
+   from osprey.approval import (
        create_approval_type,
        get_approval_resume_data,
        clear_approval_state,
        handle_service_with_interrupts
    )
-   from framework.utils.config import get_full_configuration
+   from osprey.utils.config import get_full_configuration
    from langgraph.types import Command
 
    @capability_node
@@ -233,7 +233,7 @@ The execution method is typically set in your ``config.yml``:
 
 .. code-block:: yaml
 
-   framework:
+   osprey:
      execution:
        execution_method: "container"  # or "local"
        container:

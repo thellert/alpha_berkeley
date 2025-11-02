@@ -1,9 +1,9 @@
-Understanding the Framework
-===========================
+Understanding Osprey
+====================
 
 .. toctree::
    :maxdepth: 2
-   :caption: Understanding the Framework
+   :caption: Understanding Osprey
    :hidden:
 
    01_infrastructure-architecture
@@ -11,10 +11,10 @@ Understanding the Framework
    03_langgraph-integration
    04_orchestrator-first-philosophy
 
-The Alpha Berkeley Framework is a production-ready conversational agentic system built on LangGraph's StateGraph foundation. Its distinctive architecture centers on **Classification and Orchestration** - capability selection followed by upfront execution planning - providing reliable, scalable multi-step operations with human oversight that scales well to a large number of domain specific tools.
+The Osprey Framework is a production-ready conversational agentic system built on LangGraph's StateGraph foundation. Its distinctive architecture centers on **Classification and Orchestration** - capability selection followed by upfront execution planning - providing reliable, scalable multi-step operations with human oversight that scales well to a large number of domain specific tools.
 
 .. image:: ../../_static/resources/workflow_overview.pdf
-   :alt: Alpha Berkeley Framework Workflow Overview
+   :alt: Osprey Framework Workflow Overview
    :align: center
    :width: 100%
 
