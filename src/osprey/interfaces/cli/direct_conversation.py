@@ -40,7 +40,6 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.styles import Style
-
 # Centralized command system
 from osprey.commands import get_command_registry, CommandContext, CommandResult
 from osprey.commands.completer import UnifiedCommandCompleter
