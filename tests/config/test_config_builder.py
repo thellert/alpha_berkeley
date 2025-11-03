@@ -214,7 +214,7 @@ execution_control:
         monkeypatch.setenv('CONFIG_FILE', str(config_file))
 
         # Reset global config
-        import framework.utils.config as config_module
+        import osprey.utils.config as config_module
         config_module._default_config = None
         config_module._default_configurable = None
 

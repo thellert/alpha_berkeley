@@ -12,10 +12,9 @@ The CLI is simple - it handles user interaction and delegates all processing to 
 """
 
 import asyncio
-import sys
 import os
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any
 
 # Load environment variables before any other imports
 from dotenv import load_dotenv
@@ -23,24 +22,24 @@ load_dotenv()
 
 
 from osprey.registry import initialize_registry, get_registry
+from langgraph.checkpoint.memory import MemorySaver
 from osprey.graph import create_graph
 from osprey.infrastructure.gateway import Gateway
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.messages import HumanMessage
-from osprey.utils.logger import get_logger
 from osprey.utils.config import get_full_configuration
+from osprey.utils.logger import get_logger
 from rich.console import Console
-from rich.text import Text
+
+# Centralized styles
+from osprey.cli.styles import OspreyColors, Styles
 
 # Modern CLI dependencies
 from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.styles import Style
-from prompt_toolkit.completion import merge_completers
 
 # Centralized command system
 from osprey.commands import get_command_registry, CommandContext, CommandResult
@@ -143,23 +142,23 @@ class CLI:
         # Create custom key bindings
         self.key_bindings = self._create_key_bindings()
 
-        # Create custom style with dark completion menu background
+        # Create custom style with dark completion menu background using centralized theme
         self.prompt_style = Style.from_dict({
-            'prompt': '#00aa00 bold',
-            'suggestion': '#666666 italic',
+            'prompt': f'{OspreyColors.PRIMARY} bold',
+            'suggestion': f'{OspreyColors.TEXT_DIM} italic',
 
             # Dark completion menu styling
-            'completion-menu': 'bg:#1c1c1c',           # Almost black background
-            'completion-menu.completion': 'bg:#1c1c1c', # Same dark background for items
-            'completion-menu.completion.current': 'bg:#2d2d2d', # Slightly lighter for selected
-            'completion-menu.scrollbar': '#444444',     # Dim scrollbar
-            'completion-menu.scrollbar.background': '#1c1c1c', # Dark scrollbar background
+            'completion-menu': f'bg:{OspreyColors.BG_SELECTED}',
+            'completion-menu.completion': f'bg:{OspreyColors.BG_SELECTED}',
+            'completion-menu.completion.current': f'bg:{OspreyColors.BG_HIGHLIGHT}',
+            'completion-menu.scrollbar': OspreyColors.BORDER_DIM,
+            'completion-menu.scrollbar.background': OspreyColors.BG_SELECTED,
 
             # Fallback styles
-            'completion': 'bg:#1c1c1c',
-            'completion.current': 'bg:#2d2d2d',
-            'scrollbar': '#444444',
-            'scrollbar.background': '#1c1c1c',
+            'completion': f'bg:{OspreyColors.BG_SELECTED}',
+            'completion.current': f'bg:{OspreyColors.BG_HIGHLIGHT}',
+            'scrollbar': OspreyColors.BORDER_DIM,
+            'scrollbar.background': OspreyColors.BG_SELECTED,
         })
 
         # Initialize command system
@@ -273,33 +272,15 @@ class CLI:
            :func:`osprey.graph.create_graph` : Graph creation with checkpointing
            :class:`osprey.infrastructure.gateway.Gateway` : Message processing
         """
-        # Cool colored ASCII art banner
+        # Simple startup message (no banner in chat)
         self.console.print()
-
-        # Create the banner with colors
-        banner_text = """
-    ╔═══════════════════════════════════════════════════════════╗
-    ║                                                           ║
-    ║                                                           ║
-    ║    ░█████╗░░██████╗██████╗░██████╗░███████╗██╗░░░██╗      ║
-    ║    ██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔════╝╚██╗░██╔╝      ║
-    ║    ██║░░██║╚█████╗░██████╔╝██████╔╝█████╗░░░╚████╔╝░      ║
-    ║    ██║░░██║░╚═══██╗██╔═══╝░██╔══██╗██╔══╝░░░░╚██╔╝░░      ║
-    ║    ╚█████╔╝██████╔╝██║░░░░░██║░░██║███████╗░░░██║░░░      ║
-    ║    ░╚════╝░╚═════╝░╚═╝░░░░░╚═╝░░╚═╝╚══════╝░░░╚═╝░░░      ║
-    ║                                                           ║
-    ║                                                           ║
-    ║      Command Line Interface for the Osprey Framework      ║
-    ╚═══════════════════════════════════════════════════════════╝
-        """
-
-        self.console.print(Text(banner_text, style="bold cyan"))
-        self.console.print("💡 Type 'bye' or 'end' to exit", style="yellow")
-        self.console.print("⚡ Use slash commands (/) for quick actions - try /help", style="bright_blue")
+        self.console.print(f"[{Styles.PRIMARY}]Osprey Chat Interface[/{Styles.PRIMARY}]", style="bold")
+        self.console.print(f"[{Styles.DIM}]Type 'bye' or 'end' to exit[/{Styles.DIM}]")
+        self.console.print(f"[{Styles.DIM}]Use slash commands (/) for quick actions - try /help[/{Styles.DIM}]")
         self.console.print()
 
         # Initialize configuration using LangGraph config
-        self.console.print("🔄 Initializing configuration...", style="blue")
+        self.console.print(f"[{Styles.INFO}]🔄 Initializing configuration...[/{Styles.INFO}]")
 
         # Create unique thread for this CLI session
         self.thread_id = f"cli_session_{uuid.uuid4().hex[:8]}"
@@ -311,7 +292,7 @@ class CLI:
         configurable.update({
             "user_id": "cli_user",
             "thread_id": self.thread_id,
-            "chat_id": "cli_chat", 
+            "chat_id": "cli_chat",
             "session_id": self.thread_id,
             "interface_context": "cli"
         })
@@ -327,7 +308,7 @@ class CLI:
         }
 
         # Initialize framework
-        self.console.print("🔄 Initializing framework...", style="blue")
+        self.console.print(f"[{Styles.INFO}]🔄 Initializing framework...[/{Styles.INFO}]")
         initialize_registry(config_path=self.config_path)
         registry = get_registry()
         checkpointer = MemorySaver()
@@ -339,11 +320,11 @@ class CLI:
         # Initialize modern prompt session
         self.prompt_session = self._create_prompt_session()
 
-        self.console.print(f"✅ Framework initialized! Thread ID: {self.thread_id}", style="green")
-        self.console.print("  • Use ↑/↓ arrow keys to navigate command history", style="dim cyan")
-        self.console.print("  • Use ←/→ arrow keys to edit current line", style="dim cyan")
-        self.console.print("  • Press Ctrl+L to clear screen", style="dim cyan")
-        self.console.print("  • Type 'bye' or 'end' to exit, or press Ctrl+C", style="dim cyan")
+        self.console.print(f"[{Styles.SUCCESS}]✅ Framework initialized! Thread ID: {self.thread_id}[/{Styles.SUCCESS}]")
+        self.console.print(f"[{Styles.DIM}]  • Use ↑/↓ arrow keys to navigate command history[/{Styles.DIM}]")
+        self.console.print(f"[{Styles.DIM}]  • Use ←/→ arrow keys to edit current line[/{Styles.DIM}]")
+        self.console.print(f"[{Styles.DIM}]  • Press Ctrl+L to clear screen[/{Styles.DIM}]")
+        self.console.print(f"[{Styles.DIM}]  • Type 'bye' or 'end' to exit, or press Ctrl+C[/{Styles.DIM}]")
         self.console.print()
 
     async def run(self):
@@ -407,7 +388,7 @@ class CLI:
 
                 # Exit conditions
                 if user_input.lower() in ["bye", "end"]:
-                    self.console.print("👋 Goodbye!", style="yellow")
+                    self.console.print(f"[{Styles.WARNING}]👋 Goodbye![/{Styles.WARNING}]")
                     break
 
                 # Skip empty input
@@ -445,13 +426,13 @@ class CLI:
                 await self._process_user_input(user_input)
 
             except KeyboardInterrupt:
-                self.console.print("\n👋 Goodbye!", style="yellow")
+                self.console.print(f"\n[{Styles.WARNING}]👋 Goodbye![/{Styles.WARNING}]")
                 break
             except EOFError:
-                self.console.print("\n👋 Goodbye!", style="yellow")
+                self.console.print(f"\n[{Styles.WARNING}]👋 Goodbye![/{Styles.WARNING}]")
                 break
             except Exception as e:
-                self.console.print(f"❌ Error: {e}", style="red")
+                self.console.print(f"[{Styles.ERROR}]❌ Error: {e}[/{Styles.ERROR}]")
                 logger.exception("Unexpected error during interaction")
                 continue
 
@@ -505,27 +486,27 @@ class CLI:
            :meth:`_show_final_result` : Final result display
         """
 
-        self.console.print(f"🔄 Processing: {user_input}", style="blue")
+        self.console.print(f"[{Styles.INFO}]🔄 Processing: {user_input}[/{Styles.INFO}]")
 
         # Gateway handles all preprocessing
         result = await self.gateway.process_message(
-            user_input, 
-            self.graph, 
+            user_input,
+            self.graph,
             self.base_config
         )
 
         # Handle result
         if result.error:
-            self.console.print(f"❌ Error: {result.error}", style="red")
+            self.console.print(f"[{Styles.ERROR}]❌ Error: {result.error}[/{Styles.ERROR}]")
             return
 
         # Show slash command processing if any
         if result.slash_commands_processed:
-            self.console.print(f"✅ Processed commands: {result.slash_commands_processed}", style="green")
+            self.console.print(f"[{Styles.SUCCESS}]✅ Processed commands: {result.slash_commands_processed}[/{Styles.SUCCESS}]")
 
         # Execute the result
         if result.resume_command:
-            self.console.print("🔄 Resuming from interrupt...", style="blue")
+            self.console.print(f"[{Styles.INFO}]🔄 Resuming from interrupt...[/{Styles.INFO}]")
             # Resume commands come from gateway - execute with streaming
             try:
                 async for chunk in self.graph.astream(result.resume_command, config=self.base_config, stream_mode="custom"):
@@ -535,9 +516,9 @@ class CLI:
                         progress = chunk.get("progress", 0)
                         # Show real-time status updates
                         if progress:
-                            self.console.print(f"🔄 {message} ({progress*100:.0f}%)", style="blue")
+                            self.console.print(f"[{Styles.INFO}]🔄 {message} ({progress*100:.0f}%)[/{Styles.INFO}]")
                         else:
-                            self.console.print(f"🔄 {message}", style="blue")
+                            self.console.print(f"[{Styles.INFO}]🔄 {message}[/{Styles.INFO}]")
 
                 # After resuming, check if there are more interrupts or if execution completed
                 state = self.graph.get_state(config=self.base_config)
@@ -546,7 +527,7 @@ class CLI:
                 if state.interrupts:
                     interrupt = state.interrupts[0]
                     user_message = interrupt.value.get('user_message', 'Additional approval required')
-                    self.console.print(f"\n{user_message}", style="yellow")
+                    self.console.print(f"\n[{Styles.WARNING}]{user_message}[/{Styles.WARNING}]")
 
                     user_input = await self.prompt_session.prompt_async(
                         HTML('<prompt>👤 You: </prompt>'),
@@ -559,15 +540,15 @@ class CLI:
                     await self._show_final_result(state.values)
 
             except Exception as e:
-                self.console.print(f"❌ Resume error: {e}", style="red")
+                self.console.print(f"[{Styles.ERROR}]❌ Resume error: {e}[/{Styles.ERROR}]")
                 logger.exception("Error during resume execution")
         elif result.agent_state:
-            # Debug: Show execution step results count in fresh state  
+            # Debug: Show execution step results count in fresh state
             step_results = result.agent_state.get("execution_step_results", {})
-            self.console.print(f"🔄 Starting new conversation turn (execution_step_results: {len(step_results)} records)...", style="blue")
+            self.console.print(f"[{Styles.INFO}]🔄 Starting new conversation turn (execution_step_results: {len(step_results)} records)...[/{Styles.INFO}]")
             await self._execute_result(result.agent_state)
         else:
-            self.console.print("⚠️  No action required", style="yellow")
+            self.console.print(f"[{Styles.WARNING}]⚠️  No action required[/{Styles.WARNING}]")
 
     async def _execute_result(self, input_data: Any):
         """Execute agent processing with real-time streaming and interrupt handling.
@@ -631,9 +612,9 @@ class CLI:
                     progress = chunk.get("progress", 0)
                     # Show real-time status updates
                     if progress:
-                        self.console.print(f"🔄 {message} ({progress*100:.0f}%)", style="white")
+                        self.console.print(f"[{Styles.INFO}]🔄 {message} ({progress*100:.0f}%)[/{Styles.INFO}]")
                     else:
-                        self.console.print(f"🔄 {message}", style="white")
+                        self.console.print(f"[{Styles.INFO}]🔄 {message}[/{Styles.INFO}]")
 
             # After streaming completes, check for interrupts
             state = self.graph.get_state(config=self.base_config)
@@ -647,7 +628,7 @@ class CLI:
 
                 # Extract user message from interrupt data
                 user_message = interrupt_value.get('user_message', 'Approval required')
-                self.console.print(f"\n{user_message}", style="yellow")
+                self.console.print(f"\n[{Styles.WARNING}]{user_message}[/{Styles.WARNING}]")
 
                 # Get user input for approval
                 user_input = await self.prompt_session.prompt_async(
@@ -664,10 +645,10 @@ class CLI:
             await self._show_final_result(state.values)
 
         except Exception as e:
-            self.console.print(f"❌ Execution error: {e}", style="red")
+            self.console.print(f"[{Styles.ERROR}]❌ Execution error: {e}[/{Styles.ERROR}]")
             logger.exception("Error during graph execution")
 
-    async def _show_final_result(self, result: Dict[str, Any]):
+    async def _show_final_result(self, result: dict[str, Any]):
         """Display the final result from agent graph execution with figures, commands, and notebooks.
 
         Extracts and displays the final response from the completed agent
@@ -690,7 +671,7 @@ class CLI:
         even in complex conversation flows.
 
         :param result: Complete agent state containing messages and execution data
-        :type result: Dict[str, Any]
+        :type result: dict[str, Any]
 
         .. note::
            The method displays execution step count for debugging purposes,
@@ -734,7 +715,7 @@ class CLI:
 
         # Debug: Show execution step results count after execution
         step_results = result.get("execution_step_results", {})
-        self.console.print(f"📊 Execution completed (execution_step_results: {len(step_results)} records)", style="cyan")
+        self.console.print(f"[{Styles.INFO}]📊 Execution completed (execution_step_results: {len(step_results)} records)[/{Styles.INFO}]")
 
         # Extract and display the main text response
         text_response = None
@@ -745,30 +726,30 @@ class CLI:
                 if hasattr(msg, 'content') and msg.content:
                     if not hasattr(msg, 'type') or msg.type != 'human':
                         text_response = msg.content
-                        self.console.print(f"🤖 {msg.content}", style="green")
+                        self.console.print(f"[{Styles.SUCCESS}]🤖 {msg.content}[/{Styles.SUCCESS}]")
                         break
 
         if not text_response:
             # Fallback if no messages found
-            self.console.print("✅ Execution completed", style="green")
+            self.console.print(f"[{Styles.SUCCESS}]✅ Execution completed[/{Styles.SUCCESS}]")
 
         # Extract and display additional content
         figures_output = self._extract_figures_for_cli(result)
         if figures_output:
             self.console.print()  # Add spacing
-            self.console.print(figures_output, style="cyan")
+            self.console.print(f"[{Styles.INFO}]{figures_output}[/{Styles.INFO}]")
 
         commands_output = self._extract_commands_for_cli(result)
         if commands_output:
             self.console.print()  # Add spacing
-            self.console.print(commands_output, style="yellow")
+            self.console.print(f"[{Styles.COMMAND}]{commands_output}[/{Styles.COMMAND}]")
 
         notebooks_output = self._extract_notebooks_for_cli(result)
         if notebooks_output:
             self.console.print()  # Add spacing
-            self.console.print(notebooks_output, style="magenta")
+            self.console.print(f"[{Styles.INFO}]{notebooks_output}[/{Styles.INFO}]")
 
-    async def _handle_stream_event(self, event: Dict[str, Any]):
+    async def _handle_stream_event(self, event: dict[str, Any]):
         """Handle and display streaming events from LangGraph execution.
 
         Processes streaming events from the agent graph to extract and display
@@ -787,7 +768,7 @@ class CLI:
         the framework architecture.
 
         :param event: Streaming event dictionary from LangGraph execution
-        :type event: Dict[str, Any]
+        :type event: dict[str, Any]
 
         .. note::
            This method is designed for LangGraph's standard streaming mode
@@ -827,14 +808,14 @@ class CLI:
                     for msg in reversed(messages):
                         if hasattr(msg, 'content') and msg.content:
                             if not hasattr(msg, 'type') or msg.type != 'human':
-                                self.console.print(f"🤖 {msg.content}", style="green")
+                                self.console.print(f"[{Styles.SUCCESS}]🤖 {msg.content}[/{Styles.SUCCESS}]")
                                 return
 
 
         # If no response found, show completion
-        self.console.print("✅ Execution completed", style="green")
+        self.console.print(f"[{Styles.SUCCESS}]✅ Execution completed[/{Styles.SUCCESS}]")
 
-    def _extract_figures_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_figures_for_cli(self, state: dict[str, Any]) -> str | None:
         """Extract figures from centralized registry and format for CLI display.
 
         Extracts generated figures from the state and formats them for terminal
@@ -843,9 +824,9 @@ class CLI:
         access directly from their terminal.
 
         :param state: Complete agent state containing figure registry
-        :type state: Dict[str, Any]
+        :type state: dict[str, Any]
         :return: Formatted string with figure information or None if no figures
-        :rtype: Optional[str]
+        :rtype: str | None
 
         Examples:
             Display figures in terminal::
@@ -865,7 +846,7 @@ class CLI:
             logger.info(f"Processing {len(ui_figures)} figures from centralized registry for CLI display")
             figure_lines = ["📊 Generated Figures:"]
 
-            for i, figure_entry in enumerate(ui_figures, 1):
+            for figure_entry in ui_figures:
                 try:
                     # Extract figure information
                     capability = figure_entry.get("capability", "unknown")
@@ -893,7 +874,7 @@ class CLI:
             logger.error(f"Critical error in CLI figure extraction: {e}")
             return f"❌ Figure display error: {str(e)}"
 
-    def _extract_commands_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_commands_for_cli(self, state: dict[str, Any]) -> str | None:
         """Extract launchable commands from centralized registry and format for CLI display.
 
         Extracts registered commands from the state and formats them for terminal
@@ -901,9 +882,9 @@ class CLI:
         terminal emulators that support them, or copy-paste URLs for others.
 
         :param state: Complete agent state containing command registry
-        :type state: Dict[str, Any]
+        :type state: dict[str, Any]
         :return: Formatted string with command information or None if no commands
-        :rtype: Optional[str]
+        :rtype: str | None
 
         Examples:
             Display commands in terminal::
@@ -947,7 +928,7 @@ class CLI:
             logger.error(f"Critical error in CLI command extraction: {e}")
             return f"❌ Command display error: {str(e)}"
 
-    def _extract_notebooks_for_cli(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_notebooks_for_cli(self, state: dict[str, Any]) -> str | None:
         """Extract notebook links from centralized registry and format for CLI display.
 
         Extracts registered notebook links from the state and formats them for
@@ -955,9 +936,9 @@ class CLI:
         click in terminal emulators that support link clicking.
 
         :param state: Complete agent state containing notebook registry
-        :type state: Dict[str, Any]
+        :type state: dict[str, Any]
         :return: Formatted string with notebook information or None if no notebooks
-        :rtype: Optional[str]
+        :rtype: str | None
 
         Examples:
             Display notebooks in terminal::
@@ -1060,4 +1041,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

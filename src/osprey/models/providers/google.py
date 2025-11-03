@@ -6,7 +6,6 @@ from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai.providers.google_gla import GoogleGLAProvider
 from google import genai
 from google.genai import types as genai_types
-
 from .base import BaseProvider
 
 
@@ -58,7 +57,17 @@ class GoogleProviderAdapter(BaseProvider):
         **kwargs
     ) -> str:
         """Execute Google Gemini chat completion with thinking support."""
-        client = genai.Client(api_key=api_key)
+        # Suppress Google library's INFO logs (AFC messages, etc.)
+        import logging
+        google_logger = logging.getLogger('google.genai')
+        original_level = google_logger.level
+        google_logger.setLevel(logging.WARNING)
+        
+        try:
+            client = genai.Client(api_key=api_key)
+        finally:
+            # Restore original log level
+            google_logger.setLevel(original_level)
 
         # Handle thinking configuration
         enable_thinking = kwargs.get("enable_thinking", False)
@@ -104,7 +113,17 @@ class GoogleProviderAdapter(BaseProvider):
         test_model = model_id or self.health_check_model_id
 
         try:
-            client = genai.Client(api_key=api_key)
+            # Suppress Google library's INFO logs (AFC messages, etc.)
+            import logging
+            google_logger = logging.getLogger('google.genai')
+            original_level = google_logger.level
+            google_logger.setLevel(logging.WARNING)
+            
+            try:
+                client = genai.Client(api_key=api_key)
+            finally:
+                # Restore original log level
+                google_logger.setLevel(original_level)
 
             # Minimal test: 1 token in, 1 token out (~$0.0001 cost)
             response = client.models.generate_content(

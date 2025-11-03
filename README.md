@@ -1,8 +1,10 @@
-# Alpha Berkeley Framework
+# Osprey Framework
 
+> **🦅 Rebranded from Alpha Berkeley Framework**  
+> This project has been renamed to Osprey Framework. If you're upgrading from the Alpha Berkeley Framework, see the [migration guide](https://als-apg.github.io/osprey/getting-started/migration-guide.html).
 
 > **🚧 Early Access Release**  
-> This is an early access version of the Alpha Berkeley Framework. While the core functionality is stable and ready for experimentation, documentation and APIs may still evolve. We welcome feedback and contributions!
+> This is an early access version of the Osprey Framework. While the core functionality is stable and ready for experimentation, documentation and APIs may still evolve. We welcome feedback and contributions!
 
 An open-source, domain-agnostic, capability-based architecture for building intelligent agents that can be adapted to any specific domain.
 
@@ -14,10 +16,10 @@ This work was presented as a contributed oral presentation at [ICALEPCS'25](http
 
 ```bash
 # Install the framework
-pip install alpha-berkeley-framework
+pip install osprey-framework
 
 # Create a new project from a template
-framework init my-weather-agent --template hello_world_weather
+osprey init my-weather-agent --template hello_world_weather
 
 # Navigate to your project
 cd my-weather-agent
@@ -27,7 +29,7 @@ cp .env.example .env
 # Edit .env with your API keys
 
 # Start the command line chat interface
-framework chat
+osprey chat
 
 # Or use the web interface at http://localhost:8080
 ```
@@ -35,7 +37,7 @@ framework chat
 
 ## 📚 Documentation
 
-**[📖 Read the Full Documentation →](https://thellert.github.io/alpha_berkeley)**
+**[📖 Read the Full Documentation →](https://als-apg.github.io/osprey)**
 
 
 ## Key Features
@@ -66,7 +68,7 @@ If you use the Alpha Berkeley Framework in your research or projects, please cit
 
 ---
 
-*For detailed installation instructions, tutorials, and API reference, please visit our [complete documentation](https://thellert.github.io/alpha_berkeley).*
+*For detailed installation instructions, tutorials, and API reference, please visit our [complete documentation](https://als-apg.github.io/osprey).*
 
 ---
 

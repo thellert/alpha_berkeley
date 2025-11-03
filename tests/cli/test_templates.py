@@ -246,8 +246,8 @@ class TestCLIIntegration:
         # Should show next steps
         assert "Next steps:" in result.output
         assert "cd test-project" in result.output
-        assert "framework deploy up" in result.output
-        assert "framework chat" in result.output
+        assert "osprey deploy up" in result.output
+        assert "osprey chat" in result.output
 
 
 if __name__ == "__main__":

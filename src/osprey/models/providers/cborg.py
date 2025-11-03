@@ -23,8 +23,8 @@ class CBorgProviderAdapter(BaseProvider):
     requires_model_id = True
     supports_proxy = True
     default_base_url = None
-    default_model_id = "google/gemini-flash"  # Gemini Flash via CBORG for general use
-    health_check_model_id = "google/gemini-flash"  # Same for health check (already cheap)
+    default_model_id = "anthropic/claude-haiku"  # Claude Haiku via CBORG for general use
+    health_check_model_id = "anthropic/claude-haiku"  # Fast and cost-effective for health checks
     available_models = [
         "anthropic/claude-sonnet",
         "anthropic/claude-haiku",

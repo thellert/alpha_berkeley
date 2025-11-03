@@ -48,8 +48,8 @@ class ClarifyingQuestionsResponse(BaseModel):
     reason: str = Field(description="Brief explanation of why clarification is needed")
     questions: List[str] = Field(
         description="List of specific, targeted questions to clarify the user's request",
-        min_items=1,
-        max_items=4
+        min_length=1,
+        max_length=4
     )
     missing_info: List[str] = Field(
         description="List of types of missing information (e.g., 'time_range', 'system_specification')",
