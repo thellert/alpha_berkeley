@@ -1118,27 +1118,46 @@ def show_status(config_path):
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
-        # Parse newline-delimited JSON output (one JSON object per line)
-        # Note: podman may output valid JSON values that aren't container objects
-        # (e.g., status strings, metadata). We only process dict objects that
-        # represent containers.
+        # Parse JSON output from podman compose
+        # Different compose providers return different formats:
+        # - Some return a JSON array: [{"container1"}, {"container2"}]
+        # - Others return newline-delimited JSON: one object per line
+        # We handle both by trying to parse as array first, then falling back to line-by-line
         # TODO: In future CLI expansion with collapsible blocks, we could display
         # the full raw JSON output for debugging/advanced users.
         containers = []
         if result.stdout.strip():
-            for line in result.stdout.strip().split('\n'):
-                line = line.strip()
-                # Skip warning messages and non-JSON lines
-                if line and not line.startswith('>') and not line.startswith('time='):
-                    try:
-                        container = json.loads(line)
-                        # Only process container objects (dicts), skip other JSON types
-                        # (strings, arrays, etc.) which may be status/metadata
-                        if isinstance(container, dict):
-                            containers.append(container)
-                    except json.JSONDecodeError:
-                        # Skip non-JSON lines (warnings, etc.)
-                        continue
+            # Remove warning/info lines that aren't part of JSON
+            lines = result.stdout.strip().split('\n')
+            json_lines = [line for line in lines 
+                         if line.strip() and 
+                         not line.startswith('>') and 
+                         not line.startswith('time=') and
+                         not 'WARNING:' in line and
+                         not 'Executing external compose' in line]
+            json_text = '\n'.join(json_lines)
+            
+            try:
+                # Try parsing as a JSON array first (podman-compose format)
+                parsed = json.loads(json_text)
+                if isinstance(parsed, list):
+                    # It's an array of containers
+                    containers = [c for c in parsed if isinstance(c, dict)]
+                elif isinstance(parsed, dict):
+                    # Single container object
+                    containers = [parsed]
+            except json.JSONDecodeError:
+                # Fall back to line-by-line parsing (docker compose format)
+                for line in json_lines:
+                    line = line.strip()
+                    if line:
+                        try:
+                            container = json.loads(line)
+                            if isinstance(container, dict):
+                                containers.append(container)
+                        except json.JSONDecodeError:
+                            # Skip unparseable lines
+                            continue
 
         # Create Rich table
         table = Table(show_header=True, header_style="bold cyan")
