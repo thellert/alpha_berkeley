@@ -10,13 +10,12 @@ All existing functionality is preserved without modification.
 
 import click
 import asyncio
-from rich.console import Console
 
-# Import existing CLI interface (Phase 1.5 refactored)
+# Import existing CLI interface
 from osprey.interfaces.cli.direct_conversation import run_cli
 
-
-console = Console()
+# Import centralized styles
+from osprey.cli.styles import console, Styles
 
 
 @click.command()
@@ -33,28 +32,28 @@ console = Console()
 )
 def chat(project: str, config: str):
     """Start interactive CLI conversation interface.
-    
+
     Opens an interactive chat session with the agent. The interface
     provides command history, auto-suggestions, and real-time streaming
     of agent responses.
-    
+
     This command wraps the existing direct_conversation interface,
     preserving all its functionality including:
-    
+
     \b
       - Real-time status updates during agent processing
       - Approval workflow integration with interrupt handling
       - Rich console formatting with colors and styling
       - Session-based conversation continuity
       - Comprehensive error handling
-    
+
     Commands within the chat:
-    
+
     \b
       bye/end - Exit the chat
       Ctrl+L  - Clear screen
       Ctrl+C  - Exit
-    
+
     Examples:
 
     \b
@@ -77,25 +76,25 @@ def chat(project: str, config: str):
 
     console.print("Starting Osprey CLI interface...")
     console.print("   Press Ctrl+C to exit\n")
-    
+
     try:
         # Resolve config path from project and config args
         config_path = resolve_config_path(project, config)
-        
+
         # Call the existing run_cli function with config_path
         # This is the ORIGINAL function from Phase 1.5, behavior unchanged
         asyncio.run(run_cli(config_path=config_path))
-        
+
     except KeyboardInterrupt:
-        console.print("\n\n👋 Goodbye!", style="yellow")
+        console.print("\n\n👋 Goodbye!", style=Styles.WARNING)
         raise click.Abort()
     except Exception as e:
-        console.print(f"\n❌ Error: {e}", style="red")
+        console.print(f"\n❌ Error: {e}", style=Styles.ERROR)
         # Show more details in verbose mode
         import os
         if os.environ.get("DEBUG"):
             import traceback
-            console.print(traceback.format_exc(), style="dim")
+            console.print(traceback.format_exc(), style=Styles.DIM)
         raise click.Abort()
 
 
