@@ -1119,6 +1119,11 @@ def show_status(config_path):
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
 
         # Parse newline-delimited JSON output (one JSON object per line)
+        # Note: podman may output valid JSON values that aren't container objects
+        # (e.g., status strings, metadata). We only process dict objects that
+        # represent containers.
+        # TODO: In future CLI expansion with collapsible blocks, we could display
+        # the full raw JSON output for debugging/advanced users.
         containers = []
         if result.stdout.strip():
             for line in result.stdout.strip().split('\n'):
@@ -1127,7 +1132,10 @@ def show_status(config_path):
                 if line and not line.startswith('>') and not line.startswith('time='):
                     try:
                         container = json.loads(line)
-                        containers.append(container)
+                        # Only process container objects (dicts), skip other JSON types
+                        # (strings, arrays, etc.) which may be status/metadata
+                        if isinstance(container, dict):
+                            containers.append(container)
                     except json.JSONDecodeError:
                         # Skip non-JSON lines (warnings, etc.)
                         continue
