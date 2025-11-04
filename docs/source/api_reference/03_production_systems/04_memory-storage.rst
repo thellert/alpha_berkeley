@@ -7,7 +7,7 @@ User memory infrastructure with persistent storage, data source integration, and
 .. note::
    For implementation guides and examples, see :doc:`../../../developer-guides/05_production-systems/04_memory-storage-service`.
 
-.. currentmodule:: framework.services.memory_storage
+.. currentmodule:: osprey.services.memory_storage
 
 Core Components
 ===============
@@ -51,5 +51,5 @@ Utility Functions
    :doc:`../../../developer-guides/05_production-systems/04_memory-storage-service`
        Complete implementation guide and examples
    
-   :class:`framework.data_management.DataSourceProvider`
+   :class:`osprey.data_management.DataSourceProvider`
        Base provider interface implemented by UserMemoryProvider

@@ -1,0 +1,6 @@
+# Project Dependencies
+# Add your application-specific dependencies here
+
+# Framework dependency
+osprey-framework>={{ framework_version }}
+

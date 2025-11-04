@@ -1,7 +1,7 @@
 Message Generation
 ==================
 
-.. currentmodule:: framework.infrastructure.respond_node
+.. currentmodule:: osprey.infrastructure.respond_node
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -58,7 +58,7 @@ Generates responses by analyzing available context and using appropriate prompts
            # Generate response
            response = await asyncio.to_thread(
                get_chat_completion,
-               model_config=get_model_config("framework", "response"),
+               model_config=get_model_config("osprey", "response"),
                message=prompt
            )
            
@@ -183,7 +183,7 @@ Generates targeted questions for ambiguous user requests:
        # Generate structured questions
        return get_chat_completion(
            message=f"{system_instructions}\n\n{clarification_query}",
-           model_config=get_model_config("framework", "response"),
+           model_config=get_model_config("osprey", "response"),
            output_model=ClarifyingQuestionsResponse
        )
 

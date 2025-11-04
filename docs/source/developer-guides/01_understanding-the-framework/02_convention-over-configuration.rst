@@ -20,7 +20,7 @@ Convention over Configuration: Configuration-Driven Registry Patterns
 Overview
 ========
 
-The Alpha Berkeley Framework eliminates boilerplate through convention-based configuration loading and explicit registry patterns. Components are declared in registry configurations and loaded using standardized naming conventions.
+The Osprey Framework eliminates boilerplate through convention-based configuration loading and explicit registry patterns. Components are declared in registry configurations and loaded using standardized naming conventions.
 
 Project Creation and Structure
 ==============================
@@ -28,15 +28,15 @@ Project Creation and Structure
 Creating a New Project
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Projects are created using the ``framework init`` command with predefined templates:
+Projects are created using the ``osprey init`` command with predefined templates:
 
 .. code-block:: bash
 
    # Install the framework
-   pip install alpha-berkeley-framework
-   
+   pip install osprey-framework
+
    # Create a new project from a template
-   framework init my-agent --template hello_world_weather
+   osprey init my-agent --template hello_world_weather
    cd my-agent
 
 Available templates include:
@@ -94,8 +94,8 @@ Transforms capability classes into LangGraph-compatible nodes with complete infr
 
 .. code-block:: python
 
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState
    from typing import Dict, Any
 
    @capability_node
@@ -130,7 +130,7 @@ Creates infrastructure components for system operations:
 
 .. code-block:: python
 
-   from framework.base import BaseInfrastructureNode, infrastructure_node
+   from osprey.base import BaseInfrastructureNode, infrastructure_node
 
    @infrastructure_node
    class TaskExtractionNode(BaseInfrastructureNode):
@@ -160,7 +160,7 @@ Each application provides a registry configuration using the ``extend_framework_
 .. code-block:: python
 
    # File: src/my_agent/registry.py
-   from framework.registry import (
+   from osprey.registry import (
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
@@ -226,7 +226,7 @@ The ``extend_framework_registry()`` helper automatically includes all framework 
                             # Must explicitly list all capabilities including framework ones
                             CapabilityRegistration(
                                 name="orchestrator",
-                                module_path="framework.infrastructure.orchestrator_node",
+                                module_path="osprey.infrastructure.orchestrator_node",
                                 class_name="OrchestratorCapability",
                                 # ... full configuration
                             ),
@@ -306,7 +306,7 @@ The framework systematically:
 
 .. code-block:: python
 
-   from framework.registry import initialize_registry, get_registry
+   from osprey.registry import initialize_registry, get_registry
 
    # Initialize the registry system (automatically uses registry_path from config)
    initialize_registry()
@@ -387,10 +387,10 @@ Framework components use LangGraph's native streaming:
    class MyCapability(BaseCapability):
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
-           from framework.utils.streaming import get_streamer
-           
+           from osprey.utils.streaming import get_streamer
+
            # Get framework streaming support
-           streamer = get_streamer("framework", "my_capability", state)
+           streamer = get_streamer("my_capability", state)
            
            streamer.status("Processing data...")
            result = await process_data()
@@ -507,7 +507,7 @@ Component logging follows the structured API pattern used throughout the framewo
 
 .. code-block:: python
 
-   from framework.utils.logger import get_logger
+   from osprey.utils.logger import get_logger
    
    # All components use simple, flat component names
    logger = get_logger("orchestrator")
@@ -551,7 +551,7 @@ Streaming events integrate with LangGraph's native streaming and follow the same
 
 .. code-block:: python
 
-   from framework.utils.streaming import get_streamer
+   from osprey.utils.streaming import get_streamer
    
    @capability_node
    class MyCapability(BaseCapability):
@@ -597,8 +597,8 @@ The model factory integrates with the configuration system following the same pr
 
 .. code-block:: python
 
-   from framework.models import get_model
-   from framework.utils.config import get_provider_config
+   from osprey.models import get_model
+   from osprey.utils.config import get_provider_config
    
    # Configuration-driven model creation
    provider_config = get_provider_config("anthropic")

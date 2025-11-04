@@ -1,9 +1,88 @@
 # Changelog
 
-All notable changes to the Alpha Berkeley Framework will be documented in this file.
+All notable changes to the Osprey Framework will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.8.1] - 2024-11-04
+
+### Fixed
+- Post-release fixes and improvements from initial 0.8.0 testing
+- Package distribution and metadata updates
+
+### Changed
+- Final production release of Osprey Framework rebrand
+- Improved documentation and migration guides
+- Enhanced CLI theme system consistency
+
+## [0.8.0] - 2025-11-02
+
+### 🦅 Major Changes - Rebranding to Osprey Framework
+
+**BREAKING CHANGES:**
+This release represents a complete rebranding of the project from "Alpha Berkeley Framework" to "Osprey Framework".
+
+**Package & Installation Changes:**
+- **Package name:** `alpha-berkeley-framework` → `osprey-framework`
+  - Install with: `pip install osprey-framework` (note: hyphen in package name)
+  - PyPI URL: https://pypi.org/project/osprey-framework/
+- **Import paths:** `from framework.*` → `from osprey.*`
+  - All Python imports updated throughout codebase
+  - Example: `from osprey.state import AgentState`
+- **CLI command:** `framework` → `osprey`
+  - New primary command: `osprey init`, `osprey chat`, `osprey deploy`, etc.
+  - Legacy `alpha-berkeley` commands maintained for backward compatibility
+- **Repository:** `thellert/alpha_berkeley` → `als-apg/osprey`
+  - New GitHub repository: https://github.com/als-apg/osprey
+  - Old URLs automatically redirect via GitHub
+- **Documentation:** https://als-apg.github.io/osprey
+
+**Migration Guide:**
+
+For existing users upgrading from Alpha Berkeley Framework:
+
+1. **Uninstall old package:**
+   ```bash
+   pip uninstall alpha-berkeley-framework
+   ```
+
+2. **Install new package:**
+   ```bash
+   pip install osprey-framework
+   ```
+
+3. **Update imports in your code:**
+   - Find and replace: `from framework.` → `from osprey.`
+   - Find and replace: `import framework` → `import osprey`
+
+4. **Update CLI commands:**
+   - Replace `framework` with `osprey` in scripts and documentation
+   - Example: `framework init` → `osprey init`
+
+5. **Update project dependencies:**
+   - In `requirements.txt`: `alpha-berkeley-framework` → `osprey-framework`
+   - In `pyproject.toml`: `alpha-berkeley-framework` → `osprey-framework`
+
+**Note:** GitHub automatically redirects old repository URLs. However, we recommend updating your git remotes for long-term stability:
+```bash
+git remote set-url origin https://github.com/als-apg/osprey.git
+```
+
+**Technical Details:**
+- 134 Python files updated with new imports
+- 67 documentation files updated with new branding
+- All templates updated to generate osprey-based projects
+- Package structure: `src/osprey/` (was `src/framework/`)
+- Distribution files: `osprey_framework-0.8.0.whl` (underscore is automatic)
+
+### Includes All Features from v0.7.7 and v0.7.8
+- Interactive TUI menu system
+- Multi-project support  
+- Enhanced documentation
+- All bug fixes from previous releases
+
+---
 
 ## [0.7.8] - 2025-11-01
 
@@ -458,7 +537,7 @@ framework init my-turbine --template wind_turbine
 
 #### Complete Instructions
 See comprehensive migration guide:
-https://thellert.github.io/alpha_berkeley/getting-started/migration-guide
+https://als-apg.github.io/osprey/getting-started/migration-guide
 
 ### Implementation Stats
 - **100+ tasks completed** across 6 implementation phases

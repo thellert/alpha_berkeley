@@ -11,7 +11,7 @@ Developer Guides
 
    We welcome feedback! If you find issues or have suggestions, please open an issue on our GitHub page.
 
-**Comprehensive learning-oriented guides** for building sophisticated agent applications with the Alpha Berkeley Framework. These guides combine architectural understanding with practical implementation patterns, taking you from basic concepts to production-ready systems.
+**Comprehensive learning-oriented guides** for building sophisticated agent applications with the Osprey Framework. These guides combine architectural understanding with practical implementation patterns, taking you from basic concepts to production-ready systems.
 
 .. dropdown:: 🎯 Learning Paths & Quick Navigation
 

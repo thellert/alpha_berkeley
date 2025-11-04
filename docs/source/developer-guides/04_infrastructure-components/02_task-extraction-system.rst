@@ -1,7 +1,7 @@
 Task Extraction
 ================
 
-.. currentmodule:: framework.infrastructure.task_extraction_node
+.. currentmodule:: osprey.infrastructure.task_extraction_node
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -25,7 +25,7 @@ Core Problem
 
 **Traditional Approaches (Flawed):** Traditional methods often require processing the entire conversation history at every step, which can be slow and expensive. Some approaches use generic chat history summarization, but this often causes important task-relevant details to be lost. Other approaches provide no contextual information at all, leading to a loss of conversational awareness.
 
-**Framework Solution:** The framework implements a single-point context compression approach that extracts only task-relevant conversational context, enabling the Task Extraction system to efficiently convert human conversations into structured, actionable inputs for seamless processing.
+**Osprey Solution:** The framework implements a single-point context compression approach that extracts only task-relevant conversational context, enabling the Task Extraction system to efficiently convert human conversations into structured, actionable inputs for seamless processing.
 
 Architecture
 ------------
@@ -216,8 +216,8 @@ Task extraction uses configuration:
 
 .. code-block:: python
 
-   # Framework configuration
-   task_extraction_config = get_model_config("framework", "task_extraction")
+   # Osprey configuration
+   task_extraction_config = get_model_config("osprey", "task_extraction")
    
    # Application-specific overrides
    als_config = get_model_config("als_assistant", "task_extraction")

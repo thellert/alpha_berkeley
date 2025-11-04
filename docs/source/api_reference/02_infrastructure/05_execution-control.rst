@@ -6,7 +6,7 @@ Infrastructure components that control the flow of execution including routing d
 Router Node
 -----------
 
-.. currentmodule:: framework.infrastructure.router_node
+.. currentmodule:: osprey.infrastructure.router_node
 
 .. autoclass:: RouterNode
    :members:
@@ -19,7 +19,7 @@ Router Node
 Error Node
 ----------
 
-.. currentmodule:: framework.infrastructure.error_node
+.. currentmodule:: osprey.infrastructure.error_node
 
 .. autoclass:: ErrorNode
    :members:
@@ -45,13 +45,13 @@ Execution control uses models defined in the core framework:
 
 .. seealso::
    
-   :class:`~framework.base.ErrorClassification`
+   :class:`~osprey.base.ErrorClassification`
        Error classification system
-   
-   :class:`~framework.base.ErrorSeverity`
+
+   :class:`~osprey.base.ErrorSeverity`
        Error severity levels
-   
-   :class:`~framework.base.BaseInfrastructureNode`
+
+   :class:`~osprey.base.BaseInfrastructureNode`
        Base class for infrastructure components
 
 Registration
@@ -61,7 +61,7 @@ Registration
 
     NodeRegistration(
         name="router",
-        module_path="framework.infrastructure.router_node",
+        module_path="osprey.infrastructure.router_node",
         function_name="RouterNode",
         description="Central routing decision authority"
     )
@@ -70,7 +70,7 @@ Registration
 
     NodeRegistration(
         name="error",
-        module_path="framework.infrastructure.error_node", 
+        module_path="osprey.infrastructure.error_node",
         function_name="ErrorNode",
         description="Error response generation"
     )

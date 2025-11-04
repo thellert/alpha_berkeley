@@ -6,7 +6,7 @@ Message generation capabilities for responding to user queries and requesting cl
 Respond Capability
 ------------------
 
-.. currentmodule:: framework.infrastructure.respond_node
+.. currentmodule:: osprey.infrastructure.respond_node
 
 .. autoclass:: RespondCapability
    :members:
@@ -23,7 +23,7 @@ Respond Capability
 Clarify Capability
 ------------------
 
-.. currentmodule:: framework.infrastructure.clarify_node
+.. currentmodule:: osprey.infrastructure.clarify_node
 
 .. autoclass:: ClarifyCapability
    :members:
@@ -38,10 +38,10 @@ Message generation uses models defined in the core framework:
 
 .. seealso::
    
-   :class:`~framework.base.BaseCapability`
+   :class:`~osprey.base.BaseCapability`
        Base class for all capabilities
-   
-   :class:`~framework.context.ContextManager`
+
+   :class:`~osprey.context.ContextManager`
        Context management for response generation
 
 Registration
@@ -51,7 +51,7 @@ Registration
 
     CapabilityRegistration(
         name="respond",
-        module_path="framework.infrastructure.respond_node",
+        module_path="osprey.infrastructure.respond_node",
         class_name="RespondCapability",
         provides=["FINAL_RESPONSE"]
     )
@@ -59,8 +59,8 @@ Registration
 **Clarify Capability** is automatically registered as::
 
     CapabilityRegistration(
-        name="clarify", 
-        module_path="framework.infrastructure.clarify_node",
+        name="clarify",
+        module_path="osprey.infrastructure.clarify_node",
         class_name="ClarifyCapability",
         provides=[]
     )

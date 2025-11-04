@@ -2,12 +2,12 @@
 Data Management
 ===============
 
-Data orchestration framework for integrating heterogeneous data sources into agent workflows with provider discovery, concurrent retrieval, and LLM-optimized formatting.
+Data orchestration system for integrating heterogeneous data sources into agent workflows with provider discovery, concurrent retrieval, and LLM-optimized formatting.
 
 .. note::
    For implementation guides and examples, see :doc:`../../../developer-guides/05_production-systems/02_data-source-integration`.
 
-.. currentmodule:: framework.data_management
+.. currentmodule:: osprey.data_management
 
 Core Components
 ===============
@@ -69,5 +69,5 @@ Utility Functions
    :doc:`../../../developer-guides/05_production-systems/02_data-source-integration`
        Complete implementation guide and examples
    
-   :class:`framework.services.memory_storage.UserMemoryProvider`
+   :class:`osprey.services.memory_storage.UserMemoryProvider`
        Example core data source provider implementation

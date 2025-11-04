@@ -2,8 +2,8 @@
 # This file allows the framework to import modules during Sphinx autodoc generation
 
 build_dir: ./build
-project_root: /Users/thellert/LBL/ML/alpha_berkeley
-registry_path: ../src/framework/registry/registry.py
+project_root: ..
+registry_path: ../src/osprey/registry/registry.py
 
 # Minimal model configuration (not used during docs build)
 models:

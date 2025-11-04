@@ -3,8 +3,8 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "alpha-berkeley-framework"
-version = "0.7.8"
+name = "osprey-framework"
+version = "0.8.1"
 description = "An open-source, domain-agnostic, capability-based architecture for building intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -147,37 +147,36 @@ utils = [
 
 # All optional dependencies for complete installation
 all = [
-    "alpha-berkeley-framework[docs,scientific,databases,postgres,memory,dev,nlp,utils]"
+    "osprey-framework[docs,scientific,databases,postgres,memory,dev,nlp,utils]"
 ]
 
 [project.urls]
-Homepage = "https://thellert.github.io/alpha_berkeley"
-Documentation = "https://thellert.github.io/alpha_berkeley"
-Repository = "https://github.com/thellert/alpha_berkeley"
+Homepage = "https://als-apg.github.io/osprey"
+Documentation = "https://als-apg.github.io/osprey"
+Repository = "https://github.com/als-apg/osprey"
 Paper = "https://arxiv.org/abs/2508.15066"
-Issues = "https://github.com/thellert/alpha_berkeley/issues"
-Changelog = "https://github.com/thellert/alpha_berkeley/blob/main/CHANGELOG.md"
+Issues = "https://github.com/als-apg/osprey/issues"
+Changelog = "https://github.com/als-apg/osprey/blob/main/CHANGELOG.md"
 
 # Define console scripts for CLI entry points
 [project.scripts]
 # Main CLI entry point (Click group with subcommands)
-# Using "framework" for now, will become "mentat" in Phase 8
-framework = "framework.cli.main:cli"
+osprey = "osprey.cli.main:cli"
 
 # Legacy entry points (maintained for backward compatibility)
-alpha-berkeley = "framework.interfaces.cli.direct_conversation:main"
-alpha-berkeley-deploy = "framework.deployment.container_manager:main"
+alpha-berkeley = "osprey.interfaces.cli.direct_conversation:main"
+alpha-berkeley-deploy = "osprey.deployment.container_manager:main"
 alpha-berkeley-docs = "docs.launch_docs:main"
 
 # Package discovery configuration for src layout
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["framework*"]
+include = ["osprey*"]
 
 # Include package data files
 [tool.setuptools.package-data]
 "*" = ["*.yml", "*.yaml", "*.json", "*.j2", "*.md", "*.txt", "*.cfg", "*.ini"]
-"framework" = [
+"osprey" = [
     "config.yml",
     "templates/**/*",
     "templates/**/*.j2",
@@ -191,8 +190,6 @@ include = ["framework*"]
     "templates/**/*.js",
     "templates/**/*.json",
 ]
-"deployment" = ["*.py"]
-"docs" = ["*.py", "Makefile", "*.md", "*.png", "*.log", "*.pid"]
 
 # Development tool configurations
 [tool.black]
@@ -265,8 +262,7 @@ minversion = "6.0"
 addopts = "-ra -q --tb=short"
 testpaths = [
     "tests",
-    "src/applications/*/tests",
-    "services/framework/*/tests"
+    "src/applications/*/tests"
 ]
 python_files = [
     "test_*.py",
@@ -303,7 +299,7 @@ ignore = [
 "tests/*" = ["B011"]      # Allow assert False
 
 [tool.ruff.lint.isort]
-known-first-party = ["framework", "configs", "applications", "interfaces", "deployment"]
+known-first-party = ["osprey", "configs", "applications", "interfaces", "deployment"]
 
 # Coverage configuration (if using pytest-cov)
 [tool.coverage.run]

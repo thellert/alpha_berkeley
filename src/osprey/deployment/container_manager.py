@@ -1,0 +1,1349 @@
+"""Container Management and Service Orchestration System.
+
+This module provides comprehensive container orchestration capabilities for the
+deployment framework, handling service discovery, template rendering, build
+directory management, and Podman Compose integration. The system supports
+hierarchical service configurations with framework and application-specific
+services that can be independently deployed and managed.
+
+The container manager implements a sophisticated template processing pipeline
+that converts Jinja2 templates into Docker Compose files, copies necessary
+source code and configuration files, and orchestrates multi-service deployments
+through Podman Compose with proper networking and dependency management.
+
+Key Features:
+    - Hierarchical service discovery (osprey.service, applications.app.service)
+    - Jinja2 template rendering with configuration context
+    - Intelligent build directory management with selective file copying
+    - Environment variable expansion and configuration flattening
+    - Podman Compose orchestration with multi-file support
+    - Kernel template processing for Jupyter notebook environments
+
+Architecture:
+    The system supports two service categories:
+
+    1. Framework Services: Core infrastructure services like databases,
+       web interfaces, and development tools (jupyter, open-webui, pipelines)
+
+    2. Application Services: Domain-specific services tied to particular
+       applications (als_assistant.mongo, als_assistant.pv_finder)
+
+Examples:
+    Basic service deployment::
+
+        $ python container_manager.py config.yml up -d
+        # Deploys all services listed in deployed_services configuration
+
+    Service discovery patterns::
+
+        # Framework service (short name)
+        deployed_services: ["jupyter", "pipelines"]
+
+        # Framework service (full path)
+        deployed_services: ["osprey.jupyter", "osprey.pipelines"]
+
+        # Application service (full path required)
+        deployed_services: ["applications.als_assistant.mongo"]
+
+    Template rendering workflow::
+
+        1. Load configuration with imports and merging
+        2. Discover services listed in deployed_services
+        3. Process Jinja2 templates with configuration context
+        4. Copy source code and additional directories as specified
+        5. Flatten configuration files for container consumption
+        6. Execute Podman Compose with generated files
+
+.. seealso::
+   :mod:`deployment.loader` : Configuration loading system used by this module
+   :class:`configs.config.ConfigBuilder` : Configuration management
+   :func:`find_service_config` : Service discovery implementation
+   :func:`render_template` : Template processing engine
+"""
+
+import os
+import sys
+import argparse
+import subprocess
+import shutil
+import yaml
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
+
+# NOTE: Now that container_manager is in src/osprey/deployment/,
+# configs module should be importable directly without sys.path manipulation
+from osprey.utils.config import ConfigBuilder
+
+SERVICES_DIR = "services"
+SRC_DIR = "src"
+OUT_SRC_DIR = "repo_src"
+
+TEMPLATE_FILENAME = "docker-compose.yml.j2"
+COMPOSE_FILE_NAME = "docker-compose.yml"
+
+def find_service_config(config, service_name):
+    """Locate service configuration and template path for deployment.
+
+    This function implements the service discovery logic for the container
+    management system, supporting both hierarchical service naming (full paths)
+    and legacy short names for backward compatibility. The system searches
+    through framework services and application-specific services to find
+    the requested service configuration.
+
+    Service naming supports three patterns:
+    1. Framework services: "osprey.service_name" or just "service_name"
+    2. Application services: "applications.app_name.service_name"
+    3. Legacy services: "service_name" (deprecated, for backward compatibility)
+
+    The function returns both the service configuration object and the path
+    to the Docker Compose template, enabling the caller to access service
+    settings and initiate template rendering.
+
+    :param config: Configuration containing service definitions
+    :type config: dict
+    :param service_name: Service identifier (short name or full dotted path)
+    :type service_name: str
+    :return: Tuple containing service configuration and template path,
+        or (None, None) if service not found
+    :rtype: tuple[dict, str] or tuple[None, None]
+
+    Examples:
+        Framework service discovery::
+
+            >>> config = {'osprey': {'services': {'jupyter': {'path': 'services/osprey/jupyter'}}}}
+            >>> service_config, template_path = find_service_config(config, 'osprey.jupyter')
+            >>> print(template_path)  # 'services/osprey/jupyter/docker-compose.yml.j2'
+
+        Application service discovery::
+
+            >>> config = {'applications': {'als_assistant': {'services': {'mongo': {'path': 'services/applications/als_assistant/mongo'}}}}}
+            >>> service_config, template_path = find_service_config(config, 'applications.als_assistant.mongo')
+            >>> print(template_path)  # 'services/applications/als_assistant/mongo/docker-compose.yml.j2'
+
+        Legacy service discovery::
+
+            >>> config = {'services': {'legacy_service': {'path': 'services/legacy'}}}
+            >>> service_config, template_path = find_service_config(config, 'legacy_service')
+            >>> print(template_path)  # 'services/legacy/docker-compose.yml.j2'
+
+    .. note::
+       Legacy service support (services.* configuration) is deprecated and
+       will be removed in future versions. Use osprey.* or applications.*
+       naming patterns for new services.
+
+    .. seealso::
+       :func:`get_templates` : Uses this function to build template lists
+       :func:`setup_build_dir` : Processes discovered services for deployment
+    """
+    # Handle full path notation (osprey.jupyter, applications.als_assistant.mongo)
+    if '.' in service_name:
+        parts = service_name.split('.')
+
+        if parts[0] == 'osprey' and len(parts) == 2:
+            # osprey.service_name
+            framework_services = config.get('osprey', {}).get('services', {})
+            service_config = framework_services.get(parts[1])
+            if service_config:
+                return service_config, os.path.join(service_config['path'], TEMPLATE_FILENAME)
+
+        elif parts[0] == 'applications' and len(parts) == 3:
+            # applications.app_name.service_name
+            app_name, service_name_short = parts[1], parts[2]
+            applications = config.get('applications', {})
+            app_config = applications.get(app_name, {})
+            app_services = app_config.get('services', {})
+            service_config = app_services.get(service_name_short)
+            if service_config:
+                return service_config, os.path.join(service_config['path'], TEMPLATE_FILENAME)
+
+    # Handle short names - check legacy services first for backward compatibility
+    # TODO: remove this once we have migrated all services to the new config structure
+    legacy_services = config.get('services', {})
+    service_config = legacy_services.get(service_name)
+    if service_config:
+        return service_config, os.path.join(service_config['path'], TEMPLATE_FILENAME)
+
+    return None, None
+
+def get_templates(config):
+    """Collect template paths for all deployed services in the configuration.
+
+    This function builds a comprehensive list of Docker Compose template paths
+    based on the services specified in the deployed_services configuration.
+    It processes both the root services template and individual service templates,
+    providing the complete set of templates needed for deployment.
+
+    The function always includes the root services template (services/docker-compose.yml.j2)
+    which defines the shared network configuration and other global service settings.
+    Individual service templates are then discovered through the service discovery
+    system and added to the template list.
+
+    :param config: Configuration containing deployed_services list
+    :type config: dict
+    :return: List of template file paths for processing
+    :rtype: list[str]
+    :raises Warning: Prints warning if deployed_services is not configured
+
+    Examples:
+        Template collection for mixed services::
+
+            >>> config = {
+            ...     'deployed_services': ['osprey.jupyter', 'applications.als_assistant.mongo'],
+            ...     'osprey': {'services': {'jupyter': {'path': 'services/osprey/jupyter'}}},
+            ...     'applications': {'als_assistant': {'services': {'mongo': {'path': 'services/applications/als_assistant/mongo'}}}}
+            ... }
+            >>> templates = get_templates(config)
+            >>> print(templates)
+            ['services/docker-compose.yml.j2',
+             'services/osprey/jupyter/docker-compose.yml.j2',
+             'services/applications/als_assistant/mongo/docker-compose.yml.j2']
+
+    .. warning::
+       If deployed_services is not configured or empty, only the root services
+       template will be returned, which may not provide functional services.
+
+    .. seealso::
+       :func:`find_service_config` : Service discovery used by this function
+       :func:`render_template` : Processes the templates returned by this function
+    """
+    templates = []
+
+    # Add the services root template
+    templates.append(os.path.join(SERVICES_DIR, TEMPLATE_FILENAME))
+
+    # Get deployed services list
+    deployed_services = config.get('deployed_services', [])
+    if deployed_services:
+        deployed_service_names = [str(service) for service in deployed_services]
+    else:
+        print("Warning: No deployed_services list found, no service templates will be processed")
+        return templates
+
+    # Add templates for deployed services
+    for service_name in deployed_service_names:
+        service_config, template_path = find_service_config(config, service_name)
+        if template_path:
+            templates.append(template_path)
+        else:
+            print(f"Warning: Service '{service_name}' not found in configuration")
+
+    return templates
+
+def render_template(template_path, config, out_dir):
+    """Render Jinja2 template with configuration context to output directory.
+
+    This function processes Jinja2 templates using the configuration
+    as context, generating concrete configuration files for container deployment.
+    The system supports multiple template types including Docker Compose files
+    and Jupyter kernel configurations, with intelligent output filename detection.
+
+    Template rendering uses the complete configuration dictionary as Jinja2 context,
+    enabling templates to access any configuration value including environment
+    variables, service settings, and application-specific parameters. Environment
+    variables can be referenced directly in templates using ${VAR_NAME} syntax
+    for deployment-specific configurations like proxy settings. The output
+    directory is created automatically if it doesn't exist.
+
+    :param template_path: Path to the Jinja2 template file to render
+    :type template_path: str
+    :param config: Configuration dictionary to use as template context
+    :type config: dict
+    :param out_dir: Output directory for the rendered file
+    :type out_dir: str
+    :return: Full path to the rendered output file
+    :rtype: str
+
+    Examples:
+        Docker Compose template rendering::
+
+            >>> config = {'database': {'host': 'localhost', 'port': 5432}}
+            >>> output_path = render_template(
+            ...     'services/mongo/docker-compose.yml.j2',
+            ...     config,
+            ...     'build/services/mongo'
+            ... )
+            >>> print(output_path)  # 'build/services/mongo/docker-compose.yml'
+
+        Jupyter kernel template rendering::
+
+            >>> config = {'project_root': '/home/user/project'}
+            >>> output_path = render_template(
+            ...     'services/jupyter/python3-epics/kernel.json.j2',
+            ...     config,
+            ...     'build/services/jupyter/python3-epics'
+            ... )
+            >>> print(output_path)  # 'build/services/jupyter/python3-epics/kernel.json'
+
+    .. note::
+       The function automatically determines output filenames based on template
+       naming conventions: .j2 extension is removed, and specific patterns
+       like docker-compose.yml.j2 and kernel.json.j2 are recognized.
+
+    .. seealso::
+       :func:`setup_build_dir` : Uses this function for service template processing
+       :func:`render_kernel_templates` : Batch processing of kernel templates
+    """
+    env = Environment(loader=FileSystemLoader("."))
+    template = env.get_template(template_path)
+    # Config is already a dict for Jinja2 template rendering
+    config_dict = config
+    rendered_content = template.render(config_dict)
+
+    # Determine output filename based on template type
+    if template_path.endswith('docker-compose.yml.j2'):
+        output_filename = COMPOSE_FILE_NAME
+    elif template_path.endswith('kernel.json.j2'):
+        output_filename = 'kernel.json'
+    else:
+        # Generic fallback: remove .j2 extension
+        output_filename = os.path.basename(template_path)[:-3]
+
+    output_filepath = os.path.join(out_dir, output_filename)
+    os.makedirs(out_dir, exist_ok=True)
+    with open(output_filepath, "w") as f:
+        f.write(rendered_content)
+    return output_filepath
+
+def _copy_local_framework_for_override(out_dir):
+    """Copy local osprey source to container build directory for development mode.
+
+    This function locates the locally installed osprey package and copies its
+    source code to a designated location in the container build directory. The
+    copied osprey can then be installed in containers to override the standard
+    PyPI version during development and testing.
+
+    The function automatically detects the osprey installation location and
+    copies both the source code and project metadata required for proper
+    installation within containers.
+
+    :param out_dir: Container build output directory
+    :type out_dir: str
+    :return: True if osprey was successfully copied, False otherwise
+    :rtype: bool
+    """
+    try:
+        # Try to import osprey to get its location
+        import osprey
+        from pathlib import Path
+
+        # Get the osprey source root
+        osprey_module_path = Path(osprey.__file__).parent
+        osprey_source_root = osprey_module_path.parent.parent  # Go up from src/osprey to root
+
+        # Copy the osprey source to a predictable location
+        osprey_override_dir = os.path.join(out_dir, "osprey_override")
+        src_osprey = osprey_source_root / "src" / "osprey"
+
+        if src_osprey.exists():
+            # Copy the osprey source
+            shutil.copytree(src_osprey, osprey_override_dir, dirs_exist_ok=True)
+            print(f"📦 Copied osprey source for dev override to {osprey_override_dir}")
+
+            # Copy pyproject.toml for proper installation
+            pyproject_src = osprey_source_root / "pyproject.toml"
+            if pyproject_src.exists():
+                shutil.copy2(pyproject_src, os.path.join(out_dir, "osprey_pyproject.toml"))
+                print(f"📝 Copied osprey pyproject.toml for dependencies")
+
+            return True
+        else:
+            print(f"⚠️  Osprey source not found at {src_osprey}")
+            return False
+
+    except ImportError:
+        print("⚠️  Osprey not found in local environment, containers will use PyPI version")
+        return False
+    except Exception as e:
+        print(f"⚠️  Failed to prepare osprey override: {e}")
+        return False
+
+
+
+
+def render_kernel_templates(source_dir, config, out_dir):
+    """Process all Jupyter kernel templates in a service directory.
+
+    This function provides batch processing for Jupyter kernel configuration
+    templates, automatically discovering all kernel.json.j2 files within a
+    service directory and rendering them with the current configuration context.
+    This is particularly useful for Jupyter services that provide multiple
+    kernel environments with different configurations.
+
+    The function recursively searches the source directory for kernel template
+    files and processes each one, maintaining the relative directory structure
+    in the output. This ensures that kernel configurations are placed in the
+    correct locations for Jupyter to discover them.
+
+    :param source_dir: Source directory to search for kernel templates
+    :type source_dir: str
+    :param config: Configuration dictionary for template rendering
+    :type config: dict
+    :param out_dir: Base output directory for rendered kernel files
+    :type out_dir: str
+
+    Examples:
+        Kernel template processing for Jupyter service::
+
+            >>> # Source structure:
+            >>> # services/jupyter/
+            >>> #   ├── python3-epics-readonly/kernel.json.j2
+            >>> #   └── python3-epics-write/kernel.json.j2
+            >>> 
+            >>> render_kernel_templates(
+            ...     'services/jupyter',
+            ...     {'project_root': '/home/user/project'},
+            ...     'build/services/jupyter'
+            ... )
+            >>> # Output structure:
+            >>> # build/services/jupyter/
+            >>> #   ├── python3-epics-readonly/kernel.json
+            >>> #   └── python3-epics-write/kernel.json
+
+    .. note::
+       This function is typically called automatically by setup_build_dir when
+       a service configuration includes 'render_kernel_templates: true'.
+
+    .. seealso::
+       :func:`render_template` : Core template rendering used by this function
+       :func:`setup_build_dir` : Calls this function for kernel template processing
+    """
+    kernel_templates = []
+
+    # Look for kernel.json.j2 files in subdirectories
+    for root, dirs, files in os.walk(source_dir):
+        for file in files:
+            if file == 'kernel.json.j2':
+                template_path = os.path.relpath(os.path.join(root, file), os.getcwd())
+                kernel_templates.append(template_path)
+
+    # Render each kernel template
+    for template_path in kernel_templates:
+        # Calculate relative output directory
+        rel_template_dir = os.path.dirname(os.path.relpath(template_path, source_dir))
+        kernel_out_dir = os.path.join(out_dir, rel_template_dir) if rel_template_dir != '.' else out_dir
+
+        render_template(template_path, config, kernel_out_dir)
+        print(f"Rendered kernel template: {template_path} -> {kernel_out_dir}/kernel.json")
+
+def _ensure_agent_data_structure(config):
+    """Ensure _agent_data directory and subdirectories exist before container deployment.
+
+    This function creates the agent data directory structure based on the configuration
+    to prevent Docker/Podman mount failures when containers try to mount non-existent
+    directories. It creates both the main agent_data_dir and all configured subdirectories.
+
+    :param config: Configuration dictionary containing file_paths settings
+    :type config: dict
+    """
+    # Get file paths configuration
+    file_paths = config.get('file_paths', {})
+    project_root = config.get('project_root', '.')
+    agent_data_dir = file_paths.get('agent_data_dir', '_agent_data')
+
+    # Create main agent data directory
+    agent_data_path = Path(project_root) / agent_data_dir
+    agent_data_path.mkdir(parents=True, exist_ok=True)
+
+    # Create all configured subdirectories
+    subdirs = [
+        'executed_python_scripts_dir',
+        'execution_plans_dir', 
+        'user_memory_dir',
+        'registry_exports_dir',
+        'prompts_dir',
+        'checkpoints'
+    ]
+
+    for subdir_key in subdirs:
+        if subdir_key in file_paths:
+            subdir_name = file_paths[subdir_key]
+            subdir_path = agent_data_path / subdir_name
+            subdir_path.mkdir(parents=True, exist_ok=True)
+            print(f"Created agent data subdirectory: {subdir_path}")
+
+    print(f"Ensured agent data structure exists at: {agent_data_path}")
+
+
+def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
+    """Create complete build environment for service deployment.
+
+    This function orchestrates the complete build directory setup process for
+    a service, including template rendering, source code copying, configuration
+    flattening, and additional directory management. It creates a self-contained
+    build environment that contains everything needed for container deployment.
+
+    The build process follows these steps:
+    1. Create clean build directory for the service
+    2. Render the Docker Compose template with configuration context
+    3. Copy service-specific files (excluding templates)
+    4. Copy source code if requested (copy_src: true)
+    5. Copy additional directories as specified
+    6. Create flattened configuration file for container use
+    7. Process kernel templates if specified
+
+    Source code copying includes intelligent handling of requirements files,
+    automatically copying global requirements.txt to the container source
+    directory to ensure dependency management works correctly in containers.
+
+    :param template_path: Path to the service's Docker Compose template
+    :type template_path: str
+    :param config: Complete configuration dictionary for template rendering
+    :type config: dict
+    :param container_cfg: Service-specific configuration settings
+    :type container_cfg: dict
+    :param dev_mode: Development mode - copy local framework to containers
+    :type dev_mode: bool
+    :return: Path to the rendered Docker Compose file
+    :rtype: str
+
+    Examples:
+        Basic service build directory setup::
+
+            >>> container_cfg = {
+            ...     'copy_src': True,
+            ...     'additional_dirs': ['docs', 'scripts'],
+            ...     'render_kernel_templates': False
+            ... }
+            >>> compose_path = setup_build_dir(
+            ...     'services/osprey/jupyter/docker-compose.yml.j2',
+            ...     config,
+            ...     container_cfg
+            ... )
+            >>> print(compose_path)  # 'build/services/osprey/jupyter/docker-compose.yml'
+
+        Advanced service with custom directory mapping::
+
+            >>> container_cfg = {
+            ...     'copy_src': True,
+            ...     'additional_dirs': [
+            ...         'docs',  # Simple directory copy
+            ...         {'src': 'external_data', 'dst': 'data'}  # Custom mapping
+            ...     ],
+            ...     'render_kernel_templates': True
+            ... }
+            >>> compose_path = setup_build_dir(template_path, config, container_cfg)
+
+    .. note::
+       The function automatically handles build directory cleanup, removing
+       existing directories to ensure clean builds. Global requirements.txt
+       is automatically copied to container source directories when present.
+
+    .. warning::
+       This function performs destructive operations on build directories.
+       Ensure build_dir is properly configured to avoid data loss.
+
+    .. seealso::
+       :func:`render_template` : Template rendering used by this function
+       :func:`render_kernel_templates` : Kernel template processing
+       :class:`configs.config.ConfigBuilder` : Configuration flattening
+    """
+    # Create the build directory for this service 
+    source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
+
+    # Extract service name from the path for container path resolution
+    # e.g., "services/jupyter" -> "jupyter", "src/osprey/templates/services/pipelines" -> "pipelines"
+    service_name = os.path.basename(source_dir)
+
+    # Clear the directory if it exists
+    build_dir = config.get('build_dir', './build')
+    out_dir = os.path.join(build_dir, source_dir)
+    if os.path.exists(out_dir):
+        try:
+            shutil.rmtree(out_dir)
+        except OSError as e:
+            if "Device or resource busy" in str(e) or "nfs" in str(e).lower() or e.errno == 39:  # Directory not empty
+                print(f"Warning: Directory in use, attempting incremental update for {out_dir}")
+                import time
+                time.sleep(1)
+                try:
+                    shutil.rmtree(out_dir)
+                except OSError:
+                    print(f"Warning: Could not remove {out_dir}, using incremental update approach")
+                    # Use incremental update instead of full rebuild
+                    return _incremental_setup_build_dir(template_path, config, container_cfg, out_dir, dev_mode)
+            else:
+                raise
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Create the docker compose file from the template
+    compose_filepath = render_template(template_path, config, out_dir)
+
+    # Copy the contents of the services directory, except the template
+    if source_dir != SERVICES_DIR: # ignore the top level dir
+        # Deep copy everything in source directory except templates
+        for file in os.listdir(source_dir):
+            src_path = os.path.join(source_dir, file)
+            dst_path = os.path.join(out_dir, file)
+            # Skip template files (both docker-compose and kernel templates)
+            if file != TEMPLATE_FILENAME and not file.endswith('.j2'):
+                if os.path.isdir(src_path):
+                    shutil.copytree(src_path, dst_path)
+                else:
+                    shutil.copy2(src_path, dst_path)
+
+        # Copy the source directory
+        if container_cfg.get('copy_src', False):
+            shutil.copytree(SRC_DIR, os.path.join(out_dir, OUT_SRC_DIR))
+
+            # Copy global requirements.txt to repo_src if it exists
+            # This handles consolidated requirements files
+            global_requirements = "requirements.txt"
+            if os.path.exists(global_requirements):
+                repo_src_requirements = os.path.join(out_dir, OUT_SRC_DIR, "requirements.txt")
+                shutil.copy2(global_requirements, repo_src_requirements)
+                print(f"Copied global requirements.txt to {repo_src_requirements}")
+
+            # Copy project's pyproject.toml to repo_src
+            # Note: This is the user's project pyproject.toml, not framework's
+            global_pyproject = "pyproject.toml"
+            if os.path.exists(global_pyproject):
+                repo_src_pyproject = os.path.join(out_dir, OUT_SRC_DIR, "pyproject_user.toml")
+                shutil.copy2(global_pyproject, repo_src_pyproject)
+                print(f"Copied user pyproject.toml to {repo_src_pyproject}")
+
+            # Copy local osprey for development override (only in dev mode)
+            # This will override the PyPI osprey after standard installation
+            if dev_mode:
+                osprey_copied = _copy_local_framework_for_override(out_dir)
+                if osprey_copied:
+                    print("🔧 Development mode: Osprey override prepared")
+                else:
+                    print("📦 Development mode requested but osprey override failed, using PyPI")
+            else:
+                print("📦 Production mode: Containers will install osprey from PyPI")
+        # Copy additional directories if specified in service configuration
+        additional_dirs = container_cfg.get('additional_dirs', [])
+        if additional_dirs:
+            for dir_spec in additional_dirs:
+                    if isinstance(dir_spec, str):
+                        # Simple string: copy directory with same name
+                        src_dir = dir_spec
+                        dst_dir = os.path.join(out_dir, dir_spec)
+                    elif isinstance(dir_spec, dict):
+                        # Dictionary: allows custom source -> destination mapping
+                        src_dir = dir_spec.get("src")
+                        dst_dir = os.path.join(out_dir, dir_spec.get("dst", src_dir))
+                    else:
+                        continue
+
+                    if src_dir and os.path.exists(src_dir):
+                        # Handle both files and directories
+                        if os.path.isfile(src_dir):
+                            # For files, create parent directory and copy file
+                            os.makedirs(os.path.dirname(dst_dir), exist_ok=True)
+                            shutil.copy2(src_dir, dst_dir)
+                            print(f"Copied file {src_dir} to {dst_dir}")
+                        elif os.path.isdir(src_dir):
+                            # For directories, use copytree
+                            shutil.copytree(src_dir, dst_dir)
+                            print(f"Copied directory {src_dir} to {dst_dir}")
+                    elif src_dir:
+                        print(f"Warning: Path {src_dir} does not exist, skipping")
+
+        # Ensure _agent_data directory structure exists before container deployment
+        # This prevents mount failures when containers try to mount non-existent directories
+        _ensure_agent_data_structure(config)
+
+        # Create flattened configuration file for container
+        # This merges all imports and creates a complete config without import directives
+        try:
+            global_config = ConfigBuilder()
+            flattened_config = global_config.raw_config  # This contains the already-merged configuration
+
+            # Adjust registry_path for container environment
+            # In containers, src/ is copied to repo_src/, and the working directory varies by service
+            # For pipelines service: working directory is /app but files are mounted at /pipelines
+            # For other services: working directory matches mount point
+            if 'registry_path' in flattened_config:
+                registry_path = flattened_config['registry_path']
+                if isinstance(registry_path, str) and registry_path.startswith('./src/'):
+                    # Determine if this is a pipelines service by checking the source directory
+                    is_pipelines_service = 'pipelines' in source_dir
+
+                    if is_pipelines_service:
+                        # For pipelines: use absolute path since working dir (/app) != mount point (/pipelines)
+                        # ./src/weather/registry.py -> /pipelines/repo_src/weather/registry.py
+                        flattened_config['registry_path'] = registry_path.replace('./src/', '/pipelines/repo_src/')
+                        print(f"Adjusted registry_path for pipelines container: {registry_path} -> {flattened_config['registry_path']}")
+                    else:
+                        # For other services: use relative path since working dir == mount point
+                        # ./src/weather/registry.py -> ./repo_src/weather/registry.py
+                        flattened_config['registry_path'] = registry_path.replace('./src/', './repo_src/')
+                        print(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
+
+            config_yml_dst = os.path.join(out_dir, "config.yml")
+            with open(config_yml_dst, 'w') as f:
+                yaml.dump(flattened_config, f, default_flow_style=False, sort_keys=False)
+            print(f"Created flattened config.yml at {config_yml_dst}")
+        except Exception as e:
+            print(f"Warning: Failed to create flattened config: {e}")
+            # Fallback to copying original config
+            config_yml_src = "config.yml"
+            if os.path.exists(config_yml_src):
+                config_yml_dst = os.path.join(out_dir, "config.yml")
+                shutil.copy2(config_yml_src, config_yml_dst)
+                print(f"Copied original config.yml to {config_yml_dst}")
+
+        # Render kernel templates if specified in service configuration
+        if container_cfg.get('render_kernel_templates', False):
+            print(f"Processing kernel templates for {source_dir}")
+            render_kernel_templates(source_dir, config, out_dir)
+
+    return compose_filepath
+
+def parse_args():
+    """Parse command-line arguments for container management operations.
+
+    This function defines and processes the command-line interface for the
+    container management system, supporting configuration file specification,
+    deployment commands (up/down), and operational flags like detached mode.
+
+    The argument parser enforces logical constraints, such as requiring the
+    'up' command when using detached mode, and provides clear error messages
+    for invalid argument combinations.
+
+    :return: Parsed command-line arguments
+    :rtype: argparse.Namespace
+    :raises SystemExit: If invalid argument combinations are provided
+
+    Command-line Interface:
+        python container_manager.py CONFIG [COMMAND] [OPTIONS]
+
+        Positional Arguments:
+            CONFIG: Path to the configuration file (required)
+            COMMAND: Deployment command - 'up' or 'down' (optional)
+
+        Options:
+            -d, --detached: Run in detached mode (only with 'up' or 'rebuild')
+            --dev: Development mode - use local osprey package instead of PyPI
+
+    Examples:
+        Generate compose files only::
+
+            $ python container_manager.py config.yml
+            # Creates build directory and compose files without deployment
+
+        Deploy services in foreground::
+
+            $ python container_manager.py config.yml up
+            # Deploys services and shows output (uses PyPI framework)
+
+        Deploy services in background::
+
+            $ python container_manager.py config.yml up -d
+            # Deploys services in detached mode (uses PyPI framework)
+
+        Deploy with local osprey for development::
+
+            $ python container_manager.py config.yml up --dev
+            # Deploys services using local osprey package for testing
+
+        Deploy with local osprey in background::
+
+            $ python container_manager.py config.yml up -d --dev
+            # Deploys services in detached mode with local osprey
+
+        Stop services::
+
+            $ python container_manager.py config.yml down
+            # Stops and removes deployed services
+
+        Clean deployment (remove images/volumes)::
+
+            $ python container_manager.py config.yml clean
+            # Removes containers, images, volumes, and networks
+
+        Rebuild from scratch with local framework::
+
+            $ python container_manager.py config.yml rebuild -d --dev
+            # Clean + rebuild + start in detached mode with local framework
+
+    .. seealso::
+       :func:`main execution block` : Uses parsed arguments for deployment operations
+    """
+    parser = argparse.ArgumentParser(description="Run podman compose with config file.")
+
+    # Mandatory config path
+    parser.add_argument("config", help="Path to the config file")
+
+    # Optional command
+    parser.add_argument(
+        "command", nargs='?', choices=["up", "down", "clean", "rebuild"],
+        help="Command to run: 'up' (start), 'down' (stop), 'clean' (remove images/volumes), 'rebuild' (clean + up). If not provided, just generate compose files")
+
+    # Optional -d / --detached flag
+    parser.add_argument(
+        "-d", "--detached", action="store_true",
+        help="Run in detached mode. Only valid with 'up'.")
+
+    # Optional --dev flag for local osprey development
+    parser.add_argument(
+        "--dev", action="store_true",
+        help="Development mode: copy local osprey package to containers instead of using PyPI version. Use this when testing local osprey changes.")
+
+    args = parser.parse_args()
+
+    # Validation
+    if args.detached and args.command not in ["up", "rebuild"]:
+        parser.error("The -d/--detached flag is only allowed with 'up' or 'rebuild'.")
+
+    return args
+
+def _incremental_setup_build_dir(template_path, config, service_config, out_dir, dev_mode=False):
+    """Setup build directory using incremental updates when full cleanup fails.
+
+    This fallback function handles cases where the build directory cannot be
+    completely removed due to file locks or NFS issues. It updates files
+    incrementally instead of doing a full rebuild.
+
+    Args:
+        template_path (str): Path to the docker-compose template file
+        config (dict): Configuration dictionary
+        service_config (dict): Service-specific configuration
+        out_dir (str): Output directory path that couldn't be cleaned
+
+    Returns:
+        str: Path to the rendered docker-compose.yml file
+    """
+    source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
+
+    # Ensure output directory exists
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Create/update the docker compose file from the template
+    compose_filepath = render_template(template_path, config, out_dir)
+
+    # Copy/update files from source directory (skip if top-level services dir)
+    if source_dir != SERVICES_DIR:
+        for file in os.listdir(source_dir):
+            src_path = os.path.join(source_dir, file)
+            dst_path = os.path.join(out_dir, file)
+
+            # Skip template files
+            if file != TEMPLATE_FILENAME and not file.endswith('.j2'):
+                try:
+                    if os.path.isdir(src_path):
+                        # For directories, use copytree with dirs_exist_ok (Python 3.8+)
+                        if hasattr(shutil, 'copytree') and 'dirs_exist_ok' in shutil.copytree.__code__.co_varnames:
+                            shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+                        else:
+                            # Fallback for older Python versions
+                            if not os.path.exists(dst_path):
+                                shutil.copytree(src_path, dst_path)
+                    else:
+                        shutil.copy2(src_path, dst_path)
+                except (OSError, shutil.Error) as e:
+                    print(f"Warning: Could not update {dst_path}: {e}")
+
+    # Handle source directory copying if needed
+    if service_config.get('copy_src', False):
+        src_dst_path = os.path.join(out_dir, OUT_SRC_DIR)
+        try:
+            if hasattr(shutil, 'copytree') and 'dirs_exist_ok' in shutil.copytree.__code__.co_varnames:
+                shutil.copytree(SRC_DIR, src_dst_path, dirs_exist_ok=True)
+            else:
+                if not os.path.exists(src_dst_path):
+                    shutil.copytree(SRC_DIR, src_dst_path)
+        except (OSError, shutil.Error) as e:
+            print(f"Warning: Could not update source directory {src_dst_path}: {e}")
+
+    return compose_filepath
+
+def find_existing_compose_files(config, deployed_services):
+    """Find existing compose files without rebuilding directories.
+
+    This function locates existing docker-compose.yml files in the build directory
+    for the specified services without triggering any rebuild operations.
+
+    Args:
+        config (dict): Configuration dictionary containing build_dir
+        deployed_services (list): List of service names to find compose files for
+
+    Returns:
+        list: List of paths to existing compose files
+
+    Example:
+        compose_files = find_existing_compose_files(config, ['osprey.jupyter'])
+        # Returns: ['./build/services/docker-compose.yml',
+        #          './build/services/osprey/jupyter/docker-compose.yml']
+    """
+    compose_files = []
+    build_dir = config.get('build_dir', './build')
+
+    # Add top-level compose file if it exists
+    top_compose = os.path.join(build_dir, SERVICES_DIR, 'docker-compose.yml')
+    if os.path.exists(top_compose):
+        compose_files.append(top_compose)
+
+    # Add service-specific compose files
+    for service_name in deployed_services:
+        service_config, template_path = find_service_config(config, service_name)
+        if template_path:
+            # Construct expected compose file path
+            source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
+            compose_path = os.path.join(build_dir, source_dir, 'docker-compose.yml')
+            if os.path.exists(compose_path):
+                compose_files.append(compose_path)
+            else:
+                print(f"Warning: Compose file not found for service '{service_name}' at {compose_path}")
+
+    return compose_files
+
+def clean_deployment(compose_files):
+    """Clean up containers, images, volumes, and networks for a fresh deployment.
+
+    This function provides comprehensive cleanup capabilities for container
+    deployments, removing containers, images, volumes, and networks to enable
+    fresh rebuilds. It's particularly useful when configuration changes require
+    complete environment reconstruction.
+
+    :param compose_files: List of Docker Compose file paths for the deployment
+    :type compose_files: list[str]
+    """
+    print("Cleaning up deployment...")
+
+    # Stop and remove containers, networks, volumes
+    cmd_down = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd_down.extend(("-f", compose_file))
+    cmd_down.extend(["--env-file", ".env", "down", "--volumes", "--remove-orphans"])
+
+    print(f"Running: {' '.join(cmd_down)}")
+    subprocess.run(cmd_down)
+
+    # Remove images built by the compose files
+    cmd_rmi = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd_rmi.extend(("-f", compose_file))
+    cmd_rmi.extend(["--env-file", ".env", "down", "--rmi", "all"])
+
+    print(f"Running: {' '.join(cmd_rmi)}")
+    subprocess.run(cmd_rmi)
+
+    print("Cleanup completed.")
+
+
+def prepare_compose_files(config_path, dev_mode=False):
+    """Prepare compose files from configuration.
+
+    Loads configuration and generates all necessary compose files for deployment.
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    :param dev_mode: Development mode - copy local framework to containers
+    :type dev_mode: bool
+    :return: Tuple of (config dict, list of compose file paths)
+    :rtype: tuple[dict, list[str]]
+    :raises RuntimeError: If configuration loading fails
+    """
+    try:
+        config = ConfigBuilder(config_path)
+        config = config.raw_config
+    except Exception as e:
+        raise RuntimeError(f"Could not load config file {config_path}: {e}")
+
+    # Get deployed services list
+    deployed_services = config.get('deployed_services', [])
+    if deployed_services:
+        deployed_service_names = [str(service) for service in deployed_services]
+        print(f"Deployed services: {', '.join(deployed_service_names)}")
+    else:
+        print("Warning: No deployed_services list found, no services will be processed")
+        deployed_service_names = []
+
+    compose_files = []
+
+    # Create the top level compose file
+    top_template = os.path.join(SERVICES_DIR, TEMPLATE_FILENAME)
+    build_dir = config.get('build_dir', './build')
+    out_dir = os.path.join(build_dir, SERVICES_DIR)
+    top_template = render_template(top_template, config, out_dir)
+    compose_files.append(top_template)
+
+    # Create the service build directory for deployed services only
+    for service_name in deployed_service_names:
+        service_config, template_path = find_service_config(config, service_name)
+        if service_config and template_path:
+            if not os.path.isfile(template_path):
+                raise RuntimeError(f"Template file {template_path} not found for service '{service_name}'")
+
+            out = setup_build_dir(template_path, config, service_config, dev_mode)
+            compose_files.append(out)
+        else:
+            raise RuntimeError(f"Service '{service_name}' not found in configuration")
+
+    return config, compose_files
+
+
+def deploy_up(config_path, detached=False, dev_mode=False):
+    """Start services using podman compose.
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    :param detached: Run in detached mode
+    :type detached: bool
+    :param dev_mode: Development mode for local framework testing
+    :type dev_mode: bool
+    """
+    config, compose_files = prepare_compose_files(config_path, dev_mode)
+
+    # Set up environment for containers
+    env = os.environ.copy()
+    if dev_mode:
+        env['DEV_MODE'] = 'true'
+        print("🔧 Development mode: DEV_MODE environment variable set for containers")
+
+    cmd = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd.extend(("-f", compose_file))
+
+    # Only add --env-file if .env exists, otherwise let docker-compose use defaults
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+    else:
+        print("⚠️  No .env file found - services will start with default/empty environment variables")
+        print("💡 To configure API keys: cp .env.example .env && edit .env")
+
+    cmd.append("up")
+    if detached:
+        cmd.append("-d")
+
+    print(f"Running command:\n    {' '.join(cmd)}")
+    os.execvpe(cmd[0], cmd, env)
+
+
+def deploy_down(config_path, dev_mode=False):
+    """Stop services using podman compose.
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    """
+    try:
+        config = ConfigBuilder(config_path)
+        config = config.raw_config
+    except Exception as e:
+        raise RuntimeError(f"Could not load config file {config_path}: {e}")
+
+    deployed_services = config.get('deployed_services', [])
+    deployed_service_names = [str(service) for service in deployed_services] if deployed_services else []
+
+    # Try to use existing compose files
+    compose_files = find_existing_compose_files(config, deployed_service_names)
+
+    # If no existing compose files found, rebuild them
+    if not compose_files:
+        print("No existing compose files found, rebuilding...")
+        _, compose_files = prepare_compose_files(config_path, dev_mode)
+    else:
+        print(f"Using existing compose files for 'down' operation:")
+        for f in compose_files:
+            print(f"  - {f}")
+
+    cmd = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd.extend(("-f", compose_file))
+
+    # Only add --env-file if .env exists
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+
+    cmd.append("down")
+
+    print(f"Running command:\n    {' '.join(cmd)}")
+    os.execvp(cmd[0], cmd)
+
+
+def deploy_restart(config_path, detached=False):
+    """Restart services using podman compose.
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    :param detached: Run in detached mode
+    :type detached: bool
+    """
+    config, compose_files = prepare_compose_files(config_path)
+
+    cmd = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd.extend(("-f", compose_file))
+    cmd.extend(["--env-file", ".env", "restart"])
+
+    print(f"Running command:\n    {' '.join(cmd)}")
+    subprocess.run(cmd)
+
+    # If detached mode requested, detach after restart
+    if detached:
+        print("Services restarted. Running in detached mode.")
+
+
+def show_status(config_path):
+    """Show detailed status of services with formatted output.
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    """
+    try:
+        from rich.console import Console
+        from rich.table import Table
+        import json
+
+        console = Console()
+
+        config = ConfigBuilder(config_path)
+        config = config.raw_config
+    except Exception as e:
+        raise RuntimeError(f"Could not load config file {config_path}: {e}")
+
+    deployed_services = config.get('deployed_services', [])
+    deployed_service_names = [str(service) for service in deployed_services] if deployed_services else []
+
+    # Try to use existing compose files
+    compose_files = find_existing_compose_files(config, deployed_service_names)
+
+    if not compose_files:
+        console.print("\n[yellow]⚠️  No compose files found. Services may not be deployed yet.[/yellow]")
+        console.print("\n[dim]Run 'osprey deploy build' to generate compose files[/dim]\n")
+        return
+
+    # Get container status using podman compose ps --format json
+    cmd = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd.extend(("-f", compose_file))
+    cmd.extend(["--env-file", ".env", "ps", "--format", "json"])
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        # Parse JSON output from podman compose
+        # Different compose providers return different formats:
+        # - Some return a JSON array: [{"container1"}, {"container2"}]
+        # - Others return newline-delimited JSON: one object per line
+        # We handle both by trying to parse as array first, then falling back to line-by-line
+        # TODO: In future CLI expansion with collapsible blocks, we could display
+        # the full raw JSON output for debugging/advanced users.
+        containers = []
+        if result.stdout.strip():
+            # Remove warning/info lines that aren't part of JSON
+            lines = result.stdout.strip().split('\n')
+            json_lines = [line for line in lines 
+                         if line.strip() and 
+                         not line.startswith('>') and 
+                         not line.startswith('time=') and
+                         not 'WARNING:' in line and
+                         not 'Executing external compose' in line]
+            json_text = '\n'.join(json_lines)
+            
+            try:
+                # Try parsing as a JSON array first (podman-compose format)
+                parsed = json.loads(json_text)
+                if isinstance(parsed, list):
+                    # It's an array of containers
+                    containers = [c for c in parsed if isinstance(c, dict)]
+                elif isinstance(parsed, dict):
+                    # Single container object
+                    containers = [parsed]
+            except json.JSONDecodeError:
+                # Fall back to line-by-line parsing (docker compose format)
+                for line in json_lines:
+                    line = line.strip()
+                    if line:
+                        try:
+                            container = json.loads(line)
+                            if isinstance(container, dict):
+                                containers.append(container)
+                        except json.JSONDecodeError:
+                            # Skip unparseable lines
+                            continue
+
+        # Create Rich table
+        table = Table(show_header=True, header_style="bold cyan")
+        table.add_column("Service", style="cyan", no_wrap=True)
+        table.add_column("Status", style="white")
+        table.add_column("Ports", style="blue")
+        table.add_column("Image", style="dim")
+
+        if not containers:
+            console.print("\n[yellow]ℹ️  No services are currently running[/yellow]")
+            console.print(f"\n[dim]Configured services: {', '.join(deployed_service_names)}[/dim]")
+            console.print("\n[dim]Start services with: osprey deploy up[/dim]\n")
+            return
+
+        # Add rows for each container
+        for container in containers:
+            service_name = container.get("Service", container.get("Name", "unknown"))
+            state = container.get("State", "unknown")
+            health = container.get("Health", "")
+
+            # Format status with emoji and health
+            if state == "running":
+                if health == "healthy":
+                    status = "[green]● Running (healthy)[/green]"
+                elif health == "unhealthy":
+                    status = "[yellow]● Running (unhealthy)[/yellow]"
+                elif health == "starting":
+                    status = "[cyan]● Running (starting)[/cyan]"
+                else:
+                    status = "[green]● Running[/green]"
+            elif state == "exited":
+                status = "[red]● Stopped[/red]"
+            elif state == "restarting":
+                status = "[yellow]● Restarting[/yellow]"
+            else:
+                status = f"[dim]● {state}[/dim]"
+
+            # Format ports
+            ports_raw = container.get("Publishers", [])
+            if ports_raw:
+                # Extract published ports
+                port_list = []
+                for port in ports_raw:
+                    # Ensure port is a dict before calling .get()
+                    if isinstance(port, dict):
+                        published = port.get("PublishedPort", "")
+                        target = port.get("TargetPort", "")
+                        if published and target:
+                            port_list.append(f"{published}→{target}")
+                ports = ", ".join(port_list) if port_list else "-"
+            else:
+                ports = "-"
+
+            # Get image
+            image = container.get("Image", "unknown")
+            # Shorten image name if too long
+            if len(image) > 40:
+                image = "..." + image[-37:]
+
+            table.add_row(service_name, status, ports, image)
+
+        console.print(table)
+        console.print()
+
+    except subprocess.CalledProcessError as e:
+        # Fallback to simple ps if json format not supported
+        console.print("\n[dim]Running basic status check...[/dim]\n")
+        cmd_simple = ["podman", "compose"]
+        for compose_file in compose_files:
+            cmd_simple.extend(("-f", compose_file))
+        cmd_simple.extend(["--env-file", ".env", "ps"])
+        subprocess.run(cmd_simple)
+    except json.JSONDecodeError:
+        console.print("[yellow]⚠️  Could not parse container status[/yellow]")
+    except Exception as e:
+        console.print(f"[red]Error getting status: {e}[/red]")
+
+
+def rebuild_deployment(config_path, detached=False, dev_mode=False):
+    """Rebuild deployment from scratch (clean + up).
+
+    :param config_path: Path to the configuration file
+    :type config_path: str
+    :param detached: Run in detached mode
+    :type detached: bool
+    :param dev_mode: Development mode for local framework testing
+    :type dev_mode: bool
+    """
+    config, compose_files = prepare_compose_files(config_path, dev_mode)
+
+    # Clean first
+    clean_deployment(compose_files)
+
+    # Set up environment for containers
+    env = os.environ.copy()
+    if dev_mode:
+        env['DEV_MODE'] = 'true'
+        print("🔧 Development mode: DEV_MODE environment variable set for containers")
+
+    # Then start up
+    cmd = ["podman", "compose"]
+    for compose_file in compose_files:
+        cmd.extend(("-f", compose_file))
+
+    # Only add --env-file if .env exists
+    from pathlib import Path
+    env_file = Path(".env")
+    if env_file.exists():
+        cmd.extend(["--env-file", ".env"])
+    else:
+        print("⚠️  No .env file found - services will start with default/empty environment variables")
+        print("💡 To configure API keys: cp .env.example .env && edit .env")
+
+    cmd.append("up")
+    if detached:
+        cmd.append("-d")
+
+    print(f"Running command:\n    {' '.join(cmd)}")
+    os.execvpe(cmd[0], cmd, env)
+
+if __name__ == "__main__":
+    """Main execution block for container management operations.
+
+    This section orchestrates the complete deployment workflow:
+    1. Parse command-line arguments
+    2. Load and validate configuration
+    3. Discover and process services
+    4. Generate build directories and compose files
+    5. Execute Podman Compose commands if requested
+
+    The execution block handles errors gracefully, providing clear feedback
+    for configuration issues, missing services, or deployment failures.
+    Exit codes indicate success (0) or various failure conditions (1).
+
+    Workflow:
+        1. Configuration Loading: Use ConfigBuilder to load and merge
+           configuration files with proper error handling
+        2. Service Discovery: Process deployed_services list to identify
+           active services for deployment
+        3. Template Processing: Generate build directories for root services
+           and each deployed service
+        4. Container Orchestration: Execute Podman Compose with generated
+           files and environment configuration
+
+    Examples:
+        Successful deployment workflow::
+
+            $ python container_manager.py config.yml up -d
+            Deployed services: osprey.jupyter, applications.als_assistant.mongo
+            Generated compose files:
+             - build/services/docker-compose.yml
+             - build/services/osprey/jupyter/docker-compose.yml
+             - build/services/applications/als_assistant/mongo/docker-compose.yml
+            Running command:
+                podman compose -f build/services/docker-compose.yml \
+                               -f build/services/osprey/jupyter/docker-compose.yml \
+                               -f build/services/applications/als_assistant/mongo/docker-compose.yml \
+                               --env-file .env up -d
+
+    .. seealso::
+       :func:`parse_args` : Command-line argument processing
+       :class:`configs.config.ConfigBuilder` : Configuration management
+       :func:`find_service_config` : Service discovery implementation
+    """
+    args = parse_args()
+
+    try:
+        if args.command == "up":
+            deploy_up(args.config, detached=args.detached, dev_mode=args.dev)
+        elif args.command == "down":
+            deploy_down(args.config, dev_mode=args.dev)
+        elif args.command == "clean":
+            # For clean, we need to prepare files first
+            _, compose_files = prepare_compose_files(args.config, dev_mode=args.dev)
+            clean_deployment(compose_files)
+        elif args.command == "rebuild":
+            rebuild_deployment(args.config, detached=args.detached, dev_mode=args.dev)
+        else:
+            # No command specified - just generate compose files
+            _, compose_files = prepare_compose_files(args.config, dev_mode=args.dev)
+            print("Generated compose files:")
+            for compose_file in compose_files:
+                print(f" - {compose_file}")
+    except RuntimeError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        sys.exit(1)

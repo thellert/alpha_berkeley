@@ -7,7 +7,7 @@ Python code generation and execution service with LangGraph-based workflow, appr
 .. note::
    For implementation tutorials and usage examples, see :doc:`../../../developer-guides/05_production-systems/03_python-execution-service`.
 
-.. currentmodule:: framework.services.python_executor
+.. currentmodule:: osprey.services.python_executor
 
 Core Components
 ===============
@@ -152,7 +152,7 @@ Exceptions
 Utility Functions
 =================
 
-.. currentmodule:: framework.services.python_executor.models
+.. currentmodule:: osprey.services.python_executor.models
 
 .. autofunction:: get_execution_control_config_from_configurable
 
@@ -163,7 +163,7 @@ Utility Functions
 Serialization Utilities
 =======================
 
-.. currentmodule:: framework.services.python_executor.services
+.. currentmodule:: osprey.services.python_executor.services
 
 .. autofunction:: make_json_serializable
 
@@ -174,5 +174,5 @@ Serialization Utilities
    :doc:`../../../developer-guides/05_production-systems/03_python-execution-service`
        Complete implementation guide and examples
    
-   :class:`framework.capabilities.python.PythonCapability`
+   :class:`osprey.capabilities.python.PythonCapability`
        Capability interface that uses this service

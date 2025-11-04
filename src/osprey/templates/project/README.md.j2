@@ -1,0 +1,45 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+## Quick Start
+
+```bash
+{% if env.get('CBORG_API_KEY') or env.get('OPENAI_API_KEY') or env.get('ANTHROPIC_API_KEY') or env.get('GOOGLE_API_KEY') -%}
+# API keys were automatically configured from your environment
+# Start services
+{% else -%}
+# Setup environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start services
+{% endif -%}
+framework deploy up
+
+# Run CLI interface
+framework chat
+```
+
+## Project Structure
+
+```
+{{ project_name }}/
+├── {{ package_name }}/        # Application code
+│   ├── registry.py
+│   ├── capabilities/
+│   └── context_classes.py
+├── services/                  # Docker services
+├── config.yml                 # Configuration
+└── pyproject.toml            # Dependencies
+```
+
+## Development
+
+Edit files in `{{ package_name }}/` to add functionality. Changes are reflected immediately.
+
+## Documentation
+
+- Framework: https://als-apg.github.io/osprey
+- Tutorial: [Building Your First Capability](https://als-apg.github.io/osprey/developer-guides/building-first-capability.html)
+

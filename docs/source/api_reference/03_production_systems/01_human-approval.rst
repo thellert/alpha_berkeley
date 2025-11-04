@@ -7,7 +7,7 @@ LangGraph-native approval system for production-ready human-in-the-loop workflow
 .. note::
    For implementation guides and examples, see :doc:`../../../developer-guides/05_production-systems/01_human-approval-workflows`.
 
-.. currentmodule:: framework.approval
+.. currentmodule:: osprey.approval
 
 Core Components
 ===============
@@ -101,5 +101,5 @@ Utility Functions
    :doc:`../../../developer-guides/05_production-systems/01_human-approval-workflows`
        Complete implementation guide and examples
    
-   :class:`framework.services.python_executor.PythonExecutorService`
+   :class:`osprey.services.python_executor.PythonExecutorService`
        Service that integrates with approval system

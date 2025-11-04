@@ -33,12 +33,12 @@ Infrastructure
 
 The infrastructure layer implements the **Orchestrator-First Architecture** that powers sophisticated agentic behavior with deterministic execution patterns. These components transform user conversations into validated execution plans with complete oversight and approval integration.
 
-.. currentmodule:: framework.infrastructure
+.. currentmodule:: osprey.infrastructure
 
 Architecture Overview
 =====================
 
-The Alpha Berkeley Framework infrastructure implements a **Orchestrator-First** pipeline that eliminates the unpredictability of traditional reactive agentic systems:
+The Osprey Framework infrastructure implements a **Orchestrator-First** pipeline that eliminates the unpredictability of traditional reactive agentic systems:
 
 **Traditional Reactive Approach:**
 
@@ -229,9 +229,9 @@ The infrastructure components work together in a deterministic processing flow:
       .. code-block:: python
 
          # Infrastructure nodes auto-register with framework
-         from framework.base.decorators import infrastructure_node
-         from framework.base.nodes import BaseInfrastructureNode
-         from framework.base.errors import ErrorClassification, ErrorSeverity
+         from osprey.base.decorators import infrastructure_node
+         from osprey.base.nodes import BaseInfrastructureNode
+         from osprey.base.errors import ErrorClassification, ErrorSeverity
          
          @infrastructure_node
          class CustomInfraNode(BaseInfrastructureNode):
@@ -261,8 +261,8 @@ The infrastructure components work together in a deterministic processing flow:
                  }
          
          # Capabilities register as infrastructure capabilities
-         from framework.base.decorators import capability_node
-         from framework.base.capability import BaseCapability
+         from osprey.base.decorators import capability_node
+         from osprey.base.capability import BaseCapability
          from langchain_core.messages import AIMessage
          
          @capability_node

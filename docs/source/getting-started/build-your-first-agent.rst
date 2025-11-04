@@ -22,11 +22,11 @@ This tutorial builds on the Hello World foundations to demonstrate **orchestrati
 Getting Started - Create the Project
 ------------------------------------
 
-First, create a new wind turbine project from the template using :doc:`framework init <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+First, create a new wind turbine project from the template using :doc:`osprey init <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
 .. code-block:: bash
 
-   framework init turbine-agent --template wind_turbine
+   osprey init turbine-agent --template wind_turbine
    cd turbine-agent
 
 This generates a complete, self-contained project with the following structure:
@@ -59,7 +59,7 @@ This generates a complete, self-contained project with the following structure:
 .. admonition:: New in v0.7+: Template-Based Projects
    :class: version-07plus-change
 
-   Projects are now generated from templates using ``framework init``. The template code is the canonical reference - you can view it on GitHub at `src/framework/templates/apps/wind_turbine <https://github.com/thellert/alpha_berkeley/tree/main/src/framework/templates/apps/wind_turbine>`_.
+   Projects are now generated from templates using ``osprey init``. The template code is the canonical reference - you can view it on GitHub at `src/osprey/templates/apps/wind_turbine <https://github.com/als-apg/osprey/tree/main/src/osprey/templates/apps/wind_turbine>`_.
 
 🎯 What You'll Learn
 --------------------
@@ -489,7 +489,7 @@ Integration Patterns Mastered
 Interactive Planning Mode Demonstration
 ---------------------------------------
 
-The Alpha Berkeley Framework's planning mode provides full transparency into multi-step execution plans before they execute. This is especially powerful for complex analysis tasks where you want to understand and approve the approach before execution begins.
+The Osprey Framework's planning mode provides full transparency into multi-step execution plans before they execute. This is especially powerful for complex analysis tasks where you want to understand and approve the approach before execution begins.
 
 .. dropdown:: **The Power of Planning Mode**
    :open:

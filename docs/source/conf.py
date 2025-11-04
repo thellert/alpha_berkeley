@@ -40,7 +40,7 @@ def get_version_from_git():
             version = github_ref.replace('refs/tags/v', '')
             print(f"📋 Using version from GitHub tag: {version}")
             return version
-        
+
         # Fallback to git describe for local builds
         result = subprocess.run(
             ['git', 'describe', '--tags', '--abbrev=0'], 
@@ -60,9 +60,9 @@ def get_version_from_git():
         print("⚠️  Git not available, using fallback version")
         return '0.0.0-dev'
 
-project = 'Alpha Berkeley Framework'
-copyright = '2025, ALS Team'
-author = 'ALS Team'
+project = 'Osprey Framework'
+copyright = '2025, Osprey Developer Team'
+author = 'Osprey Developer Team'
 release = get_version_from_git()
 
 # -- General configuration ---------------------------------------------------
@@ -95,13 +95,13 @@ html_theme_options = {
     "icon_links": [
         {
             "name": "GitHub",
-            "url": "https://github.com/thellert/alpha_berkeley",
+            "url": "https://github.com/als-apg/osprey",
             "icon": "fa-brands fa-github",
         },
     ],
     # Using clean text-only logo for proper spacing
     "logo": {
-        "text": "Alpha Berkeley Framework",
+        "text": "Osprey Framework",
     },
     "show_toc_level": 2,
     "navbar_align": "left",
@@ -113,8 +113,8 @@ html_theme_options = {
 
 # Repository information for edit buttons
 html_context = {
-    "github_user": "thellert",
-    "github_repo": "alpha_berkeley", 
+    "github_user": "als-apg",
+    "github_repo": "osprey", 
     "github_version": "main",
     "doc_path": "docs/source",
 }
@@ -171,7 +171,7 @@ autodoc_mock_imports = [
     'pydantic_ai.providers.openai',
     'pydantic_ai.providers.google_gla',
     'pydantic_ai.providers.anthropic',
-    
+
     # Data science stack - too heavy for docs CI, interfaces documented
     'pandas',
     'numpy', 
@@ -180,7 +180,7 @@ autodoc_mock_imports = [
     'seaborn',
     'scikit-learn',
     'scipy',
-    
+
     # Database clients - connection logic mocked, interfaces documented  
     'pymongo',
     'neo4j',
@@ -189,47 +189,47 @@ autodoc_mock_imports = [
     'psycopg.rows',
     'psycopg_pool',
     'langgraph.checkpoint.postgres',
-    
+
     # Specialized infrastructure - interfaces documented, implementations mocked
     'pydantic_ai',
     'langgraph', 
     'langchain',
-    
+
     # Container and deployment tools - not needed for documentation
     'docker',
     'podman',
     'python-dotenv',
     'dotenv',
-    
+
     # EPICS control system - specialized scientific software
     'epics',
     'pyepics', 
     'p4p',
     'pvaccess',
-    
+
     # Development tools - not needed for static documentation
     'pytest',
     'jupyter',
     'notebook', 
     'ipykernel',
-    
+
     # Network and async libraries - interfaces documented, implementations mocked
     'aiohttp',
     'websockets',
-    
+
     # Framework services that depend on complex infrastructure
     # Note: The services themselves can now import, but their dependencies are mocked above
-    
+
     # Internal modules that have import issues during docs build
     'container_manager',
     'loader',
-    
+
     # Framework modules that fail due to registry/config dependencies
     'framework.infrastructure.task_extraction_node',
     'framework.infrastructure.orchestration_node', 
     'framework.infrastructure.error_node.ErrorType',
     'framework.services.python_executor.PythonExecutorConfig',
-    
+
     # Capability error classes that depend on registry
     'framework.capabilities.memory',
     'framework.capabilities.time_range_parsing',
@@ -364,7 +364,7 @@ function addMermaidCSS() {
                 fill: #ffffff !important;
                 color: #ffffff !important;
             }
-            
+
             html[data-theme="light"] .mermaid text,
             html[data-theme="light"] .mermaid .nodeLabel,
             html[data-theme="light"] .mermaid .edgeLabel,
@@ -378,7 +378,7 @@ function addMermaidCSS() {
                 fill: #333333 !important;
                 color: #333333 !important;
             }
-            
+
             /* Remove any filters that might interfere */
             .mermaid svg {
                 filter: none !important;
@@ -391,10 +391,10 @@ function addMermaidCSS() {
 // Function to render all Mermaid diagrams with current theme
 function renderMermaidDiagrams() {
     const currentTheme = getCurrentTheme();
-    
+
     // Add CSS overrides
     addMermaidCSS();
-    
+
     // Configure Mermaid with current theme
     const mermaidConfig = {
         startOnLoad: false,
@@ -444,7 +444,7 @@ function renderMermaidDiagrams() {
             useMaxWidth: true
         }
     };
-    
+
     // Apply theme-specific customizations
     if (currentTheme === 'dark') {
         mermaidConfig.themeVariables = {
@@ -453,30 +453,30 @@ function renderMermaidDiagrams() {
             primaryTextColor: "#ffffff",
             primaryBorderColor: "#4a90e2",
             lineColor: "#ffffff",
-            
+
             // Text colors - comprehensive coverage
             textColor: "#ffffff",
             secondaryColor: "#ffffff",
             tertiaryColor: "#ffffff",
-            
+
             // Node text colors
             nodeTextColor: "#ffffff",
             edgeLabelBackground: "#1a202c",
-            
+
             // Background colors
             background: "#1a202c",
             mainBkg: "#2d3748",
             secondBkg: "#4a5568",
             sectionBkgColor: "#2d3748",
             altSectionBkgColor: "#1a202c",
-            
+
             // Grid and borders
             gridColor: "#4a5568",
-            
+
             // Flowchart specific
             clusterBkg: "#2d3748",
             clusterBorder: "#4a5568",
-            
+
             // Sequence diagram specific
             actorBkg: "#2d3748",
             actorBorder: "#4a5568",
@@ -491,7 +491,7 @@ function renderMermaidDiagrams() {
             noteBkgColor: "#2d3748",
             noteTextColor: "#ffffff",
             noteBorderColor: "#4a5568",
-            
+
             // State diagram specific
             fillType0: "#2d3748",
             fillType1: "#4a5568",
@@ -501,10 +501,10 @@ function renderMermaidDiagrams() {
             fillType5: "#8a9cad",
             fillType6: "#9aacbd",
             fillType7: "#aabccd",
-            
+
             // Class diagram specific
             classText: "#ffffff",
-            
+
             // Git diagram specific
             git0: "#4a90e2",
             git1: "#f6ad55",
@@ -522,7 +522,7 @@ function renderMermaidDiagrams() {
             gitBranchLabel5: "#ffffff",
             gitBranchLabel6: "#ffffff",
             gitBranchLabel7: "#ffffff",
-            
+
             // Journey diagram specific
             taskBkgColor: "#2d3748",
             taskTextColor: "#ffffff",
@@ -544,31 +544,31 @@ function renderMermaidDiagrams() {
             primaryTextColor: "#333333",
             primaryBorderColor: "#1f77b4",
             lineColor: "#333333",
-            
+
             // Text colors
             textColor: "#333333",
             secondaryColor: "#333333",
             tertiaryColor: "#333333",
-            
+
             // Node text colors
             nodeTextColor: "#333333",
             edgeLabelBackground: "#ffffff",
-            
+
             // Background colors
             background: "#ffffff",
             mainBkg: "#ffffff",
             secondBkg: "#f8f9fa",
             sectionBkgColor: "#f9f9f9",
             altSectionBkgColor: "#ffffff",
-            
+
             // Grid and borders
             gridColor: "#e0e0e0"
         };
     }
-    
+
     // Initialize Mermaid with current configuration
     mermaid.initialize(mermaidConfig);
-    
+
     // Find all Mermaid diagrams and render them
     const diagrams = document.querySelectorAll('.mermaid');
     diagrams.forEach((diagram, index) => {
@@ -576,10 +576,10 @@ function renderMermaidDiagrams() {
         if (!diagram.dataset.originalContent) {
             diagram.dataset.originalContent = diagram.textContent.trim();
         }
-        
+
         // Generate unique ID for this diagram
         const diagramId = `mermaid-diagram-${index}`;
-        
+
         // Render the diagram
         mermaid.render(diagramId, diagram.dataset.originalContent)
             .then(result => {

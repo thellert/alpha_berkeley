@@ -2,9 +2,9 @@
 State and Context Essentials
 ============================
 
-.. currentmodule:: framework.state
+.. currentmodule:: osprey.state
 
-The Alpha Berkeley Framework supports multi-turn conversations, preserving relevant context across conversation turns through selective persistence of capability data. Master the essential state and context management patterns for Alpha Berkeley Framework development.
+The Osprey Framework supports multi-turn conversations, preserving relevant context across conversation turns through selective persistence of capability data. Master the essential state and context management patterns for Osprey Framework development.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -25,7 +25,7 @@ The Alpha Berkeley Framework supports multi-turn conversations, preserving relev
 Framework Approach
 ===================
 
-The Alpha Berkeley Framework uses **selective persistence**:
+The Osprey Framework uses **selective persistence**:
 
 - **Only context data persists** across conversation turns
 - **All execution fields reset** automatically
@@ -116,7 +116,7 @@ Creating Fresh State
 
 .. code-block:: python
 
-   from framework.state import StateManager
+   from osprey.state import StateManager
    
    # Create fresh state for new conversation
    state = StateManager.create_fresh_state(
@@ -137,7 +137,7 @@ The essential pattern for storing capability results:
 
 .. code-block:: python
 
-   from framework.state import StateManager
+   from osprey.state import StateManager
    from my_app.context_classes import WeatherDataContext
    
    @capability_node
@@ -177,7 +177,7 @@ Access stored context data with structured interface:
 
 .. code-block:: python
 
-   from framework.context import ContextManager
+   from osprey.context import ContextManager
    
    def process_with_context(state: AgentState):
        # Create context manager from state
@@ -203,7 +203,7 @@ Context classes provide type-safe data containers:
    from datetime import datetime
    from typing import ClassVar
    from pydantic import Field
-   from framework.context.base import CapabilityContext
+   from osprey.context.base import CapabilityContext
    
    class WeatherDataContext(CapabilityContext):
        """Context for weather data with validation."""

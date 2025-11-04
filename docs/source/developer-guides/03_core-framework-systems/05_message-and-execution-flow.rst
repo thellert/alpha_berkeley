@@ -2,9 +2,9 @@
 Message and Execution Flow
 ==========================
 
-.. currentmodule:: framework.infrastructure
+.. currentmodule:: osprey.infrastructure
 
-The Alpha Berkeley Framework implements a router-controlled message processing system that transforms user input into agent responses through coordinated infrastructure components.
+The Osprey Framework implements a router-controlled message processing system that transforms user input into agent responses through coordinated infrastructure components.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -55,8 +55,8 @@ The Gateway handles all message preprocessing, state management, and routing dec
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway
-   from framework.graph import create_graph
+   from osprey.infrastructure.gateway import Gateway
+   from osprey.graph import create_graph
    
    async def process_user_message(user_input: str) -> None:
        # Initialize Gateway and graph
@@ -145,7 +145,7 @@ The RouterNode serves as the central decision-making authority, determining exec
 
 .. code-block:: python
 
-   from framework.infrastructure.router_node import RouterNode, router_conditional_edge
+   from osprey.infrastructure.router_node import RouterNode, router_conditional_edge
    
    @infrastructure_node(quiet=True)
    class RouterNode(BaseInfrastructureNode):
@@ -202,8 +202,8 @@ TaskExtractionNode converts conversation history into structured, actionable tas
 
 .. code-block:: python
 
-   from framework.infrastructure.task_extraction_node import TaskExtractionNode
-   from framework.prompts.defaults.task_extraction import ExtractedTask
+   from osprey.infrastructure.task_extraction_node import TaskExtractionNode
+   from osprey.prompts.defaults.task_extraction import ExtractedTask
    
    @infrastructure_node
    class TaskExtractionNode(BaseInfrastructureNode):
@@ -241,7 +241,7 @@ ClassificationNode analyzes tasks and selects appropriate capabilities.
 
 .. code-block:: python
 
-   from framework.infrastructure.classification_node import ClassificationNode, select_capabilities
+   from osprey.infrastructure.classification_node import ClassificationNode, select_capabilities
    
    @infrastructure_node
    class ClassificationNode(BaseInfrastructureNode):
@@ -278,8 +278,8 @@ OrchestrationNode creates detailed execution plans with LLM coordination.
 
 .. code-block:: python
 
-   from framework.infrastructure.orchestration_node import OrchestrationNode
-   from framework.base.planning import ExecutionPlan, PlannedStep
+   from osprey.infrastructure.orchestration_node import OrchestrationNode
+   from osprey.base.planning import ExecutionPlan, PlannedStep
    
    @infrastructure_node
    class OrchestrationNode(BaseInfrastructureNode):
@@ -341,10 +341,10 @@ Capabilities execute business logic according to the orchestrated plan.
 
 .. code-block:: python
 
-   from framework.base import BaseCapability
-   from framework.decorators import capability_node
-   from framework.state import StateManager
-   from framework.context import ContextManager
+   from osprey.base import BaseCapability
+   from osprey.decorators import capability_node
+   from osprey.state import StateManager
+   from osprey.context import ContextManager
    
    @capability_node
    class ExampleCapability(BaseCapability):
@@ -379,7 +379,7 @@ StateManager provides utilities for state creation and context storage.
 
 .. code-block:: python
 
-   from framework.state import StateManager, AgentState
+   from osprey.state import StateManager, AgentState
    
    class StateManager:
        @staticmethod
@@ -412,7 +412,7 @@ ContextManager provides access to capability context data with Pydantic serializ
 
 .. code-block:: python
 
-   from framework.context.context_manager import ContextManager
+   from osprey.context.context_manager import ContextManager
    
    class ContextManager:
        def __init__(self, state: AgentState):
@@ -438,7 +438,7 @@ ErrorNode handles error recovery and response generation.
 
 .. code-block:: python
 
-   from framework.infrastructure.error_node import ErrorNode
+   from osprey.infrastructure.error_node import ErrorNode
    
    @infrastructure_node
    class ErrorNode(BaseInfrastructureNode):
@@ -460,9 +460,9 @@ Complete Working Example
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway
-   from framework.graph import create_graph
-   from framework.registry import get_registry
+   from osprey.infrastructure.gateway import Gateway
+   from osprey.graph import create_graph
+   from osprey.registry import get_registry
    
    async def complete_message_processing():
        # Initialize framework
@@ -496,8 +496,8 @@ The framework uses LangGraph with router-controlled conditional edges.
 
 .. code-block:: python
 
-   from framework.graph import create_graph
-   from framework.registry import get_registry
+   from osprey.graph import create_graph
+   from osprey.registry import get_registry
    
    def create_graph(registry: RegistryManager) -> StateGraph:
        # Get all nodes from registry

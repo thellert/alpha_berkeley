@@ -1,5 +1,5 @@
-Alpha Berkeley Framework Documentation
-======================================
+Osprey Framework Documentation
+================================
 
 .. admonition:: 🚧 Early Access Documentation
    :class: warning
@@ -13,10 +13,10 @@ Alpha Berkeley Framework Documentation
    We welcome feedback! If you find issues or have suggestions, please open an issue on our GitHub page.
 
 
-What is Alpha Berkeley Framework?
-----------------------------------
+What is Osprey Framework?
+--------------------------
 
-The **Alpha Berkeley Framework** provides a production-ready architecture for building domain-specific agentic systems. Built on :doc:`LangGraph's StateGraph foundation <developer-guides/01_understanding-the-framework/03_langgraph-integration>`, it implements a structured pipeline that transforms natural language inputs into reliable, orchestrated execution plans.
+The **Osprey Framework** provides a production-ready architecture for building domain-specific agentic systems. Built on :doc:`LangGraph's StateGraph foundation <developer-guides/01_understanding-the-framework/03_langgraph-integration>`, it implements a structured pipeline that transforms natural language inputs into reliable, orchestrated execution plans.
 
 The framework addresses common challenges in agentic system development: :doc:`tool management at scale <developer-guides/04_infrastructure-components/03_classification-and-routing>`, :doc:`structured orchestration without hallucination <developer-guides/01_understanding-the-framework/04_orchestrator-first-philosophy>`, and seamless integration of :doc:`human oversight workflows <api_reference/03_production_systems/01_human-approval>`.
 
@@ -35,10 +35,10 @@ Our framework provides a domain-agnostic architecture for safety-critical system
 
 
 .. figure:: _static/resources/workflow_overview.pdf
-   :alt: Alpha Berkeley Framework Architecture
+   :alt: Osprey Framework Architecture
    :align: center
    :width: 100%
-   
+
    **Production Deployment Example**: This diagram illustrates the framework architecture using capabilities from the :doc:`ALS Accelerator Assistant <example-applications/als-assistant>` - our production deployment at Lawrence Berkeley National Laboratory's Advanced Light Source particle accelerator.
 
 The framework provides:
@@ -100,12 +100,12 @@ Documentation Structure
    :color: primary
    :icon: quote
 
-   If you use the Alpha Berkeley Framework in your research or projects, please cite our `paper <https://arxiv.org/abs/2508.15066>`_:
+   If you use the Osprey Framework in your research or projects, please cite our `paper <https://arxiv.org/abs/2508.15066>`_:
 
    .. code-block:: bibtex
 
-      @article{hellert2025alpha,
-        title={Alpha Berkeley: A Scalable Framework for the Orchestration of Agentic Systems},
+      @article{hellert2025osprey,
+        title={Osprey: A Scalable Framework for the Orchestration of Agentic Systems},
         author={Hellert, Thorsten and Montenegro, João and Sulc, Antonin},
         journal={arXiv preprint arXiv:2508.15066},
         year={2025},

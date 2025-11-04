@@ -1,0 +1,103 @@
+"""Main CLI entry point for Osprey Framework.
+
+This module provides the main CLI group that organizes all osprey
+commands under the `osprey` command namespace.
+
+Note: This will become 'osprey' in Phase 8 of the migration.
+
+Performance Note: Uses lazy imports to avoid loading heavy dependencies
+(langgraph, langchain, etc.) until a command is actually invoked.
+This keeps `osprey --help` fast.
+"""
+
+import click
+import sys
+
+# Import version from osprey package
+try:
+    from osprey import __version__
+except ImportError:
+    __version__ = "0.8.1"
+
+
+# PERFORMANCE OPTIMIZATION: Lazy command loading
+# Commands are imported only when invoked, not at module load time.
+# This keeps --help fast and avoids loading heavy dependencies unnecessarily.
+
+class LazyGroup(click.Group):
+    """Click group that lazily loads subcommands only when invoked."""
+
+    def get_command(self, ctx, cmd_name):
+        """Lazily import and return the command when it's invoked."""
+        # Map command names to their module paths
+        commands = {
+            'init': 'osprey.cli.init_cmd',
+            'deploy': 'osprey.cli.deploy_cmd',
+            'chat': 'osprey.cli.chat_cmd',
+            'export-config': 'osprey.cli.export_config_cmd',
+            'health': 'osprey.cli.health_cmd',
+        }
+
+        if cmd_name not in commands:
+            return None
+
+        # Lazy import - only loads when command is actually used
+        import importlib
+        mod = importlib.import_module(commands[cmd_name])
+
+        # Get the command function from the module
+        # Convention: module name without _cmd suffix
+        if cmd_name == 'export-config':
+            cmd_func = getattr(mod, 'export_config')
+        else:
+            cmd_func = getattr(mod, cmd_name)
+
+        return cmd_func
+
+    def list_commands(self, ctx):
+        """Return list of available commands (for --help)."""
+        return ['init', 'deploy', 'chat', 'export-config', 'health']
+
+
+@click.group(cls=LazyGroup, invoke_without_command=True)
+@click.version_option(version=__version__, prog_name="osprey")
+@click.pass_context
+def cli(ctx):
+    """Osprey Framework CLI - Capability-Based Agentic Framework.
+
+    A unified command-line interface for creating, deploying, and interacting
+    with intelligent agents built on the Osprey Framework.
+
+    Use 'osprey COMMAND --help' for more information on a specific command.
+
+    Examples:
+
+    \b
+      osprey                          Launch interactive menu
+      osprey init my-project          Create new project
+      osprey deploy up                Start services
+      osprey chat                     Interactive conversation
+      osprey health                   Check system health
+      osprey export-config            View osprey defaults
+    """
+    # NEW: If no command provided, launch interactive menu
+    if ctx.invoked_subcommand is None:
+        from .interactive_menu import launch_tui
+        launch_tui()
+
+
+def main():
+    """Entry point for the osprey CLI."""
+    try:
+        cli()
+    except KeyboardInterrupt:
+        click.echo("\nGoodbye!", err=True)
+        sys.exit(130)
+    except Exception as e:
+        click.echo(f"Error: {e}", err=True)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+

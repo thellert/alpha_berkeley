@@ -2,9 +2,9 @@
 Registry and Discovery
 ========================
 
-.. currentmodule:: framework.registry
+.. currentmodule:: osprey.registry
 
-The Alpha Berkeley Framework implements a centralized component registration and discovery system that enables clean separation between framework infrastructure and application-specific functionality.
+The Osprey Framework implements a centralized component registration and discovery system that enables clean separation between framework infrastructure and application-specific functionality.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -47,7 +47,7 @@ The ``RegistryManager`` provides centralized access to all framework components:
 
 .. code-block:: python
 
-   from framework.registry import initialize_registry, get_registry
+   from osprey.registry import initialize_registry, get_registry
    
    # Initialize the registry system
    initialize_registry()
@@ -75,7 +75,7 @@ Applications implement registries using the ``RegistryConfigProvider`` interface
 .. code-block:: python
 
    # src/my_app/registry.py
-   from framework.registry import (
+   from osprey.registry import (
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
@@ -167,7 +167,7 @@ Component Registration
    )
 
    # Implementation in src/my_app/capabilities/weather_data_retrieval.py
-   from framework.base import BaseCapability, capability_node
+   from osprey.base import BaseCapability, capability_node
    
    @capability_node
    class WeatherDataRetrievalCapability(BaseCapability):
@@ -193,7 +193,7 @@ Component Registration
    )
 
    # Implementation in src/my_app/context_classes.py
-   from framework.context.base import CapabilityContext
+   from osprey.context.base import CapabilityContext
    
    class WeatherDataContext(CapabilityContext):
        CONTEXT_TYPE: ClassVar[str] = "WEATHER_DATA"
@@ -223,7 +223,7 @@ Applications can register custom AI providers for institutional services or comm
 .. code-block:: python
 
    # In registry.py
-   from framework.registry import ProviderRegistration
+   from osprey.registry import ProviderRegistration
    
    return extend_framework_registry(
        providers=[
@@ -236,7 +236,7 @@ Applications can register custom AI providers for institutional services or comm
    )
    
    # Implementation in src/my_app/providers/azure.py
-   from framework.models.providers.base import BaseProvider
+   from osprey.models.providers.base import BaseProvider
    from typing import Optional
    import httpx
    
@@ -293,14 +293,14 @@ Common use cases for custom providers include:
 - **Commercial Providers**: Cohere, Mistral AI, Together AI, etc.
 - **Custom Endpoints**: Self-hosted models with OpenAI-compatible APIs
 
-Once registered, custom providers work seamlessly with :func:`framework.models.get_model` and :func:`framework.models.get_chat_completion`, and are automatically discovered by the health check system (``framework health``).
+Once registered, custom providers work seamlessly with :func:`osprey.models.get_model` and :func:`osprey.models.get_chat_completion`, and are automatically discovered by the health check system (``osprey health``).
 
 Registry Initialization and Usage
 =================================
 
 .. code-block:: python
 
-   from framework.registry import initialize_registry, get_registry
+   from osprey.registry import initialize_registry, get_registry
    
    # Initialize registry (loads framework + application components)
    initialize_registry()

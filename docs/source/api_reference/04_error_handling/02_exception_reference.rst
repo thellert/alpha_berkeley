@@ -4,7 +4,7 @@ Exception Reference
 
 Complete catalog of framework exceptions with inheritance structure and usage patterns.
 
-.. currentmodule:: framework
+.. currentmodule:: osprey
 
 The framework implements a comprehensive exception hierarchy that provides precise error classification for all failure modes. The exceptions are designed to support intelligent retry logic, user-friendly error reporting, and comprehensive debugging information.
 
@@ -14,16 +14,16 @@ Base Framework Exceptions
 FrameworkError
 --------------
 
-.. autoclass:: framework.base.errors.FrameworkError
+.. autoclass:: osprey.base.errors.FrameworkError
    :members:
    :show-inheritance:
 
-   Base exception for all framework-related errors. Root exception class for all custom exceptions within the Alpha Berkeley Framework.
+   Base exception for all framework-related errors. Root exception class for all custom exceptions within the Osprey Framework.
 
 RegistryError
 -------------
 
-.. autoclass:: framework.base.errors.RegistryError
+.. autoclass:: osprey.base.errors.RegistryError
    :members:
    :show-inheritance:
 
@@ -32,7 +32,7 @@ RegistryError
 ConfigurationError
 ------------------
 
-.. autoclass:: framework.base.errors.ConfigurationError
+.. autoclass:: osprey.base.errors.ConfigurationError
    :members:
    :show-inheritance:
 
@@ -44,7 +44,7 @@ Python Executor Service Exceptions
 ErrorCategory
 -------------
 
-.. autoclass:: framework.services.python_executor.exceptions.ErrorCategory
+.. autoclass:: osprey.services.python_executor.exceptions.ErrorCategory
    :members:
    :undoc-members:
    :show-inheritance:
@@ -64,7 +64,7 @@ ErrorCategory
 PythonExecutorException
 -----------------------
 
-.. autoclass:: framework.services.python_executor.exceptions.PythonExecutorException
+.. autoclass:: osprey.services.python_executor.exceptions.PythonExecutorException
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -88,7 +88,7 @@ Infrastructure Errors
 ContainerConnectivityError
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.ContainerConnectivityError
+.. autoclass:: osprey.services.python_executor.exceptions.ContainerConnectivityError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -105,7 +105,7 @@ ContainerConnectivityError
 ContainerConfigurationError
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.ContainerConfigurationError
+.. autoclass:: osprey.services.python_executor.exceptions.ContainerConfigurationError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -118,7 +118,7 @@ Code-Related Errors
 CodeGenerationError
 ~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.CodeGenerationError
+.. autoclass:: osprey.services.python_executor.exceptions.CodeGenerationError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -128,7 +128,7 @@ CodeGenerationError
 CodeSyntaxError
 ~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.CodeSyntaxError
+.. autoclass:: osprey.services.python_executor.exceptions.CodeSyntaxError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -138,7 +138,7 @@ CodeSyntaxError
 CodeRuntimeError
 ~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.CodeRuntimeError
+.. autoclass:: osprey.services.python_executor.exceptions.CodeRuntimeError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -151,7 +151,7 @@ Workflow Errors
 ExecutionTimeoutError
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.ExecutionTimeoutError
+.. autoclass:: osprey.services.python_executor.exceptions.ExecutionTimeoutError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -161,7 +161,7 @@ ExecutionTimeoutError
 MaxAttemptsExceededError
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.MaxAttemptsExceededError
+.. autoclass:: osprey.services.python_executor.exceptions.MaxAttemptsExceededError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -171,7 +171,7 @@ MaxAttemptsExceededError
 WorkflowError
 ~~~~~~~~~~~~~
 
-.. autoclass:: framework.services.python_executor.exceptions.WorkflowError
+.. autoclass:: osprey.services.python_executor.exceptions.WorkflowError
    :members:
    :show-inheritance:
    :special-members: __init__
@@ -191,7 +191,7 @@ Memory Operations Exceptions
 MemoryCapabilityError
 ---------------------
 
-.. autoclass:: framework.capabilities.memory.MemoryCapabilityError
+.. autoclass:: osprey.capabilities.memory.MemoryCapabilityError
    :members:
    :show-inheritance:
 
@@ -200,7 +200,7 @@ MemoryCapabilityError
 UserIdNotAvailableError
 -----------------------
 
-.. autoclass:: framework.capabilities.memory.UserIdNotAvailableError
+.. autoclass:: osprey.capabilities.memory.UserIdNotAvailableError
    :members:
    :show-inheritance:
 
@@ -209,7 +209,7 @@ UserIdNotAvailableError
 ContentExtractionError
 ----------------------
 
-.. autoclass:: framework.capabilities.memory.ContentExtractionError
+.. autoclass:: osprey.capabilities.memory.ContentExtractionError
    :members:
    :show-inheritance:
 
@@ -218,7 +218,7 @@ ContentExtractionError
 MemoryFileError
 ---------------
 
-.. autoclass:: framework.capabilities.memory.MemoryFileError
+.. autoclass:: osprey.capabilities.memory.MemoryFileError
    :members:
    :show-inheritance:
 
@@ -227,7 +227,7 @@ MemoryFileError
 MemoryRetrievalError
 --------------------
 
-.. autoclass:: framework.capabilities.memory.MemoryRetrievalError
+.. autoclass:: osprey.capabilities.memory.MemoryRetrievalError
    :members:
    :show-inheritance:
 
@@ -236,7 +236,7 @@ MemoryRetrievalError
 LLMCallError
 ------------
 
-.. autoclass:: framework.capabilities.memory.LLMCallError
+.. autoclass:: osprey.capabilities.memory.LLMCallError
    :members:
    :show-inheritance:
 
@@ -248,7 +248,7 @@ Time Parsing Exceptions
 TimeParsingError
 ----------------
 
-.. autoclass:: framework.capabilities.time_range_parsing.TimeParsingError
+.. autoclass:: osprey.capabilities.time_range_parsing.TimeParsingError
    :members:
    :show-inheritance:
 
@@ -257,7 +257,7 @@ TimeParsingError
 InvalidTimeFormatError
 ----------------------
 
-.. autoclass:: framework.capabilities.time_range_parsing.InvalidTimeFormatError
+.. autoclass:: osprey.capabilities.time_range_parsing.InvalidTimeFormatError
    :members:
    :show-inheritance:
 
@@ -266,7 +266,7 @@ InvalidTimeFormatError
 AmbiguousTimeReferenceError
 ---------------------------
 
-.. autoclass:: framework.capabilities.time_range_parsing.AmbiguousTimeReferenceError
+.. autoclass:: osprey.capabilities.time_range_parsing.AmbiguousTimeReferenceError
    :members:
    :show-inheritance:
 
@@ -275,7 +275,7 @@ AmbiguousTimeReferenceError
 TimeParsingDependencyError
 --------------------------
 
-.. autoclass:: framework.capabilities.time_range_parsing.TimeParsingDependencyError
+.. autoclass:: osprey.capabilities.time_range_parsing.TimeParsingDependencyError
    :members:
    :show-inheritance:
 

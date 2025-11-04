@@ -32,7 +32,7 @@ Production Systems
 
 Enterprise-grade services that transform research prototypes into production-ready agentic systems. These components provide the security, reliability, and scalability required for high-stakes scientific and industrial environments.
 
-.. currentmodule:: framework
+.. currentmodule:: osprey
 
 
 The Five Pillars
@@ -116,11 +116,11 @@ These systems work together to provide comprehensive production capabilities:
       .. code-block:: python
 
          # Approval system integration
-         from framework.approval import get_approval_manager
+         from osprey.approval import get_approval_manager
          approval_manager = get_approval_manager()
          
          # Secure execution with oversight
-         from framework.services.python_executor import PythonExecutorService, PythonExecutionRequest
+         from osprey.services.python_executor import PythonExecutorService, PythonExecutionRequest
          python_service = PythonExecutorService()
          request = PythonExecutionRequest(
              user_query="Analyze beam performance data",
@@ -139,7 +139,7 @@ These systems work together to provide comprehensive production capabilities:
       .. code-block:: python
 
          # Data source integration
-         from framework.data_management import (
+         from osprey.data_management import (
              get_data_source_manager, 
              create_data_source_request, 
              DataSourceRequester
@@ -158,7 +158,7 @@ These systems work together to provide comprehensive production capabilities:
          result = await data_manager.retrieve_all_context(request)
          
          # Memory integration
-         from framework.services.memory_storage import get_memory_storage_manager, MemoryContent
+         from osprey.services.memory_storage import get_memory_storage_manager, MemoryContent
          from datetime import datetime
          memory_manager = get_memory_storage_manager()
          memory_entry = MemoryContent(

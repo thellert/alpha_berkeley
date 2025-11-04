@@ -16,24 +16,24 @@ Error Handling
    :icon: book
 
    **Comprehensive error handling system for user-friendly agentic operations:**
-   
+
    - **Classification System** - Four-tier severity levels (RETRIABLE, REPLANNING, CRITICAL, FATAL) with domain-specific error analysis and recovery strategy coordination
-   - **Exception Hierarchy** - Complete catalog of framework exceptions including base errors, Python executor categories, memory operations, and time parsing with inheritance structure
+   - **Exception Hierarchy** - Complete catalog of Osprey Framework exceptions including base errors, Python executor categories, memory operations, and time parsing with inheritance structure
    - **Recovery Coordination** - Router-based automatic recovery with exponential backoff, orchestrator replanning, LLM-powered error responses, and graceful degradation patterns
    - **Production Integration** - Network-aware classification, data validation triggers, custom retry policies, and category-based handling for real-world deployment scenarios
 
    **Prerequisites:** Basic understanding of framework capabilities and infrastructure components
-   
+
    **Target Audience:** Framework users, capability developers, scientists running experiments, infrastructure maintainers
    
-Sophisticated error handling and recovery system designed for production-grade agentic systems. The Alpha Berkeley Framework implements a comprehensive three-layer error management architecture that provides intelligent error classification, automatic recovery coordination, and graceful degradation patterns.
+Sophisticated error handling and recovery system designed for production-grade agentic systems. The Osprey Framework implements a comprehensive three-layer error management architecture that provides intelligent error classification, automatic recovery coordination, and graceful degradation patterns.
 
-.. currentmodule:: framework
+.. currentmodule:: osprey
 
 Architecture Overview
 =====================
 
-The Alpha Berkeley Framework implements **Manual Retry Coordination** with intelligent recovery strategies designed for domain experts who need fast debugging cycles without extensive stack traces. While traditional error traces remain valuable for developers, agentic systems are often used by scientists and researchers who need immediate, actionable feedback when experiments fail:
+The Osprey Framework implements **Manual Retry Coordination** with intelligent recovery strategies designed for domain experts who need fast debugging cycles without extensive stack traces. While traditional error traces remain valuable for developers, agentic systems are often used by scientists and researchers who need immediate, actionable feedback when experiments fail:
 
 **Traditional Approach:**
 

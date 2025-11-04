@@ -1,7 +1,7 @@
 Example Applications
 ====================
 
-This section showcases real-world implementations of the Alpha Berkeley Framework across different domains.
+This section showcases real-world implementations of the Osprey Framework across different domains.
 
 Current Applications
 --------------------

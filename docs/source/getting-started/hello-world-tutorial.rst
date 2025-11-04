@@ -20,8 +20,8 @@ By the end of this guide, you'll have a working agent that responds to queries l
    :color: info
    :icon: list-unordered
 
-   **Required:** Alpha Berkeley framework installed via ``pip install alpha-berkeley-framework``
-   
+   **Required:** Osprey framework installed via ``pip install osprey-framework``
+
    If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
    
    - Install Podman (container runtime)
@@ -42,7 +42,7 @@ Step 1: Create the Project
 
       .. code-block:: bash
 
-         framework
+         osprey
 
       This launches an interactive terminal UI that will:
 
@@ -59,7 +59,7 @@ Step 1: Create the Project
 
       .. code-block:: bash
 
-         framework init weather-demo --template hello_world_weather
+         osprey init weather-demo --template hello_world_weather
          cd weather-demo
 
       This is perfect for scripts, automation, or when you already know exactly what you want.
@@ -122,7 +122,7 @@ The ``mock_weather_api.py`` file provides a deterministic weather data provider 
 
 .. dropdown:: Complete Mock API Implementation
    
-   Full implementation of the mock weather service (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/mock_weather_api.py>`_)
+   Full implementation of the mock weather service (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/mock_weather_api.py>`_)
 
    .. code-block:: python
 
@@ -244,7 +244,7 @@ Provides human-readable summaries for user interfaces and debugging:
 
 .. dropdown:: Complete Weather Context Implementation
    
-   Full context class showing all required methods (`view context class on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/applications/hello_world_weather/context_classes.py>`_)
+   Full context class showing all required methods (`view context class on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/context_classes.py.j2>`_)
 
    .. code-block:: python
 
@@ -262,7 +262,7 @@ Provides human-readable summaries for user interfaces and debugging:
       from datetime import datetime
       from typing import Dict, Any, Optional, ClassVar
       from pydantic import Field
-      from framework.context.base import CapabilityContext
+      from osprey.context.base import CapabilityContext
 
       class CurrentWeatherContext(CapabilityContext):
           """Simple context for current weather conditions."""
@@ -502,7 +502,7 @@ The classifier guide teaches the LLM when to activate your capability based on u
 
 .. dropdown:: Complete Current Weather Capability Implementation
    
-   Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
+   Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
 
    .. code-block:: python
 
@@ -514,16 +514,16 @@ The classifier guide teaches the LLM when to activate your capability based on u
       
       from typing import Dict, Any, Optional
       
-      from framework.base import (
+      from osprey.base import (
           BaseCapability, capability_node,
           OrchestratorGuide, OrchestratorExample, PlannedStep,
           ClassifierActions, ClassifierExample, TaskClassifierGuide
       )
-      from framework.base.errors import ErrorClassification, ErrorSeverity
-      from framework.registry import get_registry
-      from framework.state import AgentState, StateManager
-      from framework.utils.logger import get_logger
-      from framework.utils.streaming import get_streamer
+      from osprey.base.errors import ErrorClassification, ErrorSeverity
+      from osprey.registry import get_registry
+      from osprey.state import AgentState, StateManager
+      from osprey.utils.logger import get_logger
+      from osprey.utils.streaming import get_streamer
       
       from weather_demo.context_classes import CurrentWeatherContext
       from weather_demo.mock_weather_api import weather_api
@@ -690,7 +690,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
 
 .. code-block:: python
 
-   from framework.registry import (
+   from osprey.registry import (
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
@@ -734,7 +734,7 @@ If you need fine control, you can explicitly list all components:
 
 .. code-block:: python
 
-   from framework.registry import (
+   from osprey.registry import (
        CapabilityRegistration,
        ContextClassRegistration,
        RegistryConfig,
@@ -770,7 +770,7 @@ If you need fine control, you can explicitly list all components:
 
 .. dropdown:: Complete Registry Implementation
    
-   Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/framework/templates/apps/hello_world_weather/registry.py.j2>`_)
+   Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/registry.py.j2>`_)
 
    .. code-block:: python
 
@@ -781,7 +781,7 @@ If you need fine control, you can explicitly list all components:
       include framework components and add weather-specific capability.
       """
       
-      from framework.registry import (
+      from osprey.registry import (
           extend_framework_registry,
           CapabilityRegistration,
           ContextClassRegistration,
@@ -846,9 +846,9 @@ The ``config.yml`` includes:
    
    # Service deployments
    deployed_services:
-     - framework.jupyter
-     - framework.open-webui
-     - framework.pipelines
+     - osprey.jupyter
+     - osprey.open-webui
+     - osprey.pipelines
    
    # Pipeline configuration
    pipeline:
@@ -870,12 +870,12 @@ Now that you understand the components, let's deploy and test the agent.
 
 **1. Deploy Services**
 
-Start the containerized services using :doc:`framework deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+Start the containerized services using :doc:`osprey deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
 .. code-block:: bash
 
    # Start services in background
-   framework deploy up --detached
+   osprey deploy up --detached
    
    # Check they're running
    podman ps
@@ -896,11 +896,11 @@ Ensure your API keys are set in ``.env``:
 
 **3. Start Chat Interface**
 
-Launch the interactive chat using :doc:`framework chat <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+Launch the interactive chat using :doc:`osprey chat <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
 .. code-block:: bash
 
-   framework chat
+   osprey chat
 
 **4. Test Your Agent**
 

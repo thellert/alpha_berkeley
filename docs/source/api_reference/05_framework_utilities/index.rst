@@ -4,22 +4,22 @@ Framework Utilities
 
 Supporting systems for advanced usage and development tooling.
 
-.. currentmodule:: framework
+.. currentmodule:: osprey
 
 Core Components
 ===============
 
 .. autosummary::
    :toctree: _autosummary
-   
+
    models.get_model
    models.get_chat_completion
 
-.. currentmodule:: framework.utils
+.. currentmodule:: osprey.utils
 
 .. autosummary::
    :toctree: _autosummary
-   
+
    logger.get_logger
    logger.ComponentLogger
    streaming.get_streamer
@@ -30,7 +30,7 @@ Model Factory
 
 Multi-provider LLM model management for structured generation and direct completions.
 
-.. currentmodule:: framework.models
+.. currentmodule:: osprey.models
 
 .. autofunction:: get_model
 
@@ -44,7 +44,7 @@ Component logging and streaming utilities for framework development.
 Logging System
 --------------
 
-.. currentmodule:: framework.utils.logger
+.. currentmodule:: osprey.utils.logger
 
 .. autofunction:: get_logger
 
@@ -55,7 +55,7 @@ Logging System
 Streaming System
 ----------------
 
-.. currentmodule:: framework.utils.streaming
+.. currentmodule:: osprey.utils.streaming
 
 .. autofunction:: get_streamer
 

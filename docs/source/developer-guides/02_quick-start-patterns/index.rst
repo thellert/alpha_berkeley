@@ -28,7 +28,7 @@ Quick Start Patterns
    
    **Target Audience:** Developers building their first agentic system capabilities
 
-Get productive immediately with the Alpha Berkeley Framework's essential development patterns. Each guide focuses on specific skills you need to build effective agent capabilities.
+Get productive immediately with the Osprey Framework's essential development patterns. Each guide focuses on specific skills you need to build effective agent capabilities.
 
 .. grid:: 1 1 2 2
    :gutter: 3

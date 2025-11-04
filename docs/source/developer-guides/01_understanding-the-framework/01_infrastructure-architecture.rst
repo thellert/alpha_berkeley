@@ -20,7 +20,7 @@ Infrastructure Architecture: Classification-Orchestration Pipeline
 Overview
 ========
 
-The Alpha Berkeley Framework uses a **Classification-Orchestration Pipeline** where every user request flows through task extraction, capability classification, execution planning, and deterministic routing. The Gateway provides a unified entry point while the Router coordinates infrastructure components through state-based decisions.
+The Osprey Framework uses a **Classification-Orchestration Pipeline** where every user request flows through task extraction, capability classification, execution planning, and deterministic routing. The Gateway provides a unified entry point while the Router coordinates infrastructure components through state-based decisions.
 
 Core Components
 ===============
@@ -32,7 +32,7 @@ The Gateway serves as the **only entry point** for all message processing across
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway
+   from osprey.infrastructure.gateway import Gateway
 
    # All interfaces use Gateway as single entry point
    gateway = Gateway()
@@ -222,8 +222,8 @@ The framework uses LangGraph with router-controlled flow:
 
 .. code-block:: python
 
-   from framework.graph.graph_builder import create_graph
-   from framework.registry import get_registry
+   from osprey.graph.graph_builder import create_graph
+   from osprey.registry import get_registry
 
    # Initialize registry and create graph
    registry = get_registry()

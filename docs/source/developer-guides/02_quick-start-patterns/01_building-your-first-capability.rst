@@ -2,9 +2,9 @@
 Building Your First Capability
 ==============================
 
-.. currentmodule:: framework.base
+.. currentmodule:: osprey.base
 
-Create a production-ready capability using the Alpha Berkeley Framework's core patterns.
+Create a production-ready capability using the Osprey Framework's core patterns.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -18,7 +18,7 @@ Create a production-ready capability using the Alpha Berkeley Framework's core p
    - Handle errors and streaming properly
    - Create CapabilityContext classes for data exchange
 
-   **Prerequisites:** Python environment with Alpha Berkeley Framework installed
+   **Prerequisites:** Python environment with Osprey Framework installed
    
    **Time Investment:** 30-45 minutes for complete implementation
 
@@ -42,7 +42,7 @@ Step 1: Create Context Class
 
    from typing import ClassVar
    from pydantic import Field
-   from framework.context.base import CapabilityContext
+   from osprey.context.base import CapabilityContext
    
    class ProcessedDataContext(CapabilityContext):
        """Context for processed user query data."""
@@ -75,10 +75,10 @@ Step 2: Implement Capability
 
    from typing import Dict, Any
    from datetime import datetime
-   from framework.base import BaseCapability, capability_node
-   from framework.state import AgentState, StateManager
-   from framework.utils.logger import get_logger
-   from framework.utils.streaming import get_streamer
+   from osprey.base import BaseCapability, capability_node
+   from osprey.state import AgentState, StateManager
+   from osprey.utils.logger import get_logger
+   from osprey.utils.streaming import get_streamer
    from applications.my_app.context_classes import ProcessedDataContext
    
    logger = get_logger("data_processor")
@@ -134,7 +134,7 @@ Step 3: Register Your Capability
 .. code-block:: python
    :caption: applications/my_app/registry.py
 
-   from framework.registry import (
+   from osprey.registry import (
        RegistryConfigProvider, RegistryConfig, 
        CapabilityRegistration, ContextClassRegistration
    )
@@ -169,7 +169,7 @@ Step 4: Test Your Capability
    :caption: test_my_capability.py
 
    import asyncio
-   from framework.state import StateManager
+   from osprey.state import StateManager
    from applications.my_app.capabilities.data_processor import DataProcessorCapability
    
    async def test_capability():
@@ -198,7 +198,7 @@ Add custom error classification for domain-specific retry logic:
 
    @staticmethod
    def classify_error(exc: Exception, context: dict) -> ErrorClassification:
-       from framework.base.errors import ErrorClassification, ErrorSeverity
+       from osprey.base.errors import ErrorClassification, ErrorSeverity
        
        if isinstance(exc, (ConnectionError, TimeoutError)):
            return ErrorClassification(

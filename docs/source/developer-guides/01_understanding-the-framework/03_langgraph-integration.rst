@@ -20,7 +20,7 @@ LangGraph Integration: Native StateGraph and Workflow Execution
 Overview
 ========
 
-The Alpha Berkeley Framework leverages LangGraph's native features for production conversational agentic systems:
+The Osprey Framework leverages LangGraph's native features for production conversational agentic systems:
 
 1. **StateGraph Workflow**: Registry-based node discovery with router-controlled flow
 2. **MessagesState Foundation**: Native message handling with selective persistence
@@ -39,9 +39,9 @@ The framework creates LangGraph workflows using registry-discovered components:
 .. code-block:: python
 
    from langgraph.graph import StateGraph
-   from framework.state import AgentState
-   from framework.registry import get_registry
-   from framework.graph.graph_builder import create_graph
+   from osprey.state import AgentState
+   from osprey.registry import get_registry
+   from osprey.graph.graph_builder import create_graph
 
    # Framework automatically creates StateGraph from registry
    def create_graph(registry: RegistryManager) -> StateGraph:
@@ -165,7 +165,7 @@ The framework uses LangGraph's native interrupt system for human-in-the-loop ope
 .. code-block:: python
 
    from langgraph.types import interrupt
-   from framework.approval.approval_system import create_code_approval_interrupt
+   from osprey.approval.approval_system import create_code_approval_interrupt
 
    # In Python executor service - request human approval
    @staticmethod
@@ -215,7 +215,7 @@ The framework handles service calls that may generate interrupts:
 
 .. code-block:: python
 
-   from framework.approval.approval_system import handle_service_with_interrupts
+   from osprey.approval.approval_system import handle_service_with_interrupts
 
    @capability_node
    class PythonExecutorCapability(BaseCapability):
@@ -247,14 +247,14 @@ The framework provides real-time status updates through LangGraph's streaming:
 
 .. code-block:: python
 
-   from framework.utils.streaming import get_streamer
+   from osprey.utils.streaming import get_streamer
 
    @capability_node  
    class DataAnalysisCapability(BaseCapability):
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
            # Get streaming helper
-           streamer = get_streamer("framework", "data_analysis", state)
+           streamer = get_streamer("osprey", "data_analysis", state)
            
            # Provide real-time status updates
            streamer.status("Loading data sources...")
@@ -280,7 +280,7 @@ PostgreSQL Checkpointer Setup
 
 .. code-block:: python
 
-   from framework.graph.graph_builder import create_async_postgres_checkpointer
+   from osprey.graph.graph_builder import create_async_postgres_checkpointer
 
    def create_production_checkpointer():
        """Create PostgreSQL checkpointer for production."""
@@ -347,7 +347,7 @@ Custom State Updates
 .. code-block:: python
 
    # Framework provides StateManager for consistent state updates
-   from framework.state import StateManager
+   from osprey.state import StateManager
 
    # Store capability results
    return StateManager.store_context(

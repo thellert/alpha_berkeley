@@ -9,11 +9,11 @@ Configuration Architecture
    :icon: book
 
    **Key Concepts:**
-   
+
    - Self-contained configuration approach
    - Configuration templates and project initialization
    - Environment variable integration
-   - Viewing framework defaults with ``framework export-config``
+   - Viewing framework defaults with ``osprey export-config``
    - Configuration organization and best practices
 
    **Prerequisites:** Basic `YAML <https://yaml.org>`__ knowledge
@@ -105,21 +105,21 @@ Project Configuration
 Configuration Template
 ----------------------
 
-**Location:** ``src/framework/templates/project/config.yml.j2``
+**Location:** ``src/osprey/templates/project/config.yml.j2``
 
-**Purpose:** Template used by ``framework init`` to create new projects
+**Purpose:** Template used by ``osprey init`` to create new projects
 
-When you run ``framework init my-project``, the template is rendered with your project-specific values to create a complete, self-contained ``config.yml``.
+When you run ``osprey init my-project``, the template is rendered with your project-specific values to create a complete, self-contained ``config.yml``.
 
 **View the template:**
 
 .. code-block:: bash
 
    # See what a default config looks like
-   framework export-config
-   
+   osprey export-config
+
    # Save to file for reference
-   framework export-config --output reference.yml
+   osprey export-config --output reference.yml
 
 Configuration Sections
 ======================
@@ -181,7 +181,7 @@ Use ``${VAR_NAME}`` syntax with optional defaults:
 .. code-block:: bash
 
    # .env (project root)
-   PROJECT_ROOT=/home/user/alpha_berkeley
+   PROJECT_ROOT=/home/user/my-project
    ANTHROPIC_API_KEY=sk-ant-...
    LOCAL_PYTHON_VENV=/home/user/venv/bin/python
 
@@ -210,7 +210,7 @@ All configuration utility functions accept an optional ``config_path`` parameter
 
 .. code-block:: python
 
-   from framework.utils.config import get_model_config, get_registry_path
+   from osprey.utils.config import get_model_config, get_registry_path
    
    # Load config from specific project
    model_cfg = get_model_config(
@@ -241,19 +241,19 @@ This ensures configuration files are portable and work correctly regardless of w
 Environment Variable for Default Project
 ----------------------------------------
 
-Set ``FRAMEWORK_PROJECT`` to specify a default project directory:
+Set ``OSPREY_PROJECT`` to specify a default project directory:
 
 .. code-block:: bash
 
    # Terminal 1: Work on project A
-   export FRAMEWORK_PROJECT=~/projects/agent-a
-   framework chat
-   framework deploy status
-   
+   export OSPREY_PROJECT=~/projects/agent-a
+   osprey chat
+   osprey deploy status
+
    # Terminal 2: Work on project B
-   export FRAMEWORK_PROJECT=~/projects/agent-b
-   framework chat
-   framework deploy status
+   export OSPREY_PROJECT=~/projects/agent-b
+   osprey chat
+   osprey deploy status
 
 See :doc:`../../developer-guides/02_quick-start-patterns/00_cli-reference` for complete CLI multi-project workflow examples.
 
@@ -265,8 +265,8 @@ Creating New Projects
 .. code-block:: bash
 
    # Create new project from template
-   framework init my-project
-   
+   osprey init my-project
+
    # This creates:
    # my-project/
    # ├── config.yml           ← Complete, self-contained config

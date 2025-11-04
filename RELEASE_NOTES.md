@@ -90,7 +90,7 @@ framework deploy status
 - **No Cross-Project Contamination**: Each project maintains its own isolated configuration
 
 ```python
-from framework.utils.config import get_model_config
+from osprey.utils.config import get_model_config
 
 # Use specific config file
 config = get_model_config(config_path="/path/to/project/config.yml")

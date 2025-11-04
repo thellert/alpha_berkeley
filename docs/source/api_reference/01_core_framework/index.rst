@@ -32,7 +32,7 @@ Core Framework
    
    **Target Audience:** Framework developers, capability authors, infrastructure builders
    
-The Core Framework provides the **essential foundation APIs** that enable reliable, type-safe agentic system development. These five interconnected systems form the backbone of every capability, infrastructure node, and production deployment in the Alpha Berkeley Framework.
+The Core Framework provides the **essential foundation APIs** that enable reliable, type-safe agentic system development. These five interconnected systems form the backbone of every capability, infrastructure node, and production deployment in the Osprey Framework.
 
 
 
@@ -129,8 +129,8 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from framework.registry import initialize_registry, get_registry
-         from framework.state import StateManager
+         from osprey.registry import initialize_registry, get_registry
+         from osprey.state import StateManager
          
          # 1. Initialize the global registry system (application startup)
          initialize_registry()  # Loads all applications and components
@@ -149,8 +149,8 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from framework.state import StateManager
-         from framework.context import ContextManager
+         from osprey.state import StateManager
+         from osprey.context import ContextManager
          
          # 1. Create fresh state for new conversation
          state = StateManager.create_fresh_state(
@@ -175,7 +175,7 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from framework.utils.config import (
+         from osprey.utils.config import (
              get_config_value, get_model_config, get_full_configuration
          )
          
@@ -184,7 +184,7 @@ These systems work together to provide a unified development experience:
          debug_mode = get_config_value('development.debug', False)
          
          # Model-specific configuration
-         model_config = get_model_config('framework', 'orchestrator')
+         model_config = get_model_config('osprey', 'orchestrator')
          
          # Full configuration for service passing
          full_config = get_full_configuration()
@@ -201,10 +201,10 @@ These systems work together to provide a unified development experience:
 
       .. code-block:: python
 
-         from framework.base import BaseCapability, capability_node
-         from framework.state import AgentState, StateManager
-         from framework.context import ContextManager
-         from framework.utils.config import get_model_config
+         from osprey.base import BaseCapability, capability_node
+         from osprey.state import AgentState, StateManager
+         from osprey.context import ContextManager
+         from osprey.utils.config import get_model_config
          from applications.als_assistant.context_classes import AnalysisResultsContext
          
          @capability_node
@@ -222,7 +222,7 @@ These systems work together to provide a unified development experience:
                  context = ContextManager(state)
                  
                  # Get configuration for models/services
-                 model_config = get_model_config('framework', 'python_code_generator')
+                 model_config = get_model_config('osprey', 'python_code_generator')
                  
                  # Process data (actual implementation logic)
                  analysis_results = await process_analysis(step, context)

@@ -4,7 +4,7 @@ Prompt System
 
 Framework prompt system with dependency injection for domain-specific prompt customization.
 
-.. currentmodule:: framework.prompts
+.. currentmodule:: osprey.prompts
 
 Core Prompt Builder Interface
 =============================
@@ -49,7 +49,7 @@ Framework Access
 Application Provider Interface
 ==============================
 
-.. currentmodule:: framework.prompts.loader
+.. currentmodule:: osprey.prompts.loader
 
 .. autoclass:: FrameworkPromptProvider
    :members:
@@ -73,7 +73,7 @@ Provider Registration
 Framework Default Implementations
 =================================
 
-.. currentmodule:: framework.prompts.defaults
+.. currentmodule:: osprey.prompts.defaults
 
 .. autoclass:: DefaultPromptProvider
    :members:

@@ -1,7 +1,7 @@
 Orchestration
 =============
 
-.. currentmodule:: framework.infrastructure.orchestration_node
+.. currentmodule:: osprey.infrastructure.orchestration_node
 
 Infrastructure node that creates execution plans from active capabilities and task requirements with native LangGraph interrupt support for human-in-the-loop approval.
 
@@ -21,19 +21,19 @@ Orchestration uses models defined in the core framework:
 
 .. seealso::
    
-   :class:`~framework.base.ExecutionPlan`
+   :class:`~osprey.base.ExecutionPlan`
        Structured execution plan model
-   
-   :class:`~framework.base.PlannedStep`
+
+   :class:`~osprey.base.PlannedStep`
        Individual step within execution plans
-   
-   :class:`~framework.base.BaseInfrastructureNode`
+
+   :class:`~osprey.base.BaseInfrastructureNode`
        Base class for infrastructure components
 
 Approval System Integration
 ---------------------------
 
-.. currentmodule:: framework.approval.approval_system
+.. currentmodule:: osprey.approval.approval_system
 
 .. autofunction:: create_plan_approval_interrupt
 
@@ -48,7 +48,7 @@ Automatically registered as::
 
     NodeRegistration(
         name="orchestrator",
-        module_path="framework.infrastructure.orchestration_node",
+        module_path="osprey.infrastructure.orchestration_node",
         function_name="OrchestrationNode",
         description="Execution planning and orchestration"
     )

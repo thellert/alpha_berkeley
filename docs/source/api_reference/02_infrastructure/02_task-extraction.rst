@@ -1,7 +1,7 @@
 Task Extraction
 ===============
 
-.. currentmodule:: framework.infrastructure.task_extraction_node
+.. currentmodule:: osprey.infrastructure.task_extraction_node
 
 Infrastructure node that converts chat conversation history into focused, actionable tasks.
 
@@ -26,10 +26,10 @@ Task extraction uses models defined in the core framework:
 
 .. seealso::
    
-   :class:`~framework.prompts.defaults.task_extraction.ExtractedTask`
+   :class:`~osprey.prompts.defaults.task_extraction.ExtractedTask`
        Structured output model for extracted tasks
-   
-   :class:`~framework.base.BaseInfrastructureNode`
+
+   :class:`~osprey.base.BaseInfrastructureNode`
        Base class for infrastructure components
 
 Registration
@@ -39,7 +39,7 @@ Automatically registered as::
 
     NodeRegistration(
         name="task_extraction",
-        module_path="framework.infrastructure.task_extraction_node", 
+        module_path="osprey.infrastructure.task_extraction_node",
         function_name="TaskExtractionNode",
         description="Task extraction and processing"
     )

@@ -1,7 +1,7 @@
 Error Handling
 ==============
 
-.. currentmodule:: framework.infrastructure.error_node
+.. currentmodule:: osprey.infrastructure.error_node
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -289,7 +289,7 @@ The LLM receives the complete error context including all metadata for intellige
            )
            
            explanation = get_chat_completion(
-               model_config=get_model_config("framework", "response"),
+               model_config=get_model_config("osprey", "response"),
                message=prompt,
                max_tokens=500
            )
@@ -436,6 +436,6 @@ Integration Patterns
    :doc:`05_message-generation`
        How error responses are formatted
 
-Error Handling Infrastructure provides the resilience and user-friendly error communication that makes the Alpha Berkeley Framework production-ready, ensuring graceful failure handling while keeping users informed and engaged.
+Error Handling Infrastructure provides the resilience and user-friendly error communication that makes the Osprey Framework production-ready, ensuring graceful failure handling while keeping users informed and engaged.
 
 

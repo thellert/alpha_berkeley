@@ -4,7 +4,7 @@ Base Components
 
 Foundation classes for capabilities and infrastructure nodes with LangGraph integration, plus decorators for seamless framework integration.
 
-.. currentmodule:: framework.base
+.. currentmodule:: osprey.base
 
 Base Classes
 ============

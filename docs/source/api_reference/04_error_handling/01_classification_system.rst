@@ -4,7 +4,7 @@ Classification System
 
 Core error classification and severity management system.
 
-.. currentmodule:: framework.base.errors
+.. currentmodule:: osprey.base.errors
 
 The classification system provides the foundation for intelligent error handling by enabling automatic recovery strategy selection based on error severity and context. This system integrates seamlessly with both capability execution and infrastructure operations.
 
@@ -109,7 +109,7 @@ Classification Methods
 Base Capability Classification
 ------------------------------
 
-.. automethod:: framework.base.capability.BaseCapability.classify_error
+.. automethod:: osprey.base.capability.BaseCapability.classify_error
 
    Domain-specific error classification for capabilities. Override this method to provide sophisticated error handling based on specific failure modes.
 
@@ -138,7 +138,7 @@ Base Capability Classification
 Infrastructure Node Classification
 ----------------------------------
 
-.. automethod:: framework.base.nodes.BaseInfrastructureNode.classify_error
+.. automethod:: osprey.base.nodes.BaseInfrastructureNode.classify_error
 
    Conservative error classification for infrastructure nodes. Infrastructure nodes handle system-critical functions, so failures typically require immediate attention.
 
@@ -158,7 +158,7 @@ Infrastructure Node Classification
 Retry Policy Configuration
 ==========================
 
-.. automethod:: framework.base.capability.BaseCapability.get_retry_policy
+.. automethod:: osprey.base.capability.BaseCapability.get_retry_policy
 
    Retry policy configuration for failure recovery strategies.
 
@@ -172,7 +172,7 @@ Retry Policy Configuration
           "backoff_factor": 1.5     # Exponential backoff multiplier
       }
 
-.. automethod:: framework.base.nodes.BaseInfrastructureNode.get_retry_policy
+.. automethod:: osprey.base.nodes.BaseInfrastructureNode.get_retry_policy
 
    Conservative retry policy for infrastructure operations.
 
@@ -267,7 +267,7 @@ The ``metadata`` field is the **primary mechanism** for providing structured err
 .. seealso::
 
    :doc:`02_exception_reference`
-       Complete catalog of framework exceptions
+       Complete catalog of Osprey exceptions
    
    :doc:`03_recovery_coordination`
        Router coordination and recovery strategies

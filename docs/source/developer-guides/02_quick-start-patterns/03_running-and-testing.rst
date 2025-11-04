@@ -2,9 +2,9 @@
 Running and Testing
 ===================
 
-.. currentmodule:: framework.infrastructure
+.. currentmodule:: osprey.infrastructure
 
-Learn essential patterns for running, testing, and debugging capabilities within the Alpha Berkeley Framework.
+Learn essential patterns for running, testing, and debugging capabilities within the Osprey Framework.
 
 .. dropdown:: 📚 What You'll Learn
    :color: primary
@@ -32,9 +32,9 @@ Basic Usage Pattern
 
 .. code-block:: python
 
-   from framework.infrastructure.gateway import Gateway, GatewayResult
-   from framework.graph import create_graph
-   from framework.registry import initialize_registry, get_registry
+   from osprey.infrastructure.gateway import Gateway, GatewayResult
+   from osprey.graph import create_graph
+   from osprey.registry import initialize_registry, get_registry
    from langgraph.checkpoint.memory import MemorySaver
    
    async def process_message_example():
@@ -125,8 +125,8 @@ Running the CLI
 
 .. code-block:: bash
 
-   # From the alpha_berkeley directory:
-   python interfaces/CLI/direct_conversation.py
+   # From the osprey directory:
+   osprey chat
 
 The CLI automatically handles:
 
@@ -141,7 +141,7 @@ Example CLI Session
 .. code-block:: text
 
    ╔═════════════════════════════════════════════════════════════════╗
-   ║     Command Line Interface for the Alpha Berkeley Framework     ║
+   ║         Command Line Interface for the Osprey Framework         ║
    ╚═════════════════════════════════════════════════════════════════╝
    💡 Type 'bye' or 'end' to exit
 
@@ -180,14 +180,14 @@ Create simple test scripts using the Gateway pattern:
    import sys
    import os
    
-   # Add framework to path
+   # Add osprey to path
    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
    
-   from framework.registry import initialize_registry, get_registry
-   from framework.graph import create_graph
-   from framework.infrastructure.gateway import Gateway
+   from osprey.registry import initialize_registry, get_registry
+   from osprey.graph import create_graph
+   from osprey.infrastructure.gateway import Gateway
    from langgraph.checkpoint.memory import MemorySaver
-   from framework.utils.config import get_full_configuration
+   from osprey.utils.config import get_full_configuration
    
    async def test_capability():
        # Initialize framework
@@ -235,7 +235,7 @@ Debug Logging
 
 .. code-block:: python
 
-   from framework.utils.logger import get_logger
+   from osprey.utils.logger import get_logger
    
    # Enable debug logging for components
    framework_logger = get_logger("debug")
@@ -246,8 +246,8 @@ Capability Debugging
 
 .. code-block:: python
 
-   from framework.utils.logger import get_logger
-   from framework.utils.streaming import get_streamer
+   from osprey.utils.logger import get_logger
+   from osprey.utils.streaming import get_streamer
    
    logger = get_logger("debug_capability")
    
@@ -326,7 +326,7 @@ Framework Initialization
 .. code-block:: python
 
    # ✅ Correct initialization order
-   from framework.registry import initialize_registry, get_registry
+   from osprey.registry import initialize_registry, get_registry
    
    initialize_registry()  # Initialize first
    registry = get_registry()  # Then get instance
@@ -379,7 +379,7 @@ Configuration Issues
 
 .. code-block:: python
 
-   from framework.utils.config import get_full_configuration
+   from osprey.utils.config import get_full_configuration
    import os
    
    # Check environment variables

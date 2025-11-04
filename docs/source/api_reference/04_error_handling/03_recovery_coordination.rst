@@ -4,7 +4,7 @@ Recovery Coordination
 
 Router-based recovery strategies and infrastructure error coordination.
 
-.. currentmodule:: framework
+.. currentmodule:: osprey
 
 The framework implements intelligent recovery coordination through a centralized router system that automatically determines recovery strategies based on error classification. The system coordinates between retry mechanisms, orchestrator replanning, and graceful termination.
 
@@ -14,7 +14,7 @@ Router Recovery System
 Router Conditional Edge
 -----------------------
 
-.. autofunction:: framework.infrastructure.router_node.router_conditional_edge
+.. autofunction:: osprey.infrastructure.router_node.router_conditional_edge
 
    Central recovery coordination implementing the complete recovery strategy.
 
@@ -32,7 +32,7 @@ Router Conditional Edge
 RouterNode Infrastructure
 -------------------------
 
-.. autoclass:: framework.infrastructure.router_node.RouterNode
+.. autoclass:: osprey.infrastructure.router_node.RouterNode
    :members:
    :show-inheritance:
 
@@ -44,7 +44,7 @@ Orchestrator Replanning
 OrchestrationNode
 -----------------
 
-.. automethod:: framework.infrastructure.orchestration_node.OrchestrationNode.execute
+.. automethod:: osprey.infrastructure.orchestration_node.OrchestrationNode.execute
 
    Handles replanning when REPLANNING errors are encountered:
 
@@ -59,7 +59,7 @@ Classifier Reclassification
 ClassificationNode
 -------------------
 
-.. automethod:: framework.infrastructure.classification_node.ClassificationNode.execute
+.. automethod:: osprey.infrastructure.classification_node.ClassificationNode.execute
 
    Handles reclassification when RECLASSIFICATION errors are encountered:
 
@@ -75,7 +75,7 @@ Error Response Generation
 ErrorNode System
 ----------------
 
-.. autoclass:: framework.infrastructure.error_node.ErrorNode
+.. autoclass:: osprey.infrastructure.error_node.ErrorNode
    :members:
    :show-inheritance:
 
@@ -87,11 +87,11 @@ Infrastructure Error Classification
 Classification Node
 -------------------
 
-.. automethod:: framework.infrastructure.classification_node.ClassificationNode.classify_error
+.. automethod:: osprey.infrastructure.classification_node.ClassificationNode.classify_error
 
    Built-in error classification for classifier operations with LLM-aware retry logic.
 
-.. automethod:: framework.infrastructure.classification_node.ClassificationNode.get_retry_policy
+.. automethod:: osprey.infrastructure.classification_node.ClassificationNode.get_retry_policy
 
    Custom retry policy for LLM-based classification operations.
 

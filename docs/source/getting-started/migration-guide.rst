@@ -1,180 +1,310 @@
-Migration Guide: Upgrading to v0.7.0+
-=====================================
+Migration Guide: Upgrading to Osprey Framework v0.8.0
+=====================================================
 
-.. admonition:: Who Should Read This
+.. admonition:: 🦅 Framework Renamed to Osprey
    :class: important
 
-   This guide is for users upgrading from the old monolithic structure 
-   (applications embedded in framework repo) to the new pip-installable 
-   architecture (v0.7.0+).
+   As of **v0.8.0**, the **Alpha Berkeley Framework** has been renamed to **Osprey Framework**.
+   This guide covers both the rename migration and architectural upgrades from older versions.
+
+Quick Navigation
+----------------
+
+**Choose your migration path:**
+
+.. grid:: 1 2 2 2
+   :gutter: 2
+
+   .. grid-item-card:: 📦 Fresh Installation
+      :link: installation
+      :link-type: doc
+      
+      Installing Osprey for the first time? Skip this guide.
+
+   .. grid-item-card:: 🔄 From v0.7.x → v0.8.0
+      :link: migration-path-b-v0-7-x-v0-8-0-rename-only
+      :link-type: ref
+      
+      Quick rename migration (15-30 min)
+
+   .. grid-item-card:: 🏗️ From v0.6.x → v0.8.0  
+      :link: migration-path-a-v0-6-x-v0-8-0-full-migration
+      :link-type: ref
+      
+      Architectural + rename migration (2-4 hours)
+
+   .. grid-item-card:: 📖 Understanding Changes
+      :link: overview-of-all-changes
+      :link-type: ref
+      
+      What changed and why
+
+Using Claude, Cursor, or another AI assistant? Download the AI-optimized migration guide for your version:
    
-   **Fresh installations?** Skip to :doc:`installation` instead.
+- **📥 From v0.7.x (Quick Rename):** :download:`Migration Guide v0.7→v0.8 </_static/resources/MIGRATION_GUIDE_v0.7_to_v0.8.md>`
+- **📥 From v0.6.x (Full Migration):** :download:`Migration Guide v0.6→v0.8 </_static/resources/MIGRATION_GUIDE_v0.6_to_v0.8.md>`
+   
 
-Overview of Changes
--------------------
+.. _overview-of-all-changes:
 
-The framework has transitioned from a monolithic architecture to a 
-pip-installable dependency model, enabling independent application development.
+Overview of All Changes
+-----------------------
 
-**Old Structure (v0.6.x and earlier)**::
+The framework has undergone two major transitions:
+
+Version History
+~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 15 25 60
+
+   * - Version
+     - Release
+     - Major Changes
+   * - **v0.8.0**
+     - Nov 2025
+     - 🦅 **Renamed to Osprey Framework**
+       
+       - Package: ``alpha-berkeley-framework`` → ``osprey-framework``
+       - Imports: ``from framework.*`` → ``from osprey.*``
+       - CLI: ``framework`` → ``osprey``
+       - Repository: ``als-apg/osprey``
+   * - **v0.7.0**
+     - Oct 2025
+     - 📦 **Pip-installable Architecture**
+       
+       - Monolithic → Separate applications
+       - Unified CLI system
+       - Registry helpers
+       - Self-contained configuration
+   * - **v0.6.x**
+     - Earlier
+     - 🏗️ **Monolithic Structure**
+       
+       - All applications embedded in framework repo
+       - Manual Python module execution
+
+Structural Evolution
+~~~~~~~~~~~~~~~~~~~~
+
+**v0.6.x and earlier (Monolithic)**::
 
    alpha_berkeley/
    ├── src/
-   │   ├── framework/              # Core framework
-   │   └── applications/           # ❌ All apps embedded here
+   │   ├── framework/              # Core (old name)
+   │   └── applications/           # ❌ All apps embedded
    │       ├── als_assistant/
-   │       ├── wind_turbine/
-   │       └── hello_world_weather/
+   │       └── wind_turbine/
    ├── interfaces/                 # Top-level
    ├── deployment/                 # Top-level
-   └── config.yml                  # Global configuration
+   └── config.yml                  # Global config
 
-**New Structure (v0.7.0+)**::
+**v0.7.0 (Pip-installable, old name)**::
 
-   # Framework is pip-installable
+   # Framework as dependency
    pip install alpha-berkeley-framework
    
-   # Each application is now separate
+   # Separate application repos
    my-project/
    ├── src/my_project/
-   │   ├── registry.py
-   │   ├── capabilities/
-   │   └── context_classes.py
-   ├── services/                   # Copied from framework
-   ├── config.yml                  # Self-contained
-   └── pyproject.toml              # Framework as dependency
+   ├── config.yml
+   └── pyproject.toml
 
-Breaking Changes
-----------------
+**v0.8.0 (Current - Renamed to Osprey)**::
 
-1. Import Paths Changed
-~~~~~~~~~~~~~~~~~~~~~~~~
+   # New package name
+   pip install osprey-framework
+   
+   # Same structure, new imports
+   my-project/
+   ├── src/my_project/
+   │   # from osprey.* imports
+   └── pyproject.toml
+       # osprey-framework dependency
 
-All ``applications.*`` imports must be updated:
+.. _migration-path-b-v0-7-x-v0-8-0-rename-only:
+
+Migration Path B: v0.7.x → v0.8.0 (Rename Only)
+------------------------------------------------
+
+.. admonition:: ✅ For Current Users
+   :class: tip
+
+   If you're already on v0.7.x with the pip-installable architecture,
+   this is a **quick rename migration** (15-30 minutes).
+   
+   **No API changes** - only package name and imports change.
+
+Step 1: Update Framework Package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   # Uninstall old package
+   pip uninstall alpha-berkeley-framework -y
+
+   # Install new package
+   pip install osprey-framework
+
+   # Verify installation
+   osprey --version  # Should show 0.8.0+
+
+Step 2: Update Import Statements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Find and replace** in your project files (case-sensitive):
 
 .. code-block:: python
 
-   # OLD ❌
-   from applications.wind_turbine.capabilities import TurbineAnalysis
-   from applications.wind_turbine.context_classes import TurbineDataContext
-   
-   # NEW ✅
-   from wind_turbine.capabilities import TurbineAnalysis
-   from wind_turbine.context_classes import TurbineDataContext
+   # FIND:    from framework.
+   # REPLACE: from osprey.
 
-2. CLI Commands Unified
-~~~~~~~~~~~~~~~~~~~~~~~~
+**Before:**
 
-New unified CLI with lazy loading:
+.. code-block:: python
 
-.. code-block:: bash
+   from framework.state import AgentState
+   from framework.base.capability import BaseCapability
+   from framework.base.node import BaseNode
+   from framework.registry.manager import RegistryManager
 
-   # OLD ❌
-   python -m interfaces.CLI.direct_conversation
-   python -m deployment.container_manager deploy_up
-   
-   # NEW ✅
-   framework chat
-   framework deploy up
+**After:**
 
-See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for complete command reference.
+.. code-block:: python
 
-3. Configuration Structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+   from osprey.state import AgentState
+   from osprey.base.capability import BaseCapability
+   from osprey.base.node import BaseNode
+   from osprey.registry.manager import RegistryManager
 
-Each application now has its own ``config.yml``:
+Step 3: Update String Module References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: yaml
+**Find and replace** string-based module paths:
 
-   # OLD: Global framework config
-   applications:
-     - als_assistant
-     - wind_turbine
-   
-   # NEW: Per-application config
-   registry_path: ./src/my_app/registry.py
-   project_root: /path/to/my-project
+.. code-block:: python
 
-**Key differences:**
+   # FIND:    "framework.
+   # REPLACE: "osprey.
 
-- No more global framework configuration
-- ``registry_path`` specifies exact location of registry file
-- All settings self-contained in one config file
-- See :doc:`../developer-guides/03_core-framework-systems/06_configuration-architecture`
+**Before:**
 
-4. Registry Discovery
-~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: python
 
-Explicit path-based discovery replaces automatic scanning:
+   module_path = "framework.capabilities.my_capability"
+   __module__ = "framework.services.my_service"
 
-.. code-block:: yaml
+**After:**
 
-   # config.yml
-   registry_path: ./src/my_app/registry.py  # Explicit path required
+.. code-block:: python
 
-**No more:**
+   module_path = "osprey.capabilities.my_capability"
+   __module__ = "osprey.services.my_service"
 
-- Automatic scanning of ``applications/`` directory
-- Convention-based discovery by directory name
-- Multiple applications in one configuration (advanced use case only)
+Step 4: Update Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-5. Directory Structure
-~~~~~~~~~~~~~~~~~~~~~~
-
-Framework components moved:
+**requirements.txt:**
 
 .. code-block:: text
 
-   OLD                          NEW
-   interfaces/        →         src/framework/interfaces/
-   deployment/        →         src/framework/deployment/
-   src/configs/       →         src/framework/utils/
+   # OLD:
+   alpha-berkeley-framework>=0.7.0
 
-These are now pip-installed and not directly visible in application repos.
+   # NEW:
+   osprey-framework>=0.8.0
 
-Migration Steps
----------------
+**pyproject.toml:**
 
-Choose your migration path based on application type:
+.. code-block:: toml
 
-Production Applications
-~~~~~~~~~~~~~~~~~~~~~~~
+   # OLD:
+   dependencies = [
+       "alpha-berkeley-framework>=0.7.0",
+   ]
 
-For applications with independent development teams (e.g., ``als_assistant``):
+   # NEW:
+   dependencies = [
+       "osprey-framework>=0.8.0",
+   ]
 
-**Step 1: Install Framework**
+Step 5: Test Your Application
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   # Install as dependency
-   pip install alpha-berkeley-framework
+   # Verify imports work
+   python -c "from osprey.state import AgentState; print('✅ Imports working')"
+
+   # Run your tests
+   pytest
+
+   # Try the CLI
+   osprey chat --project /path/to/your/project
+
+**That's it!** Your migration is complete. See the :ref:`verification-checklist` below.
+
+.. _migration-path-a-v0-6-x-v0-8-0-full-migration:
+
+Migration Path A: v0.6.x → v0.8.0 (Full Migration)
+---------------------------------------------------
+
+.. admonition:: 🏗️ For Legacy Users
+   :class: important
+
+   If you're on v0.6.x or earlier with the monolithic structure,
+   you need **both migrations** (2-4 hours):
    
-   # Verify installation
-   framework --version
-   framework --help
+   1. Architectural migration (monolithic → pip-installable)
+   2. Rename migration (Alpha Berkeley → Osprey)
 
-**Step 2: Create New Repository**
+Overview
+~~~~~~~~
 
-Option A - Use scaffolding (recommended):
+This migration combines:
+
+- **Structural changes**: Moving from embedded applications to standalone repos
+- **Import updates**: ``applications.my_app`` → ``my_app`` AND ``framework`` → ``osprey``
+- **CLI updates**: Python modules → unified ``osprey`` command
+- **Configuration**: Global config → per-application config
+
+Step 1: Install Osprey Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   framework init my-app --template minimal
+   # Install new package (skip old framework)
+   pip install osprey-framework
+
+   # Verify installation
+   osprey --version  # Should show 0.8.0+
+   osprey --help
+
+Step 2: Create New Application Repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**Option A - Use scaffolding (recommended):**
+
+.. code-block:: bash
+
+   osprey init my-app --template minimal
    cd my-app
 
-Option B - Manual setup:
+**Option B - Manual setup:**
 
 .. code-block:: bash
 
-   mkdir -p my-app/src/my_app/{capabilities,}
+   mkdir -p my-app/src/my_app/capabilities
    cd my-app
    touch src/my_app/{__init__.py,registry.py,context_classes.py}
 
-**Step 3: Copy Application Code**
+Step 3: Copy Application Code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
-   # From old structure
+   # From old monolithic structure
    OLD_REPO=/path/to/alpha_berkeley
    
    # Copy application code
@@ -184,13 +314,13 @@ Option B - Manual setup:
    if [ -d "$OLD_REPO/services/applications/my_app" ]; then
        cp -r $OLD_REPO/services/applications/my_app/* services/
    fi
-   
-   # Copy application-specific config sections
-   # (You'll merge these into new config.yml manually)
 
-**Step 4: Update Import Paths**
+Step 4: Update ALL Import Paths
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Automated replacement:
+You need **two sets of replacements**:
+
+**First: Remove applications prefix**
 
 .. code-block:: bash
 
@@ -200,31 +330,53 @@ Automated replacement:
    
    find src/my_app -name "*.py" -type f -exec sed -i \
      's/import applications\.my_app/import my_app/g' {} +
+
+**Second: Update framework to osprey**
+
+.. code-block:: bash
+
+   # Update framework imports to osprey
+   find src/my_app -name "*.py" -type f -exec sed -i \
+     's/from framework\./from osprey./g' {} +
    
-   # Verify changes
-   grep -r "applications\." src/my_app/ || echo "✓ All imports updated"
+   # Update string module references
+   find src/my_app -name "*.py" -type f -exec sed -i \
+     's/"framework\./"osprey./g' {} +
+
+**Verify changes:**
+
+.. code-block:: bash
+
+   # Should find NOTHING:
+   grep -r "applications\." src/my_app/ 
+   grep -r "from framework\." src/my_app/
+   
+   # Should find your osprey imports:
+   grep -r "from osprey\." src/my_app/
 
 **Manual verification:**
 
 .. code-block:: python
 
-   # Check each capability file for remaining issues
+   # Check each capability file
    
-   # Common patterns to fix:
-   # ❌ from applications.my_app.capabilities import X
-   # ✅ from my_app.capabilities import X
+   # ❌ OLD (v0.6.x):
+   from applications.my_app.capabilities import X
+   from framework.state import AgentState
    
-   # ❌ import applications.my_app.context_classes
-   # ✅ import my_app.context_classes
+   # ✅ NEW (v0.8.0):
+   from my_app.capabilities import X
+   from osprey.state import AgentState
 
-**Step 5: Simplify Registry with Helper**
+Step 5: Update Registry
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Replace verbose registry with helper function:
 
 .. code-block:: python
 
    # src/my_app/registry.py
-   from framework.registry import (
+   from osprey.registry import (
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
@@ -256,20 +408,17 @@ Replace verbose registry with helper function:
                    ),
                    # Add all your context classes...
                ],
-               # Optional: exclude framework capabilities you don't need
-               exclude_capabilities=["python"],  # Example
            )
 
-See :doc:`../developer-guides/03_core-framework-systems/03_registry-and-discovery` for details.
-
-**Step 6: Create Configuration**
+Step 6: Create Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Generate base configuration:
 
 .. code-block:: bash
 
    # Export framework defaults as starting point
-   framework export-config > config.yml
+   osprey export-config > config.yml
 
 Edit ``config.yml`` to customize:
 
@@ -277,33 +426,40 @@ Edit ``config.yml`` to customize:
 
    # Essential settings to update:
    
-   # 1. Project paths
    project_root: /absolute/path/to/my-app
    registry_path: ./src/my_app/registry.py
-   
-   # 2. Build directory
    build_dir: ./build
    
-   # 3. Models (update providers and model IDs)
    models:
      orchestrator:
-       provider: cborg
-       model_id: anthropic/claude-sonnet
-     response:
-       provider: cborg
-       model_id: google/gemini-flash
-     # ... update all 8 models
-   
-   # 4. Service paths
-   services:
-     jupyter:
-       path: ./services/jupyter
-     open_webui:
-       port_host: 8080
-     pipelines:
-       port_host: 9099
+       provider: openai
+       model_id: gpt-4
+     # ... update all models
 
-**Step 7: Setup Environment**
+Step 7: Update Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create or update ``requirements.txt``:
+
+.. code-block:: text
+
+   osprey-framework>=0.8.0
+   # Add your other dependencies
+
+Or ``pyproject.toml``:
+
+.. code-block:: toml
+
+   [project]
+   name = "my-app"
+   version = "1.0.0"
+   dependencies = [
+       "osprey-framework>=0.8.0",
+       # Add other dependencies
+   ]
+
+Step 8: Setup Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -311,52 +467,339 @@ Edit ``config.yml`` to customize:
    cp .env.example .env
    
    # Edit .env with your API keys
-   # Required:
-   # - OPENAI_API_KEY (if using OpenAI)
-   # - ANTHROPIC_API_KEY (if using Claude)
-   # - GOOGLE_API_KEY (if using Gemini)
-   # - CBORG_API_KEY (if using CBorg)
 
-**Step 8: Validate Setup**
+Step 9: Validate Setup
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    # Run health check
-   framework health
-   
+   osprey health
+
    # Should report:
    # ✅ Python version
-   # ✅ Framework installed
+   # ✅ Osprey framework installed
    # ✅ Dependencies available
    # ✅ Config file valid
    # ✅ Registry file found
 
-**Step 9: Test Functionality**
+Step 10: Test Functionality
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    # Test CLI
-   framework chat
+   osprey chat
    # > "Hello, can you help me test?"
 
-   # Start services (optional)...
-   framework deploy up
+   # Start services (optional)
+   osprey deploy up
 
-   # ...and test web interface
-   # Browse to http://localhost:8080
-
-**Step 10: Create Repository**
+Step 11: Create Repository
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: bash
 
    # Initialize git
    git init
    git add .
-   git commit -m "Initial commit: Migrated from alpha_berkeley framework"
+   git commit -m "Initial commit: Migrated to Osprey Framework v0.8.0"
    
    # Create remote and push
    git remote add origin <your-repo-url>
    git push -u origin main
+
+**Migration complete!** See the :ref:`verification-checklist` below.
+
+Legacy Breaking Changes Reference
+----------------------------------
+
+For users migrating from v0.6.x, here are all the breaking changes:
+
+1. Import Paths Changed (Architectural)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All ``applications.*`` imports must be updated:
+
+.. code-block:: python
+
+   # OLD ❌
+   from applications.wind_turbine.capabilities import TurbineAnalysis
+   from applications.wind_turbine.context_classes import TurbineDataContext
+   
+   # NEW ✅
+   from wind_turbine.capabilities import TurbineAnalysis
+   from wind_turbine.context_classes import TurbineDataContext
+
+2. Framework Import Paths Changed (Rename)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All ``framework.*`` imports must be updated to ``osprey.*``:
+
+.. code-block:: python
+
+   # OLD ❌
+   from framework.state import AgentState
+   from framework.base.capability import BaseCapability
+   
+   # NEW ✅
+   from osprey.state import AgentState
+   from osprey.base.capability import BaseCapability
+
+3. CLI Commands Unified
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+New unified CLI with lazy loading:
+
+.. code-block:: bash
+
+   # OLD ❌
+   python -m interfaces.CLI.direct_conversation
+   python -m deployment.container_manager deploy_up
+
+   # NEW ✅
+   osprey chat
+   osprey deploy up
+
+See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for complete command reference.
+
+4. Package Name Changed
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   # OLD ❌
+   pip install alpha-berkeley-framework
+   
+   # NEW ✅
+   pip install osprey-framework
+
+5. Configuration Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each application now has its own ``config.yml``:
+
+.. code-block:: yaml
+
+   # OLD: Global framework config
+   applications:
+     - als_assistant
+     - wind_turbine
+   
+   # NEW: Per-application config
+   registry_path: ./src/my_app/registry.py
+   project_root: /path/to/my-project
+
+**Key differences:**
+
+- No more global framework configuration
+- ``registry_path`` specifies exact location of registry file
+- All settings self-contained in one config file
+- See :doc:`../developer-guides/03_core-framework-systems/06_configuration-architecture`
+
+6. Registry Discovery
+~~~~~~~~~~~~~~~~~~~~~
+
+Explicit path-based discovery replaces automatic scanning:
+
+.. code-block:: yaml
+
+   # config.yml
+   registry_path: ./src/my_app/registry.py  # Explicit path required
+
+**No more:**
+
+- Automatic scanning of ``applications/`` directory
+- Convention-based discovery by directory name
+- Multiple applications in one configuration (advanced use case only)
+
+7. Directory Structure
+~~~~~~~~~~~~~~~~~~~~~~
+
+Framework components moved:
+
+.. code-block:: text
+
+   OLD                          NEW
+   interfaces/        →         src/osprey/interfaces/
+   deployment/        →         src/osprey/deployment/
+   src/configs/       →         src/osprey/utils/
+
+These are now pip-installed and not directly visible in application repos.
+
+.. _verification-checklist:
+
+Verification & Testing
+----------------------
+
+After completing your migration, use this checklist:
+
+Import Verification
+~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   # Create test_migration.py
+   """Test that all imports work."""
+   
+   def test_core_imports():
+       """Test core framework imports."""
+       from osprey.state import AgentState
+       from osprey.base.capability import BaseCapability
+       from osprey.base.node import BaseNode
+       from osprey.registry.manager import RegistryManager
+       print("✅ Core imports working")
+   
+   def test_app_imports():
+       """Test your application imports."""
+       from my_app.capabilities.my_capability import MyCapability
+       from my_app.registry import registry
+       print("✅ Application imports working")
+   
+   if __name__ == "__main__":
+       test_core_imports()
+       test_app_imports()
+       print("\n✅ All imports successful!")
+
+CLI Verification
+~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   # Test basic CLI commands
+   osprey --version      # Should show 0.8.0+
+   osprey health         # Should pass all checks
+   
+   # Test with your project
+   osprey export-config --project /path/to/your/project
+   osprey chat --project /path/to/your/project --dry-run
+
+Search for Old References
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   # Should find NOTHING (or only comments):
+   grep -r "from framework\." src/ 
+   grep -r "alpha-berkeley-framework" .
+   
+   # Should find your new imports:
+   grep -r "from osprey\." src/
+   grep -r "osprey-framework" requirements.txt pyproject.toml
+
+Run Tests
+~~~~~~~~~
+
+.. code-block:: bash
+
+   # Run your existing test suite
+   pytest -v
+   
+   # Should all pass with new imports
+
+Complete Checklist
+~~~~~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 50 10
+
+   * - Status
+     - Task
+     - Path
+   * - ☐
+     - Package installed: ``osprey-framework>=0.8.0``
+     - Both
+   * - ☐
+     - All ``from framework.*`` → ``from osprey.*``
+     - Both
+   * - ☐  
+     - All ``"framework.*`` → ``"osprey.*``
+     - Both
+   * - ☐
+     - Updated ``requirements.txt`` / ``pyproject.toml``
+     - Both
+   * - ☐
+     - All ``applications.my_app`` → ``my_app``
+     - Path A only
+   * - ☐
+     - Created separate application repo
+     - Path A only
+   * - ☐
+     - Updated registry with helpers
+     - Path A only
+   * - ☐
+     - Created ``config.yml``
+     - Path A only
+   * - ☐
+     - CLI command works: ``osprey --help``
+     - Both
+   * - ☐
+     - Health check passes: ``osprey health``
+     - Both
+   * - ☐
+     - Tests pass: ``pytest``
+     - Both
+   * - ☐
+     - Application runs successfully
+     - Both
+
+Troubleshooting
+---------------
+
+Common Issues
+~~~~~~~~~~~~~
+
+**Issue: "ModuleNotFoundError: No module named 'framework'"**
+
+*Solution:* You have old import statements that weren't updated:
+
+.. code-block:: bash
+
+   # Find remaining old imports
+   grep -r "from framework\." src/ --include="*.py"
+   
+   # Replace them with:
+   # from framework.X → from osprey.X
+
+**Issue: "ModuleNotFoundError: No module named 'osprey'"**
+
+*Solution:* New package not installed:
+
+.. code-block:: bash
+
+   pip uninstall alpha-berkeley-framework -y
+   pip install osprey-framework
+   python -c "import osprey; print(osprey.__version__)"
+
+**Issue: "command not found: osprey"**
+
+*Solution:* Package installed in wrong environment:
+
+.. code-block:: bash
+
+   # Activate correct virtual environment
+   source venv/bin/activate
+   
+   # Reinstall
+   pip install osprey-framework
+   
+   # Verify
+   which osprey
+
+**Issue: Tests fail after migration**
+
+*Solution:* Check test files for old imports:
+
+.. code-block:: bash
+
+   grep -r "from framework\." tests/ --include="*.py"
+   grep -r "applications\." tests/ --include="*.py"
+
+For more help, see:
+
+- GitHub Issues: https://github.com/als-apg/osprey/issues
+- Discussions: https://github.com/als-apg/osprey/discussions
 
 Tutorial Applications
 ~~~~~~~~~~~~~~~~~~~~~
@@ -366,11 +809,11 @@ For tutorial applications (``hello_world_weather``, ``wind_turbine``), **regener
 .. code-block:: bash
 
    # Weather tutorial
-   framework init my-weather --template hello_world_weather
+   osprey init my-weather --template hello_world_weather
    cd my-weather
-   
-   # Turbine tutorial  
-   framework init my-turbine --template wind_turbine
+
+   # Turbine tutorial
+   osprey init my-turbine --template wind_turbine
    cd my-turbine
 
 Templates are kept up-to-date with framework changes and use latest patterns.
@@ -381,32 +824,50 @@ For detailed guidance on using these templates:
 * :doc:`Build Your First Agent <build-your-first-agent>` - Comprehensive guide to the wind turbine template
 
 
-New Features in v0.7.0
-----------------------
+What's New in v0.8.0
+--------------------
 
-After migration, explore new capabilities:
+Rename to Osprey Framework
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Unified CLI
-~~~~~~~~~~~
+The framework has been renamed to better reflect its evolution:
+
+- **New name**: Osprey Framework 🦅
+- **New package**: ``osprey-framework`` (on PyPI)
+- **New repository**: https://github.com/als-apg/osprey
+- **New docs**: https://als-apg.github.io/osprey
+
+**Why Osprey?**
+
+- Domain-agnostic identity (beyond Berkeley)
+- Memorable and distinctive
+- Reflects the framework's vision
+
+**Backward compatibility:**
+
+- GitHub automatically redirects old URLs
+- All APIs remain the same (import paths only change)
+
+Features from v0.7.0
+~~~~~~~~~~~~~~~~~~~~
+
+If you're coming from v0.6.x, you also get:
+
+**Unified CLI:**
 
 .. code-block:: bash
 
-   framework init <name>        # Create new project
-   framework deploy up          # Start services
-   framework chat               # Interactive conversation
-   framework health             # System diagnostics
-   framework export-config      # View framework defaults
+   osprey init <name>        # Create new project
+   osprey deploy up          # Start services
+   osprey chat               # Interactive conversation
+   osprey health             # System diagnostics
+   osprey export-config      # View framework defaults
 
-See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference`.
-
-Registry Helpers
-~~~~~~~~~~~~~~~~
-
-Simplify registry creation with helpers:
+**Registry Helpers:**
 
 .. code-block:: python
 
-   from framework.registry import extend_framework_registry
+   from osprey.registry import extend_framework_registry
    
    # 70% less code, automatic framework updates
    return extend_framework_registry(
@@ -414,12 +875,7 @@ Simplify registry creation with helpers:
        exclude_capabilities=["python"]
    )
 
-See :doc:`../developer-guides/03_core-framework-systems/03_registry-and-discovery`.
-
-Self-Contained Configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Complete transparency - all settings in one place:
+**Self-Contained Configuration:**
 
 .. code-block:: yaml
 
@@ -427,34 +883,21 @@ Complete transparency - all settings in one place:
    # ~320 lines, well-organized
    # No hidden defaults
 
-See :doc:`../developer-guides/03_core-framework-systems/06_configuration-architecture`.
-
-Health Diagnostics
-~~~~~~~~~~~~~~~~~~
-
-Comprehensive system validation:
+**Health Diagnostics:**
 
 .. code-block:: bash
 
-   framework health
+   osprey health
    
-   # Checks:
-   # - Python version
-   # - Dependencies
-   # - Configuration
-   # - Registry files
-   # - Container status
+   # Comprehensive system validation
 
-Template System
-~~~~~~~~~~~~~~~
-
-Quick project generation:
+**Template System:**
 
 .. code-block:: bash
 
-   framework init my-app --template hello_world_weather
-   framework init my-app --template wind_turbine
-   framework init my-app --template minimal
+   osprey init my-app --template hello_world_weather
+   osprey init my-app --template wind_turbine
+   osprey init my-app --template minimal
 
 Getting Help
 ------------
@@ -469,8 +912,8 @@ If you encounter issues during migration:
 
 **Community:**
 
-- GitHub Issues: https://github.com/thellert/alpha_berkeley/issues
-- Discussions: https://github.com/thellert/alpha_berkeley/discussions
+- GitHub Issues: https://github.com/als-apg/osprey/issues
+- Discussions: https://github.com/als-apg/osprey/discussions
 
 **Common Resources:**
 
@@ -483,13 +926,12 @@ Next Steps
 
 After successful migration:
 
-1. **Learn Best Practices** - Follow the :doc:`Hello World Tutorial <hello-world-tutorial>` to understand v0.7.0 patterns
-2. **Build Advanced Features** - Work through :doc:`Build Your First Agent <build-your-first-agent>` for multi-capability integration
-3. **Explore New Features** - Try the unified CLI commands
-4. **Simplify Registry** - Use ``extend_framework_registry()`` helper
-5. **Update Documentation** - Document your application's new structure
-6. **Set Up CI/CD** - Configure automated testing in new repo
-7. **Share Feedback** - Report issues or suggest improvements
+1. **Learn Best Practices** - Follow the :doc:`Hello World Tutorial <hello-world-tutorial>`
+2. **Build Advanced Features** - Work through :doc:`Build Your First Agent <build-your-first-agent>`
+3. **Explore CLI** - Try all the unified ``osprey`` commands
+4. **Update Documentation** - Document your application's new structure
+5. **Set Up CI/CD** - Configure automated testing with new imports
+6. **Share Feedback** - Report issues at https://github.com/als-apg/osprey/issues
 
-**Happy coding with Alpha Berkeley Framework v0.7.0!** 🚀
+**Happy coding with Osprey Framework v0.8.0!** 🦅
 
