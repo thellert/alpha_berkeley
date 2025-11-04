@@ -188,7 +188,7 @@ project_root
 
    project_root: ${PROJECT_ROOT}
    # Or hard-coded:
-   project_root: /home/user/alpha_berkeley
+   project_root: /home/user/my-project
 
 **Details:**
 

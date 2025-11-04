@@ -181,7 +181,7 @@ Use ``${VAR_NAME}`` syntax with optional defaults:
 .. code-block:: bash
 
    # .env (project root)
-   PROJECT_ROOT=/home/user/alpha_berkeley
+   PROJECT_ROOT=/home/user/my-project
    ANTHROPIC_API_KEY=sk-ant-...
    LOCAL_PYTHON_VENV=/home/user/venv/bin/python
 

@@ -287,9 +287,9 @@ class KnowledgeCapability(BaseCapability):
 ## 🔗 Quick Links
 
 - **Complete Examples**: See `example_capability.py.j2` and `context_classes.py`
-- **Working Apps**: Generate with `framework init --template hello_world_weather`
-- **Framework Docs**: https://thellert.github.io/alpha_berkeley/
-- **API Reference**: https://thellert.github.io/alpha_berkeley/api_reference/
+- **Working Apps**: Generate with `osprey init --template hello_world_weather`
+- **Framework Docs**: https://als-apg.github.io/osprey/
+- **API Reference**: https://als-apg.github.io/osprey/api_reference/
 
 ---
 

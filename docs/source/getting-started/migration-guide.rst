@@ -69,7 +69,7 @@ Version History
        - Package: ``alpha-berkeley-framework`` → ``osprey-framework``
        - Imports: ``from framework.*`` → ``from osprey.*``
        - CLI: ``framework`` → ``osprey``
-       - Repository: ``thellert/alpha_berkeley`` → ``als-apg/osprey``
+       - Repository: ``als-apg/osprey``
    * - **v0.7.0**
      - Oct 2025
      - 📦 **Pip-installable Architecture**

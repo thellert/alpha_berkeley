@@ -113,8 +113,8 @@ html_theme_options = {
 
 # Repository information for edit buttons
 html_context = {
-    "github_user": "thellert",
-    "github_repo": "alpha_berkeley", 
+    "github_user": "als-apg",
+    "github_repo": "osprey", 
     "github_version": "main",
     "doc_path": "docs/source",
 }

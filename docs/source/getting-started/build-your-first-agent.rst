@@ -59,7 +59,7 @@ This generates a complete, self-contained project with the following structure:
 .. admonition:: New in v0.7+: Template-Based Projects
    :class: version-07plus-change
 
-   Projects are now generated from templates using ``osprey init``. The template code is the canonical reference - you can view it on GitHub at `src/osprey/templates/apps/wind_turbine <https://github.com/thellert/alpha_berkeley/tree/main/src/osprey/templates/apps/wind_turbine>`_.
+   Projects are now generated from templates using ``osprey init``. The template code is the canonical reference - you can view it on GitHub at `src/osprey/templates/apps/wind_turbine <https://github.com/als-apg/osprey/tree/main/src/osprey/templates/apps/wind_turbine>`_.
 
 🎯 What You'll Learn
 --------------------

@@ -194,7 +194,7 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
         db_uri = os.getenv('POSTGRESQL_URI')
         if db_uri is None:
             # Default to local development database
-            db_uri = "postgresql://postgres:postgres@localhost:5432/alpha_berkeley"
+            db_uri = "postgresql://postgres:postgres@localhost:5432/osprey"
             logger.warning(f"No PostgreSQL URI provided, using default: {db_uri}")
 
     # Import required components

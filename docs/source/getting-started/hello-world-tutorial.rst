@@ -122,7 +122,7 @@ The ``mock_weather_api.py`` file provides a deterministic weather data provider 
 
 .. dropdown:: Complete Mock API Implementation
    
-   Full implementation of the mock weather service (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/osprey/templates/apps/hello_world_weather/mock_weather_api.py>`_)
+   Full implementation of the mock weather service (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/mock_weather_api.py>`_)
 
    .. code-block:: python
 
@@ -244,7 +244,7 @@ Provides human-readable summaries for user interfaces and debugging:
 
 .. dropdown:: Complete Weather Context Implementation
    
-   Full context class showing all required methods (`view context class on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/osprey/templates/apps/hello_world_weather/context_classes.py.j2>`_)
+   Full context class showing all required methods (`view context class on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/context_classes.py.j2>`_)
 
    .. code-block:: python
 
@@ -502,7 +502,7 @@ The classifier guide teaches the LLM when to activate your capability based on u
 
 .. dropdown:: Complete Current Weather Capability Implementation
    
-   Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/osprey/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
+   Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
 
    .. code-block:: python
 
@@ -770,7 +770,7 @@ If you need fine control, you can explicitly list all components:
 
 .. dropdown:: Complete Registry Implementation
    
-   Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/thellert/alpha_berkeley/blob/main/src/osprey/templates/apps/hello_world_weather/registry.py.j2>`_)
+   Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/registry.py.j2>`_)
 
    .. code-block:: python
 
