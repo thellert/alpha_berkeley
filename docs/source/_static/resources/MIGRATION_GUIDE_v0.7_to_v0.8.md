@@ -383,6 +383,27 @@ osprey export-config
 
 ## 🐛 Troubleshooting
 
+### Issue: "Registry not initialized" when importing capabilities
+
+**Cause:** Code calls `get_model()` or `get_registry()` at module level (before registry initialization)
+
+**Solution:** Use lazy initialization - call these functions inside functions, not at module level:
+```python
+# ❌ BAD - calls at module import time
+from osprey.models import get_model
+agent = Agent(model=get_model(config))
+
+# ✅ GOOD - lazy initialization
+def get_agent():
+    if not hasattr(get_agent, '_agent'):
+        get_agent._agent = Agent(model=get_model(config))
+    return get_agent._agent
+```
+
+**Note:** In Osprey v0.8.0, model providers are registry components, so `get_model()` requires initialized registry.
+
+---
+
 ### Issue: "ModuleNotFoundError: No module named 'framework'"
 
 **Cause:** Old import statement wasn't updated

@@ -1174,10 +1174,12 @@ def show_status(config_path):
                 # Extract published ports
                 port_list = []
                 for port in ports_raw:
-                    published = port.get("PublishedPort", "")
-                    target = port.get("TargetPort", "")
-                    if published and target:
-                        port_list.append(f"{published}→{target}")
+                    # Ensure port is a dict before calling .get()
+                    if isinstance(port, dict):
+                        published = port.get("PublishedPort", "")
+                        target = port.get("TargetPort", "")
+                        if published and target:
+                            port_list.append(f"{published}→{target}")
                 ports = ", ".join(port_list) if port_list else "-"
             else:
                 ports = "-"
