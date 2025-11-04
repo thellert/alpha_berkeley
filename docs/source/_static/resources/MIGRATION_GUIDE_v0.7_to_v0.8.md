@@ -225,7 +225,52 @@ install_requires=["osprey-framework>=0.8.0"]
 
 ---
 
-### Step 6: Update Documentation Strings (Optional but Recommended)
+### Step 6: Update Docker Compose Configuration (If Using Services)
+
+**If your project uses Docker services (Jupyter, Open WebUI, etc.), update the network name:**
+
+**services/docker-compose.yml.j2:**
+
+```yaml
+# FIND:
+networks:
+  alpha-berkeley-network:
+
+# REPLACE WITH:
+networks:
+  osprey-network:
+```
+
+**Also update network references in service definitions:**
+
+```yaml
+# In each service definition:
+services:
+  my-service:
+    # ...
+    networks:
+      - alpha-berkeley-network  # FIND
+      # →
+      - osprey-network  # REPLACE WITH
+```
+
+**Check these files in your project:**
+- `services/docker-compose.yml.j2`
+- `services/jupyter/docker-compose.yml.j2`
+- `services/open-webui/docker-compose.yml.j2`
+- `services/pipelines/docker-compose.yml.j2`
+
+**After updating:**
+```bash
+# If services are currently running, restart them
+cd services
+docker-compose down
+docker-compose up -d
+```
+
+---
+
+### Step 7: Update Documentation Strings (Optional but Recommended)
 
 **Update brand references in docstrings:**
 
@@ -261,7 +306,7 @@ execution model to provide weather data.
 
 ---
 
-### Step 7: Update README and Documentation (Optional)
+### Step 8: Update README and Documentation (Optional)
 
 If the project has a README.md or documentation:
 
@@ -291,6 +336,9 @@ grep -r "from framework\." . --include="*.py" --exclude-dir=venv --exclude-dir=.
 
 # Should find NOTHING:
 grep -r "alpha-berkeley-framework" . --exclude-dir=venv --exclude-dir=.venv --exclude-dir=build --exclude-dir=dist
+
+# Should find NOTHING (if using Docker services):
+grep -r "alpha-berkeley-network" . --exclude-dir=venv --exclude-dir=.venv --exclude-dir=build --exclude-dir=dist
 
 # Should find your new imports:
 grep -r "from osprey\." . --include="*.py" --exclude-dir=venv --exclude-dir=.venv
@@ -500,6 +548,7 @@ Confirm all items before marking migration complete:
 - [ ] ✅ All `from framework.*` updated to `from osprey.*`
 - [ ] ✅ All `"framework.*` strings updated to `"osprey.*`
 - [ ] ✅ `requirements.txt` and/or `pyproject.toml` updated
+- [ ] ✅ Docker network updated: `alpha-berkeley-network` → `osprey-network` (if applicable)
 - [ ] ✅ No old references found: `grep -r "from framework\." .` returns nothing
 - [ ] ✅ Test imports work: `python -c "from osprey.state import AgentState"`
 - [ ] ✅ CLI works: `osprey --version` shows 0.8.0+
@@ -538,6 +587,7 @@ After successful migration:
 - Package name: `alpha-berkeley-framework` → `osprey-framework`
 - Import paths: `from framework.*` → `from osprey.*`
 - CLI command: `framework` → `osprey`
+- Docker network name: `alpha-berkeley-network` → `osprey-network` (if using services)
 
 **What stayed the same:**
 - All APIs and functionality
