@@ -104,12 +104,14 @@ Documentation Structure
 
    .. code-block:: bibtex
 
-      @article{hellert2025osprey,
-        title={Osprey: A Scalable Framework for the Orchestration of Agentic Systems},
-        author={Hellert, Thorsten and Montenegro, João and Sulc, Antonin},
-        journal={arXiv preprint arXiv:2508.15066},
-        year={2025},
-        url={https://arxiv.org/abs/2508.15066}
+      @misc{hellert2025osprey,
+            title={Osprey: A Scalable Framework for the Orchestration of Agentic Systems}, 
+            author={Thorsten Hellert and João Montenegro and Antonin Sulc},
+            year={2025},
+            eprint={2508.15066},
+            archivePrefix={arXiv},
+            primaryClass={cs.MA},
+            url={https://arxiv.org/abs/2508.15066}, 
       }
 
 .. toctree::

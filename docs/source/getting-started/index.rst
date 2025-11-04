@@ -51,15 +51,15 @@ By following this comprehensive learning path, you'll have:
       **Outcome:** 
       Working dev environment
 
-   .. grid-item-card:: 🔄 1. Upgrading (v0.6.x → v0.7.0)
+   .. grid-item-card:: 🦅 1. Migrating to Osprey v0.8.0
       :link: migration-guide
       :link-type: doc
       :class-header: bg-warning text-white
             
-      Migrate existing applications from embedded structure to pip-installable architecture.
+      Upgrade from Alpha Berkeley to Osprey Framework. Quick rename (v0.7.x) or full migration (v0.6.x).
       
       **Outcome:** 
-      Upgraded application
+      Upgraded to Osprey
 
 .. grid:: 1 1 3 3
    :gutter: 3

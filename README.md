@@ -18,20 +18,23 @@ This work was presented as a contributed oral presentation at [ICALEPCS'25](http
 # Install the framework
 pip install osprey-framework
 
-# Create a new project from a template
+# Recommended: Interactive setup (guides you through everything!)
+osprey
+
+# The interactive menu will:
+# - Help you choose a template with descriptions
+# - Guide you through AI provider and model selection
+# - Automatically detect and configure API keys from your environment
+# - Create a ready-to-use project with smart defaults
+
+# Alternative: Direct command if you know what you want
 osprey init my-weather-agent --template hello_world_weather
-
-# Navigate to your project
 cd my-weather-agent
-
-# Setup environment
-cp .env.example .env
-# Edit .env with your API keys
+# If API keys aren't in your environment, copy and edit .env:
+# cp .env.example .env
 
 # Start the command line chat interface
 osprey chat
-
-# Or use the web interface at http://localhost:8080
 ```
 
 
@@ -55,8 +58,8 @@ osprey chat
 If you use the Alpha Berkeley Framework in your research or projects, please cite our [paper](https://arxiv.org/abs/2508.15066):
 
 ```bibtex
-@misc{hellert2025alphaberkeley,
-      title={Alpha Berkeley: A Scalable Framework for the Orchestration of Agentic Systems}, 
+@misc{hellert2025osprey,
+      title={Osprey: A Scalable Framework for the Orchestration of Agentic Systems}, 
       author={Thorsten Hellert and João Montenegro and Antonin Sulc},
       year={2025},
       eprint={2508.15066},
