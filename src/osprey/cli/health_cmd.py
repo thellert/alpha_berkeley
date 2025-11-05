@@ -78,7 +78,7 @@ class HealthChecker:
             spinner = Spinner("dots", text="[dim]Initializing framework registry...[/dim]", style=Styles.INFO)
             with Live(spinner, console=console, transient=True):
                 if not self.verbose:
-                    with quiet_logger('REGISTRY'):
+                    with quiet_logger(['REGISTRY', 'CONFIG']):
                         initialize_registry()
                 else:
                     initialize_registry()
@@ -527,8 +527,24 @@ class HealthChecker:
 
             # Check each expected service
             for service in deployed_services:
+                # Extract service short name (handle dotted paths like "osprey.jupyter")
+                service_short = str(service).split('.')[-1].lower()
+                
                 # Look for containers matching the service name
-                matching = [c for c in containers if service.lower() in str(c.get("Names", [])).lower()]
+                # Use smart matching to handle underscore/hyphen variations
+                matching = []
+                for c in containers:
+                    names = c.get("Names", [])
+                    if isinstance(names, list):
+                        names_str = " ".join(str(n) for n in names).lower()
+                    else:
+                        names_str = str(names).lower()
+                    
+                    # Check for match (handles both underscore and hyphen)
+                    if (service_short in names_str or 
+                        service_short.replace('_', '-') in names_str or
+                        service_short.replace('-', '_') in names_str):
+                        matching.append(c)
 
                 if matching:
                     container = matching[0]
@@ -588,9 +604,9 @@ class HealthChecker:
         from osprey.registry import get_registry
 
         try:
-            # Suppress REGISTRY logger unless in verbose mode
+            # Suppress REGISTRY and CONFIG loggers unless in verbose mode
             if not self.verbose:
-                with quiet_logger('REGISTRY'):
+                with quiet_logger(['REGISTRY', 'CONFIG']):
                     registry = get_registry()
                     provider_class = registry.get_provider(provider_name)
             else:
@@ -706,10 +722,10 @@ class HealthChecker:
             test_message = "Reply with exactly: OK"
 
             # Call get_chat_completion with a timeout
-            # Suppress REGISTRY logger unless in verbose mode
+            # Suppress REGISTRY and CONFIG loggers unless in verbose mode
             try:
                 if not self.verbose:
-                    with quiet_logger('REGISTRY'):
+                    with quiet_logger(['REGISTRY', 'CONFIG']):
                         response = get_chat_completion(
                             message=test_message,
                             provider=provider,
@@ -818,7 +834,7 @@ class HealthChecker:
         panel = Panel(
             "\n".join(panel_content),
             title="🏥 Osprey Health Check Results",
-            border_style="dim cyan",
+            border_style=Styles.BORDER_DIM,
             expand=False,
             padding=(1, 2)
         )

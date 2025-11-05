@@ -10,7 +10,9 @@ All existing functionality is preserved without modification.
 
 import click
 from pathlib import Path
-from rich.console import Console
+
+from osprey.cli.styles import console, Styles
+from osprey.utils.log_filter import quiet_logger
 
 # Import existing container manager functions (Phase 1.5 refactored)
 from osprey.deployment.container_manager import (
@@ -24,9 +26,6 @@ from osprey.deployment.container_manager import (
 )
 
 from .project_utils import resolve_config_path
-
-
-console = Console()
 
 
 @click.command()
@@ -113,7 +112,10 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
       $ osprey deploy rebuild --dev
     """
 
-    console.print(f"Service management: [bold]{action}[/bold]")
+    # Only show action message for operations that have multiple steps
+    # Status check is quick, don't need the extra line
+    if action != "status":
+        console.print(f"Service management: [bold]{action}[/bold]")
 
     try:
         # Resolve config path from project and config args
@@ -123,8 +125,8 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
         from pathlib import Path
         config_file = Path(config_path)
         if not config_file.exists():
-            console.print(f"\n❌ Configuration file not found: [cyan]{config_path}[/cyan]", style="red")
-            console.print(f"\n💡 Are you in a project directory?", style="yellow")
+            console.print(f"\n❌ Configuration file not found: [accent]{config_path}[/accent]", style=Styles.ERROR)
+            console.print(f"\n💡 Are you in a project directory?", style=Styles.WARNING)
             console.print(f"   Current directory: [dim]{Path.cwd()}[/dim]\n")
             
             # Look for nearby project directories with config.yml
@@ -143,16 +145,16 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
                 pass  # Skip if can't read directory
             
             if nearby_projects:
-                console.print(f"   Found project(s) in current directory:", style="yellow")
+                console.print(f"   Found project(s) in current directory:", style=Styles.WARNING)
                 for proj in nearby_projects[:5]:  # Limit to 5 suggestions
-                    console.print(f"     • [cyan]cd {proj} && osprey deploy {action}[/cyan]")
-                    console.print(f"       or: [cyan]osprey deploy {action} --project {proj}[/cyan]")
+                    console.print(f"     • [command]cd {proj} && osprey deploy {action}[/command] or: ")
+                    console.print(f"       [command]osprey deploy {action} --project {proj}[/command]")
             else:
-                console.print(f"   Try:", style="yellow")
+                console.print(f"   Try:", style=Styles.WARNING)
                 console.print(f"     • Navigate to your project directory first")
-                console.print(f"     • Use [cyan]--project[/cyan] flag to specify project location")
+                console.print(f"     • Use [command]--project[/command] flag to specify project location")
             
-            console.print(f"\n   Or use interactive menu: [cyan]osprey[/cyan]\n")
+            console.print(f"\n   Or use interactive menu: [command]osprey[/command]\n")
             raise click.Abort()
 
         # Dispatch to existing container_manager functions
@@ -189,15 +191,15 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
         # We don't add extra output to avoid changing user experience
 
     except KeyboardInterrupt:
-        console.print("\n⚠️  Operation cancelled by user", style="yellow")
+        console.print("\n⚠️  Operation cancelled by user", style=Styles.WARNING)
         raise click.Abort()
     except Exception as e:
-        console.print(f"❌ Deployment failed: {e}", style="red")
+        console.print(f"❌ Deployment failed: {e}", style=Styles.ERROR)
         # Show more details in verbose mode
         import os
         if os.environ.get("DEBUG"):
             import traceback
-            console.print(traceback.format_exc(), style="dim")
+            console.print(traceback.format_exc(), style=Styles.DIM)
         raise click.Abort()
 
 

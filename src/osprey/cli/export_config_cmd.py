@@ -8,12 +8,10 @@ configuration options are available when creating new projects.
 import click
 import yaml
 from pathlib import Path
-from rich.console import Console
 from rich.syntax import Syntax
 from jinja2 import Template
 
-
-console = Console()
+from osprey.cli.styles import console, Styles
 
 
 @click.command(name="export-config")
@@ -67,11 +65,11 @@ def export_config(project: str, output: str, format: str):
         if not template_path.exists():
             console.print(
                 "❌ Could not locate osprey configuration template.",
-                style="red"
+                style=Styles.ERROR
             )
             console.print(
                 f"   Expected at: {template_path}",
-                style="dim"
+                style=Styles.DIM
             )
             raise click.Abort()
 
@@ -127,14 +125,14 @@ def export_config(project: str, output: str, format: str):
             )
 
     except KeyboardInterrupt:
-        console.print("\n⚠️  Operation cancelled", style="yellow")
+        console.print("\n⚠️  Operation cancelled", style=Styles.WARNING)
         raise click.Abort()
     except Exception as e:
-        console.print(f"❌ Failed to export configuration: {e}", style="red")
+        console.print(f"❌ Failed to export configuration: {e}", style=Styles.ERROR)
         import os
         if os.environ.get("DEBUG"):
             import traceback
-            console.print(traceback.format_exc(), style="dim")
+            console.print(traceback.format_exc(), style=Styles.DIM)
         raise click.Abort()
 
 

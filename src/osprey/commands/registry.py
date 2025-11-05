@@ -19,7 +19,8 @@ and extensible command registration patterns for framework and application-speci
 import asyncio
 import re
 from typing import Dict, List, Optional, Tuple, Any, Union
-from rich.console import Console
+
+from osprey.cli.styles import console, Styles
 
 from .types import (
     Command, 
@@ -98,7 +99,7 @@ class CommandRegistry:
     def __init__(self):
         self.commands: Dict[str, Command] = {}
         self.aliases: Dict[str, str] = {}  # alias -> command_name mapping
-        self.console = Console()
+        self.console = console  # Use themed console from styles.py
 
         # Auto-register default commands
         self._register_default_commands()
@@ -217,29 +218,29 @@ class CommandRegistry:
         parsed = parse_command_line(command_line)
 
         if not parsed.is_valid:
-            self.console.print(f"❌ {parsed.error_message}", style="red")
+            self.console.print(f"❌ {parsed.error_message}", style=Styles.ERROR)
             return CommandResult.HANDLED
 
         command = self.get_command(parsed.command_name)
         if not command:
-            self.console.print(f"❌ Unknown command: /{parsed.command_name}", style="red")
-            self.console.print("💡 Type /help to see available commands", style="dim")
+            self.console.print(f"❌ Unknown command: /{parsed.command_name}", style=Styles.ERROR)
+            self.console.print("💡 Type /help to see available commands", style=Styles.DIM)
             return CommandResult.HANDLED
 
         # Validate interface restrictions
         if not command.is_valid_for_interface(context.interface_type):
-            self.console.print(f"❌ Command /{command.name} not available in {context.interface_type}", style="red")
+            self.console.print(f"❌ Command /{command.name} not available in {context.interface_type}", style=Styles.ERROR)
             return CommandResult.HANDLED
 
         # Validate options
         if not command.validate_option(parsed.option):
             if command.requires_args:
-                self.console.print(f"❌ Command /{command.name} requires an argument", style="red")
+                self.console.print(f"❌ Command /{command.name} requires an argument", style=Styles.ERROR)
             elif command.valid_options:
                 valid_opts = ", ".join(command.valid_options)
-                self.console.print(f"❌ Invalid option '{parsed.option}' for /{command.name}. Valid options: {valid_opts}", style="red")
+                self.console.print(f"❌ Invalid option '{parsed.option}' for /{command.name}. Valid options: {valid_opts}", style=Styles.ERROR)
             else:
-                self.console.print(f"❌ Invalid option for /{command.name}", style="red")
+                self.console.print(f"❌ Invalid option for /{command.name}", style=Styles.ERROR)
             return CommandResult.HANDLED
 
         try:
@@ -259,12 +260,12 @@ class CommandRegistry:
                 return CommandResult.HANDLED
 
         except CommandExecutionError as e:
-            self.console.print(f"❌ {e}", style="red")
+            self.console.print(f"❌ {e}", style=Styles.ERROR)
             if e.suggestion:
-                self.console.print(f"💡 {e.suggestion}", style="dim")
+                self.console.print(f"💡 {e.suggestion}", style=Styles.DIM)
             return CommandResult.HANDLED
         except Exception as e:
-            self.console.print(f"❌ Error executing /{command.name}: {e}", style="red")
+            self.console.print(f"❌ Error executing /{command.name}: {e}", style=Styles.ERROR)
             return CommandResult.HANDLED
 
     def _register_default_commands(self):

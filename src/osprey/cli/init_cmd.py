@@ -110,7 +110,7 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
         if detected_env:
             console.print(f"  🔑 Detected {len(detected_env)} environment variable(s) from system:")
             for env_var in detected_env.keys():
-                console.print(f"     • {env_var}", style="dim")
+                console.print(f"     • {env_var}", style=Styles.DIM)
 
         # Handle existing directory
         output_path = Path(output_dir).resolve()
@@ -174,7 +174,7 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
     except Exception as e:
         console.print(f"❌ Unexpected error: {e}", style=Styles.ERROR)
         import traceback
-        console.print(traceback.format_exc(), style="dim")
+        console.print(traceback.format_exc(), style=Styles.DIM)
         raise click.Abort()
 
 

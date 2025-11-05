@@ -100,7 +100,7 @@ def show_color_swatches(theme: ColorTheme):
     colors_table.add_column("Color", style="bold", width=20)
     colors_table.add_column("Hex", width=10)
     colors_table.add_column("Swatch", width=10)
-    colors_table.add_column("Usage", style="dim")
+    colors_table.add_column("Usage", style=Styles.DIM)
 
     core_colors = [
         ("PRIMARY", theme.primary, "Brand identity, headers, selections"),
@@ -123,7 +123,7 @@ def show_color_swatches(theme: ColorTheme):
     fixed_table.add_column(width=20)
     fixed_table.add_column(width=10)
     fixed_table.add_column(width=10)
-    fixed_table.add_column(style="dim")
+    fixed_table.add_column(style=Styles.DIM)
 
     fixed_colors = [
         ("SUCCESS", theme.success, "Success messages, confirmations"),
@@ -144,7 +144,7 @@ def show_color_swatches(theme: ColorTheme):
     derived_table.add_column(width=20)
     derived_table.add_column(width=10)
     derived_table.add_column(width=10)
-    derived_table.add_column(style="dim")
+    derived_table.add_column(style=Styles.DIM)
 
     derived = [
         ("PRIMARY_DARK", theme.primary_dark, "85% brightness"),

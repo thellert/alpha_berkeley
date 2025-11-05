@@ -22,6 +22,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
+from osprey.cli.styles import Styles
+
 from .types import (
     Command, 
     CommandResult, 
@@ -75,10 +77,10 @@ def register_cli_commands(registry) -> None:
                 if cmd.aliases:
                     panel_content += f"\n\nAliases: {', '.join([f'/{alias}' for alias in cmd.aliases])}"
 
-                panel = Panel(panel_content, title="Command Help", border_style="blue")
+                panel = Panel(panel_content, title="Command Help", border_style=Styles.BORDER_ACCENT)
                 console.print(panel)
             else:
-                console.print(f"❌ Unknown command: /{args.strip()}", style="red")
+                console.print(f"❌ Unknown command: /{args.strip()}", style=Styles.ERROR)
         else:
             # Show all commands organized by category
             commands_by_category = {}
@@ -90,8 +92,8 @@ def register_cli_commands(registry) -> None:
 
             for category, commands in commands_by_category.items():
                 table = Table(title=f"{category.value.title()} Commands", show_header=True)
-                table.add_column("Command", style="cyan", width=20)
-                table.add_column("Description", style="white")
+                table.add_column("Command", style=Styles.ACCENT, width=20)
+                table.add_column("Description", style=Styles.PRIMARY)
 
                 for cmd in sorted(commands, key=lambda x: x.name):
                     aliases_text = f" ({', '.join(cmd.aliases)})" if cmd.aliases else ""
@@ -100,7 +102,7 @@ def register_cli_commands(registry) -> None:
                 console.print(table)
                 console.print()
 
-            console.print("💡 Use /help <command> for detailed help", style="dim")
+            console.print("💡 Use /help <command> for detailed help", style=Styles.DIM)
 
         return CommandResult.HANDLED
 
@@ -113,7 +115,7 @@ def register_cli_commands(registry) -> None:
     def exit_handler(args: str, context: CommandContext) -> CommandResult:
         """Exit the CLI."""
         console = context.console or Console()
-        console.print("👋 Goodbye!", style="yellow")
+        console.print("👋 Goodbye!", style=Styles.WARNING)
         return CommandResult.EXIT
 
     def config_handler(args: str, context: CommandContext) -> CommandResult:
@@ -134,13 +136,13 @@ def register_cli_commands(registry) -> None:
                 panel = Panel(
                     "\n".join(config_info),
                     title="Current Configuration",
-                    border_style="green"
+                    border_style=Styles.SUCCESS
                 )
                 console.print(panel)
             else:
-                console.print("📋 Configuration loaded but no details available", style="yellow")
+                console.print("📋 Configuration loaded but no details available", style=Styles.WARNING)
         else:
-            console.print("❌ No configuration available", style="red")
+            console.print("❌ No configuration available", style=Styles.ERROR)
 
         return CommandResult.HANDLED
 
@@ -152,7 +154,7 @@ def register_cli_commands(registry) -> None:
             # Import and run the health checker with full diagnostics
             from osprey.cli.health_cmd import HealthChecker
 
-            console.print("🔍 Running comprehensive system health check...", style="blue")
+            console.print("🔍 Running comprehensive system health check...", style=Styles.INFO)
             console.print()
 
             # Create health checker with full diagnostics enabled
@@ -202,13 +204,13 @@ def register_cli_commands(registry) -> None:
                 panel = Panel(
                     "\n".join(session_info),
                     title=f"Current Session ({context.interface_type})",
-                    border_style="dim cyan"
+                    border_style=Styles.BORDER_DIM
                 )
                 console.print(panel)
 
         except Exception as e:
-            console.print(f"❌ Error running health check: {e}", style="red")
-            console.print("💡 Try running 'osprey health --full' directly", style="dim")
+            console.print(f"❌ Error running health check: {e}", style=Styles.ERROR)
+            console.print("💡 Try running 'osprey health --full' directly", style=Styles.DIM)
 
         return CommandResult.HANDLED
 
@@ -394,7 +396,7 @@ def register_service_commands(registry) -> None:
         """Handle log viewer command."""
         if not context.service_instance:
             console = context.console or Console()
-            console.print("❌ Log viewer not available in this context", style="red")
+            console.print("❌ Log viewer not available in this context", style=Styles.ERROR)
             return CommandResult.HANDLED
 
         # Delegate to service-specific log handling
@@ -403,7 +405,7 @@ def register_service_commands(registry) -> None:
             return CommandResult.HANDLED
         else:
             console = context.console or Console()
-            console.print("❌ Log viewer not implemented", style="red")
+            console.print("❌ Log viewer not implemented", style=Styles.ERROR)
             return CommandResult.HANDLED
 
     registry.register(Command(

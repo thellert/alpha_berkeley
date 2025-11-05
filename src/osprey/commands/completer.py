@@ -21,6 +21,8 @@ from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import HTML
 
+from osprey.cli.styles import get_active_theme
+
 from .registry import get_command_registry
 from .types import CommandContext
 
@@ -95,26 +97,29 @@ class UnifiedCommandCompleter(Completer):
             command = self.registry.get_command(cmd_name)
 
             if command:
-                # Convert Rich colors to hex values that prompt_toolkit understands
+                # Get colors from active theme
+                theme = get_active_theme()
+                
+                # Map categories to theme colors
                 category_colors = {
-                    "cli": "#5fafff",        # bright_blue equivalent
-                    "agent": "#5fff5f",      # green equivalent  
-                    "service": "#ffff5f",    # yellow equivalent
-                    "custom": "#ff5fff"      # magenta equivalent
+                    "cli": theme.info,        # info/blue for CLI commands
+                    "agent": theme.success,   # success/green for agent commands  
+                    "service": theme.warning, # warning/yellow for service commands
+                    "custom": theme.accent    # accent/pink for custom commands
                 }
 
-                color = category_colors.get(command.category.value, "#ffffff")
+                color = category_colors.get(command.category.value, theme.text_primary)
 
-                # Use actual dim cyan hex color (#5f8787) instead of Rich color name
+                # Use theme's dim text color for descriptions
                 display_html = (
                     f'<completion style="fg:{color}">{completion}</completion> '
-                    f'<description style="fg:#5f8787">- {command.description}</description>'
+                    f'<description style="fg:{theme.text_dim}">- {command.description}</description>'
                 )
 
-                # Add syntax hint using dim cyan hex color
+                # Add syntax hint using theme's dim text color
                 if command.valid_options:
                     options_hint = f" [{'/'.join(command.valid_options[:2])}{'...' if len(command.valid_options) > 2 else ''}]"
-                    display_html += f'<syntax style="fg:#5f8787 italic">{options_hint}</syntax>'
+                    display_html += f'<syntax style="fg:{theme.text_dim} italic">{options_hint}</syntax>'
 
                 yield Completion(
                     text=completion,
