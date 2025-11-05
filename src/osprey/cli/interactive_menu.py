@@ -32,7 +32,7 @@ import shutil
 import sys
 import yaml
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -66,18 +66,34 @@ custom_style = get_questionary_style()
 # BANNER AND BRANDING
 # ============================================================================
 
-def show_banner(context: str = "interactive"):
+def show_banner(context: str = "interactive", config_path: Optional[str] = None):
     """Display the unified osprey banner with ASCII art.
-
+    
     Args:
         context: Display context - "interactive", "chat", or "welcome"
+        config_path: Optional path to config file for custom banner
     """
     from rich.text import Text
-
+    from osprey.utils.config import get_config_value
+    from pathlib import Path
+    
     console.print()
-
-    # Unified ASCII art banner used across all CLI interfaces
-    banner_text = """
+    
+    # Try to load custom banner if in a project directory
+    banner_text = None
+    
+    try:
+        # Check if config exists before trying to load
+        if config_path:
+            banner_text = get_config_value("cli.banner", None, config_path)
+        elif (Path.cwd() / "config.yml").exists():
+            banner_text = get_config_value("cli.banner", None)
+    except Exception:
+        pass  # Fallback to default - CLI should always work
+    
+    # Default banner if not configured
+    if banner_text is None:
+        banner_text = """
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║                                                           ║
@@ -91,10 +107,10 @@ def show_banner(context: str = "interactive"):
     ║                                                           ║
     ║      Command Line Interface for the Osprey Framework      ║
     ╚═══════════════════════════════════════════════════════════╝
-    """
-
+        """
+    
     console.print(Text(banner_text, style=ThemeConfig.get_banner_style()))
-
+    
     # Context-specific subtitle
     if context == "interactive":
         console.print(f"    [{Styles.HEADER}]Interactive Menu System[/{Styles.HEADER}]")
@@ -103,7 +119,7 @@ def show_banner(context: str = "interactive"):
         msg = Messages.info("💡 Type 'bye' or 'end' to exit")
         console.print(f"    {msg}")
         console.print(f"    [{Styles.ACCENT}]⚡ Use slash commands (/) for quick actions - try /help[/{Styles.ACCENT}]")
-
+    
     console.print()
 
 

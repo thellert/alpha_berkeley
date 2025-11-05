@@ -199,6 +199,38 @@ Show help message for any command.
    osprey chat --help
    osprey export-config --help
 
+CLI Customization
+=================
+
+You can customize the CLI appearance through the ``cli`` section in your project's ``config.yml``.
+
+**Example - Custom colors:**
+
+.. code-block:: yaml
+
+   cli:
+     theme: "custom"
+     custom_theme:
+       primary: "#4A90E2"      # Brand blue
+       success: "#7ED321"      # Success green
+       accent: "#F5A623"       # Accent orange
+       command: "#9013FE"      # Command purple
+       path: "#50E3C2"         # Path teal
+       info: "#BD10E0"         # Info magenta
+
+**Example - Custom banner:**
+
+.. code-block:: yaml
+
+   cli:
+     theme: "default"
+     banner: |
+       ╔════════════════════════════════════════╗
+       ║      MY PROJECT NAME                   ║
+       ╚════════════════════════════════════════╝
+
+All menu items, prompts, and messages will use your custom colors and banner. The default theme is used if no ``cli`` section is present.
+
 Commands
 ========
 

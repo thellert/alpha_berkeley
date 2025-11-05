@@ -209,6 +209,34 @@ pipeline:
   startup_hooks: []
 
 # ============================================================
+# CLI CONFIGURATION
+# ============================================================
+# Customize the command-line interface appearance
+
+cli:
+  # Theme selection - Options: default | vulcan | custom
+  theme: "default"
+  
+  # Custom theme colors (only used when theme: custom)
+  # Uncomment and modify to create your own color scheme
+  # custom_theme:
+  #   primary: "#C75F71"     # Main brand color
+  #   success: "#9988A1"     # Success messages
+  #   accent: "#F0B8B8"      # Interactive elements
+  #   command: "#9988A1"     # Shell commands
+  #   path: "#A2AE9D"        # File paths
+  #   info: "#9988A1"        # Info messages
+  
+  # Custom ASCII banner (optional)
+  # Uncomment to override the default Osprey banner
+  # banner: |
+  #   Your custom ASCII art here
+  
+
+# Note: Theme system logging uses the existing 'base' logger color
+# No additional logging configuration needed
+
+# ============================================================
 # DEVELOPMENT & DEBUGGING
 # ============================================================
 

@@ -80,6 +80,15 @@ def cli(ctx):
       osprey health                   Check system health
       osprey export-config            View osprey defaults
     """
+    # Initialize theme from config if available (best-effort, silent failure)
+    try:
+        from .styles import initialize_theme_from_config
+        initialize_theme_from_config()
+    except Exception:
+        # Silent failure - default theme will be used
+        # CLI must work even if theme loading fails
+        pass
+    
     # NEW: If no command provided, launch interactive menu
     if ctx.invoked_subcommand is None:
         from .interactive_menu import launch_tui

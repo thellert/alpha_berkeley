@@ -12,9 +12,14 @@ Design Philosophy:
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 from rich.console import Console
 from rich.theme import Theme
+
+from osprey.utils.logger import get_logger
+
+logger = get_logger("base")
 
 try:
     from prompt_toolkit.key_binding import KeyBindings
@@ -115,6 +120,15 @@ class ColorTheme:
 # Default Osprey theme (purple-teal)
 OSPREY_THEME = ColorTheme()
 
+# Vulcan theme (default Osprey theme - branded name)
+VULCAN_THEME = ColorTheme()
+
+# Theme registry for easy lookup
+THEME_REGISTRY = {
+    "default": VULCAN_THEME,
+    "vulcan": VULCAN_THEME,
+}
+
 # Additional themes can be defined here
 # Example: OCEAN_THEME = ColorTheme(primary="#0077be", accent="#00ccaa", ...)
 
@@ -142,6 +156,74 @@ def set_theme(theme: ColorTheme):
     # Rebuild theme-dependent objects
     console = Console(theme=_build_rich_theme(theme))
     custom_style = _build_questionary_style(theme)
+
+
+def load_theme_from_config(config_path: Optional[str] = None) -> ColorTheme:
+    """Load and apply theme from configuration file.
+    
+    Args:
+        config_path: Optional path to config file (uses default if None)
+    
+    Returns:
+        The loaded ColorTheme instance
+    
+    Examples:
+        >>> # Load theme from default config
+        >>> theme = load_theme_from_config()
+        
+        >>> # Load theme from specific config
+        >>> theme = load_theme_from_config("/path/to/config.yml")
+    """
+    from osprey.utils.config import get_config_value
+    
+    # Get theme name from config (default to "default")
+    theme_name = get_config_value("cli.theme", "default", config_path)
+    
+    # Handle custom theme
+    if theme_name == "custom":
+        custom_colors = get_config_value("cli.custom_theme", {}, config_path)
+        if custom_colors:
+            try:
+                # Validate hex colors before creating theme
+                for key, value in custom_colors.items():
+                    if not isinstance(value, str) or not value.startswith('#'):
+                        logger.warning(f"Invalid color format for {key}: {value}, using default")
+                        return VULCAN_THEME
+                
+                # Create custom theme from config
+                theme = ColorTheme(**custom_colors)
+                return theme
+            except Exception as e:
+                logger.warning(f"Failed to create custom theme: {e}, using default")
+                return VULCAN_THEME
+        else:
+            logger.warning("Custom theme selected but no custom_theme config found, using default")
+            theme_name = "default"
+    
+    # Load predefined theme
+    theme = THEME_REGISTRY.get(theme_name)
+    if theme is None:
+        logger.warning(f"Unknown theme '{theme_name}', using default")
+        theme = VULCAN_THEME
+    
+    return theme
+
+
+def initialize_theme_from_config(config_path: Optional[str] = None):
+    """Initialize and apply theme from configuration.
+    
+    This should be called at CLI startup to apply the configured theme.
+    
+    Args:
+        config_path: Optional path to config file
+    """
+    try:
+        theme = load_theme_from_config(config_path)
+        set_theme(theme)
+        logger.debug(f"Applied theme from configuration")
+    except Exception as e:
+        logger.debug(f"Failed to load theme from config: {e}, using default")
+        set_theme(VULCAN_THEME)
 
 
 def _build_rich_theme(theme: ColorTheme) -> Theme:
@@ -521,8 +603,12 @@ __all__ = [
     # Theme management
     'ColorTheme',
     'OSPREY_THEME',
+    'VULCAN_THEME',
+    'THEME_REGISTRY',
     'get_active_theme',
     'set_theme',
+    'load_theme_from_config',
+    'initialize_theme_from_config',
 
     # Backwards compatibility
     'OspreyColors',
