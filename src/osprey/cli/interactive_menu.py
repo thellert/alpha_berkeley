@@ -75,6 +75,7 @@ def show_banner(context: str = "interactive", config_path: Optional[str] = None)
     """
     from rich.text import Text
     from osprey.utils.config import get_config_value
+    from osprey.utils.log_filter import quiet_logger
     from pathlib import Path
     
     console.print()
@@ -84,10 +85,12 @@ def show_banner(context: str = "interactive", config_path: Optional[str] = None)
     
     try:
         # Check if config exists before trying to load
-        if config_path:
-            banner_text = get_config_value("cli.banner", None, config_path)
-        elif (Path.cwd() / "config.yml").exists():
-            banner_text = get_config_value("cli.banner", None)
+        # Suppress config loading messages in interactive menu
+        with quiet_logger(['REGISTRY', 'CONFIG']):
+            if config_path:
+                banner_text = get_config_value("cli.banner", None, config_path)
+            elif (Path.cwd() / "config.yml").exists():
+                banner_text = get_config_value("cli.banner", None)
     except Exception:
         pass  # Fallback to default - CLI should always work
     
@@ -465,8 +468,7 @@ def show_main_menu() -> str | None:
         # Standard menu options
         choices.extend([
             Choice("[+] Create new project (interactive)", value='init_interactive'),
-            Choice("[?] Show init command syntax", value='init_help'),
-            Choice("[?] Show main help", value='help'),
+            Choice("[?] Help", value='help'),
             Choice("[x] Exit", value='exit')
         ])
 
@@ -493,6 +495,7 @@ def show_main_menu() -> str | None:
                 Choice("[>] deploy      - Manage services (web UIs)", value='deploy'),
                 Choice("[>] health      - Run system health check", value='health'),
                 Choice("[>] config      - Show configuration", value='config'),
+                Choice("[>] registry    - Show registry contents", value='registry'),
                 Choice("[+] init        - Create new project", value='init_interactive'),
                 Choice("[?] help        - Show all commands", value='help'),
                 Choice("[x] exit        - Exit CLI", value='exit')
@@ -1285,6 +1288,7 @@ def handle_project_selection(project_path: Path):
                 Choice("[>] deploy      - Manage services (web UIs)", value='deploy'),
                 Choice("[>] health      - Run system health check", value='health'),
                 Choice("[>] config      - Show configuration", value='config'),
+                Choice("[>] registry    - Show registry contents", value='registry'),
                 Choice("[<] back        - Return to main menu", value='back'),
             ],
             style=custom_style,
@@ -1303,6 +1307,9 @@ def handle_project_selection(project_path: Path):
             handle_health_action(project_path=project_path)
         elif action == 'config':
             handle_export_action(project_path=project_path)
+        elif action == 'registry':
+            from osprey.cli.registry_cmd import handle_registry_action
+            handle_registry_action(project_path=project_path)
 
         # After action completes, loop continues and shows project menu again
 
@@ -1411,9 +1418,11 @@ def handle_deploy_action(project_path: Path | None = None):
         choices=[
             Choice("[^] up      - Start all services", value='up'),
             Choice("[v] down    - Stop all services", value='down'),
+            Choice("[i] status  - Show service status", value='status'),
             Choice("[*] restart - Restart all services", value='restart'),
             Choice("[+] build   - Build/prepare compose files only", value='build'),
-            Choice("[i] status  - Show service status", value='status'),
+            Choice("[R] rebuild - Clean, rebuild, and restart services", value='rebuild'),
+            Choice("[X] clean   - Remove containers and volumes (WARNING: destructive)", value='clean'),
             Choice("[<] back    - Back to main menu", value='back'),
         ],
         style=custom_style,
@@ -1441,6 +1450,58 @@ def handle_deploy_action(project_path: Path | None = None):
         original_dir = None
 
     try:
+        # Confirm destructive operations
+        if action == 'clean':
+            console.print("\n[bold red]⚠️  WARNING: Destructive Operation[/bold red]")
+            console.print("\n[warning]This will permanently delete:[/warning]")
+            console.print("  • All containers for this project")
+            console.print("  • All volumes (including databases and stored data)")
+            console.print("  • All networks created by compose")
+            console.print("  • Container images built for this project")
+            console.print("\n[dim]This action cannot be undone![/dim]\n")
+            
+            confirm = questionary.confirm(
+                "Are you sure you want to proceed?",
+                default=False,
+                style=custom_style
+            ).ask()
+            
+            if not confirm:
+                console.print(f"\n{Messages.warning('Operation cancelled')}")
+                input("\nPress ENTER to continue...")
+                if original_dir:
+                    try:
+                        os.chdir(original_dir)
+                    except (OSError, PermissionError):
+                        pass
+                return
+        
+        elif action == 'rebuild':
+            console.print("\n[bold yellow]⚠️  Rebuild Operation[/bold yellow]")
+            console.print("\n[warning]This will:[/warning]")
+            console.print("  • Stop and remove all containers")
+            console.print("  • Delete all volumes (data will be lost)")
+            console.print("  • Remove container images")
+            console.print("  • Rebuild everything from scratch")
+            console.print("  • Start services again")
+            console.print("\n[dim]Any data stored in volumes will be lost![/dim]\n")
+            
+            confirm = questionary.confirm(
+                "Proceed with rebuild?",
+                default=False,
+                style=custom_style
+            ).ask()
+            
+            if not confirm:
+                console.print(f"\n{Messages.warning('Rebuild cancelled')}")
+                input("\nPress ENTER to continue...")
+                if original_dir:
+                    try:
+                        os.chdir(original_dir)
+                    except (OSError, PermissionError):
+                        pass
+                return
+        
         # Build the osprey deploy command
         # Use 'osprey' command directly to avoid module import warnings
         cmd = ["osprey", "deploy", action]
@@ -1458,12 +1519,19 @@ def handle_deploy_action(project_path: Path | None = None):
             console.print("\n[bold]Restarting services...[/bold]")
         elif action == 'build':
             console.print("\n[bold]Building compose files...[/bold]")
+        elif action == 'rebuild':
+            console.print("\n[bold]Rebuilding services (clean + build + start)...[/bold]")
+        elif action == 'clean':
+            console.print("\n[bold red]⚠️  Cleaning deployment...[/bold red]")
         elif action == 'status':
             console.print("\n[bold]Service Status:[/bold]")
 
         try:
             # Run subprocess with timeout (5 minutes for deploy operations)
-            result = subprocess.run(cmd, cwd=project_path or Path.cwd(), timeout=300)
+            # Set environment to suppress config/registry warnings in subprocess
+            env = os.environ.copy()
+            env['OSPREY_QUIET'] = '1'  # Signal to suppress non-critical warnings
+            result = subprocess.run(cmd, cwd=project_path or Path.cwd(), timeout=300, env=env)
         except subprocess.TimeoutExpired:
             console.print(f"\n{Messages.error('Command timed out after 5 minutes')}")
             console.print(Messages.warning("The operation took too long. Check your container runtime."))
@@ -1484,6 +1552,10 @@ def handle_deploy_action(project_path: Path | None = None):
                 console.print(f"\n{Messages.success('Services restarted')}")
             elif action == 'build':
                 console.print(f"\n{Messages.success('Compose files built')}")
+            elif action == 'rebuild':
+                console.print(f"\n{Messages.success('Services rebuilt and started')}")
+            elif action == 'clean':
+                console.print(f"\n{Messages.success('Deployment cleaned')}")
         else:
             console.print(f"\n{Messages.warning(f'Command exited with code {result.returncode}')}")
 
@@ -1523,10 +1595,13 @@ def handle_health_action(project_path: Path | None = None):
 
     try:
         from osprey.cli.health_cmd import HealthChecker
+        from osprey.utils.log_filter import quiet_logger
 
         # Create and run health checker (full mode by default)
-        checker = HealthChecker(verbose=False, full=True)
-        success = checker.check_all()
+        # Suppress config/registry initialization messages
+        with quiet_logger(['REGISTRY', 'CONFIG']):
+            checker = HealthChecker(verbose=False, full=True)
+            success = checker.check_all()
 
         if success:
             console.print(f"\n{Messages.success('Health check completed successfully')}")
@@ -1679,48 +1754,6 @@ Deploy web services:
     input("Press ENTER to continue...")
 
 
-def handle_init_help_action():
-    """Show init command syntax."""
-    help_text = """
-# Osprey Init Command
-
-## Syntax
-
-    osprey init <project-name> [options]
-
-## Options
-
-- `--template` - Template to use (minimal, hello_world_weather, wind_turbine)
-- `--output-dir` - Output directory (default: current directory)
-- `--registry-style` - Registry style (compact, explicit)
-
-## Examples
-
-Create minimal project:
-    osprey init my-agent
-
-Create with specific template:
-    osprey init weather-app --template hello_world_weather
-
-## Interactive Mode
-
-For an interactive guided setup, use:
-    osprey
-
-Then select "Create new project (interactive)"
-
-"""
-    console.print()
-    console.print(Panel(
-        Markdown(help_text),
-        title="[header]Init Command Help[/header]",
-        border_style=ThemeConfig.get_border_style(),
-        width=80
-    ))
-    console.print()
-    input("Press ENTER to continue...")
-
-
 # ============================================================================
 # NAVIGATION LOOP
 # ============================================================================
@@ -1759,10 +1792,11 @@ def navigation_loop():
             handle_health_action()
         elif action == 'config':
             handle_export_action()
+        elif action == 'registry':
+            from osprey.cli.registry_cmd import handle_registry_action
+            handle_registry_action()
         elif action == 'help':
             handle_help_action()
-        elif action == 'init_help':
-            handle_init_help_action()
 
 
 # ============================================================================

@@ -24,7 +24,9 @@ try:
 except (RuntimeError, ImportError):
     get_config = None
 
-logger = logging.getLogger(__name__)
+# Use standard logging (not get_logger) to avoid circular imports with logger.py
+# The short name 'CONFIG' enables easy filtering: quiet_logger(['REGISTRY', 'CONFIG'])
+logger = logging.getLogger('CONFIG')
 
 
 class ConfigBuilder:
@@ -166,7 +168,9 @@ class ConfigBuilder:
                 var_name = match.group(1) or match.group(2)
                 env_value = os.environ.get(var_name)
                 if env_value is None:
-                    logger.warning(f"Environment variable '{var_name}' not found, keeping original value")
+                    # Only log warning if not in quiet mode (e.g., from interactive menu subprocess)
+                    if not os.environ.get('OSPREY_QUIET'):
+                        logger.info(f"Environment variable '{var_name}' not found, keeping original value")
                     return match.group(0)
                 return env_value
 
