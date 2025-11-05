@@ -1,6 +1,48 @@
-# Alpha Berkeley Framework - Latest Release (v0.7.8)
+# Osprey Framework - Latest Release (v0.8.2)
 
-🚀 **User Experience Release** - Interactive Terminal UI and Multi-Project Support
+🎨 **Polish & Quality Release** - Style Consistency, Logger Refactoring, and Strategic Testing
+
+## What's New in v0.8.2
+
+### 🎨 CLI Style System Improvements
+- **Complete style consistency** across all CLI commands
+- Migrated from hardcoded colors to centralized `Styles` constants
+- Theme-ready architecture for future customization
+- Improved command completer with theme-aware colors
+
+### 📝 Logging Infrastructure Enhancements
+- **Container manager refactor**: Converted 53 print statements to ComponentLogger system
+- Consistent, colored logging with component identification across deployment operations
+- Enhanced log suppression using `quiet_logger` for cleaner CLI output
+- Better debugging experience with proper log levels
+
+### 🚀 Deployment & Status Improvements
+- **Rebuilt status command**: Now uses direct `podman ps` for more reliable container state
+- Smart service name matching (handles underscore/hyphen variations)
+- Separates project containers from other Osprey containers for clarity
+- Added `rebuild` and `clean` actions to interactive menu with safety confirmations
+- Improved error handling with timeout protection
+
+### 🧪 Strategic Test Suite
+- **22 new tests** covering critical refactoring areas
+- Logging filter utilities tests (7 tests) - core infrastructure validation
+- Container status logic tests (15 tests) - complex matching logic coverage
+- All tests passing, <1s runtime
+- Philosophy: Few strong tests over coverage theater
+
+### 🔧 Configuration & Infrastructure
+- Condensed verbose comments for better code readability
+- Improved CONFIG logger naming for easier filtering
+- OSPREY_QUIET environment variable for subprocess noise reduction
+- Registry display command with themed output
+
+### 📦 Code Quality
+- Net change: **-641 lines** (significant cleanup and consolidation)
+- Eliminated all hardcoded color strings
+- Reduced code duplication through helper function extraction
+- Enhanced maintainability throughout
+
+---
 
 ## What's New in v0.7.8
 

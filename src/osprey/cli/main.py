@@ -17,7 +17,7 @@ import sys
 try:
     from osprey import __version__
 except ImportError:
-    __version__ = "0.8.1"
+    __version__ = "0.8.2"
 
 
 # PERFORMANCE OPTIMIZATION: Lazy command loading

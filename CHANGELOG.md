@@ -5,6 +5,36 @@ All notable changes to the Osprey Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.2] - 2025-11-05
+
+### Added
+- Registry display command (`osprey registry`) with themed output
+- Rebuild and clean deployment actions in interactive menu with safety confirmations
+- Strategic test suite: 22 tests covering logging filters and container status logic
+- OSPREY_QUIET environment variable for subprocess noise reduction
+- Helper functions for status table creation (reduced duplication)
+
+### Changed
+- **Complete CLI style migration**: All commands now use centralized Styles constants
+- **Container manager logging**: Converted 53 print statements to ComponentLogger system
+- **Status command rewrite**: Now uses direct `podman ps` for more reliable state checking
+- Improved service name matching with underscore/hyphen variation handling
+- Enhanced log suppression using quiet_logger for cleaner CLI output
+- Theme-aware command completer using active theme colors
+- Condensed verbose comments for better code readability
+
+### Fixed
+- Container status display now works independently of compose files
+- Smart container-to-project matching with backward compatibility
+- Proper separation of project vs non-project containers in status display
+- CONFIG logger properly suppressed in interactive menu operations
+
+### Improved
+- Net change: -641 lines through cleanup and consolidation
+- Better error handling in status command with timeout protection
+- Enhanced maintainability through style consistency
+- Clearer deployment operation confirmations for destructive actions
+
 ## [0.8.1] - 2024-11-04
 
 ### Fixed
