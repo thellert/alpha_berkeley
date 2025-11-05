@@ -229,6 +229,49 @@ def get_templates(config):
 
     return templates
 
+def _inject_project_metadata(config):
+    """Add project tracking metadata for container labels.
+    
+    This function injects deployment metadata into the configuration that will
+    be used as Docker labels in the rendered compose files. These labels enable
+    tracking which project/agent owns each container.
+    
+    The project name is extracted with the following priority:
+    1. Root-level 'project_name' attribute (preferred, explicit)
+    2. Last component of 'project_root' path (smart fallback)
+    3. Default to 'unnamed-project'
+    
+    :param config: Configuration dictionary
+    :type config: dict
+    :return: Configuration with added osprey_labels section
+    :rtype: dict
+    """
+    import datetime
+    
+    # Extract project name with priority order
+    project_name = config.get('project_name')
+    
+    if not project_name:
+        # Fallback: Extract from project_root path
+        project_root = config.get('project_root', '')
+        if project_root:
+            project_name = os.path.basename(project_root.rstrip('/'))
+    
+    if not project_name:
+        # Final fallback: Default
+        project_name = 'unnamed-project'
+    
+    # Create enhanced config with label metadata
+    config_with_labels = config.copy()
+    config_with_labels['osprey_labels'] = {
+        'project_name': project_name,
+        'project_root': config.get('project_root', os.getcwd()),
+        'deployed_at': datetime.datetime.now().isoformat(),
+    }
+    
+    return config_with_labels
+
+
 def render_template(template_path, config, out_dir):
     """Render Jinja2 template with configuration context to output directory.
 
@@ -285,8 +328,9 @@ def render_template(template_path, config, out_dir):
     """
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template_path)
-    # Config is already a dict for Jinja2 template rendering
-    config_dict = config
+    
+    # Inject project metadata for container labels
+    config_dict = _inject_project_metadata(config)
     rendered_content = template.render(config_dict)
 
     # Determine output filename based on template type
@@ -1162,6 +1206,7 @@ def show_status(config_path):
         # Create Rich table
         table = Table(show_header=True, header_style="bold cyan")
         table.add_column("Service", style="cyan", no_wrap=True)
+        table.add_column("Project", style="green", no_wrap=True)
         table.add_column("Status", style="white")
         table.add_column("Ports", style="blue")
         table.add_column("Image", style="dim")
@@ -1177,6 +1222,30 @@ def show_status(config_path):
             service_name = container.get("Service", container.get("Name", "unknown"))
             state = container.get("State", "unknown")
             health = container.get("Health", "")
+            
+            # Extract project information from container labels
+            # Note: podman compose ps returns labels as comma-separated string,
+            # while podman inspect returns them as dict
+            labels_raw = container.get("Labels", {})
+            
+            if isinstance(labels_raw, dict):
+                # Already a dict (from some podman versions)
+                project_name = labels_raw.get("osprey.project.name", "unknown")
+            elif isinstance(labels_raw, str):
+                # Parse comma-separated key=value string
+                project_name = "unknown"
+                for label in labels_raw.split(','):
+                    if '=' in label:
+                        key, value = label.split('=', 1)
+                        if key.strip() == "osprey.project.name":
+                            project_name = value.strip()
+                            break
+            else:
+                project_name = "unknown"
+            
+            # Truncate long project names
+            if len(project_name) > 12:
+                project_name = project_name[:9] + "..."
 
             # Format status with emoji and health
             if state == "running":
@@ -1217,7 +1286,7 @@ def show_status(config_path):
             if len(image) > 40:
                 image = "..." + image[-37:]
 
-            table.add_row(service_name, status, ports, image)
+            table.add_row(service_name, project_name, status, ports, image)
 
         console.print(table)
         console.print()

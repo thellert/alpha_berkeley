@@ -57,6 +57,7 @@ Project Configuration
    # My Project Configuration
    # ============================================================
    
+   project_name: "my-agent"
    build_dir: ./build
    project_root: /path/to/my-project
    registry_path: ./src/my_app/registry.py

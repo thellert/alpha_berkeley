@@ -388,10 +388,28 @@ Services are configured in ``config.yml`` under ``deployed_services``:
 
 .. code-block:: yaml
 
+   project_name: "my-agent"  # Project identifier for container tracking
+   
    deployed_services:
      - osprey.jupyter        # Jupyter development environment
      - osprey.open-webui     # Web chat interface
      - osprey.pipelines      # Processing pipeline
+
+**Project Directory:**
+
+All ``osprey deploy`` commands must be run from a project directory (containing ``config.yml``), or use the ``--project`` flag:
+
+.. code-block:: bash
+
+   # Option 1: Run from project directory
+   cd my-project
+   osprey deploy up
+   
+   # Option 2: Use --project flag
+   osprey deploy up --project ~/projects/my-project
+   
+   # Option 3: Use interactive menu (auto-handles directories)
+   osprey
 
 Workflow
 --------

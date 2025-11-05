@@ -426,6 +426,7 @@ Edit ``config.yml`` to customize:
 
    # Essential settings to update:
    
+   project_name: "my-app"
    project_root: /absolute/path/to/my-app
    registry_path: ./src/my_app/registry.py
    build_dir: ./build
@@ -587,6 +588,7 @@ Each application now has its own ``config.yml``:
      - wind_turbine
    
    # NEW: Per-application config
+   project_name: "my-app"
    registry_path: ./src/my_app/registry.py
    project_root: /path/to/my-project
 

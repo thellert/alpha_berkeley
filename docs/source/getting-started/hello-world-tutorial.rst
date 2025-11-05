@@ -835,6 +835,9 @@ The ``config.yml`` includes:
 
 .. code-block:: yaml
 
+   # Project name
+   project_name: "weather-demo"
+
    # Registry discovery - tells framework where your application code is
    registry_path: src/weather/registry.py
    

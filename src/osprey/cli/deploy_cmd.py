@@ -23,6 +23,8 @@ from osprey.deployment.container_manager import (
     prepare_compose_files
 )
 
+from .project_utils import resolve_config_path
+
 
 console = Console()
 
@@ -39,7 +41,7 @@ console = Console()
 )
 @click.option(
     "--config", "-c",
-    type=click.Path(exists=True),
+    type=click.Path(),
     default="config.yml",
     help="Configuration file (default: config.yml in project directory)"
 )
@@ -110,13 +112,48 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
       # Rebuild with local osprey for development
       $ osprey deploy rebuild --dev
     """
-    from .project_utils import resolve_config_path
 
     console.print(f"Service management: [bold]{action}[/bold]")
 
     try:
         # Resolve config path from project and config args
         config_path = resolve_config_path(project, config)
+        
+        # Validate config file exists with helpful error message
+        from pathlib import Path
+        config_file = Path(config_path)
+        if not config_file.exists():
+            console.print(f"\n❌ Configuration file not found: [cyan]{config_path}[/cyan]", style="red")
+            console.print(f"\n💡 Are you in a project directory?", style="yellow")
+            console.print(f"   Current directory: [dim]{Path.cwd()}[/dim]\n")
+            
+            # Look for nearby project directories with config.yml
+            # Exclude common non-project directories
+            excluded_dirs = {'docs', 'tests', 'test', 'build', 'dist', 'venv', '.venv', 
+                           'node_modules', '.git', '__pycache__', 'src', 'lib'}
+            nearby_projects = []
+            try:
+                for item in Path.cwd().iterdir():
+                    if (item.is_dir() and 
+                        item.name not in excluded_dirs and
+                        not item.name.startswith('.') and
+                        (item / "config.yml").exists()):
+                        nearby_projects.append(item.name)
+            except PermissionError:
+                pass  # Skip if can't read directory
+            
+            if nearby_projects:
+                console.print(f"   Found project(s) in current directory:", style="yellow")
+                for proj in nearby_projects[:5]:  # Limit to 5 suggestions
+                    console.print(f"     • [cyan]cd {proj} && osprey deploy {action}[/cyan]")
+                    console.print(f"       or: [cyan]osprey deploy {action} --project {proj}[/cyan]")
+            else:
+                console.print(f"   Try:", style="yellow")
+                console.print(f"     • Navigate to your project directory first")
+                console.print(f"     • Use [cyan]--project[/cyan] flag to specify project location")
+            
+            console.print(f"\n   Or use interactive menu: [cyan]osprey[/cyan]\n")
+            raise click.Abort()
 
         # Dispatch to existing container_manager functions
         # These are the ORIGINAL functions from Phase 1.5, behavior unchanged

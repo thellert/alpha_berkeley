@@ -399,19 +399,25 @@ The ``status`` command displays detailed information about all deployed services
 
    Service Deployment Status
    
-   ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
-   ┃ Service       ┃ Status         ┃ Ports          ┃ Image          ┃
-   ┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
-   │ open-webui    │ ● Running      │ 8080→8080      │ ghcr.io/...    │
-   │ pipelines     │ ● Running      │ 9099→9099      │ local/...      │
-   │ jupyter-read  │ ● Running      │ 8088→8088      │ local/...      │
-   │ jupyter-write │ ● Running      │ 8089→8088      │ local/...      │
-   │ mongo         │ ● Stopped      │ 27017→27017    │ mongo:latest   │
-   └───────────────┴────────────────┴────────────────┴────────────────┘
+   ┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
+   ┃ Service       ┃ Project     ┃ Status         ┃ Ports          ┃ Image          ┃
+   ┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
+   │ open-webui    │ weather-ag… │ ● Running      │ 8080→8080      │ ghcr.io/...    │
+   │ pipelines     │ weather-ag… │ ● Running      │ 9099→9099      │ local/...      │
+   │ jupyter-read  │ weather-ag… │ ● Running      │ 8088→8088      │ local/...      │
+   │ jupyter-write │ weather-ag… │ ● Running      │ 8089→8088      │ local/...      │
+   │ mongo         │ als-assist… │ ● Stopped      │ 27017→27017    │ mongo:latest   │
+   └───────────────┴─────────────┴────────────────┴────────────────┴────────────────┘
+
+.. admonition:: New in v0.8.2: Project Tracking
+   :class: version-08plus-change
+
+   The status display now includes project ownership tracking using Docker labels. This enables multi-project deployments where you can identify which project/agent owns each container.
 
 The status display includes:
 
 - **Service**: Container name
+- **Project**: Project/agent name (from ``project_name`` in config.yml)
 - **Status**: Running (●) or Stopped (●) with visual indicator
 - **Ports**: Port mappings (host→container)
 - **Image**: Container image used
@@ -429,6 +435,39 @@ You can check status for specific projects using the ``--project`` flag:
    # Check multiple projects
    osprey deploy status --project ~/projects/agent1
    osprey deploy status --project ~/projects/agent2
+
+Container Labels and Filtering
+------------------------------
+
+All deployed containers are automatically labeled with project metadata using Docker labels. This enables advanced container management and filtering.
+
+**Container Labels:**
+
+Each container gets three automatic labels:
+
+- ``osprey.project.name`` - Project identifier (from ``project_name`` in config.yml)
+- ``osprey.project.root`` - Absolute path to project directory
+- ``osprey.deployed.at`` - ISO 8601 timestamp of deployment
+
+**Query Containers by Project:**
+
+.. code-block:: bash
+
+   # List all Osprey containers
+   podman ps --filter label=osprey.project.name
+
+   # List containers for specific project
+   podman ps --filter label=osprey.project.name=weather-agent
+
+   # Inspect container labels
+   podman inspect jupyter-read | grep osprey
+
+**Use Cases:**
+
+- **Multi-project deployments**: Run multiple agent projects simultaneously
+- **Container identification**: Quickly identify which project owns containers
+- **Automation**: Script container management based on project labels
+- **Debugging**: Filter logs and status by project
 
 Command Options
 ---------------
@@ -662,6 +701,7 @@ This example shows a complete working configuration from the Wind Turbine tutori
 .. code-block:: yaml
 
    # config.yml
+   project_name: "wind-turbine"
    build_dir: ./build
    project_root: /home/user/wind-turbine
    registry_path: ./src/wind/registry.py

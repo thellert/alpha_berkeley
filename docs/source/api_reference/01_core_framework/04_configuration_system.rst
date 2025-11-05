@@ -173,6 +173,35 @@ build_dir
 - Should be in ``.gitignore``
 - Can use environment variables: ``${BUILD_DIR}``
 
+project_name
+------------
+
+**Type:** String
+
+**Location:** Root ``config.yml``
+
+**Default:** Derived from ``project_root`` path if not specified
+
+**Purpose:** Canonical identifier for the project/agent.
+
+.. code-block:: yaml
+
+   project_name: "weather-agent"
+
+**Details:**
+
+- First-class attribute for project identification
+- Used for container labels (Docker/Podman metadata)
+- Enables multi-project container management
+- Shown in ``osprey deploy status`` output
+- Separate from ``pipeline.name`` (which is for OpenWebUI display)
+- Falls back to extracting from ``project_root`` path if not specified
+
+.. admonition:: New in v0.8.2: Container Project Tracking
+   :class: version-08plus-change
+
+   The ``project_name`` attribute enables tracking which project owns deployed containers using Docker labels. All containers are automatically labeled with ``osprey.project.name`` for easy identification and filtering.
+
 project_root
 ------------
 
@@ -1183,6 +1212,7 @@ Complete Configuration Example
 .. code-block:: yaml
 
    # config.yml - Complete, self-contained configuration
+   project_name: "my-agent"
    build_dir: ./build
    project_root: ${PROJECT_ROOT}
    registry_path: ./src/my_app/registry.py
