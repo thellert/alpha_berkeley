@@ -73,6 +73,11 @@ from jinja2 import Environment, FileSystemLoader
 # NOTE: Now that container_manager is in src/osprey/deployment/,
 # configs module should be importable directly without sys.path manipulation
 from osprey.utils.config import ConfigBuilder
+from osprey.utils.log_filter import quiet_logger
+from osprey.utils.logger import get_logger
+
+# Initialize component logger for deployment operations
+logger = get_logger("deployment")
 
 SERVICES_DIR = "services"
 SRC_DIR = "src"
@@ -216,7 +221,7 @@ def get_templates(config):
     if deployed_services:
         deployed_service_names = [str(service) for service in deployed_services]
     else:
-        print("Warning: No deployed_services list found, no service templates will be processed")
+        logger.warning("No deployed_services list found, no service templates will be processed")
         return templates
 
     # Add templates for deployed services
@@ -225,7 +230,7 @@ def get_templates(config):
         if template_path:
             templates.append(template_path)
         else:
-            print(f"Warning: Service '{service_name}' not found in configuration")
+            logger.warning(f"Service '{service_name}' not found in configuration")
 
     return templates
 
@@ -381,24 +386,24 @@ def _copy_local_framework_for_override(out_dir):
         if src_osprey.exists():
             # Copy the osprey source
             shutil.copytree(src_osprey, osprey_override_dir, dirs_exist_ok=True)
-            print(f"📦 Copied osprey source for dev override to {osprey_override_dir}")
+            logger.success(f"Copied osprey source for dev override to {osprey_override_dir}")
 
             # Copy pyproject.toml for proper installation
             pyproject_src = osprey_source_root / "pyproject.toml"
             if pyproject_src.exists():
                 shutil.copy2(pyproject_src, os.path.join(out_dir, "osprey_pyproject.toml"))
-                print(f"📝 Copied osprey pyproject.toml for dependencies")
+                logger.info("Copied osprey pyproject.toml for dependencies")
 
             return True
         else:
-            print(f"⚠️  Osprey source not found at {src_osprey}")
+            logger.warning(f"Osprey source not found at {src_osprey}")
             return False
 
     except ImportError:
-        print("⚠️  Osprey not found in local environment, containers will use PyPI version")
+        logger.warning("Osprey not found in local environment, containers will use PyPI version")
         return False
     except Exception as e:
-        print(f"⚠️  Failed to prepare osprey override: {e}")
+        logger.warning(f"Failed to prepare osprey override: {e}")
         return False
 
 
@@ -467,7 +472,7 @@ def render_kernel_templates(source_dir, config, out_dir):
         kernel_out_dir = os.path.join(out_dir, rel_template_dir) if rel_template_dir != '.' else out_dir
 
         render_template(template_path, config, kernel_out_dir)
-        print(f"Rendered kernel template: {template_path} -> {kernel_out_dir}/kernel.json")
+        logger.info(f"Rendered kernel template: {template_path} -> {kernel_out_dir}/kernel.json")
 
 def _ensure_agent_data_structure(config):
     """Ensure _agent_data directory and subdirectories exist before container deployment.
@@ -503,9 +508,9 @@ def _ensure_agent_data_structure(config):
             subdir_name = file_paths[subdir_key]
             subdir_path = agent_data_path / subdir_name
             subdir_path.mkdir(parents=True, exist_ok=True)
-            print(f"Created agent data subdirectory: {subdir_path}")
+            logger.debug(f"Created agent data subdirectory: {subdir_path}")
 
-    print(f"Ensured agent data structure exists at: {agent_data_path}")
+    logger.debug(f"Ensured agent data structure exists at: {agent_data_path}")
 
 
 def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
@@ -596,13 +601,13 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
             shutil.rmtree(out_dir)
         except OSError as e:
             if "Device or resource busy" in str(e) or "nfs" in str(e).lower() or e.errno == 39:  # Directory not empty
-                print(f"Warning: Directory in use, attempting incremental update for {out_dir}")
+                logger.warning(f"Directory in use, attempting incremental update for {out_dir}")
                 import time
                 time.sleep(1)
                 try:
                     shutil.rmtree(out_dir)
                 except OSError:
-                    print(f"Warning: Could not remove {out_dir}, using incremental update approach")
+                    logger.warning(f"Could not remove {out_dir}, using incremental update approach")
                     # Use incremental update instead of full rebuild
                     return _incremental_setup_build_dir(template_path, config, container_cfg, out_dir, dev_mode)
             else:
@@ -635,7 +640,7 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
             if os.path.exists(global_requirements):
                 repo_src_requirements = os.path.join(out_dir, OUT_SRC_DIR, "requirements.txt")
                 shutil.copy2(global_requirements, repo_src_requirements)
-                print(f"Copied global requirements.txt to {repo_src_requirements}")
+                logger.debug(f"Copied global requirements.txt to {repo_src_requirements}")
 
             # Copy project's pyproject.toml to repo_src
             # Note: This is the user's project pyproject.toml, not framework's
@@ -643,18 +648,18 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
             if os.path.exists(global_pyproject):
                 repo_src_pyproject = os.path.join(out_dir, OUT_SRC_DIR, "pyproject_user.toml")
                 shutil.copy2(global_pyproject, repo_src_pyproject)
-                print(f"Copied user pyproject.toml to {repo_src_pyproject}")
+                logger.debug(f"Copied user pyproject.toml to {repo_src_pyproject}")
 
             # Copy local osprey for development override (only in dev mode)
             # This will override the PyPI osprey after standard installation
             if dev_mode:
                 osprey_copied = _copy_local_framework_for_override(out_dir)
                 if osprey_copied:
-                    print("🔧 Development mode: Osprey override prepared")
+                    logger.key_info("Development mode: Osprey override prepared")
                 else:
-                    print("📦 Development mode requested but osprey override failed, using PyPI")
+                    logger.warning("Development mode requested but osprey override failed, using PyPI")
             else:
-                print("📦 Production mode: Containers will install osprey from PyPI")
+                logger.info("Production mode: Containers will install osprey from PyPI")
         # Copy additional directories if specified in service configuration
         additional_dirs = container_cfg.get('additional_dirs', [])
         if additional_dirs:
@@ -676,13 +681,13 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
                             # For files, create parent directory and copy file
                             os.makedirs(os.path.dirname(dst_dir), exist_ok=True)
                             shutil.copy2(src_dir, dst_dir)
-                            print(f"Copied file {src_dir} to {dst_dir}")
+                            logger.debug(f"Copied file {src_dir} to {dst_dir}")
                         elif os.path.isdir(src_dir):
                             # For directories, use copytree
                             shutil.copytree(src_dir, dst_dir)
-                            print(f"Copied directory {src_dir} to {dst_dir}")
+                            logger.debug(f"Copied directory {src_dir} to {dst_dir}")
                     elif src_dir:
-                        print(f"Warning: Path {src_dir} does not exist, skipping")
+                        logger.warning(f"Path {src_dir} does not exist, skipping")
 
         # Ensure _agent_data directory structure exists before container deployment
         # This prevents mount failures when containers try to mount non-existent directories
@@ -691,8 +696,9 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
         # Create flattened configuration file for container
         # This merges all imports and creates a complete config without import directives
         try:
-            global_config = ConfigBuilder()
-            flattened_config = global_config.raw_config  # This contains the already-merged configuration
+            with quiet_logger(['REGISTRY', 'CONFIG']):
+                global_config = ConfigBuilder()
+                flattened_config = global_config.raw_config  # This contains the already-merged configuration
 
             # Adjust registry_path for container environment
             # In containers, src/ is copied to repo_src/, and the working directory varies by service
@@ -708,29 +714,29 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
                         # For pipelines: use absolute path since working dir (/app) != mount point (/pipelines)
                         # ./src/weather/registry.py -> /pipelines/repo_src/weather/registry.py
                         flattened_config['registry_path'] = registry_path.replace('./src/', '/pipelines/repo_src/')
-                        print(f"Adjusted registry_path for pipelines container: {registry_path} -> {flattened_config['registry_path']}")
+                        logger.debug(f"Adjusted registry_path for pipelines container: {registry_path} -> {flattened_config['registry_path']}")
                     else:
                         # For other services: use relative path since working dir == mount point
                         # ./src/weather/registry.py -> ./repo_src/weather/registry.py
                         flattened_config['registry_path'] = registry_path.replace('./src/', './repo_src/')
-                        print(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
+                        logger.debug(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
 
             config_yml_dst = os.path.join(out_dir, "config.yml")
             with open(config_yml_dst, 'w') as f:
                 yaml.dump(flattened_config, f, default_flow_style=False, sort_keys=False)
-            print(f"Created flattened config.yml at {config_yml_dst}")
+            logger.debug(f"Created flattened config.yml at {config_yml_dst}")
         except Exception as e:
-            print(f"Warning: Failed to create flattened config: {e}")
+            logger.warning(f"Failed to create flattened config: {e}")
             # Fallback to copying original config
             config_yml_src = "config.yml"
             if os.path.exists(config_yml_src):
                 config_yml_dst = os.path.join(out_dir, "config.yml")
                 shutil.copy2(config_yml_src, config_yml_dst)
-                print(f"Copied original config.yml to {config_yml_dst}")
+                logger.debug(f"Copied original config.yml to {config_yml_dst}")
 
         # Render kernel templates if specified in service configuration
         if container_cfg.get('render_kernel_templates', False):
-            print(f"Processing kernel templates for {source_dir}")
+            logger.info(f"Processing kernel templates for {source_dir}")
             render_kernel_templates(source_dir, config, out_dir)
 
     return compose_filepath
@@ -877,7 +883,7 @@ def _incremental_setup_build_dir(template_path, config, service_config, out_dir,
                     else:
                         shutil.copy2(src_path, dst_path)
                 except (OSError, shutil.Error) as e:
-                    print(f"Warning: Could not update {dst_path}: {e}")
+                    logger.warning(f"Could not update {dst_path}: {e}")
 
     # Handle source directory copying if needed
     if service_config.get('copy_src', False):
@@ -889,11 +895,11 @@ def _incremental_setup_build_dir(template_path, config, service_config, out_dir,
                 if not os.path.exists(src_dst_path):
                     shutil.copytree(SRC_DIR, src_dst_path)
         except (OSError, shutil.Error) as e:
-            print(f"Warning: Could not update source directory {src_dst_path}: {e}")
+            logger.warning(f"Could not update source directory {src_dst_path}: {e}")
 
     return compose_filepath
 
-def find_existing_compose_files(config, deployed_services):
+def find_existing_compose_files(config, deployed_services, quiet=False):
     """Find existing compose files without rebuilding directories.
 
     This function locates existing docker-compose.yml files in the build directory
@@ -902,6 +908,7 @@ def find_existing_compose_files(config, deployed_services):
     Args:
         config (dict): Configuration dictionary containing build_dir
         deployed_services (list): List of service names to find compose files for
+        quiet (bool): If True, suppress warning messages about missing files
 
     Returns:
         list: List of paths to existing compose files
@@ -928,8 +935,8 @@ def find_existing_compose_files(config, deployed_services):
             compose_path = os.path.join(build_dir, source_dir, 'docker-compose.yml')
             if os.path.exists(compose_path):
                 compose_files.append(compose_path)
-            else:
-                print(f"Warning: Compose file not found for service '{service_name}' at {compose_path}")
+            elif not quiet:
+                logger.warning(f"Compose file not found for service '{service_name}' at {compose_path}")
 
     return compose_files
 
@@ -944,7 +951,7 @@ def clean_deployment(compose_files):
     :param compose_files: List of Docker Compose file paths for the deployment
     :type compose_files: list[str]
     """
-    print("Cleaning up deployment...")
+    logger.key_info("Cleaning up deployment...")
 
     # Stop and remove containers, networks, volumes
     cmd_down = ["podman", "compose"]
@@ -952,7 +959,7 @@ def clean_deployment(compose_files):
         cmd_down.extend(("-f", compose_file))
     cmd_down.extend(["--env-file", ".env", "down", "--volumes", "--remove-orphans"])
 
-    print(f"Running: {' '.join(cmd_down)}")
+    logger.info(f"Running: {' '.join(cmd_down)}")
     subprocess.run(cmd_down)
 
     # Remove images built by the compose files
@@ -961,10 +968,10 @@ def clean_deployment(compose_files):
         cmd_rmi.extend(("-f", compose_file))
     cmd_rmi.extend(["--env-file", ".env", "down", "--rmi", "all"])
 
-    print(f"Running: {' '.join(cmd_rmi)}")
+    logger.info(f"Running: {' '.join(cmd_rmi)}")
     subprocess.run(cmd_rmi)
 
-    print("Cleanup completed.")
+    logger.success("Cleanup completed")
 
 
 def prepare_compose_files(config_path, dev_mode=False):
@@ -981,8 +988,9 @@ def prepare_compose_files(config_path, dev_mode=False):
     :raises RuntimeError: If configuration loading fails
     """
     try:
-        config = ConfigBuilder(config_path)
-        config = config.raw_config
+        with quiet_logger(['REGISTRY', 'CONFIG']):
+            config = ConfigBuilder(config_path)
+            config = config.raw_config
     except Exception as e:
         raise RuntimeError(f"Could not load config file {config_path}: {e}")
 
@@ -990,9 +998,9 @@ def prepare_compose_files(config_path, dev_mode=False):
     deployed_services = config.get('deployed_services', [])
     if deployed_services:
         deployed_service_names = [str(service) for service in deployed_services]
-        print(f"Deployed services: {', '.join(deployed_service_names)}")
+        logger.info(f"Deployed services: {', '.join(deployed_service_names)}")
     else:
-        print("Warning: No deployed_services list found, no services will be processed")
+        logger.warning("No deployed_services list found, no services will be processed")
         deployed_service_names = []
 
     compose_files = []
@@ -1035,7 +1043,7 @@ def deploy_up(config_path, detached=False, dev_mode=False):
     env = os.environ.copy()
     if dev_mode:
         env['DEV_MODE'] = 'true'
-        print("🔧 Development mode: DEV_MODE environment variable set for containers")
+        logger.key_info("Development mode: DEV_MODE environment variable set for containers")
 
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
@@ -1047,14 +1055,14 @@ def deploy_up(config_path, detached=False, dev_mode=False):
     if env_file.exists():
         cmd.extend(["--env-file", ".env"])
     else:
-        print("⚠️  No .env file found - services will start with default/empty environment variables")
-        print("💡 To configure API keys: cp .env.example .env && edit .env")
+        logger.warning("No .env file found - services will start with default/empty environment variables")
+        logger.info("To configure API keys: cp .env.example .env && edit .env")
 
     cmd.append("up")
     if detached:
         cmd.append("-d")
 
-    print(f"Running command:\n    {' '.join(cmd)}")
+    logger.info(f"Running command:\n    {' '.join(cmd)}")
     os.execvpe(cmd[0], cmd, env)
 
 
@@ -1065,25 +1073,26 @@ def deploy_down(config_path, dev_mode=False):
     :type config_path: str
     """
     try:
-        config = ConfigBuilder(config_path)
-        config = config.raw_config
+        with quiet_logger(['REGISTRY', 'CONFIG']):
+            config = ConfigBuilder(config_path)
+            config = config.raw_config
     except Exception as e:
         raise RuntimeError(f"Could not load config file {config_path}: {e}")
 
     deployed_services = config.get('deployed_services', [])
     deployed_service_names = [str(service) for service in deployed_services] if deployed_services else []
 
-    # Try to use existing compose files
-    compose_files = find_existing_compose_files(config, deployed_service_names)
+    # Try to use existing compose files (suppress warnings for status check)
+    compose_files = find_existing_compose_files(config, deployed_service_names, quiet=True)
 
     # If no existing compose files found, rebuild them
     if not compose_files:
-        print("No existing compose files found, rebuilding...")
+        logger.info("No existing compose files found, rebuilding...")
         _, compose_files = prepare_compose_files(config_path, dev_mode)
     else:
-        print(f"Using existing compose files for 'down' operation:")
+        logger.info("Using existing compose files for 'down' operation:")
         for f in compose_files:
-            print(f"  - {f}")
+            logger.info(f"  - {f}")
 
     cmd = ["podman", "compose"]
     for compose_file in compose_files:
@@ -1097,7 +1106,7 @@ def deploy_down(config_path, dev_mode=False):
 
     cmd.append("down")
 
-    print(f"Running command:\n    {' '.join(cmd)}")
+    logger.info(f"Running command:\n    {' '.join(cmd)}")
     os.execvp(cmd[0], cmd)
 
 
@@ -1116,193 +1125,213 @@ def deploy_restart(config_path, detached=False):
         cmd.extend(("-f", compose_file))
     cmd.extend(["--env-file", ".env", "restart"])
 
-    print(f"Running command:\n    {' '.join(cmd)}")
+    logger.info(f"Running command:\n    {' '.join(cmd)}")
     subprocess.run(cmd)
 
     # If detached mode requested, detach after restart
     if detached:
-        print("Services restarted. Running in detached mode.")
+        logger.info("Services restarted. Running in detached mode.")
 
 
 def show_status(config_path):
     """Show detailed status of services with formatted output.
+    
+    Uses direct podman ps to show actual container state, independent of compose files.
+    Displays containers for this project separately from other running containers.
 
     :param config_path: Path to the configuration file
     :type config_path: str
     """
     try:
-        from rich.console import Console
         from rich.table import Table
         import json
+        from osprey.cli.styles import console, Styles
 
-        console = Console()
-
-        config = ConfigBuilder(config_path)
-        config = config.raw_config
+        with quiet_logger(['REGISTRY', 'CONFIG']):
+            config = ConfigBuilder(config_path)
+            config = config.raw_config
     except Exception as e:
         raise RuntimeError(f"Could not load config file {config_path}: {e}")
 
+    # Get deployed services and current project name
     deployed_services = config.get('deployed_services', [])
     deployed_service_names = [str(service) for service in deployed_services] if deployed_services else []
+    
+    # Determine current project name (same logic as _inject_project_metadata)
+    current_project = config.get('project_name')
+    if not current_project:
+        project_root = config.get('project_root', '')
+        if project_root:
+            current_project = os.path.basename(project_root.rstrip('/'))
+    if not current_project:
+        current_project = 'unnamed-project'
 
-    # Try to use existing compose files
-    compose_files = find_existing_compose_files(config, deployed_service_names)
-
-    if not compose_files:
-        console.print("\n[yellow]⚠️  No compose files found. Services may not be deployed yet.[/yellow]")
-        console.print("\n[dim]Run 'osprey deploy build' to generate compose files[/dim]\n")
+    # Get all containers using direct podman ps (not compose-dependent)
+    try:
+        result = subprocess.run(
+            ["podman", "ps", "-a", "--format", "json"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            console.print(f"\n[red]Error: Could not query container status[/red]")
+            console.print(f"[dim]Command failed with return code {result.returncode}[/dim]\n")
+            return
+        
+        all_containers = json.loads(result.stdout) if result.stdout.strip() else []
+        
+    except subprocess.TimeoutExpired:
+        console.print("\n[red]Error: Container query timed out[/red]\n")
+        return
+    except json.JSONDecodeError as e:
+        console.print(f"\n[red]Error: Could not parse container data[/red]")
+        console.print(f"[dim]{e}[/dim]\n")
+        return
+    except Exception as e:
+        console.print(f"\n[red]Error: {e}[/red]\n")
         return
 
-    # Get container status using podman compose ps --format json
-    cmd = ["podman", "compose"]
-    for compose_file in compose_files:
-        cmd.extend(("-f", compose_file))
-    cmd.extend(["--env-file", ".env", "ps", "--format", "json"])
+    # Separate containers into project and non-project
+    project_containers = []
+    other_containers = []
+    
+    for container in all_containers:
+        # Extract project label
+        labels = container.get("Labels", {})
+        container_project = "unknown"
+        
+        if isinstance(labels, dict):
+            container_project = labels.get("osprey.project.name", "unknown")
+        elif isinstance(labels, str):
+            for label in labels.split(','):
+                if '=' in label:
+                    key, value = label.split('=', 1)
+                    if key.strip() == "osprey.project.name":
+                        container_project = value.strip()
+                        break
+        
+        # Check if container belongs to this project
+        belongs_to_project = container_project == current_project
+        
+        # Also check if container name matches any deployed service (for backward compatibility)
+        names = container.get("Names", [])
+        if isinstance(names, list):
+            names_str = " ".join(str(n) for n in names).lower()
+        else:
+            names_str = str(names).lower()
+        
+        matches_service = any(
+            service.split('.')[-1].lower() in names_str 
+            for service in deployed_service_names
+        )
+        
+        if belongs_to_project or matches_service:
+            project_containers.append(container)
+        else:
+            # Only include containers with osprey labels in "other"
+            if container_project != "unknown":
+                other_containers.append(container)
 
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+    # Helper functions for status display
+    def _create_status_table():
+        """Create a status table with consistent styling."""
+        table = Table(show_header=True, header_style=Styles.BOLD_PRIMARY)
+        table.add_column("Service", style=Styles.ACCENT, no_wrap=True)
+        table.add_column("Project", style=Styles.SUCCESS, no_wrap=True)
+        table.add_column("Status", style=Styles.PRIMARY)
+        table.add_column("Ports", style=Styles.INFO)
+        table.add_column("Image", style=Styles.DIM)
+        return table
+    
+    def _add_container_to_table(table, container):
+        """Add a container as a row in the status table."""
+        # Extract container name
+        names = container.get("Names", [])
+        if isinstance(names, list) and names:
+            container_name = names[0]
+        else:
+            container_name = str(names) if names else "unknown"
+        
+        # Extract project label
+        labels = container.get("Labels", {})
+        project_name = "unknown"
+        if isinstance(labels, dict):
+            project_name = labels.get("osprey.project.name", "unknown")
+        elif isinstance(labels, str):
+            for label in labels.split(','):
+                if '=' in label:
+                    key, value = label.split('=', 1)
+                    if key.strip() == "osprey.project.name":
+                        project_name = value.strip()
+                        break
+        
+        # Truncate long project names
+        if len(project_name) > 12:
+            project_name = project_name[:9] + "..."
+        
+        # Format status
+        state = container.get("State", "unknown")
+        if state == "running":
+            status = f"[{Styles.SUCCESS}]● Running[/{Styles.SUCCESS}]"
+        elif state == "exited":
+            status = f"[{Styles.ERROR}]● Stopped[/{Styles.ERROR}]"
+        elif state == "restarting":
+            status = f"[{Styles.WARNING}]● Restarting[/{Styles.WARNING}]"
+        else:
+            status = f"[{Styles.DIM}]● {state}[/{Styles.DIM}]"
+        
+        # Format ports
+        ports_raw = container.get("Ports", [])
+        port_list = []
+        if ports_raw:
+            for port in ports_raw:
+                if isinstance(port, dict):
+                    # Handle different port format variations
+                    # podman ps format: host_port, container_port
+                    # compose ps format: PublishedPort, TargetPort
+                    published = (port.get("host_port") or 
+                                port.get("PublishedPort") or 
+                                port.get("published", ""))
+                    target = (port.get("container_port") or 
+                             port.get("TargetPort") or 
+                             port.get("target", ""))
+                    if published and target:
+                        port_list.append(f"{published}→{target}")
+        ports = ", ".join(port_list) if port_list else "-"
+        
+        # Get image
+        image = container.get("Image", "unknown")
+        if len(image) > 40:
+            image = "..." + image[-37:]
+        
+        table.add_row(container_name, project_name, status, ports, image)
 
-        # Parse JSON output from podman compose
-        # Different compose providers return different formats:
-        # - Some return a JSON array: [{"container1"}, {"container2"}]
-        # - Others return newline-delimited JSON: one object per line
-        # We handle both by trying to parse as array first, then falling back to line-by-line
-        # TODO: In future CLI expansion with collapsible blocks, we could display
-        # the full raw JSON output for debugging/advanced users.
-        containers = []
-        if result.stdout.strip():
-            # Remove warning/info lines that aren't part of JSON
-            lines = result.stdout.strip().split('\n')
-            json_lines = [line for line in lines 
-                         if line.strip() and 
-                         not line.startswith('>') and 
-                         not line.startswith('time=') and
-                         not 'WARNING:' in line and
-                         not 'Executing external compose' in line]
-            json_text = '\n'.join(json_lines)
-            
-            try:
-                # Try parsing as a JSON array first (podman-compose format)
-                parsed = json.loads(json_text)
-                if isinstance(parsed, list):
-                    # It's an array of containers
-                    containers = [c for c in parsed if isinstance(c, dict)]
-                elif isinstance(parsed, dict):
-                    # Single container object
-                    containers = [parsed]
-            except json.JSONDecodeError:
-                # Fall back to line-by-line parsing (docker compose format)
-                for line in json_lines:
-                    line = line.strip()
-                    if line:
-                        try:
-                            container = json.loads(line)
-                            if isinstance(container, dict):
-                                containers.append(container)
-                        except json.JSONDecodeError:
-                            # Skip unparseable lines
-                            continue
-
-        # Create Rich table
-        table = Table(show_header=True, header_style="bold cyan")
-        table.add_column("Service", style="cyan", no_wrap=True)
-        table.add_column("Project", style="green", no_wrap=True)
-        table.add_column("Status", style="white")
-        table.add_column("Ports", style="blue")
-        table.add_column("Image", style="dim")
-
-        if not containers:
-            console.print("\n[yellow]ℹ️  No services are currently running[/yellow]")
-            console.print(f"\n[dim]Configured services: {', '.join(deployed_service_names)}[/dim]")
-            console.print("\n[dim]Start services with: osprey deploy up[/dim]\n")
-            return
-
-        # Add rows for each container
-        for container in containers:
-            service_name = container.get("Service", container.get("Name", "unknown"))
-            state = container.get("State", "unknown")
-            health = container.get("Health", "")
-            
-            # Extract project information from container labels
-            # Note: podman compose ps returns labels as comma-separated string,
-            # while podman inspect returns them as dict
-            labels_raw = container.get("Labels", {})
-            
-            if isinstance(labels_raw, dict):
-                # Already a dict (from some podman versions)
-                project_name = labels_raw.get("osprey.project.name", "unknown")
-            elif isinstance(labels_raw, str):
-                # Parse comma-separated key=value string
-                project_name = "unknown"
-                for label in labels_raw.split(','):
-                    if '=' in label:
-                        key, value = label.split('=', 1)
-                        if key.strip() == "osprey.project.name":
-                            project_name = value.strip()
-                            break
-            else:
-                project_name = "unknown"
-            
-            # Truncate long project names
-            if len(project_name) > 12:
-                project_name = project_name[:9] + "..."
-
-            # Format status with emoji and health
-            if state == "running":
-                if health == "healthy":
-                    status = "[green]● Running (healthy)[/green]"
-                elif health == "unhealthy":
-                    status = "[yellow]● Running (unhealthy)[/yellow]"
-                elif health == "starting":
-                    status = "[cyan]● Running (starting)[/cyan]"
-                else:
-                    status = "[green]● Running[/green]"
-            elif state == "exited":
-                status = "[red]● Stopped[/red]"
-            elif state == "restarting":
-                status = "[yellow]● Restarting[/yellow]"
-            else:
-                status = f"[dim]● {state}[/dim]"
-
-            # Format ports
-            ports_raw = container.get("Publishers", [])
-            if ports_raw:
-                # Extract published ports
-                port_list = []
-                for port in ports_raw:
-                    # Ensure port is a dict before calling .get()
-                    if isinstance(port, dict):
-                        published = port.get("PublishedPort", "")
-                        target = port.get("TargetPort", "")
-                        if published and target:
-                            port_list.append(f"{published}→{target}")
-                ports = ", ".join(port_list) if port_list else "-"
-            else:
-                ports = "-"
-
-            # Get image
-            image = container.get("Image", "unknown")
-            # Shorten image name if too long
-            if len(image) > 40:
-                image = "..." + image[-37:]
-
-            table.add_row(service_name, project_name, status, ports, image)
-
+    # Display project containers
+    console.print(f"\n[bold]Service Status:[/bold]")
+    
+    if project_containers:
+        table = _create_status_table()
+        for container in project_containers:
+            _add_container_to_table(table, container)
         console.print(table)
-        console.print()
-
-    except subprocess.CalledProcessError as e:
-        # Fallback to simple ps if json format not supported
-        console.print("\n[dim]Running basic status check...[/dim]\n")
-        cmd_simple = ["podman", "compose"]
-        for compose_file in compose_files:
-            cmd_simple.extend(("-f", compose_file))
-        cmd_simple.extend(["--env-file", ".env", "ps"])
-        subprocess.run(cmd_simple)
-    except json.JSONDecodeError:
-        console.print("[yellow]⚠️  Could not parse container status[/yellow]")
-    except Exception as e:
-        console.print(f"[red]Error getting status: {e}[/red]")
+    else:
+        console.print(f"\n[warning]ℹ️  No services running for project '{current_project}'[/warning]")
+        if deployed_service_names:
+            console.print(f"[dim]Configured services: {', '.join(deployed_service_names)}[/dim]")
+        console.print("\n[info]Start services with:[/info]")
+        console.print("  • [command]osprey deploy up[/command]")
+    
+    # Display other osprey containers
+    if other_containers:
+        console.print(f"\n[bold]Other Osprey Containers:[/bold]")
+        other_table = _create_status_table()
+        for container in other_containers:
+            _add_container_to_table(other_table, container)
+        console.print(other_table)
+    
+    console.print()
 
 
 def rebuild_deployment(config_path, detached=False, dev_mode=False):
@@ -1324,7 +1353,7 @@ def rebuild_deployment(config_path, detached=False, dev_mode=False):
     env = os.environ.copy()
     if dev_mode:
         env['DEV_MODE'] = 'true'
-        print("🔧 Development mode: DEV_MODE environment variable set for containers")
+        logger.key_info("Development mode: DEV_MODE environment variable set for containers")
 
     # Then start up
     cmd = ["podman", "compose"]
@@ -1337,14 +1366,14 @@ def rebuild_deployment(config_path, detached=False, dev_mode=False):
     if env_file.exists():
         cmd.extend(["--env-file", ".env"])
     else:
-        print("⚠️  No .env file found - services will start with default/empty environment variables")
-        print("💡 To configure API keys: cp .env.example .env && edit .env")
+        logger.warning("No .env file found - services will start with default/empty environment variables")
+        logger.info("To configure API keys: cp .env.example .env && edit .env")
 
     cmd.append("up")
     if detached:
         cmd.append("-d")
 
-    print(f"Running command:\n    {' '.join(cmd)}")
+    logger.info(f"Running command:\n    {' '.join(cmd)}")
     os.execvpe(cmd[0], cmd, env)
 
 if __name__ == "__main__":
@@ -1407,12 +1436,12 @@ if __name__ == "__main__":
         else:
             # No command specified - just generate compose files
             _, compose_files = prepare_compose_files(args.config, dev_mode=args.dev)
-            print("Generated compose files:")
+            logger.success("Generated compose files:")
             for compose_file in compose_files:
-                print(f" - {compose_file}")
+                logger.info(f" - {compose_file}")
     except RuntimeError as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
         sys.exit(1)
