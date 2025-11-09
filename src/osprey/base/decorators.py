@@ -360,7 +360,7 @@ def _handle_capability_state_updates(
         "timestamp": datetime.now().isoformat()
     }
 
-    logger.info(f"State updates: step {current_step_index + 1}")
+    logger.debug(f"State updates: step {current_step_index + 1}")
 
     return state_updates
 

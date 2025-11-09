@@ -91,7 +91,7 @@ class TimeRangeContext(CapabilityContext):
 
     :param start_date: Parsed start datetime with timezone information
     :type start_date: datetime
-    :param end_date: Parsed end datetime with timezone information  
+    :param end_date: Parsed end datetime with timezone information
     :type end_date: datetime
 
     .. note::
@@ -397,7 +397,7 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
 
         Common patterns and their conversions:
         - "last X hours/minutes/days" → X time units BEFORE current time to NOW
-        - "past X hours/minutes/days" → X time units BEFORE current time to NOW  
+        - "past X hours/minutes/days" → X time units BEFORE current time to NOW
         - "yesterday" → previous day from 00:00:00 to 23:59:59
         - "today" → current day from 00:00:00 to current time
         - "this week" → from start of current week to now
@@ -411,7 +411,7 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
         3. Verify: start_date < end_date
 
         **STEP-BY-STEP for "past/last X days":**
-        1. start_date = current_time MINUS X days (earlier time)  
+        1. start_date = current_time MINUS X days (earlier time)
         2. end_date = current_time (later time)
         3. Verify: start_date < end_date
 
@@ -488,7 +488,7 @@ class TimeRangeParsingCapability(BaseCapability):
 
     @staticmethod
     async def execute(
-        state: AgentState, 
+        state: AgentState,
         **kwargs
     ) -> Dict[str, Any]:
         """Execute comprehensive time range parsing with LLM integration and validation.
@@ -545,11 +545,11 @@ class TimeRangeParsingCapability(BaseCapability):
         # Define streaming helper here for step awareness
         streamer = get_streamer("time_range_parsing", state)
 
-        logger.info(f"Starting LLM-based time range parsing: {step.get('task_objective', 'unknown')}")
-        streamer.status("Parsing time range with LLM...")
-
-        # Use task_objective as primary instruction for focused time parsing
+        # Display task with structured formatting
         task_objective = step.get('task_objective', 'unknown')
+        logger.info(f"Starting time range parsing")
+        logger.info(f'[bold]Query:[/bold] "[italic]{task_objective}[/italic]"')
+        streamer.status("Parsing time range with LLM...")
 
         # Build sophisticated system prompt
         full_prompt = _get_time_parsing_system_prompt(task_objective)
@@ -605,13 +605,18 @@ class TimeRangeParsingCapability(BaseCapability):
             end_date=response_data.end_date,
         )
 
-        logger.info(f"Parsed time range: {time_context.start_date} to {time_context.end_date}")
+        # Display parsed result with structured formatting
+        start_str = time_context.start_date.strftime('%Y-%m-%d %H:%M:%S')
+        end_str = time_context.end_date.strftime('%Y-%m-%d %H:%M:%S')
+        logger.info(f"[bold]Parsed time range:[/bold]")
+        logger.info(f"  Start: [cyan]{start_str}[/cyan]")
+        logger.info(f"  End:   [cyan]{end_str}[/cyan]")
 
         # Store context using StateManager
         state_updates = StateManager.store_context(
-            state, 
-            registry.context_types.TIME_RANGE, 
-            step.get("context_key"), 
+            state,
+            registry.context_types.TIME_RANGE,
+            step.get("context_key"),
             time_context
         )
 
