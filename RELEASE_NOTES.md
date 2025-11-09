@@ -1,111 +1,177 @@
-# Osprey Framework - Latest Release (v0.8.3)
+# Osprey Framework - Latest Release (v0.8.4)
 
-🐳 **Container Runtime Flexibility Release** - Docker & Podman Support with Auto-Detection
+🔧 **Registry Architecture Enhancement** - Extend and Standalone Registry Modes
 
-## What's New in v0.8.3
+## What's New in v0.8.4
 
-### 🐳 Docker Runtime Support
-- **Flexible Container Runtime**: Framework now supports both Docker and Podman
-  - Automatic detection: Prefers Docker, falls back to Podman
-  - Configuration option: `container_runtime` in `config.yml` (`auto`, `docker`, or `podman`)
-  - Environment variable override: `CONTAINER_RUNTIME` for per-command selection
-  - Modern runtimes only: Docker Desktop 4.0+ or Podman 4.0+ (native compose support)
+### 🏗️ Registry Modes
 
-### 🔧 Runtime Detection Module
-- **New `runtime_helper.py`**: Intelligent runtime detection with caching
-  - Platform-specific error messages (macOS/Linux/Windows)
-  - Helpful troubleshooting guidance when Docker/Podman not running
-  - Module-level caching for performance
-  - Comprehensive test suite (33 tests)
+**Two distinct modes for application registries:**
 
-### 🛠️ Container Management Updates
-- **Updated 6 functions** in `container_manager.py` to use runtime abstraction
-- **Runtime-agnostic health checks** in `health_cmd.py`
-- **Runtime-agnostic mount detection** in `interactive_menu.py`
-- **Fixed JSON parsing**: `osprey deploy status` now handles both Docker (NDJSON) and Podman (JSON array) formats
-- All compose operations work seamlessly with both runtimes
+- **Extend Mode (Recommended)**: Applications extend framework defaults via `ExtendedRegistryConfig`
+  - Framework components loaded automatically (memory, Python, time parsing, routing, etc.)
+  - Applications add, exclude, or override framework components
+  - Returned by `extend_framework_registry()` helper function
+  - Reduces boilerplate and simplifies upgrades
+  - Perfect for 95%+ of applications
 
-### 📚 Documentation Updates
-- **Installation Guide**: Side-by-side Docker and Podman installation instructions
-- **API Reference**: Added `runtime_helper` module documentation
-- **Developer Guide**: Updated container deployment references
-- **Tutorial Updates**: Updated prerequisites and examples
-- **Documentation Workflow**: Added comprehensive `UPDATE_DOCS.md` guide
+- **Standalone Mode (Advanced)**: Applications provide complete registry including all framework components
+  - Framework registry is NOT loaded
+  - Full control over all components
+  - Used when `RegistryConfig` is returned directly (not via helper)
+  - For minimal deployments or custom framework variations
 
-### 📦 Dependency Changes
-- **Removed Python packages**: `podman` and `podman-compose` no longer required
-- **System installation**: Container runtimes now installed via system package managers
-  - macOS/Windows: Docker Desktop 4.0+ OR Podman 4.0+
-  - Linux: Docker CE 4.0+ OR Podman 4.0+
-- Framework uses CLI tools (`docker`/`podman` commands), not Python SDKs
+Mode detection is automatic based on registry type (`isinstance(config, ExtendedRegistryConfig)`)
 
-### 🎯 Custom AI Provider Registration
-- **Applications can register custom AI providers** through the registry system
-- Added `providers` parameter to `extend_framework_registry()` helper function
-- Added `exclude_providers` parameter to exclude framework providers
-- Added `override_providers` parameter to replace framework providers
-- Support for institutional AI services (Azure, Stanford AI, national lab endpoints)
-- Comprehensive test suite (16 tests) covering all provider registration scenarios
+### ✨ New Features
+
+- **`ExtendedRegistryConfig` marker class**: Signals Extend mode to the registry manager
+  - Subclass of `RegistryConfig` with identical fields
+  - Type-based detection enables automatic framework merging
+  - Added to `__all__` exports in `osprey.registry`
+
+- **`generate_explicit_registry_code()` helper function**: For template generation
+  - Generates complete registry Python code combining framework + app components
+  - Used by CLI template system for creating standalone registries
+  - Useful for applications that want full visibility of all components
+  - Takes app metadata and component lists, returns formatted Python source code
+
+- **Comprehensive test suite**: 500+ lines across 4 new test files
+  - `test_registry_modes.py`: Tests for Extend vs Standalone mode detection
+  - `test_registry_loading.py`: Tests for registry loading mechanisms
+  - `test_registry_helpers.py`: Tests for helper functions
+  - `test_registry_validation.py`: Tests for registry validation
+
+### 🔄 Changed
+
+- **Registry Helper**: `extend_framework_registry()` now returns `ExtendedRegistryConfig` instead of `RegistryConfig`
+  - Backward compatible (ExtendedRegistryConfig is a subclass of RegistryConfig)
+  - Type signature change enables automatic mode detection
+  - Applications using type hints should update return type annotation
+
+- **CLI Terminology Update**: More intuitive naming
+  - `compact` → `extend` (emphasizes extension of framework)
+  - `explicit` → `standalone` (clarifies independent operation)
+  - Updated all documentation, commands, and templates
+
+- **Enhanced Documentation**: Comprehensive coverage of both modes
+  - Developer guide updated with mode selection guidance
+  - API reference documentation expanded with ExtendedRegistryConfig details
+  - Code examples updated to show ExtendedRegistryConfig return type
+  - Migration guide for upgrading from older versions
 
 ## Breaking Changes
 
-### Installation Requirements
-- **Users must install Docker Desktop 4.0+ OR Podman 4.0+ separately**
-- Python packages no longer provide container runtime functionality
-- See [installation guide](https://als-apg.github.io/osprey/getting-started/installation.html) for platform-specific instructions
+⚠️ **These changes require minor updates to existing code:**
 
-### Impact
-- **Existing Podman users**: Unaffected - auto-detection will find Podman if Docker not installed
-- **New users**: More flexibility - can use Docker Desktop (most common) or Podman
-- **Docker and Podman use separate namespaces**: Existing containers/volumes won't be visible after switching runtimes
+### 1. RegistryManager Constructor
 
-## Upgrade Instructions
+**Change**: Parameter changed from `registry_paths: List[str]` to `registry_path: Optional[str]`
 
-1. **Install Container Runtime** (if not already installed):
-   - **Docker Desktop**: https://docs.docker.com/get-started/get-docker/
-   - **Podman**: https://podman.io/docs/installation
+**Impact**: Low - most applications use `initialize_registry()` which reads from config
 
-2. **Upgrade Framework**:
-   ```bash
-   pip install --upgrade osprey-framework
-   ```
+**Migration**:
+```python
+# Old (v0.8.3 and earlier):
+manager = RegistryManager(registry_paths=[path1, path2])
 
-3. **Verify Installation**:
-   ```bash
-   # Check Docker
-   docker --version
-   docker compose version
-   
-   # Or check Podman
-   podman --version
-   podman compose version
-   ```
+# New (v0.8.4+):
+manager = RegistryManager(registry_path=path)  # Single registry only
+```
 
-4. **Optional: Configure Runtime**:
-   ```yaml
-   # config.yml
-   container_runtime: auto  # or 'docker' or 'podman'
-   ```
+**Rationale**: Simplified to single-application model matching actual usage patterns. Framework now supports one application registry per instance (loaded from `config.yml`).
 
-## Testing
+### 2. Type Signature Change
 
-This release includes comprehensive test coverage:
-- **33 new tests** for runtime detection and selection
-- **16 new tests** for custom provider registration
-- **All 128 tests passing** with <2s runtime
+**Change**: `extend_framework_registry()` return type changed to `ExtendedRegistryConfig`
 
-## Links
+**Impact**: Very low - backward compatible at runtime (subclass relationship)
 
-- **Documentation**: https://als-apg.github.io/osprey
-- **Installation Guide**: https://als-apg.github.io/osprey/getting-started/installation.html
-- **API Reference**: https://als-apg.github.io/osprey/api_reference/
-- **GitHub Repository**: https://github.com/als-apg/osprey
-- **Issue Tracker**: https://github.com/als-apg/osprey/issues
+**Migration**:
+```python
+# Old type hint:
+def get_registry_config(self) -> RegistryConfig:
 
-## Contributors
+# New type hint:
+def get_registry_config(self) -> ExtendedRegistryConfig:
+```
 
-Thanks to everyone who contributed to this release!
+Only affects code using explicit type checking. Runtime behavior unchanged.
 
----
+## Upgrading from v0.8.3
 
-For the complete changelog, see [CHANGELOG.md](https://github.com/als-apg/osprey/blob/main/CHANGELOG.md).
+### For Most Users (using extend_framework_registry)
+
+**No changes required!** Your code will continue to work:
+
+```python
+from osprey.registry import extend_framework_registry
+
+# This still works exactly the same
+config = extend_framework_registry(
+    capabilities=[...],
+    context_classes=[...]
+)
+```
+
+**Optional improvement**: Update type hints for better IDE support:
+
+```python
+from osprey.registry import ExtendedRegistryConfig
+
+def get_registry_config(self) -> ExtendedRegistryConfig:  # Updated type hint
+    return extend_framework_registry(...)
+```
+
+### For Advanced Users (direct RegistryManager usage)
+
+If you instantiate `RegistryManager` directly:
+
+```python
+# Update parameter name:
+from osprey.registry import RegistryManager
+
+# Old:
+manager = RegistryManager(registry_paths=[path])
+
+# New:
+manager = RegistryManager(registry_path=path)
+```
+
+### For CLI Users
+
+**Terminology change** in commands:
+
+```bash
+# Old command options (still work for backward compatibility):
+osprey init my-project --registry-style compact
+osprey init my-project --registry-style explicit
+
+# New command options (recommended):
+osprey init my-project --registry-style extend
+osprey init my-project --registry-style standalone
+```
+
+## Installation
+
+```bash
+pip install --upgrade osprey-framework
+```
+
+## Documentation
+
+- **Main Documentation**: https://als-apg.github.io/osprey
+- **Registry System Guide**: https://als-apg.github.io/osprey/developer-guides/03_core-framework-systems/03_registry-and-discovery.html
+- **Migration Guide**: https://als-apg.github.io/osprey/getting-started/migration-guide.html
+- **API Reference**: https://als-apg.github.io/osprey/api_reference/01_core_framework/03_registry_system.html
+
+## Developer Notes
+
+- Registry system now uses type-based mode detection for cleaner separation of concerns
+- Standalone mode enables minimal deployments and custom framework variations
+- Extend mode remains the recommended default for >95% of applications
+- See developer guide "Registry and Discovery" for complete mode selection guidance
+
+## Full Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for complete details of all changes.
