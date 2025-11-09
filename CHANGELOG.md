@@ -5,6 +5,21 @@ All notable changes to the Osprey Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Custom AI Provider Registration**: Applications can now register custom AI model providers through the registry system
+  - Added `providers` parameter to `extend_framework_registry()` helper function
+  - Added `exclude_providers` parameter to exclude framework providers
+  - Added `override_providers` parameter to replace framework providers with custom implementations
+  - Provider merging support in `RegistryManager._merge_application_with_override()`
+  - Comprehensive test suite (16 tests) covering all provider registration scenarios
+  - Support for institutional AI services (Azure, Stanford AI, national lab endpoints) and commercial providers
+
+### Changed
+- Enhanced registry helper functions to support provider registration parameters
+- Updated developer guide documentation with provider registration examples
+
 ## [0.8.2] - 2025-11-05
 
 ### Added

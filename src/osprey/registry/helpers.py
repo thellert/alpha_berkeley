@@ -16,7 +16,8 @@ from .base import (
     ContextClassRegistration,
     DataSourceRegistration,
     ServiceRegistration,
-    FrameworkPromptProviderRegistration
+    FrameworkPromptProviderRegistration,
+    ProviderRegistration
 )
 
 
@@ -26,13 +27,16 @@ def extend_framework_registry(
     data_sources: Optional[List[DataSourceRegistration]] = None,
     services: Optional[List[ServiceRegistration]] = None,
     framework_prompt_providers: Optional[List[FrameworkPromptProviderRegistration]] = None,
+    providers: Optional[List[ProviderRegistration]] = None,
     core_nodes: Optional[List[NodeRegistration]] = None,
     exclude_capabilities: Optional[List[str]] = None,
     exclude_nodes: Optional[List[str]] = None,
     exclude_context_classes: Optional[List[str]] = None,
     exclude_data_sources: Optional[List[str]] = None,
+    exclude_providers: Optional[List[str]] = None,
     override_capabilities: Optional[List[CapabilityRegistration]] = None,
     override_nodes: Optional[List[NodeRegistration]] = None,
+    override_providers: Optional[List[ProviderRegistration]] = None,
 ) -> RegistryConfig:
     """Create application registry configuration that extends the framework.
 
@@ -53,12 +57,15 @@ def extend_framework_registry(
         data_sources: Application data sources to add to framework defaults
         services: Application services to add to framework defaults
         framework_prompt_providers: Application prompt providers to add
+        providers: Application AI model providers to add to framework defaults
         exclude_capabilities: Names of framework capabilities to exclude
         exclude_nodes: Names of framework nodes to exclude
         exclude_context_classes: Context types to exclude from framework
         exclude_data_sources: Names of framework data sources to exclude
+        exclude_providers: Names of framework providers to exclude
         override_capabilities: Capabilities that replace framework versions (by name)
         override_nodes: Nodes that replace framework versions (by name)
+        override_providers: Providers that replace framework versions (by name)
 
     Returns:
         Complete RegistryConfig with framework + application components
@@ -112,6 +119,24 @@ def extend_framework_registry(
                     ]
                 )
 
+        Add custom AI model providers::
+
+            def get_registry_config(self) -> RegistryConfig:
+                return extend_framework_registry(
+                    capabilities=[...],
+                    context_classes=[...],
+                    providers=[
+                        ProviderRegistration(
+                            module_path="my_app.providers.custom_ai",
+                            class_name="CustomAIProviderAdapter"
+                        ),
+                        ProviderRegistration(
+                            module_path="my_app.providers.institutional_ai",
+                            class_name="InstitutionalAIProviderAdapter"
+                        ),
+                    ]
+                )
+
     .. note::
        The returned configuration contains only application components. The
        framework registry system automatically merges this with framework defaults
@@ -137,6 +162,9 @@ def extend_framework_registry(
     if exclude_data_sources:
         framework_exclusions["data_sources"] = exclude_data_sources
 
+    if exclude_providers:
+        framework_exclusions["providers"] = exclude_providers
+
     # Combine override and regular components
     all_capabilities = list(capabilities or [])
     if override_capabilities:
@@ -146,6 +174,10 @@ def extend_framework_registry(
     if override_nodes:
         all_nodes.extend(override_nodes)
 
+    all_providers = list(providers or [])
+    if override_providers:
+        all_providers.extend(override_providers)
+
     # Return APPLICATION-ONLY config (framework will be merged by RegistryManager)
     return RegistryConfig(
         core_nodes=all_nodes,
@@ -154,6 +186,7 @@ def extend_framework_registry(
         data_sources=list(data_sources or []),
         services=list(services or []),
         framework_prompt_providers=list(framework_prompt_providers or []),
+        providers=all_providers,
         framework_exclusions=framework_exclusions if framework_exclusions else None
     )
 

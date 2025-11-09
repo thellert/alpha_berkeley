@@ -218,23 +218,71 @@ Component Registration
 
 **AI Provider Registration:**
 
-Applications can register custom AI providers for institutional services or commercial providers not included in the framework:
+Applications can register custom AI providers for institutional services or commercial providers not included in the framework.
+
+**Basic Provider Registration:**
 
 .. code-block:: python
 
-   # In registry.py
-   from osprey.registry import ProviderRegistration
+   # In src/my_app/registry.py
+   from osprey.registry import RegistryConfigProvider, ProviderRegistration
+   from osprey.registry.helpers import extend_framework_registry
    
+   class MyAppRegistryProvider(RegistryConfigProvider):
+       def get_registry_config(self):
+           return extend_framework_registry(
+               capabilities=[...],
+               context_classes=[...],
+               providers=[
+                   ProviderRegistration(
+                       module_path="my_app.providers.azure",
+                       class_name="AzureOpenAIProviderAdapter"
+                   ),
+                   ProviderRegistration(
+                       module_path="my_app.providers.institutional",
+                       class_name="InstitutionalAIProvider"
+                   )
+               ]
+           )
+
+**Excluding Framework Providers:**
+
+You can exclude framework providers if you want to use only custom providers:
+
+.. code-block:: python
+
    return extend_framework_registry(
+       capabilities=[...],
        providers=[
            ProviderRegistration(
-               module_path="my_app.providers.azure",
-               class_name="AzureOpenAIProviderAdapter"
+               module_path="my_app.providers.custom",
+               class_name="CustomProvider"
            )
        ],
-       # ... other registrations ...
+       exclude_providers=["anthropic", "google"]  # Exclude specific framework providers
    )
-   
+
+**Replacing Framework Providers:**
+
+To replace a framework provider with a custom implementation:
+
+.. code-block:: python
+
+   return extend_framework_registry(
+       capabilities=[...],
+       override_providers=[
+           ProviderRegistration(
+               module_path="my_app.providers.custom_openai",
+               class_name="CustomOpenAIProvider"
+           )
+       ],
+       exclude_providers=["openai"]  # Remove framework version
+   )
+
+**Provider Implementation:**
+
+.. code-block:: python
+
    # Implementation in src/my_app/providers/azure.py
    from osprey.models.providers.base import BaseProvider
    from typing import Optional

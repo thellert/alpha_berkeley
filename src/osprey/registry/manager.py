@@ -239,6 +239,9 @@ class RegistryManager:
 
         # Provider-specific storage for metadata introspection
         self._provider_registrations = {}
+        
+        # Store provider exclusions for deferred checking (names are introspected after loading)
+        self._excluded_provider_names = []
 
         # Build complete configuration by merging framework + applications
         self.config = self._build_merged_configuration()
@@ -578,6 +581,12 @@ class RegistryManager:
             if not excluded_names:
                 continue
 
+            # Handle provider exclusions specially (names are introspected after loading)
+            if component_type == 'providers':
+                self._excluded_provider_names.extend(excluded_names)
+                logger.info(f"Application {app_name} will exclude framework providers: {excluded_names}")
+                continue
+
             # Get the component collection from merged config
             component_collection = getattr(merged, component_type, None)
             if component_collection is None:
@@ -693,6 +702,15 @@ class RegistryManager:
         # Safely access framework_prompt_providers attribute
         app_prompt_providers = getattr(app_config, 'framework_prompt_providers', [])
         merged.framework_prompt_providers.extend(app_prompt_providers)
+
+        # Merge providers with override support (applications can add custom providers)
+        # Note: Provider names are introspected from the class after loading, so we can't
+        # check for overrides here. We'll append all application providers and let the
+        # _initialize_providers method handle any duplicate names (last one wins).
+        app_providers = getattr(app_config, 'providers', [])
+        if app_providers:
+            merged.providers.extend(app_providers)
+            logger.info(f"Application {app_name} added {len(app_providers)} provider(s)")
 
     def initialize(self) -> None:
         """Initialize all component registries in dependency order.
@@ -911,6 +929,11 @@ class RegistryManager:
                     raise RegistryError(
                         f"Provider {registration.class_name} must define 'name' class attribute"
                     )
+
+                # Check if this provider is excluded
+                if provider_name in self._excluded_provider_names:
+                    logger.info(f"  ⊘ Skipping excluded provider: {provider_name}")
+                    continue
 
                 # Store provider class (indexed by its name attribute)
                 self._registries['providers'][provider_name] = provider_class
