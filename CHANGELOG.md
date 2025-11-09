@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2025-11-09
+
 ### Added
 - **Docker Runtime Support**: Framework now supports both Docker and Podman container runtimes
   - New `runtime_helper.py` module for automatic runtime detection
