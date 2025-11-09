@@ -114,7 +114,7 @@ class CLI:
        :class:`rich.console.Console` : Rich console formatting
     """
 
-    def __init__(self, config_path="config.yml"):
+    def __init__(self, config_path="config.yml", show_streaming_updates=False):
         """Initialize the CLI interface with specified configuration.
 
         Sets up the CLI instance with empty framework components that will be
@@ -126,8 +126,11 @@ class CLI:
 
         :param config_path: Path to the configuration file
         :type config_path: str
+        :param show_streaming_updates: Whether to show streaming status updates from capabilities
+        :type show_streaming_updates: bool
         """
         self.config_path = config_path
+        self.show_streaming_updates = show_streaming_updates
         self.graph = None
         self.gateway = None
         self.thread_id = None
@@ -435,6 +438,54 @@ class CLI:
                 logger.exception("Unexpected error during interaction")
                 continue
 
+    def _handle_streaming_update(self, chunk: dict[str, Any]):
+        """Process and display a streaming status update from the agent graph.
+
+        .. note::
+           TODO(#12): This streaming logic will be unified with the logging system.
+           See https://github.com/als-apg/osprey/issues/12 for details.
+
+        Extracts status information from a streaming chunk and displays it in a
+        formatted way if streaming updates are enabled. This centralizes the
+        streaming update logic used in both new executions and resume operations.
+
+        :param chunk: Streaming chunk from LangGraph custom stream mode
+        :type chunk: dict[str, Any]
+
+        .. note::
+           This method only displays updates if self.show_streaming_updates is True.
+           By default, streaming updates are disabled since Router provides step logging.
+        """
+        if not self.show_streaming_updates or chunk.get("event_type") != "status":
+            return
+
+        message = chunk.get("message", "Processing...")
+        step = chunk.get("step")
+        total_steps = chunk.get("total_steps")
+        component = chunk.get("component", "")
+        phase = chunk.get("phase", "")
+
+        # Format message with step info (no percentages - they don't represent real progress)
+        status_parts = []
+
+        # Add phase/component context
+        if phase and phase != component:
+            status_parts.append(f"{phase}")
+        elif component:
+            status_parts.append(f"{component.replace('_', ' ').title()}")
+
+        # Add step counter if available
+        if step and total_steps:
+            status_parts.append(f"({step}/{total_steps})")
+
+        # Build final status message
+        if status_parts:
+            status_msg = f"{': '.join(status_parts)} - {message}"
+        else:
+            status_msg = message
+
+        self.console.print(f"[{Styles.INFO}]🔄 {status_msg}[/{Styles.INFO}]")
+
     async def _process_user_input(self, user_input: str):
         """Process user input through the Gateway and handle execution flow.
 
@@ -483,6 +534,7 @@ class CLI:
            :class:`osprey.infrastructure.gateway.Gateway` : Message processing
            :meth:`_execute_result` : Agent execution with streaming
            :meth:`_show_final_result` : Final result display
+           :meth:`_handle_streaming_update` : Streaming status display logic
         """
 
         self.console.print(f"[{Styles.INFO}]🔄 Processing: {user_input}[/{Styles.INFO}]")
@@ -509,15 +561,8 @@ class CLI:
             # Resume commands come from gateway - execute with streaming
             try:
                 async for chunk in self.graph.astream(result.resume_command, config=self.base_config, stream_mode="custom"):
-                    # Handle custom streaming events from get_stream_writer()
-                    if chunk.get("event_type") == "status":
-                        message = chunk.get("message", "Processing...")
-                        progress = chunk.get("progress", 0)
-                        # Show real-time status updates
-                        if progress:
-                            self.console.print(f"[{Styles.INFO}]🔄 {message} ({progress*100:.0f}%)[/{Styles.INFO}]")
-                        else:
-                            self.console.print(f"[{Styles.INFO}]🔄 {message}[/{Styles.INFO}]")
+                    # Handle streaming updates if enabled (centralized logic)
+                    self._handle_streaming_update(chunk)
 
                 # After resuming, check if there are more interrupts or if execution completed
                 state = self.graph.get_state(config=self.base_config)
@@ -585,35 +630,29 @@ class CLI:
             Normal execution flow::
 
                 >>> await cli._execute_result(agent_state)
-                🔄 Data Analysis - Loading dataset...
-                🔄 Data Analysis - Processing 1000 records...
+                # Router logs step progress (e.g., "Executing step 1/3")
+                # Streaming updates not shown unless show_streaming_updates=True
                 🤖 Analysis complete! Found 3 key insights.
 
             Approval interrupt handling::
 
                 >>> await cli._execute_result(agent_state)
-                🔄 Python Executor - Generating analysis code...
+                # Router logs execution progress
                 ⚠️ Approve Python execution? (yes/no)
                 # Waits for user input and processes approval
 
         .. seealso::
            :meth:`_process_user_input` : Recursive approval handling
            :meth:`_show_final_result` : Final result display formatting
+           :meth:`_handle_streaming_update` : Streaming status display logic
            :class:`langgraph.graph.StateGraph` : LangGraph streaming execution
         """
 
         try:
             # Use streaming for real-time updates
             async for chunk in self.graph.astream(input_data, config=self.base_config, stream_mode="custom"):
-                # Handle custom streaming events from get_stream_writer()
-                if chunk.get("event_type") == "status":
-                    message = chunk.get("message", "Processing...")
-                    progress = chunk.get("progress", 0)
-                    # Show real-time status updates
-                    if progress:
-                        self.console.print(f"[{Styles.INFO}]🔄 {message} ({progress*100:.0f}%)[/{Styles.INFO}]")
-                    else:
-                        self.console.print(f"[{Styles.INFO}]🔄 {message}[/{Styles.INFO}]")
+                # Handle streaming updates if enabled (centralized logic)
+                self._handle_streaming_update(chunk)
 
             # After streaming completes, check for interrupts
             state = self.graph.get_state(config=self.base_config)
@@ -972,7 +1011,7 @@ class CLI:
             return f"❌ Notebook display error: {str(e)}"
 
 
-async def run_cli(config_path="config.yml"):
+async def run_cli(config_path="config.yml", show_streaming_updates=False):
     """Run the CLI interface with specified configuration.
 
     This function provides a clean entry point for starting the CLI with a
@@ -981,6 +1020,8 @@ async def run_cli(config_path="config.yml"):
 
     :param config_path: Path to the configuration file
     :type config_path: str
+    :param show_streaming_updates: Whether to show streaming status updates from capabilities
+    :type show_streaming_updates: bool
     :raises Exception: Startup errors are propagated from CLI initialization
 
     Examples:
@@ -994,16 +1035,26 @@ async def run_cli(config_path="config.yml"):
             >>> import asyncio
             >>> asyncio.run(run_cli())
 
+        Run with streaming updates enabled::
+
+            >>> import asyncio
+            >>> asyncio.run(run_cli(show_streaming_updates=True))
+
     .. note::
        The config_path is stored but the global configuration system is
        initialized from environment or default paths. In future refactoring,
        this will be updated to use explicit config loading.
 
+    .. note::
+       Streaming updates are disabled by default as the Router already provides
+       step-level progress logging (e.g., "Executing step 1/3"). Enable them for
+       more granular capability-level status updates.
+
     .. seealso::
        :class:`CLI` : Main CLI interface class
        :meth:`CLI.run` : Primary interaction loop
     """
-    cli = CLI(config_path=config_path)
+    cli = CLI(config_path=config_path, show_streaming_updates=show_streaming_updates)
     await cli.run()
 
 
