@@ -69,21 +69,23 @@ custom_style = get_questionary_style()
 
 def show_banner(context: str = "interactive", config_path: Optional[str] = None):
     """Display the unified osprey banner with ASCII art.
-    
+
     Args:
         context: Display context - "interactive", "chat", or "welcome"
         config_path: Optional path to config file for custom banner
     """
+    from pathlib import Path
+
     from rich.text import Text
+
     from osprey.utils.config import get_config_value
     from osprey.utils.log_filter import quiet_logger
-    from pathlib import Path
-    
+
     console.print()
-    
+
     # Try to load custom banner if in a project directory
     banner_text = None
-    
+
     try:
         # Check if config exists before trying to load
         # Suppress config loading messages in interactive menu
@@ -94,7 +96,7 @@ def show_banner(context: str = "interactive", config_path: Optional[str] = None)
                 banner_text = get_config_value("cli.banner", None)
     except Exception:
         pass  # Fallback to default - CLI should always work
-    
+
     # Default banner if not configured
     if banner_text is None:
         banner_text = """
@@ -112,9 +114,9 @@ def show_banner(context: str = "interactive", config_path: Optional[str] = None)
     ║      Command Line Interface for the Osprey Framework      ║
     ╚═══════════════════════════════════════════════════════════╝
         """
-    
+
     console.print(Text(banner_text, style=ThemeConfig.get_banner_style()))
-    
+
     # Context-specific subtitle
     if context == "interactive":
         console.print(f"    [{Styles.HEADER}]Interactive Menu System[/{Styles.HEADER}]")
@@ -123,7 +125,7 @@ def show_banner(context: str = "interactive", config_path: Optional[str] = None)
         msg = Messages.info("💡 Type 'bye' or 'end' to exit")
         console.print(f"    {msg}")
         console.print(f"    [{Styles.ACCENT}]⚡ Use slash commands (/) for quick actions - try /help[/{Styles.ACCENT}]")
-    
+
     console.print()
 
 
@@ -602,7 +604,7 @@ def select_template(templates: list[str]) -> str | None:
     descriptions = {
         'minimal': 'Empty project structure with TODO placeholders',
         'hello_world_weather': 'Single capability weather example (tutorial)',
-        'wind_turbine': 'Multi-capability with RAG and custom prompts (advanced)'
+        'wind_turbine': 'Multi-capability with RAG and custom prompts (advanced example)'
     }
 
     choices = []
@@ -1081,16 +1083,15 @@ def run_interactive_init() -> str:
 
     # 3. Registry style
     console.print("\n[bold]Step 3: Registry Style[/bold]\n")
+
     registry_style = questionary.select(
         "Select registry style:",
         choices=[
-            Choice("compact  - Uses extend_osprey_registry() helper (~10 lines)",
-                   value='compact'),
-            Choice("explicit - Full framework component listing (~500 lines)",
-                   value='explicit'),
+            Choice("extend     - Extends framework defaults (recommended)", value='extend'),
+            Choice("standalone - Complete explicit registry (advanced)", value='standalone'),
         ],
         style=custom_style,
-        instruction="(compact is recommended for most projects)"
+        instruction="(extend mode is recommended for most projects)"
     ).ask()
 
     if registry_style is None:
@@ -1133,15 +1134,17 @@ def run_interactive_init() -> str:
 
     try:
         # Note: force=True because we already handled directory deletion if user chose override
+        context = {
+            'default_provider': provider,
+            'default_model': model
+        }
+
         project_path = manager.create_project(
             project_name=project_name,
             output_dir=Path.cwd(),
             template_name=template,
             registry_style=registry_style,
-            context={
-                'default_provider': provider,
-                'default_model': model
-            },
+            context=context,
             force=True
         )
 
@@ -1431,13 +1434,13 @@ def handle_deploy_action(project_path: Path | None = None):
             console.print("  • All networks created by compose")
             console.print("  • Container images built for this project")
             console.print("\n[dim]This action cannot be undone![/dim]\n")
-            
+
             confirm = questionary.confirm(
                 "Are you sure you want to proceed?",
                 default=False,
                 style=custom_style
             ).ask()
-            
+
             if not confirm:
                 console.print(f"\n{Messages.warning('Operation cancelled')}")
                 input("\nPress ENTER to continue...")
@@ -1447,7 +1450,7 @@ def handle_deploy_action(project_path: Path | None = None):
                     except (OSError, PermissionError):
                         pass
                 return
-        
+
         elif action == 'rebuild':
             console.print("\n[bold yellow]⚠️  Rebuild Operation[/bold yellow]")
             console.print("\n[warning]This will:[/warning]")
@@ -1457,13 +1460,13 @@ def handle_deploy_action(project_path: Path | None = None):
             console.print("  • Rebuild everything from scratch")
             console.print("  • Start services again")
             console.print("\n[dim]Any data stored in volumes will be lost![/dim]\n")
-            
+
             confirm = questionary.confirm(
                 "Proceed with rebuild?",
                 default=False,
                 style=custom_style
             ).ask()
-            
+
             if not confirm:
                 console.print(f"\n{Messages.warning('Rebuild cancelled')}")
                 input("\nPress ENTER to continue...")
@@ -1473,7 +1476,7 @@ def handle_deploy_action(project_path: Path | None = None):
                     except (OSError, PermissionError):
                         pass
                 return
-        
+
         # Build the osprey deploy command
         # Use 'osprey' command directly to avoid module import warnings
         cmd = ["osprey", "deploy", action]

@@ -18,32 +18,32 @@ Quick Navigation
    .. grid-item-card:: 📦 Fresh Installation
       :link: installation
       :link-type: doc
-      
+
       Installing Osprey for the first time? Skip this guide.
 
    .. grid-item-card:: 🔄 From v0.7.x → v0.8.0
       :link: migration-path-b-v0-7-x-v0-8-0-rename-only
       :link-type: ref
-      
+
       Quick rename migration (15-30 min)
 
-   .. grid-item-card:: 🏗️ From v0.6.x → v0.8.0  
+   .. grid-item-card:: 🏗️ From v0.6.x → v0.8.0
       :link: migration-path-a-v0-6-x-v0-8-0-full-migration
       :link-type: ref
-      
+
       Architectural + rename migration (2-4 hours)
 
    .. grid-item-card:: 📖 Understanding Changes
       :link: overview-of-all-changes
       :link-type: ref
-      
+
       What changed and why
 
 Using Claude, Cursor, or another AI assistant? Download the AI-optimized migration guide for your version:
-   
+
 - **📥 From v0.7.x (Quick Rename):** :download:`Migration Guide v0.7→v0.8 </_static/resources/MIGRATION_GUIDE_v0.7_to_v0.8.md>`
 - **📥 From v0.6.x (Full Migration):** :download:`Migration Guide v0.6→v0.8 </_static/resources/MIGRATION_GUIDE_v0.6_to_v0.8.md>`
-   
+
 
 .. _overview-of-all-changes:
 
@@ -65,7 +65,7 @@ Version History
    * - **v0.8.0**
      - Nov 2025
      - 🦅 **Renamed to Osprey Framework**
-       
+
        - Package: ``alpha-berkeley-framework`` → ``osprey-framework``
        - Imports: ``from framework.*`` → ``from osprey.*``
        - CLI: ``framework`` → ``osprey``
@@ -73,7 +73,7 @@ Version History
    * - **v0.7.0**
      - Oct 2025
      - 📦 **Pip-installable Architecture**
-       
+
        - Monolithic → Separate applications
        - Unified CLI system
        - Registry helpers
@@ -81,7 +81,7 @@ Version History
    * - **v0.6.x**
      - Earlier
      - 🏗️ **Monolithic Structure**
-       
+
        - All applications embedded in framework repo
        - Manual Python module execution
 
@@ -104,7 +104,7 @@ Structural Evolution
 
    # Framework as dependency
    pip install alpha-berkeley-framework
-   
+
    # Separate application repos
    my-project/
    ├── src/my_project/
@@ -115,7 +115,7 @@ Structural Evolution
 
    # New package name
    pip install osprey-framework
-   
+
    # Same structure, new imports
    my-project/
    ├── src/my_project/
@@ -133,7 +133,7 @@ Migration Path B: v0.7.x → v0.8.0 (Rename Only)
 
    If you're already on v0.7.x with the pip-installable architecture,
    this is a **quick rename migration** (15-30 minutes).
-   
+
    **No API changes** - only package name and imports change.
 
 Step 1: Update Framework Package
@@ -255,7 +255,7 @@ Migration Path A: v0.6.x → v0.8.0 (Full Migration)
 
    If you're on v0.6.x or earlier with the monolithic structure,
    you need **both migrations** (2-4 hours):
-   
+
    1. Architectural migration (monolithic → pip-installable)
    2. Rename migration (Alpha Berkeley → Osprey)
 
@@ -306,10 +306,10 @@ Step 3: Copy Application Code
 
    # From old monolithic structure
    OLD_REPO=/path/to/alpha_berkeley
-   
+
    # Copy application code
    cp -r $OLD_REPO/src/applications/my_app/* src/my_app/
-   
+
    # Copy custom services if any
    if [ -d "$OLD_REPO/services/applications/my_app" ]; then
        cp -r $OLD_REPO/services/applications/my_app/* services/
@@ -327,7 +327,7 @@ You need **two sets of replacements**:
    # Update all Python files
    find src/my_app -name "*.py" -type f -exec sed -i \
      's/from applications\.my_app/from my_app/g' {} +
-   
+
    find src/my_app -name "*.py" -type f -exec sed -i \
      's/import applications\.my_app/import my_app/g' {} +
 
@@ -338,7 +338,7 @@ You need **two sets of replacements**:
    # Update framework imports to osprey
    find src/my_app -name "*.py" -type f -exec sed -i \
      's/from framework\./from osprey./g' {} +
-   
+
    # Update string module references
    find src/my_app -name "*.py" -type f -exec sed -i \
      's/"framework\./"osprey./g' {} +
@@ -348,9 +348,9 @@ You need **two sets of replacements**:
 .. code-block:: bash
 
    # Should find NOTHING:
-   grep -r "applications\." src/my_app/ 
+   grep -r "applications\." src/my_app/
    grep -r "from framework\." src/my_app/
-   
+
    # Should find your osprey imports:
    grep -r "from osprey\." src/my_app/
 
@@ -359,11 +359,11 @@ You need **two sets of replacements**:
 .. code-block:: python
 
    # Check each capability file
-   
+
    # ❌ OLD (v0.6.x):
    from applications.my_app.capabilities import X
    from framework.state import AgentState
-   
+
    # ✅ NEW (v0.8.0):
    from my_app.capabilities import X
    from osprey.state import AgentState
@@ -375,20 +375,20 @@ Replace verbose registry with helper function:
 
 .. code-block:: python
 
-   # src/my_app/registry.py
-   from osprey.registry import (
-       extend_framework_registry,
-       CapabilityRegistration,
-       ContextClassRegistration,
-       RegistryConfigProvider,
-       RegistryConfig
-   )
-   
-   class MyAppRegistryProvider(RegistryConfigProvider):
-       """Registry for My Application."""
-       
-       def get_registry_config(self) -> RegistryConfig:
-           return extend_framework_registry(
+  # src/my_app/registry.py
+  from osprey.registry import (
+      extend_framework_registry,
+      CapabilityRegistration,
+      ContextClassRegistration,
+      RegistryConfigProvider,
+      ExtendedRegistryConfig
+  )
+
+  class MyAppRegistryProvider(RegistryConfigProvider):
+      """Registry for My Application."""
+
+      def get_registry_config(self) -> ExtendedRegistryConfig:
+          return extend_framework_registry(
                capabilities=[
                    CapabilityRegistration(
                        name="my_capability",
@@ -425,12 +425,12 @@ Edit ``config.yml`` to customize:
 .. code-block:: yaml
 
    # Essential settings to update:
-   
+
    project_name: "my-app"
    project_root: /absolute/path/to/my-app
    registry_path: ./src/my_app/registry.py
    build_dir: ./build
-   
+
    models:
      orchestrator:
        provider: openai
@@ -466,7 +466,7 @@ Step 8: Setup Environment
 
    # Copy environment template
    cp .env.example .env
-   
+
    # Edit .env with your API keys
 
 Step 9: Validate Setup
@@ -505,7 +505,7 @@ Step 11: Create Repository
    git init
    git add .
    git commit -m "Initial commit: Migrated to Osprey Framework v0.8.0"
-   
+
    # Create remote and push
    git remote add origin <your-repo-url>
    git push -u origin main
@@ -527,7 +527,7 @@ All ``applications.*`` imports must be updated:
    # OLD ❌
    from applications.wind_turbine.capabilities import TurbineAnalysis
    from applications.wind_turbine.context_classes import TurbineDataContext
-   
+
    # NEW ✅
    from wind_turbine.capabilities import TurbineAnalysis
    from wind_turbine.context_classes import TurbineDataContext
@@ -542,7 +542,7 @@ All ``framework.*`` imports must be updated to ``osprey.*``:
    # OLD ❌
    from framework.state import AgentState
    from framework.base.capability import BaseCapability
-   
+
    # NEW ✅
    from osprey.state import AgentState
    from osprey.base.capability import BaseCapability
@@ -571,7 +571,7 @@ See :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference` for comp
 
    # OLD ❌
    pip install alpha-berkeley-framework
-   
+
    # NEW ✅
    pip install osprey-framework
 
@@ -586,7 +586,7 @@ Each application now has its own ``config.yml``:
    applications:
      - als_assistant
      - wind_turbine
-   
+
    # NEW: Per-application config
    project_name: "my-app"
    registry_path: ./src/my_app/registry.py
@@ -643,7 +643,7 @@ Import Verification
 
    # Create test_migration.py
    """Test that all imports work."""
-   
+
    def test_core_imports():
        """Test core framework imports."""
        from osprey.state import AgentState
@@ -651,13 +651,13 @@ Import Verification
        from osprey.base.node import BaseNode
        from osprey.registry.manager import RegistryManager
        print("✅ Core imports working")
-   
+
    def test_app_imports():
        """Test your application imports."""
        from my_app.capabilities.my_capability import MyCapability
        from my_app.registry import registry
        print("✅ Application imports working")
-   
+
    if __name__ == "__main__":
        test_core_imports()
        test_app_imports()
@@ -671,7 +671,7 @@ CLI Verification
    # Test basic CLI commands
    osprey --version      # Should show 0.8.0+
    osprey health         # Should pass all checks
-   
+
    # Test with your project
    osprey export-config --project /path/to/your/project
    osprey chat --project /path/to/your/project --dry-run
@@ -682,9 +682,9 @@ Search for Old References
 .. code-block:: bash
 
    # Should find NOTHING (or only comments):
-   grep -r "from framework\." src/ 
+   grep -r "from framework\." src/
    grep -r "alpha-berkeley-framework" .
-   
+
    # Should find your new imports:
    grep -r "from osprey\." src/
    grep -r "osprey-framework" requirements.txt pyproject.toml
@@ -696,7 +696,7 @@ Run Tests
 
    # Run your existing test suite
    pytest -v
-   
+
    # Should all pass with new imports
 
 Complete Checklist
@@ -715,7 +715,7 @@ Complete Checklist
    * - ☐
      - All ``from framework.*`` → ``from osprey.*``
      - Both
-   * - ☐  
+   * - ☐
      - All ``"framework.*`` → ``"osprey.*``
      - Both
    * - ☐
@@ -760,7 +760,7 @@ Common Issues
 
    # Find remaining old imports
    grep -r "from framework\." src/ --include="*.py"
-   
+
    # Replace them with:
    # from framework.X → from osprey.X
 
@@ -782,10 +782,10 @@ Common Issues
 
    # Activate correct virtual environment
    source venv/bin/activate
-   
+
    # Reinstall
    pip install osprey-framework
-   
+
    # Verify
    which osprey
 
@@ -870,7 +870,7 @@ If you're coming from v0.6.x, you also get:
 .. code-block:: python
 
    from osprey.registry import extend_framework_registry
-   
+
    # 70% less code, automatic framework updates
    return extend_framework_registry(
        capabilities=[...],
@@ -890,7 +890,7 @@ If you're coming from v0.6.x, you also get:
 .. code-block:: bash
 
    osprey health
-   
+
    # Comprehensive system validation
 
 **Template System:**

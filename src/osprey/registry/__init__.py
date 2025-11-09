@@ -106,6 +106,7 @@ from .base import (
     FrameworkPromptProviderRegistration,
     ProviderRegistration,
     RegistryConfig,
+    ExtendedRegistryConfig,
     ExecutionPolicyAnalyzerRegistration,
     DomainAnalyzerRegistration
 )
@@ -113,7 +114,8 @@ from .base import (
 # Helper functions for simplified registry creation
 from .helpers import (
     extend_framework_registry,
-    get_framework_defaults
+    get_framework_defaults,
+    generate_explicit_registry_code
 )
 
 __all__ = [
@@ -134,8 +136,10 @@ __all__ = [
     'FrameworkPromptProviderRegistration',
     'ProviderRegistration',
     'RegistryConfig',
+    'ExtendedRegistryConfig',
 
     # Helper functions (NEW - Phase 4.6)
     'extend_framework_registry',
     'get_framework_defaults',
+    'generate_explicit_registry_code',
 ] 

@@ -11,16 +11,17 @@ The Osprey Framework implements a centralized component registration and discove
    :icon: book
 
    **Key Concepts:**
-   
+
    - Understanding :class:`RegistryManager` and component access patterns
+   - Choosing between **Extend Mode** (recommended) and **Standalone Mode** registry patterns
    - Implementing application registries with :class:`RegistryConfigProvider`
    - Using ``@capability_node`` decorator for LangGraph integration
    - Registry configuration patterns and best practices
    - Component loading order and dependency management
 
    **Prerequisites:** Understanding of :doc:`01_state-management-architecture` (AgentState) and Python decorators
-   
-   **Time Investment:** 20-30 minutes for complete understanding
+
+   **Time Investment:** 25-35 minutes for complete understanding
 
 System Overview
 ===============
@@ -40,6 +41,143 @@ Applications register components by implementing ``RegistryConfigProvider`` in t
    # config.yml
    registry_path: ./src/my_app/registry.py
 
+Registry Modes
+==============
+
+The registry system supports two modes for application registries, detected automatically based on the registry type. **Most applications should use Extend Mode** (recommended default).
+
+.. tab-set::
+
+   .. tab-item:: Extend Mode (Recommended)
+
+      **Extend Mode** allows applications to build on top of framework defaults by adding domain-specific components while automatically inheriting all framework infrastructure.
+
+      **When to use:**
+         - Most applications (95% of use cases)
+         - When you want automatic framework features
+         - When you need to add domain-specific components
+         - When you want easier framework upgrades
+
+      **How it works:**
+         Framework components load first, then application components merge in. Applications can :ref:`add, exclude, or override specific framework components <excluding-overriding-components>`.
+
+      **Type marker:**
+         Returns :class:`ExtendedRegistryConfig` (via :func:`extend_framework_registry` helper)
+
+      **Example:**
+
+      .. code-block:: python
+
+         from osprey.registry import (
+             RegistryConfigProvider,
+             extend_framework_registry,
+             CapabilityRegistration,
+             ContextClassRegistration,
+             ExtendedRegistryConfig
+         )
+
+         class MyAppRegistryProvider(RegistryConfigProvider):
+             def get_registry_config(self) -> ExtendedRegistryConfig:
+                 return extend_framework_registry(
+                     capabilities=[
+                         CapabilityRegistration(
+                             name="weather",
+                             module_path="my_app.capabilities.weather",
+                             class_name="WeatherCapability",
+                             description="Get weather data",
+                             provides=["WEATHER_DATA"],
+                             requires=[]
+                         )
+                     ],
+                     context_classes=[
+                         ContextClassRegistration(
+                             context_type="WEATHER_DATA",
+                             module_path="my_app.context_classes",
+                             class_name="WeatherContext"
+                         )
+                     ]
+                 )
+
+      **Benefits:**
+         - Less boilerplate code (only specify your components)
+         - Easier framework upgrades (new features automatically included)
+         - Full framework capability access without explicit registration
+         - Flexible (can exclude or override framework components as needed)
+
+   .. tab-item:: Standalone Mode (Advanced)
+
+      **Standalone Mode** gives applications complete control by requiring them to define ALL components, including framework infrastructure. The framework registry is NOT loaded.
+
+      **When to use:**
+         - Special cases requiring full control over all components
+         - Minimal deployments that don't need full framework
+         - Custom framework variations
+
+      **How it works:**
+         Application provides complete registry including ALL framework components. Framework registry is skipped entirely.
+
+      **Type marker:**
+         Returns :class:`RegistryConfig` directly (not via helper)
+
+      **Example:**
+
+      .. code-block:: python
+
+         from osprey.registry import (
+             RegistryConfigProvider,
+             RegistryConfig,
+             NodeRegistration,
+             CapabilityRegistration,
+             # ... all other registration types
+         )
+
+         class StandaloneRegistryProvider(RegistryConfigProvider):
+             def get_registry_config(self) -> RegistryConfig:
+                 return RegistryConfig(
+                     # Must provide ALL framework nodes
+                     core_nodes=[
+                         NodeRegistration(
+                             name="orchestrator",
+                             module_path="osprey.langgraph.nodes.orchestrator",
+                             function_name="orchestrator_node",
+                             description="Core orchestration"
+                         ),
+                         # ... ALL other framework nodes required
+                     ],
+                     # Must provide ALL framework capabilities
+                     capabilities=[
+                         CapabilityRegistration(
+                             name="memory",
+                             module_path="osprey.capabilities.memory",
+                             # ... complete framework memory capability
+                         ),
+                         # ... ALL other framework capabilities + app capabilities
+                     ],
+                     # ... ALL other component types
+                 )
+
+      .. warning::
+         Standalone mode requires maintaining a complete list of framework components.
+         This is significantly more maintenance overhead and is only recommended for
+         advanced use cases. Framework upgrades may require registry updates.
+
+**Mode Detection:**
+
+The :class:`RegistryManager` automatically detects the mode by checking the type returned by :meth:`RegistryConfigProvider.get_registry_config`:
+
+- ``isinstance(config, ExtendedRegistryConfig)`` → **Extend Mode** (load framework, then merge)
+- ``isinstance(config, RegistryConfig)`` but not ``ExtendedRegistryConfig`` → **Standalone Mode** (skip framework)
+
+.. seealso::
+   :class:`ExtendedRegistryConfig`
+      API reference for the Extend Mode marker class
+
+   :func:`extend_framework_registry`
+      Helper function that returns ExtendedRegistryConfig
+
+   :class:`RegistryConfig`
+      Base configuration class for Standalone Mode
+
 RegistryManager
 ===============
 
@@ -48,13 +186,13 @@ The ``RegistryManager`` provides centralized access to all framework components:
 .. code-block:: python
 
    from osprey.registry import initialize_registry, get_registry
-   
+
    # Initialize the registry system
    initialize_registry()
-   
+
    # Access the singleton registry instance
    registry = get_registry()
-   
+
    # Access components
    capability = registry.get_capability("weather_data_retrieval")
    context_class = registry.get_context_class("WEATHER_DATA")
@@ -67,47 +205,17 @@ The ``RegistryManager`` provides centralized access to all framework components:
 - ``get_data_source(name)`` - Get data source provider instance
 - ``get_node(name)`` - Get LangGraph node function
 
-Application Registry Implementation
-===================================
+Advanced Registry Patterns
+==========================
 
-Applications implement registries using the ``RegistryConfigProvider`` interface with the ``extend_framework_registry()`` helper:
+This section covers advanced patterns for customizing your application registry beyond the basic examples shown in **Registry Modes** above.
 
-.. code-block:: python
+.. _excluding-overriding-components:
 
-   # src/my_app/registry.py
-   from osprey.registry import (
-       extend_framework_registry,
-       CapabilityRegistration,
-       ContextClassRegistration,
-       RegistryConfig,
-       RegistryConfigProvider
-   )
-   
-   class MyAppRegistryProvider(RegistryConfigProvider):
-       def get_registry_config(self) -> RegistryConfig:
-           return extend_framework_registry(
-               capabilities=[
-                   CapabilityRegistration(
-                       name="weather_data_retrieval",
-                       module_path="my_app.capabilities.weather_data_retrieval",
-                       class_name="WeatherDataRetrievalCapability",
-                       description="Retrieve weather data for analysis",
-                       provides=["WEATHER_DATA"],
-                       requires=["TIME_RANGE"]
-                   )
-               ],
-               context_classes=[
-                   ContextClassRegistration(
-                       context_type="WEATHER_DATA",
-                       module_path="my_app.context_classes",
-                       class_name="WeatherDataContext"
-                   )
-               ]
-           )
+Excluding and Overriding Framework Components
+---------------------------------------------
 
-The ``extend_framework_registry()`` helper automatically includes all framework capabilities (memory, Python execution, time parsing, etc.) while adding your application-specific components.
-
-**Advanced Options:**
+You can selectively exclude or replace framework components to customize behavior:
 
 .. code-block:: python
 
@@ -128,7 +236,7 @@ The ``extend_framework_registry()`` helper automatically includes all framework 
            )
        ],
        context_classes=[...],
-       
+
        # Add data sources
        data_sources=[
            DataSourceRegistration(
@@ -138,7 +246,7 @@ The ``extend_framework_registry()`` helper automatically includes all framework 
                description="Domain knowledge retrieval"
            )
        ],
-       
+
        # Add custom framework prompt providers
        framework_prompt_providers=[
            FrameworkPromptProviderRegistration(
@@ -168,14 +276,14 @@ Component Registration
 
    # Implementation in src/my_app/capabilities/weather_data_retrieval.py
    from osprey.base import BaseCapability, capability_node
-   
+
    @capability_node
    class WeatherDataRetrievalCapability(BaseCapability):
        name = "weather_data_retrieval"
        description = "Retrieve weather data for analysis"
        provides = ["WEATHER_DATA"]
        requires = ["TIME_RANGE"]
-       
+
        @staticmethod
        async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
            # Implementation here
@@ -194,11 +302,11 @@ Component Registration
 
    # Implementation in src/my_app/context_classes.py
    from osprey.context.base import CapabilityContext
-   
+
    class WeatherDataContext(CapabilityContext):
        CONTEXT_TYPE: ClassVar[str] = "WEATHER_DATA"
        CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
-       
+
        location: str
        temperature: float
        conditions: str
@@ -227,7 +335,7 @@ Applications can register custom AI providers for institutional services or comm
    # In src/my_app/registry.py
    from osprey.registry import RegistryConfigProvider, ProviderRegistration
    from osprey.registry.helpers import extend_framework_registry
-   
+
    class MyAppRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self):
            return extend_framework_registry(
@@ -287,10 +395,10 @@ To replace a framework provider with a custom implementation:
    from osprey.models.providers.base import BaseProvider
    from typing import Optional
    import httpx
-   
+
    class AzureOpenAIProviderAdapter(BaseProvider):
        """Azure OpenAI provider with institutional configuration."""
-       
+
        # Provider metadata (single source of truth)
        name = "azure_openai"
        requires_api_key = True
@@ -298,7 +406,7 @@ To replace a framework provider with a custom implementation:
        requires_model_id = True
        supports_proxy = True
        default_base_url = None
-       
+
        def create_model(
            self,
            model_id: str,
@@ -310,7 +418,7 @@ To replace a framework provider with a custom implementation:
            """Create PydanticAI model instance."""
            # Implementation for Azure-specific model creation
            pass
-       
+
        def execute_completion(
            self,
            message: str,
@@ -324,7 +432,7 @@ To replace a framework provider with a custom implementation:
            """Execute direct API completion."""
            # Implementation for Azure-specific completions
            pass
-       
+
        def check_health(
            self,
            api_key: Optional[str],
@@ -349,20 +457,20 @@ Registry Initialization and Usage
 .. code-block:: python
 
    from osprey.registry import initialize_registry, get_registry
-   
+
    # Initialize registry (loads framework + application components)
    initialize_registry()
-   
+
    # Access registry throughout application
    registry = get_registry()
-   
+
    # Get capabilities
    capability = registry.get_capability("weather_data_retrieval")
    all_capabilities = registry.get_all_capabilities()
-   
+
    # Get context classes
    weather_context_class = registry.get_context_class("WEATHER_DATA")
-   
+
    # Get data sources
    knowledge_provider = registry.get_data_source("knowledge_base")
 
@@ -374,11 +482,11 @@ The registry system automatically exports metadata during initialization for use
 
    # Export happens automatically during initialization
    initialize_registry(auto_export=True)  # Default behavior
-   
+
    # Manual export for debugging or integration
    registry = get_registry()
    export_data = registry.export_registry_to_json("/path/to/export")
-   
+
    # Export creates standardized JSON files:
    # - registry_export.json (complete metadata)
    # - capabilities.json (capability definitions)
@@ -402,7 +510,7 @@ Component Loading Order
 Components are loaded lazily during registry initialization:
 
 1. **Context classes** - Required by capabilities
-2. **Data sources** - Required by capabilities  
+2. **Data sources** - Required by capabilities
 3. **Providers** - AI model providers
 4. **Core nodes** - Infrastructure components
 5. **Services** - Internal LangGraph service graphs

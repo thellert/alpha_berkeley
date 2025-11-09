@@ -189,7 +189,7 @@ class TestCLIIntegration:
         assert "Project created successfully" in result.output
         # Match registry style (may have ANSI color codes)
         assert "Registry style:" in result.output
-        assert "compact" in result.output
+        assert "extend" in result.output
 
     def test_init_command_with_template(self, tmp_path):
         """Test init command with specific template."""
@@ -210,28 +210,28 @@ class TestCLIIntegration:
         """Test init command with registry style option."""
         runner = CliRunner()
 
-        # Test compact style
+        # Test extend style
         result = runner.invoke(init, [
-            "compact-app",
-            "--registry-style", "compact",
+            "extend-app",
+            "--registry-style", "extend",
             "--output-dir", str(tmp_path)
         ])
 
         assert result.exit_code == 0
         # Match registry style (may have ANSI color codes)
         assert "Registry style:" in result.output
-        assert "compact" in result.output
+        assert "extend" in result.output
 
-        # Test explicit style
+        # Test standalone style
         result = runner.invoke(init, [
-            "explicit-app",
-            "--registry-style", "explicit",
+            "standalone-app",
+            "--registry-style", "standalone",
             "--output-dir", str(tmp_path)
         ])
 
         assert result.exit_code == 0
         assert "Registry style:" in result.output
-        assert "explicit" in result.output
+        assert "standalone" in result.output
 
     def test_init_command_shows_next_steps(self, tmp_path):
         """Test that init command shows helpful next steps."""

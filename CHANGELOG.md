@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Registry Modes**: Introduced Standalone and Extend modes for application registries
+  - **Extend Mode** (recommended): Applications extend framework defaults via `ExtendedRegistryConfig`
+    - Framework components loaded automatically (memory, Python, time parsing, etc.)
+    - Applications can add, exclude, or override framework components
+    - Returned by `extend_framework_registry()` helper function
+    - Reduces boilerplate and simplifies upgrades
+  - **Standalone Mode** (advanced): Applications provide complete registry including all framework components
+    - Framework registry is NOT loaded
+    - Full control over all components
+    - Used when `RegistryConfig` is returned directly (not via helper)
+  - Mode detection is automatic based on registry type (`isinstance(config, ExtendedRegistryConfig)`)
+- **New Class**: `ExtendedRegistryConfig` marker class for signaling Extend mode
+  - Subclass of `RegistryConfig` with identical fields
+  - Type-based detection enables automatic framework merging
+  - Added to `__all__` exports in `osprey.registry`
+- **New Helper Function**: `generate_explicit_registry_code()` for template generation
+  - Generates complete registry Python code combining framework + app components
+  - Used by CLI template system for creating explicit registries
+  - Useful for applications that want full visibility of all components
+  - Takes app metadata and component lists, returns formatted Python source code
+- Comprehensive test suite for registry modes (500+ lines across 4 new test files)
+  - `test_registry_modes.py`: Tests for Extend vs Standalone mode detection
+  - `test_registry_loading.py`: Tests for registry loading mechanisms
+  - `test_registry_helpers.py`: Tests for helper functions
+  - `test_registry_validation.py`: Tests for registry validation
+
+### Changed
+- **Registry Helper**: `extend_framework_registry()` now returns `ExtendedRegistryConfig` instead of `RegistryConfig`
+  - Backward compatible (ExtendedRegistryConfig is a subclass of RegistryConfig)
+  - Type signature change enables automatic mode detection
+  - Applications using type hints should update return type annotation
+- Enhanced registry documentation with comprehensive coverage of both modes
+  - Developer guide updated with mode selection guidance
+  - API reference documentation expanded with ExtendedRegistryConfig details
+  - Code examples updated to show ExtendedRegistryConfig return type
+
+### Breaking Changes
+- **RegistryManager Constructor**: Parameter changed from `registry_paths: List[str]` to `registry_path: Optional[str]`
+  - **Impact**: Low - most applications use `initialize_registry()` which reads from config
+  - **Migration**: Change `RegistryManager([path1, path2])` to `RegistryManager(path)` for single registry
+  - **Rationale**: Simplified to single-application model matching actual usage patterns
+  - Framework now supports one application registry per instance (loaded from `config.yml`)
+- **Type Signature**: `extend_framework_registry()` return type changed to `ExtendedRegistryConfig`
+  - **Impact**: Very low - backward compatible at runtime (subclass relationship)
+  - **Migration**: Update type hints from `-> RegistryConfig` to `-> ExtendedRegistryConfig`
+  - Only affects code using explicit type checking
+
+### Removed
+- Test file `test_path_based_discovery.py` (replaced with mode-specific tests)
+
+### Developer Notes
+- Registry system now uses type-based mode detection for cleaner separation of concerns
+- Standalone mode enables minimal deployments and custom framework variations
+- Extend mode remains the recommended default for >95% of applications
+- See developer guide "Registry and Discovery" for complete mode selection guidance
+
 ## [0.8.3] - 2025-11-09
 
 ### Added
@@ -152,7 +209,7 @@ git remote set-url origin https://github.com/als-apg/osprey.git
 
 ### Includes All Features from v0.7.7 and v0.7.8
 - Interactive TUI menu system
-- Multi-project support  
+- Multi-project support
 - Enhanced documentation
 - All bug fixes from previous releases
 
@@ -705,7 +762,7 @@ This release represents the framework's first complete domain-specific applicati
 
 ### Technical Details
 - Added `ui_launchable_commands` field to AgentState for centralized command registry
-- Implemented command registration system for capability-agnostic command handling  
+- Implemented command registration system for capability-agnostic command handling
 - Enhanced `get_agent_dir()` with `host_path` parameter for container/host path control
 - Updated response context with `commands_available` field for UI awareness
 - Improved container environment detection and path resolution
@@ -807,13 +864,13 @@ This release represents the framework's first complete domain-specific applicati
 - **Tag-based Documentation Rebuilds**: Documentation now automatically rebuilds when version tags are created or moved
 - **Enhanced Build Controls**: Documentation workflow now supports both automatic (tag/push) and manual triggering
 
-### Bug Fixes  
+### Bug Fixes
 - **Documentation Version Sync**: Fixed issue where moving git tags didn't trigger documentation rebuilds, ensuring docs always reflect current version
 - **Gitignore Cleanup**: Added `.nfs*` pattern to gitignore and fixed malformed entries
 
 ### Technical Details
 - Added `workflow_dispatch` trigger to `.github/workflows/docs.yml` for manual execution
-- Added `tags: ['v*']` trigger for automatic rebuilds on version tag changes  
+- Added `tags: ['v*']` trigger for automatic rebuilds on version tag changes
 - Updated deployment conditions to support manual and tag-based triggers
 - Improved build artifact and deployment logic for consistent documentation updates
 
@@ -884,7 +941,7 @@ This release represents the framework's first complete domain-specific applicati
 - **Path Mapping**: Fixed hardcoded path patterns in container execution using config-driven approach
 - **Timezone Consistency**: Standardized timezone across all services with centralized configuration
 
-### Security & Stability  
+### Security & Stability
 - **Repository Security**: Updated .gitignore to exclude development services and sensitive configurations
 - **Network Security**: Renamed container network from als-agents-network to alpha-berkeley-network for consistency
 - **Service Cleanup**: Removed mem0 service references and cleaned up leftover container code

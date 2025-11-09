@@ -21,9 +21,9 @@ from .styles import console, Messages, Styles
 )
 @click.option(
     "--registry-style", "-r",
-    type=click.Choice(["compact", "explicit"], case_sensitive=False),
-    default="compact",
-    help="Registry style: compact (uses helper, ~10 lines) or explicit (full listing, ~500 lines)"
+    type=click.Choice(["extend", "standalone"], case_sensitive=False),
+    default="extend",
+    help="Registry style: extend (recommended - extends framework defaults) or standalone (advanced - explicit control)"
 )
 @click.option(
     "--output-dir", "-o",
@@ -55,8 +55,8 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
     Registry styles:
 
     \b
-      - compact (default): Uses extend_osprey_registry() helper (~10 lines)
-      - explicit: Full osprey + app components visible (~500 lines)
+      - extend (default): Extends framework defaults (recommended for most applications)
+      - standalone: Complete explicit registry (advanced - full control over all components)
 
     The generated project includes:
 
@@ -71,11 +71,11 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
     Examples:
 
     \b
-      # Create minimal project (compact registry style)
+      # Create minimal project (extend registry style)
       $ osprey init my-assistant
 
-      # Create with explicit registry (advanced users)
-      $ osprey init my-assistant --registry-style explicit
+      # Create with standalone registry (advanced users)
+      $ osprey init my-assistant --registry-style standalone
 
       # Create from specific template
       $ osprey init my-assistant --template hello_world_weather

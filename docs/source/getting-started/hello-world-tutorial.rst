@@ -2,7 +2,7 @@
 Hello World Tutorial
 ===============================
 
-This tutorial uses a very basic weather agent to demonstrate the complete framework workflow with minimal complexity. 
+This tutorial uses a very basic weather agent to demonstrate the complete framework workflow with minimal complexity.
 
 What You'll Build
 =================
@@ -23,12 +23,12 @@ By the end of this guide, you'll have a working agent that responds to queries l
    **Required:** Osprey framework installed via ``pip install osprey-framework``
 
    If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
-   
+
    - Install Docker Desktop or Podman (container runtime)
    - Set up Python 3.11 virtual environment
    - Install the framework package
    - Configure your environment
-   
+
    **Optional but Recommended:** Basic understanding of Python and async/await patterns.
 
 Step 1: Create the Project
@@ -115,13 +115,13 @@ The ``mock_weather_api.py`` file provides a deterministic weather data provider 
        """
        Mock weather API, returns basic weather data for 3 cities (San Francisco, New York, Prague).
        """
-       
+
        def get_current_weather(self, location: str) -> CurrentWeatherReading:
            """Get simple current weather for a location."""
            # Implementation details below...
 
 .. dropdown:: Complete Mock API Implementation
-   
+
    Full implementation of the mock weather service (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/mock_weather_api.py>`_)
 
    .. code-block:: python
@@ -151,29 +151,29 @@ The ``mock_weather_api.py`` file provides a deterministic weather data provider 
 
           The weather API returns only the type safe data model for the current weather reading.
           """
-          
+
           # Simple city data with basic temperature ranges
           CITY_DATA = {
               "San Francisco": {"base_temp": 18, "conditions": ["Sunny", "Foggy", "Partly Cloudy"]},
               "New York": {"base_temp": 15, "conditions": ["Sunny", "Rainy", "Cloudy", "Snow"]},
               "Prague": {"base_temp": 12, "conditions": ["Rainy", "Cloudy", "Partly Cloudy"]}
           }
-          
+
           def get_current_weather(self, location: str) -> CurrentWeatherReading:
               """Get simple current weather for a location."""
-              
+
               # Normalize location name
               location = location.title()
               if location not in self.CITY_DATA:
                   # Default to San Francisco if city not found
                   location = "San Francisco"
-              
+
               city_info = self.CITY_DATA[location]
-              
+
               # Simple random weather generation
               temperature = city_info["base_temp"] + random.randint(-5, 8)
               conditions = random.choice(city_info["conditions"])
-              
+
               return CurrentWeatherReading(
                   location=location,
                   temperature=float(temperature),
@@ -199,11 +199,11 @@ Context classes provide structured data storage and enable seamless integration 
 
     class CurrentWeatherContext(CapabilityContext):
         """Context for current weather conditions."""
-        
+
         # Context type and category identifiers
         CONTEXT_TYPE: ClassVar[str] = "CURRENT_WEATHER"
         CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
-        
+
         # Your data fields (must be json serializable)
         location: str = Field(description="Location name")
         temperature: float = Field(description="Temperature in Celsius")
@@ -219,7 +219,7 @@ Provides structured access information for LLM consumption. This method is used 
         def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
             """Provide access details for LLM consumption."""
             key_ref = key_name if key_name else "key_name"
-            
+
             return {
                 "location": self.location,
                 "temperature": self.temperature,
@@ -243,7 +243,7 @@ Provides human-readable summaries for user interfaces and debugging:
             }
 
 .. dropdown:: Complete Weather Context Implementation
-   
+
    Full context class showing all required methods (`view context class on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/context_classes.py.j2>`_)
 
    .. code-block:: python
@@ -266,25 +266,25 @@ Provides human-readable summaries for user interfaces and debugging:
 
       class CurrentWeatherContext(CapabilityContext):
           """Simple context for current weather conditions."""
-          
+
           CONTEXT_TYPE: ClassVar[str] = "CURRENT_WEATHER"
           CONTEXT_CATEGORY: ClassVar[str] = "LIVE_DATA"
-          
+
           # Basic weather data
           location: str = Field(description="Location name")
           temperature: float = Field(description="Temperature in Celsius")
           conditions: str = Field(description="Weather conditions description")
           timestamp: datetime = Field(description="Timestamp of weather data")
-          
+
           @property
           def context_type(self) -> str:
               """Return the context type identifier."""
               return self.CONTEXT_TYPE
-          
+
           def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
               """Provide access details for LLM consumption."""
               key_ref = key_name if key_name else "key_name"
-              
+
               return {
                   "location": self.location,
                   "current_temp": f"{self.temperature}°C",
@@ -293,7 +293,7 @@ Provides human-readable summaries for user interfaces and debugging:
                   "example_usage": f"The temperature in {self.location} is {{context.{self.CONTEXT_TYPE}.{key_ref}.temperature}}°C with {{context.{self.CONTEXT_TYPE}.{key_ref}.conditions}} conditions",
                   "available_fields": ["location", "temperature", "conditions", "timestamp"]
               }
-          
+
           def get_summary(self, key: str) -> dict:
               """Get human-readable summary for this weather context."""
               return {
@@ -314,7 +314,7 @@ The ``@capability_node`` decorator validates required class components and creat
    @capability_node
    class CurrentWeatherCapability(BaseCapability):
        """Get current weather conditions for a location."""
-       
+
        # Required class attributes for registry configuration
        name = "current_weather"
        description = "Get current weather conditions for a location"
@@ -322,7 +322,7 @@ The ``@capability_node`` decorator validates required class components and creat
        requires = []
 
 .. admonition:: Key Insight
-   
+
    The ``provides`` field tells the framework what context types this capability generates. The ``requires`` field tells the framework what context types this capability needs to run.
 
 **4.2: Core Business Logic**
@@ -336,21 +336,21 @@ The ``execute()`` method contains your main business logic, which you could call
            """Execute weather retrieval."""
            step = StateManager.get_current_step(state)
            streamer = get_streamer("hello_world_weather", "current_weather", state)
-           
+
            try:
                streamer.status("Extracting location from query...")
                query = StateManager.get_current_task(state).lower()
-               
+
                # Simple location detection
                location = "San Francisco"  # default
                if "new york" in query or "nyc" in query:
                    location = "New York"
                elif "prague" in query or "praha" in query:
                    location = "Prague"
-               
+
                streamer.status(f"Getting weather for {location}...")
                weather = weather_api.get_current_weather(location)
-               
+
                # Create context object
                context = CurrentWeatherContext(
                    location=weather.location,
@@ -358,18 +358,18 @@ The ``execute()`` method contains your main business logic, which you could call
                    conditions=weather.conditions,
                    timestamp=weather.timestamp
                )
-               
+
                # Store context in framework state
                context_updates = StateManager.store_context(
-                   state, 
-                   registry.context_types.CURRENT_WEATHER, 
-                   step.get("context_key"), 
+                   state,
+                   registry.context_types.CURRENT_WEATHER,
+                   step.get("context_key"),
                    context
                )
-               
+
                streamer.status(f"Weather retrieved: {location} - {weather.temperature}°C")
                return context_updates
-               
+
            except Exception as e:
                logger.error(f"Weather retrieval error: {e}")
                raise
@@ -378,7 +378,7 @@ The ``execute()`` method contains your main business logic, which you could call
 
    1. **Framework Setup** - Get streaming utilities and current execution step
    2. **Location Extraction** - Parse user query to find location (simplified for demo)
-   3. **Data Retrieval** - Call your API/service to get actual data  
+   3. **Data Retrieval** - Call your API/service to get actual data
    4. **Context Creation** - Convert raw data to structured context object
    5. **State Storage** - Store context so other capabilities and LLM can access it
 
@@ -397,7 +397,7 @@ Every capability needs basic error handling and retry policies:
                    user_message="Weather service timeout, retrying...",
                    metadata={"technical_details": str(exc)}
                )
-           
+
            return ErrorClassification(
                severity=ErrorSeverity.CRITICAL,
                user_message=f"Weather service error: {str(exc)}",
@@ -405,8 +405,8 @@ Every capability needs basic error handling and retry policies:
                    "technical_details": f"Error: {type(exc).__name__}"
                }
            )
-       
-       @staticmethod 
+
+       @staticmethod
        def get_retry_policy() -> Dict[str, Any]:
            """Retry policy for weather data retrieval."""
            return {
@@ -420,7 +420,7 @@ Every capability needs basic error handling and retry policies:
    The Framework Handles Everything Else: Error routing, retry logic, user messaging, and execution flow are automatically managed by the framework infrastructure.
 
 **4.4: Orchestrator Guide**
-   
+
 The orchestrator guide teaches the LLM how to plan execution steps and use your capability effectively:
 
 .. code-block:: python
@@ -439,7 +439,7 @@ The orchestrator guide teaches the LLM how to plan execution steps and use your 
               scenario_description="Getting current weather for a location",
               notes=f"Output stored as {registry.context_types.CURRENT_WEATHER} with live weather data."
           )
-          
+
           return OrchestratorGuide(
               instructions=f"""**When to plan "current_weather" steps:**
       - When users ask for current weather conditions
@@ -458,7 +458,7 @@ The orchestrator guide teaches the LLM how to plan execution steps and use your 
     )
 
 .. admonition:: For Complex Capabilities
-   
+
    When building more sophisticated capabilities with multiple steps, dependencies, or complex planning logic, providing comprehensive orchestrator examples becomes crucial. The orchestrator uses these examples to understand when and how to integrate your capability into multi-step execution plans.
 
 **4.5: Classifier Guide**
@@ -473,23 +473,23 @@ The classifier guide teaches the LLM when to activate your capability based on u
               instructions="Determine if the task requires current weather information for a specific location.",
               examples=[
                   ClassifierExample(
-                      query="What's the weather like in San Francisco right now?", 
-                      result=True,  
+                      query="What's the weather like in San Francisco right now?",
+                      result=True,
                       reason="Request asks for current weather conditions in a specific location."
                   ),
                   ClassifierExample(
-                      query="How's the weather today?", 
-                      result=True, 
+                      query="How's the weather today?",
+                      result=True,
                       reason="Current weather request, though location may need to be inferred."
                   ),
                   ClassifierExample(
-                      query="What was the weather like last week?", 
-                      result=False, 
+                      query="What was the weather like last week?",
+                      result=False,
                       reason="Request is for historical weather data, not current conditions."
                   ),
                   ClassifierExample(
-                    query="What tools do you have?", 
-                    result=False, 
+                    query="What tools do you have?",
+                    result=False,
                     reason="Request is for tool information, not weather."
                   ),
               ],
@@ -497,23 +497,23 @@ The classifier guide teaches the LLM when to activate your capability based on u
           )
 
 .. admonition:: Quality Examples Matter
-   
+
    The classifier's accuracy depends heavily on the quality and diversity of your examples. Include edge cases, ambiguous queries, and clear negative examples to help the LLM make better classification decisions.
 
 .. dropdown:: Complete Current Weather Capability Implementation
-   
+
    Full capability showing all required methods and patterns (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/capabilities/current_weather.py.j2>`_)
 
    .. code-block:: python
 
       """
       Current Weather Capability
-      
+
       Simple capability to get current weather conditions for a location.
       """
-      
+
       from typing import Dict, Any, Optional
-      
+
       from osprey.base import (
           BaseCapability, capability_node,
           OrchestratorGuide, OrchestratorExample, PlannedStep,
@@ -524,43 +524,43 @@ The classifier guide teaches the LLM when to activate your capability based on u
       from osprey.state import AgentState, StateManager
       from osprey.utils.logger import get_logger
       from osprey.utils.streaming import get_streamer
-      
+
       from weather_demo.context_classes import CurrentWeatherContext
       from weather_demo.mock_weather_api import weather_api
-      
+
       logger = get_logger("current_weather")
       registry = get_registry()
-      
+
       @capability_node
       class CurrentWeatherCapability(BaseCapability):
           """Get current weather conditions for a location."""
-          
+
           # Required class attributes for registry configuration
           name = "current_weather"
           description = "Get current weather conditions for a location"
           provides = ["CURRENT_WEATHER"]
           requires = []
-          
+
           @staticmethod
           async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
               """Execute weather retrieval."""
               step = StateManager.get_current_step(state)
               streamer = get_streamer("hello_world_weather", "current_weather", state)
-              
+
               try:
                   streamer.status("Extracting location from query...")
                   query = StateManager.get_current_task(state).lower()
-                  
+
                   # Simple location detection
                   location = "San Francisco"  # default
                   if "new york" in query or "nyc" in query:
                       location = "New York"
                   elif "prague" in query or "praha" in query:
                       location = "Prague"
-                  
+
                   streamer.status(f"Getting weather for {location}...")
                   weather = weather_api.get_current_weather(location)
-                  
+
                   # Create context object
                   context = CurrentWeatherContext(
                       location=weather.location,
@@ -568,22 +568,22 @@ The classifier guide teaches the LLM when to activate your capability based on u
                       conditions=weather.conditions,
                       timestamp=weather.timestamp
                   )
-                  
+
                   # Store context in framework state
                   context_updates = StateManager.store_context(
-                      state, 
-                      registry.context_types.CURRENT_WEATHER, 
-                      step.get("context_key"), 
+                      state,
+                      registry.context_types.CURRENT_WEATHER,
+                      step.get("context_key"),
                       context
                   )
-                  
+
                   streamer.status(f"Weather retrieved: {location} - {weather.temperature}°C")
                   return context_updates
-                  
+
               except Exception as e:
                   logger.error(f"Weather retrieval error: {e}")
                   raise
-          
+
           @staticmethod
           def classify_error(exc: Exception, context: dict) -> ErrorClassification:
               """Classify errors for retry decisions."""
@@ -593,14 +593,14 @@ The classifier guide teaches the LLM when to activate your capability based on u
                       user_message="Weather service timeout, retrying...",
                       metadata={"technical_details": str(exc)}
                   )
-              
+
               return ErrorClassification(
                   severity=ErrorSeverity.CRITICAL,
                   user_message=f"Weather service error: {str(exc)}",
                   metadata={"technical_details": f"Error: {type(exc).__name__}"}
               )
-          
-          @staticmethod 
+
+          @staticmethod
           def get_retry_policy() -> Dict[str, Any]:
               """Retry policy for weather data retrieval."""
               return {
@@ -608,7 +608,7 @@ The classifier guide teaches the LLM when to activate your capability based on u
                   "delay_seconds": 0.5,
                   "backoff_factor": 1.5
               }
-          
+
           def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
               """Guide the orchestrator on how to use this capability."""
               example = OrchestratorExample(
@@ -623,7 +623,7 @@ The classifier guide teaches the LLM when to activate your capability based on u
                   scenario_description="Getting current weather for a location",
                   notes=f"Output stored as {registry.context_types.CURRENT_WEATHER} with live weather data."
               )
-              
+
               return OrchestratorGuide(
                   instructions=f"""**When to plan "current_weather" steps:**
           - When users ask for current weather conditions
@@ -640,30 +640,30 @@ The classifier guide teaches the LLM when to activate your capability based on u
                   examples=[example],
                   order=5
               )
-          
+
           def _create_classifier_guide(self) -> Optional[TaskClassifierGuide]:
               """Guide the classifier on when to activate this capability."""
               return TaskClassifierGuide(
                   instructions="Determine if the task requires current weather information for a specific location.",
                   examples=[
                       ClassifierExample(
-                          query="What's the weather like in San Francisco right now?", 
-                          result=True,  
+                          query="What's the weather like in San Francisco right now?",
+                          result=True,
                           reason="Request asks for current weather conditions in a specific location."
                       ),
                       ClassifierExample(
-                          query="How's the weather today?", 
-                          result=True, 
+                          query="How's the weather today?",
+                          result=True,
                           reason="Current weather request, though location may need to be inferred."
                       ),
                       ClassifierExample(
-                          query="What was the weather like last week?", 
-                          result=False, 
+                          query="What was the weather like last week?",
+                          result=False,
                           reason="Request is for historical weather data, not current conditions."
                       ),
                       ClassifierExample(
-                          query="What tools do you have?", 
-                          result=False, 
+                          query="What tools do you have?",
+                          result=False,
                           reason="Request is for tool information, not weather."
                       ),
                   ],
@@ -676,7 +676,7 @@ Step 5: Understanding the Registry
 The registry system is how the framework discovers and manages your application's components. It uses a simple pattern where your application provides a configuration that tells the framework what capabilities and context classes you've defined.
 
 .. admonition:: Registry Purpose
-   
+
    The registry enables loose coupling and lazy loading - the framework can discover your components without importing them until needed, improving startup performance and modularity.
 
 .. admonition:: New in v0.7+: Registry Helper Functions
@@ -694,14 +694,14 @@ The registry uses a class-based provider pattern. Here's the recommended structu
        extend_framework_registry,
        CapabilityRegistration,
        ContextClassRegistration,
-       RegistryConfig,
+       ExtendedRegistryConfig,
        RegistryConfigProvider
    )
-   
+
    class WeatherRegistryProvider(RegistryConfigProvider):
        """Registry provider for the weather application."""
-       
-       def get_registry_config(self) -> RegistryConfig:
+
+       def get_registry_config(self) -> ExtendedRegistryConfig:
            return extend_framework_registry(
                capabilities=[
                    CapabilityRegistration(
@@ -722,15 +722,16 @@ The registry uses a class-based provider pattern. Here's the recommended structu
                ]
            )
 
-**Benefits of this pattern:**
+**Benefits of this pattern (Extend Mode):**
 - Automatically includes all framework capabilities (memory, time parsing, Python, etc.)
 - You only specify your application-specific components
 - Type-safe with proper IDE support
 - Clear, maintainable code
+- Easier framework upgrades (new framework features automatically included)
 
-**5.2: Alternative: Explicit Registration (Advanced)**
+**5.2: Alternative: Standalone Mode (Advanced)**
 
-If you need fine control, you can explicitly list all components:
+For advanced use cases requiring complete control, you can use Standalone mode by returning ``RegistryConfig`` directly. This requires listing ALL framework components:
 
 .. code-block:: python
 
@@ -740,9 +741,10 @@ If you need fine control, you can explicitly list all components:
        RegistryConfig,
        RegistryConfigProvider
    )
-   
+
    class WeatherDemoRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
+           # Standalone mode: Must provide ALL components including framework
            return RegistryConfig(
                capabilities=[
                    CapabilityRegistration(
@@ -769,32 +771,32 @@ If you need fine control, you can explicitly list all components:
 - Needing fine-grained control over registration details
 
 .. dropdown:: Complete Registry Implementation
-   
+
    Complete registry file using ``extend_framework_registry()`` (`view template on GitHub <https://github.com/als-apg/osprey/blob/main/src/osprey/templates/apps/hello_world_weather/registry.py.j2>`_)
 
    .. code-block:: python
 
       """
       Weather Application Registry
-      
-      Registry configuration using extend_framework_registry() to automatically
-      include framework components and add weather-specific capability.
-      """
-      
-      from osprey.registry import (
-          extend_framework_registry,
-          CapabilityRegistration,
-          ContextClassRegistration,
-          RegistryConfig,
-          RegistryConfigProvider
-      )
-      
-      class WeatherRegistryProvider(RegistryConfigProvider):
-          """Registry provider for weather tutorial application."""
-          
-          def get_registry_config(self) -> RegistryConfig:
-              """Provide registry configuration with framework + weather components."""
-              return extend_framework_registry(
+
+     Registry configuration using extend_framework_registry() to automatically
+     include framework components and add weather-specific capability.
+     """
+
+     from osprey.registry import (
+         extend_framework_registry,
+         CapabilityRegistration,
+         ContextClassRegistration,
+         ExtendedRegistryConfig,
+         RegistryConfigProvider
+     )
+
+     class WeatherRegistryProvider(RegistryConfigProvider):
+         """Registry provider for weather tutorial application."""
+
+         def get_registry_config(self) -> ExtendedRegistryConfig:
+             """Provide registry configuration with framework + weather components."""
+             return extend_framework_registry(
                   # Add weather-specific capability
                   capabilities=[
                       CapabilityRegistration(
@@ -806,7 +808,7 @@ If you need fine control, you can explicitly list all components:
                           requires=[]
                       )
                   ],
-                  
+
                   # Add weather-specific context class
                   context_classes=[
                       ContextClassRegistration(
@@ -840,19 +842,19 @@ The ``config.yml`` includes:
 
    # Registry discovery - tells framework where your application code is
    registry_path: src/weather/registry.py
-   
+
    # Model configurations
    models:
      orchestrator:
        provider: cborg  # or openai, anthropic, ollama
        model_id: anthropic/claude-sonnet
-   
+
    # Service deployments
    deployed_services:
      - osprey.jupyter
      - osprey.open-webui
      - osprey.pipelines
-   
+
    # Pipeline configuration
    pipeline:
      name: "Weather Demo"
@@ -879,7 +881,7 @@ Start the containerized services using :doc:`osprey deploy <../developer-guides/
 
    # Start services in background
    osprey deploy up --detached
-   
+
    # Check they're running
    podman ps
 
@@ -891,7 +893,7 @@ Ensure your API keys are set in ``.env``:
 
    # Copy template
    cp .env.example .env
-   
+
    # Edit and add your API keys
    # OPENAI_API_KEY=your-key-here
    # ANTHROPIC_API_KEY=your-key-here
@@ -931,7 +933,7 @@ When you run your agent, you'll see the framework's decision-making process in a
 
 .. admonition:: What's Happening
    :class: important
-   
+
    The framework loads all available capabilities, including your ``current_weather`` capability and ``CURRENT_WEATHER`` context type. This modular loading system allows you to see exactly which components are active in your agent.
 
 **Phase 2: Task Processing Pipeline**
@@ -949,13 +951,13 @@ The user query "What's the weather in San Francisco right now?" is processed by 
 
 .. admonition:: What's Happening
    :class: important
-   
-   This is the **core decision-making process**: 
-   
+
+   This is the **core decision-making process**:
+
    1. **Task Extraction**: Complete chat history gets converted to an actionable task
    2. **Classification**: Each capability is checked if it is needed to complete the current task. Notice how your capability gets activated (``>>> True``).
-   3. **Planning**: An execution strategy is formulated, taking the active capabilities into account   
-   
+   3. **Planning**: An execution strategy is formulated, taking the active capabilities into account
+
 **Phase 3: Execution Planning**
 
 .. code-block::
@@ -978,12 +980,12 @@ The user query "What's the weather in San Francisco right now?" is processed by 
 
 .. admonition:: What's Happening
    :class: important
-   
+
    The orchestrator breaks down the task into logical steps:
-   
+
    - **Step 1**: Use your ``current_weather`` capability to get data and store it under the key ``sf_weather``
    - **Step 2**: Use the ``respond`` capability to format results and use the ``sf_weather`` context as input, knowing that its a ``CURRENT_WEATHER`` context type.
-   
+
    This demonstrates how capabilities work together in a coordinated workflow.
 
 **Phase 4: Real-Time Execution**
@@ -998,19 +1000,19 @@ The user query "What's the weather in San Francisco right now?" is processed by 
 
 .. admonition:: What's Happening
    :class: important
-   
+
    Your capability is now running! The status messages come from your ``streamer.status()`` (OpenWebUI) and ``logger.info()`` (CLI) calls, providing real-time feedback as your business logic executes.
 
 **Final Result**
 
 .. code-block::
 
-   🤖 According to the [CURRENT_WEATHER.sf_weather] data, the weather conditions in San Francisco 
+   🤖 According to the [CURRENT_WEATHER.sf_weather] data, the weather conditions in San Francisco
    for 2025-08-04 are 21.0°C and Partly Cloudy.
 
 .. admonition:: Success Indicators
    :class: important
-   
+
    - Your weather data was successfully retrieved and stored as ``[CURRENT_WEATHER.sf_weather]``
    - The context reference shows the framework is using your structured data
    - The response is formatted professionally using the framework's response capability
@@ -1025,9 +1027,9 @@ By completing this tutorial, you've created an agentic system that demonstrates:
 - **Informative UX**: Real-time status updates and structured responses
 
 .. admonition:: Next Steps
-   
+
    Try invoking other (framework-provided) capabilities :
-   
+
    - "Save the current weather in Prague to my memories"
    - "Calculate the square root of the temperature in San Francisco"
 

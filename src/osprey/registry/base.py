@@ -353,6 +353,17 @@ class RegistryConfig:
     Applications typically only need to define capabilities, context_classes, and
     optionally data_sources and framework_prompt_providers.
 
+    Registry Modes:
+        **Standalone Mode (RegistryConfig)**:
+            Direct use of RegistryConfig indicates a complete, self-contained registry.
+            Framework registry is NOT loaded. Application must provide ALL components
+            including core framework nodes, capabilities, and services.
+
+        **Extend Mode (ExtendedRegistryConfig)**:
+            Use of ExtendedRegistryConfig (via extend_framework_registry() helper)
+            indicates registry extends framework defaults. Framework components are
+            loaded first, then application components are merged.
+
     :param capabilities: Registration entries for domain capabilities
     :type capabilities: list[CapabilityRegistration]
     :param context_classes: Registration entries for context data classes
@@ -400,6 +411,47 @@ class RegistryConfig:
         "core_nodes",
         "services"
     ])
+
+
+@dataclass
+class ExtendedRegistryConfig(RegistryConfig):
+    """Registry configuration that extends framework defaults (marker subclass).
+
+    This is a marker subclass of RegistryConfig used to indicate that this
+    registry should be merged with framework defaults rather than used standalone.
+
+    The extend_framework_registry() helper returns this type to signal extend mode.
+    The registry manager detects this type and merges with framework components.
+
+    All fields and behavior are identical to RegistryConfig - this class exists
+    purely to distinguish extend mode from standalone mode at the type level.
+
+    Examples:
+        Extend mode (returned by helper)::
+
+            >>> config = extend_framework_registry(
+            ...     capabilities=[...],
+            ...     context_classes=[...]
+            ... )
+            >>> isinstance(config, ExtendedRegistryConfig)  # True
+            >>> isinstance(config, RegistryConfig)  # Also True (inheritance)
+
+        Standalone mode (direct construction)::
+
+            >>> config = RegistryConfig(
+            ...     capabilities=[...],
+            ...     context_classes=[...],
+            ...     core_nodes=[...],  # Must provide ALL framework components
+            ...     ...
+            ... )
+            >>> isinstance(config, ExtendedRegistryConfig)  # False
+            >>> isinstance(config, RegistryConfig)  # True
+
+    .. seealso::
+       :func:`extend_framework_registry` : Helper that returns this type
+       :class:`RegistryConfig` : Base configuration class
+    """
+    pass  # Marker class - inherits all fields and behavior from RegistryConfig
 
 # =============================================================================
 # REGISTRY CONFIGURATION INTERFACE

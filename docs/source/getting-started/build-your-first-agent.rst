@@ -1,4 +1,4 @@
-Build Your First Agent - Multi-Capability Integration Tutorial  
+Build Your First Agent - Multi-Capability Integration Tutorial
 ==============================================================
 
 This tutorial builds on the Hello World foundations to demonstrate **orchestration integration patterns** through a wind turbine monitoring agent. You'll learn multi-step workflows, simple RAG integration, Python service integration, and human-in-the-loop workflows. The wind turbine scenario shows how to connect multiple capabilities in coordinated workflows - the techniques are intentionally straightforward to focus on the integration patterns.
@@ -11,7 +11,7 @@ This tutorial builds on the Hello World foundations to demonstrate **orchestrati
 
    That tutorial covers the fundamental patterns you need:
 
-   - **Context classes** - Data flow and type safety  
+   - **Context classes** - Data flow and type safety
    - **Basic capabilities** - Structure, execution, and error handling
    - **Mock API integration** - External service patterns
    - **Registry configuration** - Component registration
@@ -68,9 +68,9 @@ See how the framework coordinates this multi-step analysis request:
 
 .. code-block:: text
 
-   "Our wind farm has been underperforming lately. Can you analyze the turbine 
-   performance over the past 2 weeks, identify which turbines are operating 
-   below industry standards, and rank them by efficiency? I need to know which 
+   "Our wind farm has been underperforming lately. Can you analyze the turbine
+   performance over the past 2 weeks, identify which turbines are operating
+   below industry standards, and rank them by efficiency? I need to know which
    ones require immediate maintenance attention."
 
 Into a **6-step orchestrated execution plan** that looks like this:
@@ -81,29 +81,29 @@ Into a **6-step orchestrated execution plan** that looks like this:
    │  🔄 Task Classification → 6 capabilities identified            │
    │  📋 Execution Planning → 6-step plan generated                 │
    └─────────────────────────────────────────────────────────────────┘
-   
+
    Step 1/6: time_range_parsing
    ├─ Input:  "past 2 weeks"
    └─ Output: 2025-07-26 to 2025-08-09 datetime range
-   
-   Step 2/6: turbine_data_archiver  
+
+   Step 2/6: turbine_data_archiver
    ├─ Source: Mock Turbine API
    └─ Output: 1,680 turbine readings retrieved
-   
+
    Step 3/6: weather_data_retrieval
-   ├─ Source: Mock Weather API  
+   ├─ Source: Mock Weather API
    └─ Output: 336 wind speed measurements retrieved
-   
+
    Step 4/6: knowledge_retrieval
    ├─ Source: Knowledge Base (LLM processing)
    └─ Output: Performance thresholds extracted
             • >85% excellent • 75-85% good • <75% maintenance
-   
+
    Step 5/6: turbine_analysis
    ├─ Process: LLM creates analysis plan
-   ├─ Execute: Python code generation & execution  
+   ├─ Execute: Python code generation & execution
    └─ Output:  Results calculated & ranked
-   
+
    Step 6/6: respond
    ├─ Input:   Analysis results + knowledge thresholds
    └─ Output:  📊 Maintenance report with turbine rankings
@@ -118,11 +118,11 @@ Into a **6-step orchestrated execution plan** that looks like this:
    .. tab-item:: 📚 Simple Knowledge Provider
 
       **Pattern:** Basic RAG integration that extracts structured parameters from simple text documents
-      
+
       **What's New:** Unlike Hello World's simple data retrieval, this shows how to integrate a knowledge source into your workflow. The extraction is intentionally simple (LLM reads a small text document) to focus on the integration pattern, not RAG complexity.
-      
+
       **How It Works:** The `WindFarmKnowledgeProvider` acts as a mock enterprise knowledge base. When capabilities need domain expertise (like performance thresholds), they request knowledge through the framework's data management system. The LLM reads static technical documents and extracts specific numerical parameters:
-      
+
       - **Documents:** Wind turbine specifications, performance benchmarks, maintenance thresholds
 
       - **Extraction:** LLM converts text like "Excellent performance: Above 85% capacity factor" into structured data like `excellent_performance_threshold_percent: 85.0`
@@ -132,11 +132,11 @@ Into a **6-step orchestrated execution plan** that looks like this:
    .. tab-item:: 🧮 Python Analysis Capability
 
       **Pattern:** Multi-phase workflow with LLM planning + Dynamic code generation + Human approval
-      
+
       **What's New:** Multi-step analysis that creates execution plans, generates Python code, and requires human oversight for sensitive operations.
-      
+
       **How It Works:** The `TurbineAnalysisCapability` demonstrates sophisticated workflow orchestration:
-      
+
       - **Phase 1 - Planning:** LLM creates structured analysis plan with phases like "Data Preparation," "Performance Metrics Calculation," and "Industry Benchmark Comparison"
 
       - **Phase 2 - Code Generation:** Framework automatically converts the plan into executable Python code, handling data access patterns and calculations
@@ -148,61 +148,61 @@ Into a **6-step orchestrated execution plan** that looks like this:
    .. tab-item:: 🌐 Multi-Capability Data Flow
 
       **Pattern:** Complex dependencies where 4 capabilities feed into 1 analysis capability
-      
+
       **What's New:** Demonstrates how context classes enable seamless data flow between multiple specialized capabilities.
-      
+
       **How It Works:** The wind turbine agent orchestrates a sophisticated data pipeline with automatic dependency resolution:
-      
+
       - **Data Sources:** Four capabilities (`time_range_parsing`, `turbine_data_archiver`, `weather_data_retrieval`, `knowledge_retrieval`) each produce typed context objects
-  
+
       - **Context Classes:** Pydantic-based classes like `TurbineDataContext` and `WeatherDataContext` ensure type safety and automatic serialization
-    
+
       - **Dependency Management:** The `TurbineAnalysisCapability` declares its requirements (`TURBINE_DATA`, `WEATHER_DATA`, `TURBINE_KNOWLEDGE`) and the framework automatically routes the correct data
-      
+
       - **Access Patterns:** Context classes provide rich metadata about data structure, enabling the LLM to generate correct code like `pd.DataFrame({'timestamp': context.TURBINE_DATA.key.timestamps, 'power': context.TURBINE_DATA.key.power_outputs})`
 
    .. tab-item:: 🎨 Custom Framework Prompts
 
       **Pattern:** Domain-specific prompt builders that override framework defaults for specialized behavior
-      
+
       **What's New:** Replace generic framework prompts with wind turbine-specific instructions for structured analysis, industry terminology, and formatted reporting. Shows how to customize the AI's behavior for your domain.
-      
+
       **How It Works:** The `WindTurbineResponseGenerationPromptBuilder` demonstrates domain-specific LLM behavior customization:
-      
+
       - **Role Specialization:** Transforms generic AI assistant into "expert wind turbine performance analyst providing detailed technical analysis and maintenance recommendations"
-      
+
       - **Industry Standards:** Enforces use of proper terminology (capacity factor, efficiency ratio) and referencing actual knowledge base thresholds rather than making assumptions
-      
+
       - **Structured Output:** Mandates specific formatting with performance tables, clear headings ("Performance Overview," "Rankings," "Maintenance Recommendations"), and rounded numerical values for readability
-      
+
       - **Context Awareness:** Provides different behavior for conversational vs. technical responses, ensuring appropriate depth and formatting based on available execution context
 
    .. tab-item:: ⚙️ Advanced Application Setup
 
       **Pattern:** Complete application customization through registry management and configuration overrides
-      
+
       **What's New:** Shows how to override framework defaults, register domain-specific components, and customize system behavior through application-specific configuration.
-      
+
       **How It Works:** The wind turbine application demonstrates comprehensive framework customization through two key mechanisms:
-      
+
       **Registry Customization (`WindTurbineRegistryProvider`):**
-      
+
       - **Framework Exclusions:** Explicitly excludes the generic `python` capability via `exclude_capabilities=["python"]` parameter to prevent conflicts with the specialized `turbine_analysis` capability
-      
+
       - **Custom Registration:** Registers 4 domain-specific capabilities, 4 context classes, 1 data source, and 1 framework prompt provider, all tailored to wind turbine monitoring
-      
+
       - **Dependency Declaration:** Each capability declares what it `provides` and `requires`, enabling automatic workflow orchestration
-      
+
       - **Initialization Order:** Controls component loading sequence through `initialization_order` to ensure dependencies are available when needed
-      
+
       **Configuration Overrides (`config.yml`):**
-      
+
       - **Approval Settings:** Overrides the main config's `python_execution.mode: "epics_writes"` with `mode: "all_code"` to require approval for ALL Python code execution (perfect for demonstrating human-in-the-loop workflows)
-      
+
       - **Application Models:** Defines wind turbine-specific LLM configurations for `turbine_analysis` and `knowledge_retrieval`
-      
+
       - **Logging Colors:** Customizes capability colors for better development experience
-      
+
       - **Flat Configuration:** Application settings coexist with framework settings in a single config file using unique naming, providing transparent and explicit configuration management
 
 
@@ -222,9 +222,9 @@ The wind turbine application uses **4 specialized context classes** that demonst
    # Advanced pattern: Parallel lists optimized for Python DataFrame creation
    class TurbineDataContext(CapabilityContext):
        timestamps: List[datetime] = Field(description="List of timestamps for data points")
-       turbine_ids: List[str] = Field(description="List of turbine IDs")  
+       turbine_ids: List[str] = Field(description="List of turbine IDs")
        power_outputs: List[float] = Field(description="List of power outputs in MW")
-       
+
        def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
            # Teaches LLM how to create DataFrames from parallel lists
            return {
@@ -247,7 +247,7 @@ Step 2: Mock APIs
 The wind turbine application includes basic mock APIs for tutorial purposes:
 
 - **`TurbineSensorAPI`** - Returns turbine power output data
-- **`WeatherAPI`** - Provides wind speed measurements  
+- **`WeatherAPI`** - Provides wind speed measurements
 
 These follow the same patterns covered in :ref:`hello-world-tutorial-mock-apis` (type-safe models, async methods, realistic data structures). Nothing special here - just supporting infrastructure to demonstrate the framework's integration patterns.
 
@@ -271,7 +271,7 @@ Step 3: Simple Knowledge Integration
                message=retrieval_prompt,
                output_model=KnowledgeRetrievalResult  # Structured extraction
            )
-           
+
            # Returns typed parameters, not raw text
            return DataSourceContext(data=TurbineKnowledgeContext(
                knowledge_data=knowledge_result.knowledge_data  # e.g., {"excellent_efficiency_percent": 85.0}
@@ -293,11 +293,11 @@ Step 4: Multi-Capability Coordination
    .. tab-item:: 📤 Context Storage
 
       **Pattern:** How capabilities store their results for other capabilities to use
-      
+
       **Implementation:** All capabilities follow the same storage pattern using `StateManager.store_context()`:
-      
+
       .. code-block:: python
-      
+
          # Create typed context object
          turbine_data = TurbineDataContext(
              timestamps=timestamps,
@@ -306,10 +306,10 @@ Step 4: Multi-Capability Coordination
              time_range=f"{start_date} to {end_date}",
              total_records=len(readings)
          )
-         
+
          # Store using StateManager - makes data available to other capabilities
          return StateManager.store_context(
-             state, 
+             state,
              registry.context_types.TURBINE_DATA,  # What type of data this is
              step.get("context_key"),              # Unique key from execution plan
              turbine_data                          # The actual data object
@@ -318,25 +318,25 @@ Step 4: Multi-Capability Coordination
    .. tab-item:: 📥 Context Retrieval
 
       **Pattern:** How capabilities access data from previous steps
-      
+
       **Implementation:** Use `ContextManager.extract_from_step()` to get required dependencies:
-      
+
       .. code-block:: python
-      
+
          # Get context manager
          context_manager = ContextManager(state)
-         
+
          # Extract required contexts based on execution plan dependencies
          contexts = context_manager.extract_from_step(
              step, state,
              constraints=["TURBINE_DATA", "WEATHER_DATA"],  # What we need
              constraint_mode="hard"                         # Fail if missing
          )
-         
+
          # Access the typed context objects
          turbine_data = contexts[registry.context_types.TURBINE_DATA]
          weather_data = contexts[registry.context_types.WEATHER_DATA]
-         
+
          # Use the data (already typed and validated)
          timestamps = turbine_data.timestamps
          power_outputs = turbine_data.power_outputs
@@ -344,17 +344,17 @@ Step 4: Multi-Capability Coordination
    .. tab-item:: 🔗 Context Coordination
 
       **Pattern:** How complex capabilities coordinate multiple data sources
-      
+
       **Implementation:** The `turbine_analysis` capability demonstrates multi-source coordination:
-      
+
       .. code-block:: python
-      
+
          # Declared dependencies in registry
          provides = [registry.context_types.ANALYSIS_RESULTS]
-         requires = [registry.context_types.TURBINE_DATA, 
-                    registry.context_types.WEATHER_DATA, 
+         requires = [registry.context_types.TURBINE_DATA,
+                    registry.context_types.WEATHER_DATA,
                     registry.context_types.TURBINE_KNOWLEDGE]
-         
+
          # Framework automatically ensures all dependencies are available
          # before this capability executes
          contexts = context_manager.extract_from_step(
@@ -362,7 +362,7 @@ Step 4: Multi-Capability Coordination
              constraints=["TURBINE_DATA", "WEATHER_DATA"],
              constraint_mode="hard"
          )
-         
+
          # All three context types are available and type-safe
          turbine_data = contexts[registry.context_types.TURBINE_DATA]    # From step 2
          weather_data = contexts[registry.context_types.WEATHER_DATA]    # From step 3
@@ -382,7 +382,7 @@ Step 5: Multi-Component Registry Configuration
 .. code-block:: python
 
    class WindTurbineRegistryProvider(RegistryConfigProvider):
-       def get_registry_config(self) -> RegistryConfig:
+       def get_registry_config(self) -> ExtendedRegistryConfig:
            return extend_framework_registry(
                # Register 4 capabilities with complex dependencies
                capabilities=[
@@ -396,12 +396,12 @@ Step 5: Multi-Component Registry Configuration
                    ),
                    # ... 3 other CapabilityRegistration objects
                ],
-               
+
                # Register context classes, data sources, prompt providers
                context_classes=[...],
                data_sources=[...],
                framework_prompt_providers=[...],
-               
+
                # Advanced: Exclude framework Python capability
                exclude_capabilities=["python"]  # Use specialized turbine_analysis instead
            )
@@ -426,21 +426,21 @@ The framework uses generic prompts by default, but you can replace them with dom
    :icon: paintbrush
 
    **The Problem:** Generic framework responses don't understand your domain's terminology, formatting needs, or industry standards.
-   
+
    **The Solution:** Custom prompt builders that inject domain expertise into the LLM's responses.
 
    .. code-block:: python
 
       # src/turbine_agent/framework_prompts/response_generation.py
       class WindTurbineResponseGenerationPromptBuilder(DefaultResponseGenerationPromptBuilder):
-          
+
           def get_role_definition(self) -> str:
               return "You are an expert wind turbine performance analyst providing detailed technical analysis and maintenance recommendations."
-          
+
           def _get_guidelines_section(self, info) -> str:
               guidelines = [
                   "ALWAYS present turbine performance data in well-formatted tables for clarity",
-                  "Include capacity factor percentages rounded to 1 decimal place for readability", 
+                  "Include capacity factor percentages rounded to 1 decimal place for readability",
                   "Reference specific industry standards from knowledge base when available",
                   "Use proper turbine industry terminology (capacity factor, efficiency ratio, etc.)",
                   "Structure analysis with clear headings: Performance Overview, Rankings, Maintenance Recommendations"
@@ -471,17 +471,17 @@ Integration Patterns Mastered
 
 **Building on the Hello World foundation**, you now understand **workflow integration patterns**:
 
-✅ **Multi-Capability Orchestration** - 6-step execution plans with dependencies  
+✅ **Multi-Capability Orchestration** - 6-step execution plans with dependencies
 
-✅ **Basic RAG Integration** - Simple knowledge extraction that shows how to connect knowledge sources  
+✅ **Basic RAG Integration** - Simple knowledge extraction that shows how to connect knowledge sources
 
-✅ **Human-in-the-Loop Workflows** - Approval systems for sensitive operations  
+✅ **Human-in-the-Loop Workflows** - Approval systems for sensitive operations
 
-✅ **Dynamic Python Generation** - LLM planning + Code execution + Human oversight  
+✅ **Dynamic Python Generation** - LLM planning + Code execution + Human oversight
 
-✅ **Context Flow Management** - Data flow across multiple capabilities  
+✅ **Context Flow Management** - Data flow across multiple capabilities
 
-✅ **Custom Framework Prompts** - Domain-specific AI behavior through prompt customization  
+✅ **Custom Framework Prompts** - Domain-specific AI behavior through prompt customization
 
 
 .. _planning-mode-demonstration:
@@ -566,7 +566,7 @@ The Osprey Framework's planning mode provides full transparency into multi-step 
 
             **Planned Steps (6 total):**
             **Step 1:** Parse "past 2 weeks" timeframe → TIME_RANGE
-            **Step 2:** Retrieve historical turbine data → TURBINE_DATA  
+            **Step 2:** Retrieve historical turbine data → TURBINE_DATA
             **Step 3:** Retrieve weather data for correlation → WEATHER_DATA
             **Step 4:** Get industry performance benchmarks → TURBINE_KNOWLEDGE
             **Step 5:** Analyze performance against standards → ANALYSIS_RESULTS
@@ -577,6 +577,6 @@ The Osprey Framework's planning mode provides full transparency into multi-step 
             - **`edit`** to modify the plan in the interactive editor
             - **`no`** to cancel this operation
 
-            👤 You: 
+            👤 You:
 
          The execution plan editor provides unprecedented transparency into agentic system behavior, making complex multi-step operations both understandable and controllable. This is especially valuable in production environments where understanding the approach is as important as getting results.

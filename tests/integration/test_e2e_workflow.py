@@ -113,7 +113,7 @@ class TestE2EWorkflow:
                 abs_registry_path = project_dir / registry_path
 
             # Load registry from generated project
-            registry_manager = RegistryManager(registry_paths=[str(abs_registry_path)])
+            registry_manager = RegistryManager(registry_path=str(abs_registry_path))
 
             # Registry should load without errors
             assert registry_manager.config is not None

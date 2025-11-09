@@ -12,12 +12,12 @@ Tests cover:
 
 import pytest
 
-from osprey.registry.manager import RegistryManager
 from osprey.registry.base import (
-    RegistryConfig,
     ProviderRegistration,
+    RegistryConfig,
 )
 from osprey.registry.helpers import extend_framework_registry
+from osprey.registry.manager import RegistryManager
 
 
 class TestProviderMerging:
@@ -29,11 +29,11 @@ class TestProviderMerging:
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig, ProviderRegistration
+from osprey.registry import RegistryConfigProvider, extend_framework_registry, ProviderRegistration
 
 class AppProvider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[],
             providers=[
@@ -50,86 +50,67 @@ class AppProvider(RegistryConfigProvider):
 """)
 
         # Load registry and get initial framework provider count
-        framework_manager = RegistryManager(registry_paths=[])
+        framework_manager = RegistryManager(registry_path=None)
         framework_provider_count = len(framework_manager.config.providers)
 
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
         provider_module_paths = [p.module_path for p in manager.config.providers]
-        
+
         # Framework providers should still be present
         assert "osprey.models.providers.anthropic" in provider_module_paths
         assert "osprey.models.providers.openai" in provider_module_paths
-        
+
         # Application providers should be added
         assert "test_app.providers.custom" in provider_module_paths
         assert "test_app.providers.institutional" in provider_module_paths
-        
+
         # Total count should be framework + 2 application providers
         assert len(manager.config.providers) == framework_provider_count + 2
 
-    def test_multiple_applications_can_add_providers(self, tmp_path):
-        """Test that multiple applications can each add their own providers."""
-        # Create first application registry
-        app1_file = tmp_path / "app1" / "registry.py"
-        app1_file.parent.mkdir(parents=True)
-        app1_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig, ProviderRegistration
+    def test_multiple_providers_in_single_application(self, tmp_path):
+        """Test that single application can add multiple providers."""
+        # Create application registry with multiple providers
+        app_file = tmp_path / "app" / "registry.py"
+        app_file.parent.mkdir(parents=True)
+        app_file.write_text("""
+from osprey.registry import RegistryConfigProvider, extend_framework_registry, ProviderRegistration
 
-class App1Provider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+class AppProvider(RegistryConfigProvider):
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[],
             providers=[
                 ProviderRegistration(
-                    module_path="app1.providers.custom",
-                    class_name="App1CustomProvider"
+                    module_path="app.providers.custom1",
+                    class_name="Custom1Provider"
+                ),
+                ProviderRegistration(
+                    module_path="app.providers.custom2",
+                    class_name="Custom2Provider"
                 )
             ]
         )
 """)
 
-        # Create second application registry
-        app2_file = tmp_path / "app2" / "registry.py"
-        app2_file.parent.mkdir(parents=True)
-        app2_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig, ProviderRegistration
-
-class App2Provider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
-            capabilities=[],
-            context_classes=[],
-            providers=[
-                ProviderRegistration(
-                    module_path="app2.providers.another",
-                    class_name="App2AnotherProvider"
-                )
-            ]
-        )
-""")
-
-        # Load both registries
-        manager = RegistryManager(registry_paths=[
-            str(app1_file),
-            str(app2_file)
-        ])
+        # Load registry
+        manager = RegistryManager(registry_path=str(app_file))
 
         # Both application providers should be in merged config
         provider_module_paths = [p.module_path for p in manager.config.providers]
-        assert "app1.providers.custom" in provider_module_paths
-        assert "app2.providers.another" in provider_module_paths
+        assert "app.providers.custom1" in provider_module_paths
+        assert "app.providers.custom2" in provider_module_paths
 
     def test_empty_providers_list_handled_correctly(self, tmp_path):
         """Test that empty providers list doesn't cause errors."""
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, extend_framework_registry
 
 class AppProvider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[],
             providers=[]  # Empty list
@@ -137,8 +118,8 @@ class AppProvider(RegistryConfigProvider):
 """)
 
         # Should not raise
-        manager = RegistryManager(registry_paths=[str(registry_file)])
-        
+        manager = RegistryManager(registry_path=str(registry_file))
+
         # Framework providers should still be present
         assert len(manager.config.providers) > 0
 
@@ -151,21 +132,19 @@ class TestProviderExclusions:
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, extend_framework_registry
 
 class AppProvider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[],
-            framework_exclusions={
-                "providers": ["anthropic", "google"]
-            }
+            exclude_providers=["anthropic", "google"]
         )
 """)
 
         # Load registry
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
 
         # Verify exclusions were recorded
         assert "anthropic" in manager._excluded_provider_names
@@ -176,11 +155,11 @@ class AppProvider(RegistryConfigProvider):
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig, ProviderRegistration
+from osprey.registry import RegistryConfigProvider, extend_framework_registry, ProviderRegistration
 
 class AppProvider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[],
             providers=[
@@ -189,20 +168,18 @@ class AppProvider(RegistryConfigProvider):
                     class_name="OnlyProvider"
                 )
             ],
-            framework_exclusions={
-                "providers": ["anthropic", "openai", "google", "ollama", "cborg"]
-            }
+            exclude_providers=["anthropic", "openai", "google", "ollama", "cborg"]
         )
 """)
 
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
 
         # All five framework providers should be in exclusion list
         expected_exclusions = ["anthropic", "openai", "google", "ollama", "cborg"]
         assert len(manager._excluded_provider_names) == len(expected_exclusions)
         for provider in expected_exclusions:
             assert provider in manager._excluded_provider_names
-        
+
         # Custom provider should still be in config
         provider_modules = [p.module_path for p in manager.config.providers]
         assert "app.providers.only" in provider_modules
@@ -263,7 +240,7 @@ class TestHelperFunctionProviderSupport:
             module_path="my_app.providers.new",
             class_name="NewProvider"
         )
-        
+
         override_provider = ProviderRegistration(
             module_path="my_app.providers.custom_openai",
             class_name="CustomOpenAIProvider"
@@ -283,7 +260,7 @@ class TestHelperFunctionProviderSupport:
 
     def test_helper_used_in_registry_provider(self, tmp_path):
         """Test that helper with providers works in actual registry provider file.
-        
+
         This validates the most common use case: an application using the
         extend_framework_registry helper to add custom providers.
         """
@@ -310,12 +287,12 @@ class AppProvider(RegistryConfigProvider):
         )
 """)
 
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
         provider_modules = [p.module_path for p in manager.config.providers]
-        
+
         # Custom provider should be added
         assert "app.providers.custom" in provider_modules
-        
+
         # Framework providers should still be present
         assert "osprey.models.providers.anthropic" in provider_modules
         assert "osprey.models.providers.openai" in provider_modules
@@ -346,7 +323,7 @@ class AppProvider(RegistryConfigProvider):
         )
 """)
 
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
 
         # Exclusions should be recorded
         assert "anthropic" in manager._excluded_provider_names
@@ -359,16 +336,6 @@ class AppProvider(RegistryConfigProvider):
 
 class TestProviderRegistrationDataclass:
     """Test ProviderRegistration dataclass behavior."""
-
-    def test_provider_registration_minimal_fields(self):
-        """Test that ProviderRegistration only requires module_path and class_name."""
-        registration = ProviderRegistration(
-            module_path="my_app.providers.custom",
-            class_name="CustomProvider"
-        )
-
-        assert registration.module_path == "my_app.providers.custom"
-        assert registration.class_name == "CustomProvider"
 
     def test_provider_registration_in_registry_config(self):
         """Test ProviderRegistration can be used in RegistryConfig."""
@@ -389,7 +356,7 @@ class TestProviderRegistrationDataclass:
 
 class TestProviderIntegrationScenarios:
     """Test realistic provider registration scenarios.
-    
+
     These tests demonstrate complete, production-ready patterns for
     customizing provider configuration in real applications.
     """
@@ -419,7 +386,7 @@ class AppProvider(RegistryConfigProvider):
         )
 """)
 
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
 
         # Framework OpenAI should be excluded
         assert "openai" in manager._excluded_provider_names
@@ -427,7 +394,7 @@ class AppProvider(RegistryConfigProvider):
         # Custom provider should be present
         provider_modules = [p.module_path for p in manager.config.providers]
         assert "my_app.providers.custom_openai" in provider_modules
-        
+
         # Other framework providers should still be in config (not excluded)
         assert "osprey.models.providers.anthropic" in provider_modules
 
@@ -440,11 +407,11 @@ class TestProviderMergingEdgeCases:
         registry_file = tmp_path / "app" / "registry.py"
         registry_file.parent.mkdir(parents=True)
         registry_file.write_text("""
-from osprey.registry import RegistryConfigProvider, RegistryConfig
+from osprey.registry import RegistryConfigProvider, extend_framework_registry
 
 class AppProvider(RegistryConfigProvider):
-    def get_registry_config(self) -> RegistryConfig:
-        return RegistryConfig(
+    def get_registry_config(self):
+        return extend_framework_registry(
             capabilities=[],
             context_classes=[]
             # No providers field at all
@@ -452,7 +419,7 @@ class AppProvider(RegistryConfigProvider):
 """)
 
         # Should not raise
-        manager = RegistryManager(registry_paths=[str(registry_file)])
+        manager = RegistryManager(registry_path=str(registry_file))
 
         # Framework providers should still be present
         framework_provider_modules = [
@@ -465,11 +432,11 @@ class AppProvider(RegistryConfigProvider):
 
     def test_framework_only_registry_has_providers(self):
         """Test that framework-only registry includes default providers."""
-        manager = RegistryManager(registry_paths=[])
+        manager = RegistryManager(registry_path=None)
 
         # Framework should have providers
         assert len(manager.config.providers) > 0
-        
+
         # Should include standard framework providers
         provider_modules = [p.module_path for p in manager.config.providers]
         assert "osprey.models.providers.anthropic" in provider_modules
