@@ -17,6 +17,18 @@ project_root: {{ project_root }}
 registry_path: ./src/{{ package_name }}/registry.py
 
 # ============================================================
+# CONTAINER RUNTIME
+# ============================================================
+# Container runtime selection for deployment
+# Options: auto (default), docker, podman
+# - auto: Tries Docker first, then Podman
+# - docker: Use Docker Desktop (recommended for macOS/Windows)
+# - podman: Use Podman (recommended for Linux/security-focused)
+# Can also override via CONTAINER_RUNTIME environment variable
+
+container_runtime: auto
+
+# ============================================================
 # MODEL CONFIGURATION
 # ============================================================
 # The framework uses 8 different AI models for different roles.

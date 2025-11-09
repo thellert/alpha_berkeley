@@ -16,12 +16,20 @@ Core Modules
    :toctree: _autosummary
    
    container_manager
+   runtime_helper
    loader
 
 Container Orchestration
 =======================
 
 .. automodule:: osprey.deployment.container_manager
+   :members:
+   :show-inheritance:
+
+Runtime Detection
+=================
+
+.. automodule:: osprey.deployment.runtime_helper
    :members:
    :show-inheritance:
 

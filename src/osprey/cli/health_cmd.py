@@ -23,6 +23,7 @@ from rich.live import Live
 
 from osprey.cli.styles import Messages, Styles, ThemeConfig, console
 from osprey.utils.log_filter import quiet_logger
+from osprey.deployment.runtime_helper import get_runtime_command, get_ps_command
 
 
 class HealthCheckResult:
@@ -470,10 +471,13 @@ class HealthChecker:
         """Check container runtime and deployed services."""
         console.print("\n[bold]Container Infrastructure[/bold]")
 
-        # Check if podman is available
+        # Check if a container runtime is available
         try:
+            runtime_cmd = get_runtime_command()
+            runtime = runtime_cmd[0]  # 'docker' or 'podman'
+            
             result = subprocess.run(
-                ["podman", "--version"],
+                [runtime, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5
@@ -481,20 +485,24 @@ class HealthChecker:
 
             if result.returncode == 0:
                 version = result.stdout.strip()
-                self.add_result("podman_available", "ok", version)
+                self.add_result(f"{runtime}_available", "ok", version)
                 console.print(f"  {Messages.success(f'{version}')}")
 
                 # Check container status
                 self._check_container_status()
             else:
-                self.add_result("podman_available", "error", "Podman command failed")
-                console.print(f"  {Messages.error('❌ Podman not working properly')}")
+                self.add_result(f"{runtime}_available", "error", f"{runtime.capitalize()} command failed")
+                console.print(f"  {Messages.error(f'❌ {runtime.capitalize()} not working properly')}")
+        except RuntimeError as e:
+            # No runtime found
+            self.add_result("container_runtime", "warning", str(e))
+            console.print(f"  {Messages.warning(' No container runtime found (Docker or Podman required)')}")
         except FileNotFoundError:
-            self.add_result("podman_available", "warning", "Podman not found in PATH")
-            console.print(f"  {Messages.warning(' Podman not installed or not in PATH')}")
+            self.add_result("container_runtime", "warning", "Container runtime not found in PATH")
+            console.print(f"  {Messages.warning(' Container runtime not installed or not in PATH')}")
         except Exception as e:
-            self.add_result("podman_available", "warning", f"Could not check Podman: {e}")
-            console.print(f"  {Messages.warning(f' Could not check Podman: {e}')}")
+            self.add_result("container_runtime", "warning", f"Could not check container runtime: {e}")
+            console.print(f"  {Messages.warning(f' Could not check container runtime: {e}')}")
 
     def _check_container_status(self):
         """Check status of deployed containers."""
@@ -514,7 +522,7 @@ class HealthChecker:
 
             # Get all containers
             result = subprocess.run(
-                ["podman", "ps", "-a", "--format", "json"],
+                get_ps_command(config, all_containers=True),
                 capture_output=True,
                 text=True,
                 timeout=10

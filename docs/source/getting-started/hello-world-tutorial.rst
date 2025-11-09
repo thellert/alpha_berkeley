@@ -24,7 +24,7 @@ By the end of this guide, you'll have a working agent that responds to queries l
 
    If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
    
-   - Install Podman (container runtime)
+   - Install Docker Desktop or Podman (container runtime)
    - Set up Python 3.11 virtual environment
    - Install the framework package
    - Configure your environment

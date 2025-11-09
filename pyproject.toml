@@ -52,9 +52,11 @@ dependencies = [
     "Jinja2>=3.1.6",
     "requests>=2.32.3",
     
-    # Container management (Podman, not Docker)
-    "podman>=5.4.0",
-    "podman-compose>=1.4.0",
+    # Container runtime (Docker or Podman) must be installed separately via system package managers
+    # Framework uses CLI tools (docker/podman commands), not Python packages
+    # Install Docker Desktop 4.0+ OR Podman 4.0+:
+    #   - Docker: https://docs.docker.com/get-docker/
+    #   - Podman: https://podman.io/getting-started/installation
     
     # Jupyter notebook support
     "nbformat>=5.0.0",

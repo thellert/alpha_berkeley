@@ -36,6 +36,7 @@ from typing import Any, Optional
 
 from rich.markdown import Markdown
 from rich.panel import Panel
+from osprey.deployment.runtime_helper import get_runtime_command
 
 # Import centralized styles
 from osprey.cli.styles import (
@@ -529,17 +530,25 @@ def check_directory_has_active_mounts(directory: Path) -> tuple[bool, list[str]]
         ...     print(f"Active mounts: {details}")
     """
     import subprocess
+    import json
 
     mount_details = []
 
     # Normalize the directory path
     dir_str = str(directory.resolve())
 
-    # Check for Docker mounts
+    # Determine which container runtime to use
     try:
-        # Try docker first (more common)
+        runtime_cmd = get_runtime_command()
+        runtime = runtime_cmd[0]  # 'docker' or 'podman'
+    except RuntimeError:
+        # No runtime available
+        return False, []
+
+    # Check for container mounts using detected runtime
+    try:
         result = subprocess.run(
-            ["docker", "ps", "--format", "{{.Names}}"],
+            [runtime, "ps", "--format", "{{.Names}}"],
             capture_output=True,
             text=True,
             timeout=1
@@ -552,14 +561,13 @@ def check_directory_has_active_mounts(directory: Path) -> tuple[bool, list[str]]
             for container in containers:
                 # Inspect each container for mounts
                 inspect_result = subprocess.run(
-                    ["docker", "inspect", "--format", "{{json .Mounts}}", container],
+                    [runtime, "inspect", "--format", "{{json .Mounts}}", container],
                     capture_output=True,
                     text=True,
                     timeout=5
                 )
 
                 if inspect_result.returncode == 0:
-                    import json
                     try:
                         mounts = json.loads(inspect_result.stdout)
                         for mount in mounts:
@@ -571,44 +579,6 @@ def check_directory_has_active_mounts(directory: Path) -> tuple[bool, list[str]]
                     except json.JSONDecodeError:
                         pass
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
-        # Docker not available or timeout - try Podman
-        pass
-
-    # Check for Podman mounts (if docker check didn't find anything)
-    if not mount_details:
-        try:
-            result = subprocess.run(
-                ["podman", "ps", "--format", "{{.Names}}"],
-                capture_output=True,
-                text=True,
-                timeout=1
-            )
-
-            if result.returncode == 0:
-                containers = result.stdout.strip().split('\n')
-                containers = [c for c in containers if c]
-
-                for container in containers:
-                    inspect_result = subprocess.run(
-                        ["podman", "inspect", "--format", "{{json .Mounts}}", container],
-                        capture_output=True,
-                        text=True,
-                        timeout=5
-                    )
-
-                    if inspect_result.returncode == 0:
-                        import json
-                        try:
-                            mounts = json.loads(inspect_result.stdout)
-                            for mount in mounts:
-                                source = mount.get('Source', '')
-                                if dir_str in source or source.startswith(dir_str):
-                                    mount_details.append(
-                                        f"Container '{container}' has mount: {source}"
-                                    )
-                        except json.JSONDecodeError:
-                            pass
-        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
             # Podman also not available - assume no mounts
             pass
 
@@ -1162,6 +1132,7 @@ def run_interactive_init() -> str:
     console.print("\n[bold]Creating project...[/bold]\n")
 
     try:
+        # Note: force=True because we already handled directory deletion if user chose override
         project_path = manager.create_project(
             project_name=project_name,
             output_dir=Path.cwd(),
@@ -1170,7 +1141,8 @@ def run_interactive_init() -> str:
             context={
                 'default_provider': provider,
                 'default_model': model
-            }
+            },
+            force=True
         )
 
         msg = Messages.success('Project created at:')

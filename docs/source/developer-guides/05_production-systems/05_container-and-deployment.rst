@@ -23,14 +23,15 @@ Container Deployment
 Overview
 ========
 
-The Osprey Framework provides a container management system for deploying services. The system handles service discovery, Docker Compose template rendering, and container orchestration through Podman Compose.
+The Osprey Framework provides a container management system for deploying services. The system handles service discovery, Docker Compose template rendering, and container orchestration using Docker or Podman with native compose support.
 
 **Core Features:**
 
+- **Runtime Flexibility**: Automatic detection and use of Docker or Podman
 - **Simple Service Configuration**: All services defined in a flat ``services:`` section
 - **Template Rendering**: Jinja2 processing of Docker Compose templates with full configuration context
 - **Build Management**: Automated build directory creation with source code and configuration copying
-- **Container Orchestration**: Podman Compose integration for multi-service deployment
+- **Container Orchestration**: Docker Compose or Podman Compose integration for multi-service deployment
 
 Architecture
 ============
@@ -497,7 +498,7 @@ When you run ``osprey deploy up``, the container manager follows this workflow:
 4. **Template Processing**: Render Jinja2 templates with complete configuration context
 5. **File Copying**: Copy service files, source code, and additional directories
 6. **Configuration Flattening**: Generate self-contained config files for containers
-7. **Container Orchestration**: Execute Podman Compose with generated files
+7. **Container Orchestration**: Execute Docker/Podman Compose with generated files
 
 **Generated Build Directory:**
 

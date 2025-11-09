@@ -6,7 +6,7 @@ What You'll Learn
 
 This installation guide covers the complete framework setup process:
 
-* **Installing Podman** - Container runtime for secure, daemonless deployments
+* **Installing Container Runtime** - Docker Desktop or Podman for containerized services
 * **Python 3.11 Setup** - Virtual environment configuration
 * **Framework Installation** - Installing the pip package with all dependencies
 * **Project Creation** - Generating a new project from templates
@@ -21,13 +21,13 @@ This installation guide covers the complete framework setup process:
    **System Requirements:**
    
    - **Operating System:** Linux, macOS, or Windows with WSL2
-   - **Admin/sudo access:** Required for installing Podman and Python
+   - **Admin/sudo access:** Required for installing container runtime and Python
    - **Internet connection:** For downloading packages and container images
    - **Disk space:** At least 5GB free for containers and dependencies
    
    **What You'll Install:**
 
-   - Podman 5.0.0+ (container runtime)
+   - Docker Desktop 4.0+ OR Podman 4.0+ (container runtime)
    - Python 3.11 (programming language)
    - Osprey Framework (pip package)
    
@@ -36,31 +36,68 @@ This installation guide covers the complete framework setup process:
 Installation Steps
 ~~~~~~~~~~~~~~~~~~
 
-**Install Podman**
+**Install Container Runtime**
 
-`Podman <https://podman.io/>`_ is a daemonless container engine that serves as an alternative to Docker. Unlike Docker, which requires a privileged daemon running as root, Podman can run containers without a daemon and supports true rootless operation. This architecture provides several security advantages: reduced attack surface, better privilege separation, and no need for a constantly running root process. While Docker can be complex to secure in enterprise environments, Podman's design makes it inherently more secure and easier to integrate into systems with strict security requirements. In a nutshell, if you want to make your sysadmin happy(ier!), use Podman for security reasons.
+The framework supports both Docker and Podman. Install **either one** (not both required):
 
-To get the latest installation instructions for Podman, visit the `official Podman installation guide <https://podman.io/docs/installation>`_.
+.. tab-set::
 
-After you finish the installation, check if your Podman version is at least 5.0.0 and run the "hello-world" Podman container:
+    .. tab-item:: Docker Desktop (Recommended for macOS/Windows)
 
-.. code-block:: bash
+        **Installation:**
 
-   podman --version
-   podman run hello-world
+        `Docker Desktop <https://www.docker.com/products/docker-desktop/>`_ is the most widely used container platform, providing an integrated experience with native compose support.
 
-If the "hello-world" container runs successfully and displays a welcome message, you can proceed to the next step.
+        Download and install Docker Desktop 4.0+ from the `official Docker installation guide <https://docs.docker.com/get-started/get-docker/>`_.
 
-**Running Podman Machine (macOS/Windows only)**
+        **Verification:**
 
-After the successful installation, if you're on macOS or Windows, you need to initialize and start the podman machine:
+        After installation, verify Docker is working:
 
-.. code-block:: bash
+        .. code-block:: bash
 
-   podman machine init
-   podman machine start
+           docker --version
+           docker compose version
+           docker run hello-world
 
-**Note:** Linux users can skip this step as Podman runs natively on Linux.
+        Docker Desktop handles the VM setup automatically on macOS/Windows - no additional configuration needed.
+
+    .. tab-item:: Podman (Recommended for Linux/Security-focused deployments)
+
+        **Installation:**
+
+        `Podman <https://podman.io/>`_ is a daemonless container engine that provides enhanced security through rootless operation. Unlike Docker, Podman doesn't require a privileged daemon running as root, offering better privilege separation and a reduced attack surface.
+
+        Install Podman 4.0+ from the `official Podman installation guide <https://podman.io/docs/installation>`_.
+
+        **Verification:**
+
+        After installation, verify Podman is working:
+
+        .. code-block:: bash
+
+           podman --version
+           podman run hello-world
+
+        **Podman Machine Setup (macOS/Windows only):**
+
+        On macOS/Windows, initialize and start the Podman machine:
+
+        .. code-block:: bash
+
+           podman machine init
+           podman machine start
+
+        **Note:** Linux users can skip this step as Podman runs natively on Linux.
+
+**Runtime Selection:**
+
+The framework automatically detects which runtime is available. To explicitly choose a runtime:
+
+- **Via configuration:** Set ``container_runtime: docker`` or ``container_runtime: podman`` in ``config.yml``
+- **Via environment variable:** ``export CONTAINER_RUNTIME=docker`` or ``export CONTAINER_RUNTIME=podman``
+
+If both are installed, Docker is preferred by default.
 
 **Environment Setup**
 
@@ -103,7 +140,7 @@ After creating and activating the virtual environment, install the framework pac
    * **Core Framework**: `LangGraph <https://www.langchain.com/langgraph>`_, `LangChain <https://www.langchain.com/>`_, `Pydantic-AI <https://ai.pydantic.dev/>`_
    * **AI Providers**: `OpenAI <https://openai.com/>`_, `Anthropic <https://www.anthropic.com/>`_, `Google Generative AI <https://ai.google.dev/>`_, `Ollama <https://ollama.com/>`_
    * **CLI & UI**: `Rich <https://rich.readthedocs.io/>`_, `Click <https://click.palletsprojects.com/>`_, `prompt_toolkit <https://python-prompt-toolkit.readthedocs.io/>`_
-   * **Container Management**: `Podman <https://podman.io/>`_, Podman-compose
+   * **Container Runtime**: Docker Desktop 4.0+ or Podman 4.0+ (installed separately via system package managers)
    * **Configuration**: PyYAML, Jinja2, python-dotenv
    * **Networking**: requests, websocket-client
 
@@ -454,6 +491,10 @@ Check that services are running properly:
 
 .. code-block:: bash
 
+   # If using Docker
+   docker ps
+   
+   # If using Podman
    podman ps
 
 **Access OpenWebUI**
@@ -471,7 +512,7 @@ OpenWebUI Configuration
 
 **Ollama Connection:**
 
-For Ollama running on localhost, use ``http://host.containers.internal:11434`` instead of ``http://localhost:11434`` because Podman containers cannot access the host's localhost directly. This should match your ``config.yml`` Ollama base URL setting (see `Configuration`_ section above).
+For Ollama running on localhost, use ``http://host.containers.internal:11434`` instead of ``http://localhost:11434`` because containers cannot access the host's localhost directly. This should match your ``config.yml`` Ollama base URL setting (see `Configuration`_ section above).
 
 Once the correct URL is configured and Ollama is serving, `OpenWebUI <https://openwebui.com/>`_ will automatically discover all models currently available in your Ollama installation.
 
@@ -629,17 +670,17 @@ Troubleshooting
 - If you encounter connection issues with Ollama, ensure you're using ``host.containers.internal`` instead of ``localhost`` when connecting from containers
 - Verify that all required services are uncommented in ``config.yml``
 - Check that API keys are properly set in the ``.env`` file
-- Ensure podman machine is running before starting services (macOS/Windows)
-- If containers fail to start, check logs with: ``podman logs <container_name>``
+- Ensure container runtime is running (Docker Desktop or Podman machine on macOS/Windows)
+- If containers fail to start, check logs with: ``docker logs <container_name>`` or ``podman logs <container_name>``
 
 **Verification Steps:**
 
 1. Check Python version: ``python --version`` (should be 3.11.x)
-2. Check Podman version: ``podman --version`` (should be 5.0.0+)
+2. Check container runtime version: ``docker --version`` or ``podman --version`` (should be 4.0.0+)
 3. Verify virtual environment is active (should see ``(venv)`` in your prompt)
 4. Test core framework imports: ``python -c "import langgraph; print('LangGraph installed successfully')"``
-5. Test container connectivity: ``podman run --rm alpine ping -c 1 host.containers.internal``
-6. Check service status: ``podman ps``
+5. Test container connectivity: ``docker run --rm alpine ping -c 1 host.containers.internal`` (or use ``podman`` instead)
+6. Check service status: ``docker ps`` or ``podman ps``
 
 **Common Installation Issues:**
 

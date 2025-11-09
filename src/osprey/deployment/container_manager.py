@@ -70,11 +70,14 @@ import yaml
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
-# NOTE: Now that container_manager is in src/osprey/deployment/,
-# configs module should be importable directly without sys.path manipulation
 from osprey.utils.config import ConfigBuilder
 from osprey.utils.log_filter import quiet_logger
 from osprey.utils.logger import get_logger
+from osprey.deployment.runtime_helper import (
+    get_runtime_command,
+    get_ps_command,
+    verify_runtime_is_running,
+)
 
 # Initialize component logger for deployment operations
 logger = get_logger("deployment")
@@ -940,7 +943,7 @@ def find_existing_compose_files(config, deployed_services, quiet=False):
 
     return compose_files
 
-def clean_deployment(compose_files):
+def clean_deployment(compose_files, config=None):
     """Clean up containers, images, volumes, and networks for a fresh deployment.
 
     This function provides comprehensive cleanup capabilities for container
@@ -950,11 +953,13 @@ def clean_deployment(compose_files):
 
     :param compose_files: List of Docker Compose file paths for the deployment
     :type compose_files: list[str]
+    :param config: Optional configuration dictionary for runtime detection
+    :type config: dict, optional
     """
     logger.key_info("Cleaning up deployment...")
 
     # Stop and remove containers, networks, volumes
-    cmd_down = ["podman", "compose"]
+    cmd_down = get_runtime_command(config)
     for compose_file in compose_files:
         cmd_down.extend(("-f", compose_file))
     cmd_down.extend(["--env-file", ".env", "down", "--volumes", "--remove-orphans"])
@@ -963,7 +968,7 @@ def clean_deployment(compose_files):
     subprocess.run(cmd_down)
 
     # Remove images built by the compose files
-    cmd_rmi = ["podman", "compose"]
+    cmd_rmi = get_runtime_command(config)
     for compose_file in compose_files:
         cmd_rmi.extend(("-f", compose_file))
     cmd_rmi.extend(["--env-file", ".env", "down", "--rmi", "all"])
@@ -1028,7 +1033,7 @@ def prepare_compose_files(config_path, dev_mode=False):
 
 
 def deploy_up(config_path, detached=False, dev_mode=False):
-    """Start services using podman compose.
+    """Start services using container runtime (Docker or Podman).
 
     :param config_path: Path to the configuration file
     :type config_path: str
@@ -1039,13 +1044,18 @@ def deploy_up(config_path, detached=False, dev_mode=False):
     """
     config, compose_files = prepare_compose_files(config_path, dev_mode)
 
+    # Verify container runtime is actually running
+    is_running, error_msg = verify_runtime_is_running(config)
+    if not is_running:
+        raise RuntimeError(error_msg)
+
     # Set up environment for containers
     env = os.environ.copy()
     if dev_mode:
         env['DEV_MODE'] = 'true'
         logger.key_info("Development mode: DEV_MODE environment variable set for containers")
 
-    cmd = ["podman", "compose"]
+    cmd = get_runtime_command(config)
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
 
@@ -1067,7 +1077,7 @@ def deploy_up(config_path, detached=False, dev_mode=False):
 
 
 def deploy_down(config_path, dev_mode=False):
-    """Stop services using podman compose.
+    """Stop services using container runtime (Docker or Podman).
 
     :param config_path: Path to the configuration file
     :type config_path: str
@@ -1094,7 +1104,7 @@ def deploy_down(config_path, dev_mode=False):
         for f in compose_files:
             logger.info(f"  - {f}")
 
-    cmd = ["podman", "compose"]
+    cmd = get_runtime_command(config)
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
 
@@ -1111,7 +1121,7 @@ def deploy_down(config_path, dev_mode=False):
 
 
 def deploy_restart(config_path, detached=False):
-    """Restart services using podman compose.
+    """Restart services using container runtime (Docker or Podman).
 
     :param config_path: Path to the configuration file
     :type config_path: str
@@ -1120,7 +1130,12 @@ def deploy_restart(config_path, detached=False):
     """
     config, compose_files = prepare_compose_files(config_path)
 
-    cmd = ["podman", "compose"]
+    # Verify container runtime is actually running
+    is_running, error_msg = verify_runtime_is_running(config)
+    if not is_running:
+        raise RuntimeError(error_msg)
+
+    cmd = get_runtime_command(config)
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
     cmd.extend(["--env-file", ".env", "restart"])
@@ -1136,7 +1151,7 @@ def deploy_restart(config_path, detached=False):
 def show_status(config_path):
     """Show detailed status of services with formatted output.
     
-    Uses direct podman ps to show actual container state, independent of compose files.
+    Uses direct container runtime ps to show actual container state, independent of compose files.
     Displays containers for this project separately from other running containers.
 
     :param config_path: Path to the configuration file
@@ -1166,10 +1181,10 @@ def show_status(config_path):
     if not current_project:
         current_project = 'unnamed-project'
 
-    # Get all containers using direct podman ps (not compose-dependent)
+    # Get all containers using direct runtime ps (not compose-dependent)
     try:
         result = subprocess.run(
-            ["podman", "ps", "-a", "--format", "json"],
+            get_ps_command(config, all_containers=True),
             capture_output=True,
             text=True,
             timeout=10
@@ -1180,7 +1195,17 @@ def show_status(config_path):
             console.print(f"[dim]Command failed with return code {result.returncode}[/dim]\n")
             return
         
-        all_containers = json.loads(result.stdout) if result.stdout.strip() else []
+        # Parse newline-separated JSON objects (Docker format) or JSON array (Podman format)
+        all_containers = []
+        if result.stdout.strip():
+            try:
+                # Try parsing as JSON array first (Podman format)
+                all_containers = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                # Fall back to newline-separated JSON objects (Docker format)
+                for line in result.stdout.strip().split('\n'):
+                    if line.strip():
+                        all_containers.append(json.loads(line))
         
     except subprocess.TimeoutExpired:
         console.print("\n[red]Error: Container query timed out[/red]\n")
@@ -1346,8 +1371,13 @@ def rebuild_deployment(config_path, detached=False, dev_mode=False):
     """
     config, compose_files = prepare_compose_files(config_path, dev_mode)
 
+    # Verify container runtime is actually running (for the rebuild phase)
+    is_running, error_msg = verify_runtime_is_running(config)
+    if not is_running:
+        raise RuntimeError(error_msg)
+
     # Clean first
-    clean_deployment(compose_files)
+    clean_deployment(compose_files, config)
 
     # Set up environment for containers
     env = os.environ.copy()
@@ -1356,7 +1386,7 @@ def rebuild_deployment(config_path, detached=False, dev_mode=False):
         logger.key_info("Development mode: DEV_MODE environment variable set for containers")
 
     # Then start up
-    cmd = ["podman", "compose"]
+    cmd = get_runtime_command(config)
     for compose_file in compose_files:
         cmd.extend(("-f", compose_file))
 

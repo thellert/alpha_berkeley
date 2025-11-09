@@ -148,7 +148,8 @@ class TemplateManager:
         output_dir: Path,
         template_name: str = "minimal",
         registry_style: str = "compact",
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
+        force: bool = False
     ) -> Path:
         """Create complete project from template.
 
@@ -165,6 +166,7 @@ class TemplateManager:
             template_name: Application template to use (default: "minimal")
             registry_style: Registry style - "compact" (uses helper) or "explicit" (full listing)
             context: Additional template context variables
+            force: If True, skip existence check (used when caller already handled deletion)
 
         Returns:
             Path to created project directory
@@ -193,13 +195,14 @@ class TemplateManager:
 
         # 2. Setup project directory
         project_dir = output_dir / project_name
-        if project_dir.exists():
+        if not force and project_dir.exists():
             raise ValueError(
                 f"Directory '{project_dir}' already exists. "
                 "Please choose a different project name or location."
             )
 
-        project_dir.mkdir(parents=True)
+        if not project_dir.exists():
+            project_dir.mkdir(parents=True)
 
         # 3. Prepare template context
         package_name = project_name.replace("-", "_").lower()

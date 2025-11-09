@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Docker Runtime Support**: Framework now supports both Docker and Podman container runtimes
+  - New `runtime_helper.py` module for automatic runtime detection
+  - Configuration setting `container_runtime` in `config.yml` (options: `auto`, `docker`, `podman`)
+  - Environment variable `CONTAINER_RUNTIME` for per-command runtime override
+  - Auto-detection prefers Docker first, falls back to Podman
+  - Requires Docker Desktop 4.0+ or Podman 4.0+ (native compose support)
+  - **User-friendly error messages**: Platform-specific guidance when Docker/Podman not running
+    - macOS: "Open Docker Desktop from Applications" with menu bar icon hints
+    - Linux: systemctl commands and docker group permissions
+    - Windows: Start menu and system tray instructions
+  - Comprehensive test suite for runtime detection and selection (33 tests)
 - **Custom AI Provider Registration**: Applications can now register custom AI model providers through the registry system
   - Added `providers` parameter to `extend_framework_registry()` helper function
   - Added `exclude_providers` parameter to exclude framework providers
@@ -17,8 +28,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support for institutional AI services (Azure, Stanford AI, national lab endpoints) and commercial providers
 
 ### Changed
+- **Container Management**: All deployment commands now use runtime abstraction layer
+  - Updated `container_manager.py`: 6 functions now use runtime helper
+  - Updated `health_cmd.py`: Container health checks are runtime-agnostic
+  - Updated `interactive_menu.py`: Mount checking uses configured runtime
+  - All compose operations work seamlessly with both Docker and Podman
+  - **Fixed JSON parsing**: `osprey deploy status` now handles both Docker (NDJSON) and Podman (JSON array) output formats
+- **Dependencies**: Removed Python `podman` and `podman-compose` packages
+  - Container runtimes must be installed via system package managers
+  - Framework uses CLI tools (`docker`/`podman` commands), not Python SDKs
+  - Added installation documentation for both runtimes
 - Enhanced registry helper functions to support provider registration parameters
 - Updated developer guide documentation with provider registration examples
+
+### Breaking Changes
+- **Installation**: Users must install Docker Desktop 4.0+ or Podman 4.0+ separately
+  - Python packages no longer provide container runtime functionality
+  - See installation guide for platform-specific instructions
+- **Note**: Existing Podman users are unaffected - auto-detection will find Podman if Docker not installed
 
 ## [0.8.2] - 2025-11-05
 
