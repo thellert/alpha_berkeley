@@ -26,11 +26,10 @@ Key capabilities include:
 
 import logging
 import os
-from typing import Optional, Union, Type, get_origin, get_args, get_type_hints
-from typing_extensions import TypedDict
 from urllib.parse import urlparse
-from pydantic import BaseModel, create_model, Field
+
 import httpx
+from pydantic import BaseModel, Field, create_model
 
 from osprey.utils.config import get_provider_config
 
@@ -54,7 +53,7 @@ def _is_typed_dict(cls) -> bool:
     return hasattr(cls, '__annotations__') and hasattr(cls, '__total__')
 
 
-def _convert_typed_dict_to_pydantic(typed_dict_cls) -> Type[BaseModel]:
+def _convert_typed_dict_to_pydantic(typed_dict_cls) -> type[BaseModel]:
     """Convert a TypedDict class to a dynamically created Pydantic BaseModel.
 
     This function enables seamless integration between TypedDict-based type hints
@@ -161,16 +160,16 @@ def _validate_proxy_url(proxy_url: str) -> bool:
 def get_chat_completion(
     message: str,
     max_tokens: int = 1024,
-    model_config: Optional[dict] = None,
-    provider: Optional[str] = None,
-    model_id: Optional[str] = None,
+    model_config: dict | None = None,
+    provider: str | None = None,
+    model_id: str | None = None,
     budget_tokens: int | None = None,
     enable_thinking: bool = False,
-    output_model: Optional[Type[BaseModel]] = None,
-    base_url: Optional[str] = None,
-    provider_config: Optional[dict] = None,
+    output_model: type[BaseModel] | None = None,
+    base_url: str | None = None,
+    provider_config: dict | None = None,
     temperature: float = 0.0,
-) -> Union[str, BaseModel, list]:
+) -> str | BaseModel | list:
     """Execute direct chat completion requests across multiple AI providers.
 
     This function provides immediate access to LLM model inference with support for
@@ -371,4 +370,4 @@ def get_chat_completion(
     )
 
     # Result is already handled by provider (TypedDict conversion if needed)
-    return result 
+    return result

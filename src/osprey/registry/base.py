@@ -87,7 +87,6 @@ Examples:
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
 
 # =============================================================================
 # SHARED DATACLASS DEFINITIONS - Used by both framework and applications
@@ -113,7 +112,7 @@ class NodeRegistration:
     function_name: str
     description: str
 
-@dataclass  
+@dataclass
 class CapabilityRegistration:
     """Registration metadata for capabilities.
 
@@ -145,8 +144,8 @@ class CapabilityRegistration:
     module_path: str  # Like "applications.als_assistant.capabilities.pv_address_finding"
     class_name: str  # Like "PVAddressFindingCapability"
     description: str  # Human-readable description
-    provides: List[str]  # Context types this capability produces
-    requires: List[str]  # Context types this capability needs as input
+    provides: list[str]  # Context types this capability produces
+    requires: list[str]  # Context types this capability needs as input
     always_active: bool = False  # Whether capability is always active (no classification needed)
     functional_node: str = None  # Name of functional node (from capability.node attribute)
     example_usage: str = ""  # Example of how this capability is used
@@ -190,7 +189,7 @@ class DataSourceRegistration:
     name: str
     module_path: str  # Module path for lazy loading
     class_name: str   # Class name for lazy loading
-    description: str  
+    description: str
     health_check_required: bool = True
 
 @dataclass
@@ -213,7 +212,7 @@ class ExecutionPolicyAnalyzerRegistration:
     """
     name: str
     module_path: str  # Module path for lazy loading
-    class_name: str   # Class name for lazy loading  
+    class_name: str   # Class name for lazy loading
     description: str
     priority: int = 50  # Default priority
 
@@ -237,7 +236,7 @@ class DomainAnalyzerRegistration:
     """
     name: str
     module_path: str  # Module path for lazy loading
-    class_name: str   # Class name for lazy loading  
+    class_name: str   # Class name for lazy loading
     description: str
     priority: int = 50  # Default priority
 
@@ -276,7 +275,7 @@ class FrameworkPromptProviderRegistration:
     application_name: str  # Application identifier (e.g., "als_assistant")
     module_path: str      # Module path for lazy loading (e.g., "applications.als_assistant.framework_prompts")
     description: str
-    prompt_builders: Dict[str, str] = field(default_factory=dict)  # prompt_type -> class_name mapping
+    prompt_builders: dict[str, str] = field(default_factory=dict)  # prompt_type -> class_name mapping
 
 @dataclass
 class ServiceRegistration:
@@ -305,9 +304,9 @@ class ServiceRegistration:
     module_path: str
     class_name: str
     description: str
-    provides: List[str] = field(default_factory=list)
-    requires: List[str] = field(default_factory=list)
-    internal_nodes: List[str] = field(default_factory=list)
+    provides: list[str] = field(default_factory=list)
+    requires: list[str] = field(default_factory=list)
+    internal_nodes: list[str] = field(default_factory=list)
 
 @dataclass
 class ProviderRegistration:
@@ -388,21 +387,21 @@ class RegistryConfig:
     :type initialization_order: list[str]
     """
     # Required fields (what applications typically define)
-    capabilities: List[CapabilityRegistration]
-    context_classes: List[ContextClassRegistration]
+    capabilities: list[CapabilityRegistration]
+    context_classes: list[ContextClassRegistration]
 
     # Optional fields with sensible defaults (mostly for framework)
-    core_nodes: List[NodeRegistration] = field(default_factory=list)
-    data_sources: List[DataSourceRegistration] = field(default_factory=list)
-    services: List[ServiceRegistration] = field(default_factory=list)
-    domain_analyzers: List[DomainAnalyzerRegistration] = field(default_factory=list)
-    execution_policy_analyzers: List[ExecutionPolicyAnalyzerRegistration] = field(default_factory=list)
-    framework_prompt_providers: List[FrameworkPromptProviderRegistration] = field(default_factory=list)
-    providers: List[ProviderRegistration] = field(default_factory=list)
-    framework_exclusions: Dict[str, List[str]] = field(default_factory=dict)
-    initialization_order: List[str] = field(default_factory=lambda: [
+    core_nodes: list[NodeRegistration] = field(default_factory=list)
+    data_sources: list[DataSourceRegistration] = field(default_factory=list)
+    services: list[ServiceRegistration] = field(default_factory=list)
+    domain_analyzers: list[DomainAnalyzerRegistration] = field(default_factory=list)
+    execution_policy_analyzers: list[ExecutionPolicyAnalyzerRegistration] = field(default_factory=list)
+    framework_prompt_providers: list[FrameworkPromptProviderRegistration] = field(default_factory=list)
+    providers: list[ProviderRegistration] = field(default_factory=list)
+    framework_exclusions: dict[str, list[str]] = field(default_factory=dict)
+    initialization_order: list[str] = field(default_factory=lambda: [
         "context_classes",
-        "data_sources", 
+        "data_sources",
         "domain_analyzers",
         "execution_policy_analyzers",
         "providers",

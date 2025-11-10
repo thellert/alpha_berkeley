@@ -37,8 +37,9 @@ Supported Locations:
 """
 
 import random
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+
 
 @dataclass
 class CurrentWeatherReading:
@@ -346,4 +347,4 @@ Examples:
 .. seealso::
    :class:`SimpleWeatherAPI` : The weather service class instantiated here
    :class:`CurrentWeatherCapability` : Primary consumer of this global instance
-""" 
+"""

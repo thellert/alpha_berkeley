@@ -29,10 +29,10 @@ Key Features:
 """
 
 import logging
-from typing import Optional
 
-from osprey.data_management.providers import DataSourceProvider, DataSourceContext
+from osprey.data_management.providers import DataSourceContext, DataSourceProvider
 from osprey.data_management.request import DataSourceRequest
+
 from .storage_manager import get_memory_storage_manager
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ class UserMemoryProvider(DataSourceProvider):
 
 
 
-    async def retrieve_data(self, request: DataSourceRequest) -> Optional[DataSourceContext]:
+    async def retrieve_data(self, request: DataSourceRequest) -> DataSourceContext | None:
         """Retrieve user memory data and create structured context for framework integration.
 
         Implements the core memory retrieval workflow including user identification,
@@ -204,7 +204,7 @@ class UserMemoryProvider(DataSourceProvider):
 
         # Check if query-based retrieval is requested
         if request.query is not None:
-            logger.warning(f"Query-based memory retrieval is not supported. Will return all memory entries.")
+            logger.warning("Query-based memory retrieval is not supported. Will return all memory entries.")
 
         try:
             # Get memory entries from the storage manager
@@ -430,4 +430,4 @@ class UserMemoryProvider(DataSourceProvider):
         else:
             sections.append("  (No memory entries available)")
 
-        return "\n".join(sections) 
+        return "\n".join(sections)

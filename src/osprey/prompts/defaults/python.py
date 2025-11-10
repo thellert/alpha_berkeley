@@ -5,13 +5,16 @@ Default prompts for Python code generation and execution capability.
 """
 
 import textwrap
-from typing import Optional
 
-from osprey.prompts.base import FrameworkPromptBuilder
 from osprey.base import (
-    OrchestratorGuide, OrchestratorExample, PlannedStep,
-    TaskClassifierGuide, ClassifierExample, ClassifierActions
+    ClassifierActions,
+    ClassifierExample,
+    OrchestratorExample,
+    OrchestratorGuide,
+    PlannedStep,
+    TaskClassifierGuide,
 )
+from osprey.prompts.base import FrameworkPromptBuilder
 from osprey.registry import get_registry
 
 
@@ -58,7 +61,7 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             ```
             """).strip()
 
-    def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def get_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create orchestrator guide for Python capability."""
         registry = get_registry()
 
@@ -141,61 +144,61 @@ class DefaultPythonPromptBuilder(FrameworkPromptBuilder):
             priority=40
         )
 
-    def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def get_classifier_guide(self) -> TaskClassifierGuide | None:
         """Create classifier guide for Python capability."""
         return TaskClassifierGuide(
             instructions="Determine if the user query requires Python code execution for simple computational tasks, mathematical calculations, or basic data processing.",
             examples=[
                 ClassifierExample(
-                    query="Calculate the area of a circle with radius 5", 
-                    result=True, 
+                    query="Calculate the area of a circle with radius 5",
+                    result=True,
                     reason="This requires mathematical calculation using Python."
                 ),
                 ClassifierExample(
-                    query="What is your name?", 
-                    result=False, 
+                    query="What is your name?",
+                    result=False,
                     reason="This is a conversational question, not a computational task."
                 ),
                 ClassifierExample(
-                    query="Process this list of numbers and find the average", 
-                    result=True, 
+                    query="Process this list of numbers and find the average",
+                    result=True,
                     reason="This requires data processing and statistical calculation."
                 ),
                 ClassifierExample(
-                    query="Show me the current time", 
-                    result=False, 
+                    query="Show me the current time",
+                    result=False,
                     reason="This is a simple information request, not requiring custom code generation."
                 ),
                 ClassifierExample(
-                    query="Generate a random number between 1 and 100", 
-                    result=True, 
+                    query="Generate a random number between 1 and 100",
+                    result=True,
                     reason="This requires Python code to generate random numbers."
                 ),
                 ClassifierExample(
-                    query="Sort these numbers in ascending order: 5, 2, 8, 1, 9", 
-                    result=True, 
+                    query="Sort these numbers in ascending order: 5, 2, 8, 1, 9",
+                    result=True,
                     reason="This requires Python code for data manipulation and sorting."
                 ),
                 ClassifierExample(
-                    query="What tools do you have available?", 
-                    result=False, 
+                    query="What tools do you have available?",
+                    result=False,
                     reason="This is a question about AI capabilities, not a computational task."
                 ),
                 ClassifierExample(
-                    query="Calculate the fibonacci sequence up to 10 numbers", 
-                    result=True, 
+                    query="Calculate the fibonacci sequence up to 10 numbers",
+                    result=True,
                     reason="This requires Python code to implement an algorithm."
                 ),
                 ClassifierExample(
-                    query="How does machine learning work?", 
-                    result=False, 
+                    query="How does machine learning work?",
+                    result=False,
                     reason="This is an educational question, not a request for code execution."
                 ),
                 ClassifierExample(
-                    query="Convert temperature from 32°F to Celsius", 
-                    result=True, 
+                    query="Convert temperature from 32°F to Celsius",
+                    result=True,
                     reason="This requires mathematical calculation and unit conversion."
                 ),
             ],
             actions_if_true=ClassifierActions()
-        ) 
+        )

@@ -83,4 +83,4 @@ Examples:
    :class:`CurrentWeatherCapability` : Primary weather capability exported by this module
    :mod:`hello_world_weather.registry` : Registry configuration using these capabilities
    :doc:`/developer-guides/capability-organization` : Capability module organization guide
-""" 
+"""

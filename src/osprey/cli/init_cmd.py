@@ -5,11 +5,12 @@ projects from templates. It offers a streamlined way to scaffold complete
 agent applications with proper structure and configuration.
 """
 
-import click
 from pathlib import Path
 
+import click
+
+from .styles import Messages, Styles, console
 from .templates import TemplateManager
-from .styles import console, Messages, Styles
 
 
 @click.command()
@@ -139,16 +140,16 @@ def init(project_name: str, template: str, registry_style: str, output_dir: str,
             registry_style=registry_style
         )
 
-        console.print(f"  ✓ Creating application code...", style=Styles.SUCCESS)
-        console.print(f"  ✓ Creating service configurations...", style=Styles.SUCCESS)
-        console.print(f"  ✓ Creating project configuration...", style=Styles.SUCCESS)
+        console.print("  ✓ Creating application code...", style=Styles.SUCCESS)
+        console.print("  ✓ Creating service configurations...", style=Styles.SUCCESS)
+        console.print("  ✓ Creating project configuration...", style=Styles.SUCCESS)
 
         # Check if API keys were detected and .env was created
         api_keys = ['CBORG_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY']
         has_api_keys = any(key in detected_env for key in api_keys)
 
         if has_api_keys:
-            console.print(f"  ✓ Created .env with detected API keys", style=Styles.SUCCESS)
+            console.print("  ✓ Created .env with detected API keys", style=Styles.SUCCESS)
 
         console.print(
             f"\n✅ Project created successfully at: [bold]{project_path}[/bold]"

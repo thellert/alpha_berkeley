@@ -78,15 +78,15 @@ Examples:
 """
 
 from .base import (
-    RegistryConfigProvider,
-    RegistryConfig,
-    NodeRegistration,
     CapabilityRegistration,
     ContextClassRegistration,
     DataSourceRegistration,
-    ServiceRegistration,
     FrameworkPromptProviderRegistration,
-    ProviderRegistration
+    NodeRegistration,
+    ProviderRegistration,
+    RegistryConfig,
+    RegistryConfigProvider,
+    ServiceRegistration,
 )
 
 
@@ -437,7 +437,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
             # Simplified initialization order - decorators and subgraphs are imported directly when needed
             initialization_order=[
                 "context_classes",    # First - needed by capabilities
-                "data_sources",       # Second - needed by capabilities  
+                "data_sources",       # Second - needed by capabilities
                 "providers",          # Third - AI model providers early for use by capabilities
                 "core_nodes",         # Fourth - infrastructure nodes
                 "services",           # Fifth - internal service graphs

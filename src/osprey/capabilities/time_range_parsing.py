@@ -44,24 +44,22 @@ type safety through Pydantic models and comprehensive error handling.
 
 import asyncio
 import textwrap
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Any, Optional, List, ClassVar
-from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, field_validator
 
-from osprey.base.decorators import capability_node
 from osprey.base.capability import BaseCapability
-from osprey.context.base import CapabilityContext
+from osprey.base.decorators import capability_node
 from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.state import AgentState, StateManager
 from osprey.base.examples import OrchestratorGuide, TaskClassifierGuide
+from osprey.context.base import CapabilityContext
+from osprey.prompts.loader import get_framework_prompts
 from osprey.registry import get_registry
+from osprey.state import AgentState, StateManager
+from osprey.utils.config import get_model_config
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_model_config
-from osprey.prompts.loader import get_framework_prompts
-
 
 registry = get_registry()
 
@@ -118,7 +116,7 @@ class TimeRangeContext(CapabilityContext):
     def context_type(self) -> str:
         return self.CONTEXT_TYPE
 
-    def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_access_details(self, key_name: str | None = None) -> dict[str, Any]:
         """Provide comprehensive access information for time range context integration.
 
         Generates detailed access information for other capabilities to understand
@@ -151,7 +149,7 @@ class TimeRangeContext(CapabilityContext):
         }
 
 
-    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_summary(self, key_name: str | None = None) -> dict[str, Any]:
         """Generate summary for UI display and debugging.
 
         Creates a formatted summary of the parsed time range suitable for display
@@ -356,7 +354,7 @@ def _get_time_parsing_system_prompt(user_query: str) -> str:
     """
 
     # Use UTC timezone to avoid confusion
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     current_time_str = now.strftime('%Y-%m-%d %H:%M:%S')
     current_weekday = now.strftime('%A')
 
@@ -490,7 +488,7 @@ class TimeRangeParsingCapability(BaseCapability):
     async def execute(
         state: AgentState,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute comprehensive time range parsing with LLM integration and validation.
 
         Implements the complete time range parsing workflow including sophisticated
@@ -547,7 +545,7 @@ class TimeRangeParsingCapability(BaseCapability):
 
         # Display task with structured formatting
         task_objective = step.get('task_objective', 'unknown')
-        logger.info(f"Starting time range parsing")
+        logger.info("Starting time range parsing")
         logger.info(f'[bold]Query:[/bold] "[italic]{task_objective}[/italic]"')
         streamer.status("Parsing time range with LLM...")
 
@@ -608,7 +606,7 @@ class TimeRangeParsingCapability(BaseCapability):
         # Display parsed result with structured formatting
         start_str = time_context.start_date.strftime('%Y-%m-%d %H:%M:%S')
         end_str = time_context.end_date.strftime('%Y-%m-%d %H:%M:%S')
-        logger.info(f"[bold]Parsed time range:[/bold]")
+        logger.info("[bold]Parsed time range:[/bold]")
         logger.info(f"  Start: [cyan]{start_str}[/cyan]")
         logger.info(f"  End:   [cyan]{end_str}[/cyan]")
 
@@ -708,7 +706,7 @@ class TimeRangeParsingCapability(BaseCapability):
                 metadata={"technical_details": str(exc)}
             )
 
-    def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def _create_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create orchestrator integration guide from prompt builder system.
 
         Retrieves sophisticated orchestration guidance from the application's prompt
@@ -735,7 +733,7 @@ class TimeRangeParsingCapability(BaseCapability):
 
         return time_range_builder.get_orchestrator_guide()
 
-    def _create_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def _create_classifier_guide(self) -> TaskClassifierGuide | None:
         """Create task classification guide from prompt builder system.
 
         Retrieves task classification guidance from the application's prompt builder

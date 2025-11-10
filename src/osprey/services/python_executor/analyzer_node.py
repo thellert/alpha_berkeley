@@ -7,23 +7,30 @@ Transformed for LangGraph integration with TypedDict state management.
 """
 
 import ast
-import re
-from typing import Dict, Any, List, Optional
+from typing import Any
 
-
-from .exceptions import (
-    CodeSyntaxError, CodeGenerationError, ContainerConfigurationError,
-    MaxAttemptsExceededError, PythonExecutorException
-)
 from osprey.approval.approval_system import create_code_approval_interrupt
-from .models import PythonExecutionState, AnalysisResult, validate_result_structure, get_execution_mode_config_from_configurable
-from .services import FileManager, NotebookManager
-from .execution_control import ExecutionMode
-from .execution_policy_analyzer import BasicAnalysisResult, DomainAnalysisManager, ExecutionPolicyManager
+from osprey.utils.config import get_full_configuration
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_full_configuration
-from osprey.approval.approval_manager import get_python_execution_evaluator
+
+from .exceptions import (
+    CodeGenerationError,
+    CodeSyntaxError,
+    ContainerConfigurationError,
+)
+from .execution_policy_analyzer import (
+    BasicAnalysisResult,
+    DomainAnalysisManager,
+    ExecutionPolicyManager,
+)
+from .models import (
+    AnalysisResult,
+    PythonExecutionState,
+    get_execution_mode_config_from_configurable,
+    validate_result_structure,
+)
+from .services import FileManager, NotebookManager
 
 logger = get_logger("osprey")
 
@@ -149,7 +156,7 @@ class StaticCodeAnalyzer:
                 technical_details={"original_error": str(e)}
             )
 
-    def _check_syntax(self, code: str) -> List[str]:
+    def _check_syntax(self, code: str) -> list[str]:
         """Check Python syntax validity"""
         issues = []
         try:
@@ -164,7 +171,7 @@ class StaticCodeAnalyzer:
 
         return issues
 
-    def _check_security(self, code: str) -> List[str]:
+    def _check_security(self, code: str) -> list[str]:
         """Basic security checks for dangerous operations"""
         issues = []
 
@@ -189,7 +196,7 @@ class StaticCodeAnalyzer:
 
         return issues
 
-    def _check_imports(self, code: str) -> List[str]:
+    def _check_imports(self, code: str) -> list[str]:
         """Check for prohibited imports - returns list of issues"""
         issues = []
 
@@ -212,7 +219,7 @@ class StaticCodeAnalyzer:
 
         return issues
 
-    def _determine_security_risk_level(self, security_issues: List[str]) -> str:
+    def _determine_security_risk_level(self, security_issues: list[str]) -> str:
         """Determine security risk level based on security issues"""
         if not security_issues:
             return "low"
@@ -224,7 +231,7 @@ class StaticCodeAnalyzer:
 
         return "medium"
 
-    def _get_prohibited_imports(self, import_issues: List[str]) -> List[str]:
+    def _get_prohibited_imports(self, import_issues: list[str]) -> list[str]:
         """Extract list of prohibited imports from import issues"""
         prohibited = []
         for issue in import_issues:
@@ -237,7 +244,7 @@ class StaticCodeAnalyzer:
 def create_analyzer_node():
     """Create the static analysis node function."""
 
-    async def analyzer_node(state: PythonExecutionState) -> Dict[str, Any]:
+    async def analyzer_node(state: PythonExecutionState) -> dict[str, Any]:
         """Perform static analysis and package approval data to avoid double execution."""
 
         # Define streaming helper here for step awareness
@@ -346,7 +353,7 @@ def create_analyzer_node():
             # Truly unexpected analyzer crashes are critical system errors
             # This should only happen due to framework bugs, not code quality issues
             logger.error(f"Critical system error: Analyzer crashed unexpectedly: {e}")
-            logger.error(f"This indicates a framework bug, not a code quality issue")
+            logger.error("This indicates a framework bug, not a code quality issue")
 
             return {
                 "analysis_failed": False,  # Don't retry - this is a system bug
@@ -361,10 +368,10 @@ def create_analyzer_node():
 
 async def _create_analysis_failure_attempt_notebook(
     state: PythonExecutionState,
-    configurable: Dict[str, Any], 
+    configurable: dict[str, Any],
     code: str,
     error_message: str,
-    issues: List[str]
+    issues: list[str]
 ) -> None:
     """Create attempt notebook for static analysis failures."""
     try:
@@ -413,8 +420,8 @@ async def _create_analysis_failure_attempt_notebook(
 
 async def _create_syntax_error_attempt_notebook(
     state: PythonExecutionState,
-    configurable: Dict[str, Any],
-    code: str, 
+    configurable: dict[str, Any],
+    code: str,
     error_message: str
 ) -> None:
     """Create attempt notebook for syntax errors."""

@@ -50,18 +50,19 @@ and capabilities, providing consistent patterns for state operations.
    :mod:`osprey.infrastructure.gateway` : Main entry point using StateManager
 """
 
-from typing import Dict, Any, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from .state import AgentState, StateUpdate
-from .messages import MessageUtils
+# LangGraph native imports
+from langchain_core.messages import BaseMessage
+
 from osprey.base.planning import ExecutionPlan, PlannedStep
 from osprey.context.base import CapabilityContext
 from osprey.context.context_manager import ContextManager
 from osprey.utils.config import get_agent_control_defaults as _get_agent_control_defaults
 from osprey.utils.logger import get_logger
 
-# LangGraph native imports
-from langchain_core.messages import BaseMessage, HumanMessage
+from .messages import MessageUtils
+from .state import AgentState, StateUpdate
 
 if TYPE_CHECKING:
     from osprey.context.context_manager import ContextManager
@@ -69,7 +70,7 @@ if TYPE_CHECKING:
 logger = get_logger(name="StateManager", color="white")
 
 
-def get_agent_control_defaults() -> Dict[str, Any]:
+def get_agent_control_defaults() -> dict[str, Any]:
     """Get agent control configuration defaults with robust error handling.
 
     This function retrieves the default agent control configuration from the 
@@ -120,7 +121,7 @@ def get_agent_control_defaults() -> Dict[str, Any]:
         # Return safe defaults if config fails
         return {
             "planning_mode_enabled": False,
-            "epics_writes_enabled": False, 
+            "epics_writes_enabled": False,
             "approval_global_mode": "selective",
             "python_execution_approval_enabled": True,
             "python_execution_approval_mode": "all_code",
@@ -207,7 +208,7 @@ class StateManager:
     @staticmethod
     def create_fresh_state(
         user_input: str,
-        current_state: Optional[AgentState] = None
+        current_state: AgentState | None = None
     ) -> AgentState:
         """Create fresh agent state for a new conversation turn with selective persistence.
 
@@ -347,12 +348,12 @@ class StateManager:
     # ===== UTILITY METHODS =====
 
     @staticmethod
-    def get_current_task(state: AgentState) -> Optional[str]:
+    def get_current_task(state: AgentState) -> str | None:
         """Get current task from state."""
         return state.get('task_current_task')
 
     @staticmethod
-    def get_user_query(state: AgentState) -> Optional[str]:
+    def get_user_query(state: AgentState) -> str | None:
         """Get the user's query from the current conversation.
 
         Extracts the most recent user message from the conversation history,
@@ -456,7 +457,7 @@ class StateManager:
         }
 
     @staticmethod
-    def get_messages(state: AgentState) -> List[BaseMessage]:
+    def get_messages(state: AgentState) -> list[BaseMessage]:
         """Get messages from state."""
         return state.get('messages', [])
 
@@ -477,7 +478,7 @@ class StateManager:
     # ===== PLANNING AND EXECUTION UTILITIES =====
 
     @staticmethod
-    def get_execution_plan(state: AgentState) -> Optional[ExecutionPlan]:
+    def get_execution_plan(state: AgentState) -> ExecutionPlan | None:
         """Get current execution plan from state with type validation.
 
         Performs type validation to ensure the returned ExecutionPlan is properly
@@ -558,9 +559,9 @@ class StateManager:
         else:
             # No execution plan available - this could happen in edge cases during initialization
             raise RuntimeError(
-                f"CRITICAL BUG: No execution plan available for step extraction. "
-                f"Router should ensure execution plan exists "
-                f"before routing to capabilities that need step extraction."
+                "CRITICAL BUG: No execution plan available for step extraction. "
+                "Router should ensure execution plan exists "
+                "before routing to capabilities that need step extraction."
             )
 
     @staticmethod
@@ -568,10 +569,10 @@ class StateManager:
         state: AgentState,
         capability: str,
         figure_path: str,
-        display_name: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        current_figures: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        display_name: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        current_figures: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """
         Register a figure in the centralized UI registry.
 
@@ -646,11 +647,11 @@ class StateManager:
         state: AgentState,
         capability: str,
         launch_uri: str,
-        display_name: Optional[str] = None,
-        command_type: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        current_commands: Optional[List[Dict[str, Any]]] = None
-    ) -> Dict[str, Any]:
+        display_name: str | None = None,
+        command_type: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        current_commands: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """
         Register a launchable command in the centralized UI registry.
 
@@ -730,9 +731,9 @@ class StateManager:
         capability: str,
         notebook_path: str,
         notebook_link: str,
-        display_name: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        display_name: str | None = None,
+        metadata: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Register a notebook in the centralized UI registry.
 
@@ -750,7 +751,6 @@ class StateManager:
         Returns:
             State update dictionary with ui_captured_notebooks update
         """
-        from datetime import datetime
 
         # For now, maintain backward compatibility with simple notebook links
         # In the future, this could be enhanced to store structured notebook objects
@@ -762,7 +762,7 @@ class StateManager:
         return {"ui_captured_notebooks": notebook_links}
 
 
-def get_execution_steps_summary(state: AgentState) -> List[str]:
+def get_execution_steps_summary(state: AgentState) -> list[str]:
     """Generate ordered execution steps summary for prompts and UI display.
 
     This utility function extracts and formats execution step information from the

@@ -67,10 +67,9 @@ Examples:
         ...     print(f"Configuration warnings: {warnings}")
 """
 
-from enum import Enum
-from dataclasses import dataclass
-from typing import Tuple
 import logging
+from dataclasses import dataclass
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 

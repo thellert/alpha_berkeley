@@ -18,17 +18,17 @@ and extensible command registration patterns for framework and application-speci
 
 import asyncio
 import re
-from typing import Dict, List, Optional, Tuple, Any, Union
+from typing import Any
 
-from osprey.cli.styles import console, Styles
+from osprey.cli.styles import Styles, console
 
 from .types import (
-    Command, 
-    CommandResult, 
-    CommandCategory, 
+    Command,
+    CommandCategory,
     CommandContext,
+    CommandExecutionError,
+    CommandResult,
     ParsedCommand,
-    CommandExecutionError
 )
 
 
@@ -97,8 +97,8 @@ class CommandRegistry:
     """
 
     def __init__(self):
-        self.commands: Dict[str, Command] = {}
-        self.aliases: Dict[str, str] = {}  # alias -> command_name mapping
+        self.commands: dict[str, Command] = {}
+        self.aliases: dict[str, str] = {}  # alias -> command_name mapping
         self.console = console  # Use themed console from styles.py
 
         # Auto-register default commands
@@ -157,7 +157,7 @@ class CommandRegistry:
                 raise ValueError(f"Alias '{alias}' conflicts with existing command")
             self.aliases[alias] = command.name
 
-    def get_command(self, name: str) -> Optional[Command]:
+    def get_command(self, name: str) -> Command | None:
         """Get a command by name or alias."""
         name = name.lstrip('/')
 
@@ -171,18 +171,18 @@ class CommandRegistry:
 
         return None
 
-    def get_commands_by_category(self, category: CommandCategory) -> List[Command]:
+    def get_commands_by_category(self, category: CommandCategory) -> list[Command]:
         """Get all commands in a specific category."""
         return [cmd for cmd in self.commands.values() if cmd.category == category]
 
-    def get_all_commands(self, include_hidden: bool = False) -> List[Command]:
+    def get_all_commands(self, include_hidden: bool = False) -> list[Command]:
         """Get all registered commands."""
         commands = list(self.commands.values())
         if not include_hidden:
             commands = [cmd for cmd in commands if not cmd.hidden]
         return sorted(commands, key=lambda x: (x.category.value, x.name))
 
-    def get_completions(self, prefix: str, context: Optional[CommandContext] = None) -> List[str]:
+    def get_completions(self, prefix: str, context: CommandContext | None = None) -> list[str]:
         """Get command completions for a given prefix."""
         prefix = prefix.lstrip('/')
 
@@ -213,7 +213,7 @@ class CommandRegistry:
 
         return sorted(list(set(matches)))
 
-    async def execute(self, command_line: str, context: CommandContext) -> Union[CommandResult, Dict[str, Any]]:
+    async def execute(self, command_line: str, context: CommandContext) -> CommandResult | dict[str, Any]:
         """Execute a command from a command line."""
         parsed = parse_command_line(command_line)
 
@@ -338,6 +338,6 @@ def register_command(command: Command) -> None:
     _registry.register(command)
 
 
-async def execute_command(command_line: str, context: CommandContext) -> Union[CommandResult, Dict[str, Any]]:
+async def execute_command(command_line: str, context: CommandContext) -> CommandResult | dict[str, Any]:
     """Execute a command globally."""
     return await _registry.execute(command_line, context)

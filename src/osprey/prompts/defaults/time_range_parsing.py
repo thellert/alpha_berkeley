@@ -5,13 +5,16 @@ Default prompts for time range parsing capability.
 """
 
 import textwrap
-from typing import Optional
 
-from osprey.prompts.base import FrameworkPromptBuilder
 from osprey.base import (
-    OrchestratorGuide, OrchestratorExample, PlannedStep,
-TaskClassifierGuide, ClassifierExample, ClassifierActions
+    ClassifierActions,
+    ClassifierExample,
+    OrchestratorExample,
+    OrchestratorGuide,
+    PlannedStep,
+    TaskClassifierGuide,
 )
+from osprey.prompts.base import FrameworkPromptBuilder
 from osprey.registry import get_registry
 
 
@@ -44,7 +47,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             - Implicit: "current", "recent" (default to last few minutes)
             """).strip()
 
-    def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def get_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create orchestrator guide for time range parsing."""
         registry = get_registry()
 
@@ -122,51 +125,51 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
             priority=5
         )
 
-    def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def get_classifier_guide(self) -> TaskClassifierGuide | None:
         """Create classifier guide for time range parsing."""
         return TaskClassifierGuide(
             instructions="Determine if the task involves time-based data requests that require parsing time ranges from user queries.",
             examples=[
                 ClassifierExample(
-                    query="Which tools do you have?", 
-                    result=False, 
+                    query="Which tools do you have?",
+                    result=False,
                     reason="This is a question about AI capabilities, no time range needed."
                 ),
                 ClassifierExample(
-                    query="Plot the beam current for the last 2 hours", 
-                    result=True, 
+                    query="Plot the beam current for the last 2 hours",
+                    result=True,
                     reason="Request involves time range ('last 2 hours') that needs parsing."
                 ),
                 ClassifierExample(
-                    query="What is the current beam energy?", 
-                    result=False, 
+                    query="What is the current beam energy?",
+                    result=False,
                     reason="Request is for current value, no time range needed."
                 ),
                 ClassifierExample(
-                    query="Show me vacuum trends from yesterday", 
-                    result=True, 
+                    query="Show me vacuum trends from yesterday",
+                    result=True,
                     reason="Request involves time range ('yesterday') that needs parsing."
                 ),
                 ClassifierExample(
-                    query="Get historical data from 2024-01-15 09:00:00 to 2024-01-15 21:00:00", 
-                    result=True, 
+                    query="Get historical data from 2024-01-15 09:00:00 to 2024-01-15 21:00:00",
+                    result=True,
                     reason="Request has explicit time range that needs parsing and validation."
                 ),
                 ClassifierExample(
-                    query="How does the accelerator work?", 
-                    result=False, 
+                    query="How does the accelerator work?",
+                    result=False,
                     reason="This is a general question about accelerator principles, no time data needed."
                 ),
                 ClassifierExample(
-                    query="Show recent trends", 
-                    result=True, 
+                    query="Show recent trends",
+                    result=True,
                     reason="Request involves implicit time range ('recent') that needs parsing."
                 ),
                 ClassifierExample(
-                    query="Show me some data", 
-                    result=False, 
+                    query="Show me some data",
+                    result=False,
                     reason="Request does not involve time range."
                 ),
             ],
             actions_if_true=ClassifierActions()
-        ) 
+        )

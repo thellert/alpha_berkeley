@@ -7,10 +7,9 @@ variable for flexible project location specification.
 
 import os
 from pathlib import Path
-from typing import Optional
 
 
-def resolve_project_path(project_arg: Optional[str] = None) -> Path:
+def resolve_project_path(project_arg: str | None = None) -> Path:
     """Resolve project directory from multiple sources.
 
     Resolution priority:
@@ -51,8 +50,8 @@ def resolve_project_path(project_arg: Optional[str] = None) -> Path:
     return Path.cwd()
 
 
-def resolve_config_path(project_arg: Optional[str] = None, 
-                       config_arg: Optional[str] = None) -> str:
+def resolve_config_path(project_arg: str | None = None,
+                       config_arg: str | None = None) -> str:
     """Resolve configuration file path.
 
     If --config is provided, uses it directly.

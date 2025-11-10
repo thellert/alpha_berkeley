@@ -42,8 +42,11 @@ The session context integrates with:
 """
 
 from __future__ import annotations
-from typing import Optional, Dict, Any
+
+from typing import Any
+
 from typing_extensions import TypedDict
+
 
 class SessionContext(TypedDict, total=False):
     """Type-safe session context for user identification and configuration management.
@@ -123,9 +126,9 @@ class SessionContext(TypedDict, total=False):
        :class:`osprey.state.AgentState` : Main state using session context
        :class:`osprey.state.AgentControlState` : Control state affected by user valves
     """
-    user_id: Optional[str]          # Unique identifier for the user
-    chat_id: Optional[str]          # Unique identifier for the chat session
-    session_id: Optional[str]       # Unique identifier for the session
-    session_url: Optional[str]      # URL associated with the session
-    user_valves: Optional[Any]      # User-specific configuration overrides
+    user_id: str | None          # Unique identifier for the user
+    chat_id: str | None          # Unique identifier for the chat session
+    session_id: str | None       # Unique identifier for the session
+    session_url: str | None      # URL associated with the session
+    user_valves: Any | None      # User-specific configuration overrides
 

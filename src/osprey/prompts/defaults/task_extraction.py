@@ -2,21 +2,23 @@
 Task Extraction Prompt Builder - Application-agnostic prompts for task extraction
 """
 from __future__ import annotations
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, field
+
+from dataclasses import dataclass
+
+from langchain_core.messages import BaseMessage
 from pydantic import BaseModel, Field
 
-from osprey.state import MessageUtils, ChatHistoryFormatter, UserMemories
-from langchain_core.messages import BaseMessage
-from ..base import FrameworkPromptBuilder
 from osprey.base import BaseExample
+from osprey.state import ChatHistoryFormatter, MessageUtils, UserMemories
+
+from ..base import FrameworkPromptBuilder
 
 
 @dataclass
 class TaskExtractionExample(BaseExample):
     """Example for task extraction prompt."""
 
-    def __init__(self, messages: List[BaseMessage], user_memory: UserMemories, expected_output: 'ExtractedTask'):
+    def __init__(self, messages: list[BaseMessage], user_memory: UserMemories, expected_output: ExtractedTask):
         self.messages = messages
         self.user_memory = user_memory
         self.expected_output = expected_output
@@ -217,7 +219,7 @@ class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
                 MessageUtils.create_user_message("Is that maintenance window issue resolved?"),
             ],
             user_memory=UserMemories(entries=[
-                "[2025-01-13 22:45] Next Tuesday 2AM maintenance: Database upgrade work on cluster 2, expect service interruption", 
+                "[2025-01-13 22:45] Next Tuesday 2AM maintenance: Database upgrade work on cluster 2, expect service interruption",
                 "[2025-01-14 15:30] Maintenance concern: Last time database work caused connection pool instability in adjacent services",
                 "[2025-01-15 08:00] Post-maintenance checklist: Verify database connections for services 1-3, check query performance consistency"
             ]),
@@ -244,7 +246,7 @@ Core requirements:
 • Set depends_on_user_memory=true only when the task directly incorporates specific information from user memory
         """.strip()
 
-    def get_system_instructions(self, messages: List[BaseMessage], retrieval_result=None) -> str:
+    def get_system_instructions(self, messages: list[BaseMessage], retrieval_result=None) -> str:
         """Get system instructions for task extraction agent configuration.
 
         :param messages: Native LangGraph messages to extract task from
@@ -270,12 +272,12 @@ Core requirements:
                         formatted_content = context.format_for_prompt()
                         if formatted_content and formatted_content.strip():
                             formatted_contexts.append(f"**{source_name}:**\n{formatted_content}")
-                    except Exception as e:
+                    except Exception:
                         # Log error but continue with other sources
                         pass
 
                 if formatted_contexts:
-                    data_context = f"\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
+                    data_context = "\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
                 else:
                     # Fallback to summary if no content could be formatted
                     data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"

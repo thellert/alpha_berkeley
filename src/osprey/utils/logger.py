@@ -26,10 +26,9 @@ Usage:
 """
 
 import logging
-import os
-from rich.logging import RichHandler
+
 from rich.console import Console
-from typing import Optional, Dict, Any, Union
+from rich.logging import RichHandler
 
 from osprey.utils.config import get_config_value
 

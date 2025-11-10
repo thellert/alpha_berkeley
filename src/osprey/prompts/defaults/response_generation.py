@@ -1,10 +1,10 @@
 """Default response generation prompt implementation."""
 
 import textwrap
-from typing import Optional, Dict, Any
+from typing import Any
 
+from osprey.base import OrchestratorExample, OrchestratorGuide, PlannedStep, TaskClassifierGuide
 from osprey.prompts.base import FrameworkPromptBuilder
-from osprey.base import OrchestratorGuide, OrchestratorExample, PlannedStep, TaskClassifierGuide
 
 
 class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
@@ -14,7 +14,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
         """Get the generic role definition."""
         return "You are an expert assistant for workflow automation and data analysis."
 
-    def get_task_definition(self) -> Optional[str]:
+    def get_task_definition(self) -> str | None:
         """Task definition is embedded dynamically in instructions."""
         return None
 
@@ -105,7 +105,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
                 {summary_text}
                 """).strip()
 
-    def _get_data_section(self, relevant_context: Dict[str, Any]) -> str:
+    def _get_data_section(self, relevant_context: dict[str, Any]) -> str:
         """Get retrieved data section."""
         formatted_context = self._format_context_data(relevant_context)
 
@@ -114,7 +114,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             {formatted_context}
             """).strip()
 
-    def _format_context_data(self, context_data: Dict[str, Any]) -> str:
+    def _format_context_data(self, context_data: dict[str, Any]) -> str:
         """Format retrieved context data for the response.
 
         :param context_data: Dictionary of context_type.context_key -> data
@@ -210,7 +210,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             # Execution terminated
             guidelines.extend([
                 "Clearly explain why execution was terminated",
-                "Acknowledge any partial progress that was made", 
+                "Acknowledge any partial progress that was made",
                 "Suggest practical alternatives (simpler query, different approach, etc.)",
                 "Be helpful and encouraging, not apologetic",
                 "Offer to help with a modified or simpler version of the request",
@@ -227,7 +227,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
 
         return "GUIDELINES:\n" + "\n".join(f"{i+1}. {g}" for i, g in enumerate(guidelines))
 
-    def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def get_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create generic orchestrator guide for respond capability."""
 
         technical_with_context_example = OrchestratorExample(
@@ -268,7 +268,7 @@ class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
             priority=100  # Should come last in prompt ordering (same as final_response)
         )
 
-    def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def get_classifier_guide(self) -> TaskClassifierGuide | None:
         """Respond has no classifier guide - it's orchestrator-driven."""
         return None  # Always available, not detected from user intent
 

@@ -30,44 +30,43 @@ over what information gets permanently stored.
    :class:`MemoryContext` : Context structure for memory operation results
 """
 import asyncio
-from typing import List, Dict, Any, Optional, Type, Union, ClassVar
-from dataclasses import dataclass
 import textwrap
-
-from enum import Enum
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
+from typing import Any, ClassVar
+
+from langchain_core.messages import BaseMessage
+from langgraph.types import interrupt
 from pydantic import BaseModel, Field
+
+from osprey.approval import (
+    clear_approval_state,
+    create_approval_type,
+    create_memory_approval_interrupt,
+    get_approval_resume_data,
+)
+from osprey.approval.approval_manager import get_memory_evaluator
 
 # Import from framework architecture
 from osprey.base import (
     BaseCapability,
-    OrchestratorGuide, OrchestratorExample,
-    BaseExample, ClassifierExample, TaskClassifierGuide, ClassifierActions,
+    BaseExample,
+    OrchestratorGuide,
+    TaskClassifierGuide,
 )
-from osprey.base.decorators import capability_node, _is_graph_interrupt
+from osprey.base.decorators import _is_graph_interrupt, capability_node
 from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.approval import (
-    get_approval_resume_data,
-    clear_approval_state,
-    create_memory_approval_interrupt,
-    create_approval_type,
-    handle_service_with_interrupts
-)
-from osprey.approval.approval_manager import get_memory_evaluator
 from osprey.context import CapabilityContext
 from osprey.context.context_manager import ContextManager
+from osprey.models import get_chat_completion
+from osprey.prompts.loader import get_framework_prompts
 from osprey.registry import get_registry
-from osprey.services.memory_storage import get_memory_storage_manager
-from osprey.services.memory_storage import MemoryContent
-
+from osprey.services.memory_storage import MemoryContent, get_memory_storage_manager
+from osprey.state import AgentState, ChatHistoryFormatter, StateManager
+from osprey.utils.config import get_model_config, get_session_info
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_model_config, get_session_info
-from osprey.models import get_model, get_chat_completion
-from osprey.state import ChatHistoryFormatter, AgentState, StateManager
-from langchain_core.messages import BaseMessage
-from osprey.prompts.loader import get_framework_prompts
-from langgraph.types import interrupt
 
 logger = get_logger("memory")
 
@@ -113,11 +112,11 @@ class MemoryContext(CapabilityContext):
     CONTEXT_TYPE: ClassVar[str] = "MEMORY_CONTEXT"
     CONTEXT_CATEGORY: ClassVar[str] = "CONTEXTUAL_KNOWLEDGE"
 
-    memory_data: Dict[str, Any]
+    memory_data: dict[str, Any]
     operation_type: str  # 'store', 'retrieve', 'search'
-    operation_result: Optional[str] = None
+    operation_result: str | None = None
 
-    def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_access_details(self, key_name: str | None = None) -> dict[str, Any]:
         """Provide detailed access information for capability context integration.
 
         Generates comprehensive access details for other capabilities to understand
@@ -143,7 +142,7 @@ class MemoryContext(CapabilityContext):
             "operation_result": self.operation_result
         }
 
-    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_summary(self, key_name: str | None = None) -> dict[str, Any]:
         """Generate summary for response generation and UI display.
 
         Creates a formatted summary of the memory operation results suitable for
@@ -264,7 +263,7 @@ class MemoryExtractionExample(BaseExample):
        :meth:`MemoryOperationsCapability._create_classifier_guide` : Uses this example class
        :func:`_extract_memory_content` : Function that leverages these examples
     """
-    messages: List[BaseMessage]
+    messages: list[BaseMessage]
     expected_output: MemoryContentExtraction
 
     def format_for_prompt(self) -> str:
@@ -397,7 +396,7 @@ async def _classify_memory_operation(task_objective: str, logger) -> MemoryOpera
 
         if operation_str == "save":
             return MemoryOperation.SAVE
-        elif operation_str == "retrieve":  
+        elif operation_str == "retrieve":
             return MemoryOperation.RETRIEVE
         else:
             logger.error(f"Invalid memory operation returned by LLM: {operation_str}")
@@ -474,9 +473,8 @@ class LLMCallError(MemoryCapabilityError):
 # Convention-Based Capability
 # ===========================================================
 
-from osprey.base.decorators import capability_node
 from osprey.base.capability import BaseCapability
-from osprey.state import AgentState
+
 
 @capability_node
 class MemoryOperationsCapability(BaseCapability):
@@ -524,7 +522,7 @@ class MemoryOperationsCapability(BaseCapability):
     requires = []
 
     @staticmethod
-    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+    async def execute(state: AgentState, **kwargs) -> dict[str, Any]:
         """Execute memory operations with comprehensive approval and context integration.
 
         Implements a sophisticated 3-phase execution pattern that handles both
@@ -592,9 +590,9 @@ class MemoryOperationsCapability(BaseCapability):
             # Store context using StateManager
             step = StateManager.get_current_step(state)
             context_update = StateManager.store_context(
-                state, 
-                registry.context_types.MEMORY_CONTEXT, 
-                step.get("context_key"), 
+                state,
+                registry.context_types.MEMORY_CONTEXT,
+                step.get("context_key"),
                 memory_context
             )
             approval_cleanup = clear_approval_state()
@@ -617,7 +615,7 @@ class MemoryOperationsCapability(BaseCapability):
             if not user_id:
                 raise UserIdNotAvailableError("Cannot perform memory operations: user ID not available in config")
 
-            # Extract and classify the request  
+            # Extract and classify the request
             task_objective = step.get('task_objective', '')
 
             # Use LLM-based classification
@@ -631,9 +629,9 @@ class MemoryOperationsCapability(BaseCapability):
 
                 # Store context using StateManager
                 return StateManager.store_context(
-                    state, 
-                    registry.context_types.MEMORY_CONTEXT, 
-                    step.get("context_key"), 
+                    state,
+                    registry.context_types.MEMORY_CONTEXT,
+                    step.get("context_key"),
                     memory_context
                 )
 
@@ -681,7 +679,7 @@ class MemoryOperationsCapability(BaseCapability):
                         )
 
                         # Enhanced logging pattern for debugging
-                        logger.info(f"LLM extraction result:")
+                        logger.info("LLM extraction result:")
                         logger.info(f" found={response_data.found}")
                         logger.info(f" content='{response_data.content}'")
                         logger.info(f" explanation='{response_data.explanation}'")
@@ -743,9 +741,9 @@ class MemoryOperationsCapability(BaseCapability):
 
                     # Store context using StateManager
                     return StateManager.store_context(
-                        state, 
-                        registry.context_types.MEMORY_CONTEXT, 
-                        step.get("context_key"), 
+                        state,
+                        registry.context_types.MEMORY_CONTEXT,
+                        step.get("context_key"),
                         memory_context
                     )
             else:
@@ -820,7 +818,7 @@ class MemoryOperationsCapability(BaseCapability):
                 metadata={"technical_details": str(exc)}
             )
 
-    def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def _create_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create orchestrator integration guide from prompt builder system.
 
         Retrieves sophisticated orchestration guidance from the application's
@@ -844,7 +842,7 @@ class MemoryOperationsCapability(BaseCapability):
 
         return memory_builder.get_orchestrator_guide()
 
-    def _create_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def _create_classifier_guide(self) -> TaskClassifierGuide | None:
         """Create task classification guide from prompt builder system.
 
         Retrieves task classification guidance from the application's prompt
@@ -876,8 +874,8 @@ memory_capability = MemoryOperationsCapability()
 
 
 async def _perform_memory_save_operation(
-    content: str, 
-    user_id: str, 
+    content: str,
+    user_id: str,
     logger
 ) -> MemoryContext:
     """Execute memory save operation with comprehensive validation and error handling.
@@ -932,7 +930,7 @@ async def _perform_memory_save_operation(
             return MemoryContext(
                 memory_data={"saved_content": content, "timestamp": memory_entry.timestamp.isoformat()},
                 operation_type="save",
-                operation_result=f"Successfully saved content to memory"
+                operation_result="Successfully saved content to memory"
             )
         else:
             raise MemoryFileError("Failed to save memory content to file")

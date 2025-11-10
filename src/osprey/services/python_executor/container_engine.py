@@ -75,24 +75,22 @@ Examples:
         ... )
 """
 
-import json
-import uuid
 import asyncio
-import logging
-import websocket
-import requests
-import socket
-from typing import Dict, Any, Optional, List
-from pathlib import Path
-from dataclasses import dataclass
+import json
 import time
-import numpy as np
+import uuid
+from dataclasses import dataclass
 from datetime import datetime
-import os
+from pathlib import Path
+from typing import Any
 
-from .models import PythonExecutionEngineResult
-from .exceptions import ContainerConnectivityError, CodeRuntimeError, ExecutionTimeoutError
+import requests
+import websocket
+
 from osprey.utils.logger import get_logger
+
+from .exceptions import CodeRuntimeError, ContainerConnectivityError, ExecutionTimeoutError
+from .models import PythonExecutionEngineResult
 
 logger = get_logger("python_executor")
 
@@ -229,7 +227,7 @@ class JupyterSessionManager:
 
     def __init__(self, endpoint: ContainerEndpoint):
         self.endpoint = endpoint
-        self._current_session: Optional[SessionInfo] = None
+        self._current_session: SessionInfo | None = None
 
     async def ensure_session(self) -> SessionInfo:
         """Create or reuse Jupyter session with appropriate kernel - raises exceptions on failure"""
@@ -296,7 +294,7 @@ class JupyterSessionManager:
                 port=self.endpoint.port,
                 technical_details={"connection_error": str(e)}
             )
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.HTTPError:
             raise ContainerConnectivityError(
                 f"Jupyter session creation failed: HTTP {response.status_code} - {response.text[:200]}",
                 host=self.endpoint.host,
@@ -502,7 +500,7 @@ class CodeExecutionEngine:
                             }
                         )
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout on recv - continue waiting
                 continue
             except websocket.WebSocketException as e:
@@ -542,7 +540,7 @@ class CodeExecutionEngine:
 class FileBasedResultCollector:
     """Collects execution results from files in the execution folder"""
 
-    def __init__(self, execution_folder: Optional[Path]):
+    def __init__(self, execution_folder: Path | None):
         self.execution_folder = execution_folder
 
     async def collect_results(self, start_time: float) -> PythonExecutionEngineResult:
@@ -629,7 +627,7 @@ class FileBasedResultCollector:
                         technical_details={"metadata": metadata}
                     )
 
-            logger.key_info(f"File-based result collection completed:")
+            logger.key_info("File-based result collection completed:")
             logger.info(f"  - Success: {success}")
             logger.info(f"  - Results saved: {metadata.get('results_saved', False)}")
             logger.info(f"  - Figures captured: {len(figure_paths)}")
@@ -656,7 +654,7 @@ class FileBasedResultCollector:
                 technical_details={"collection_error": str(e)}
             )
 
-    async def _read_json_file(self, filename: str) -> Optional[Dict[str, Any]]:
+    async def _read_json_file(self, filename: str) -> dict[str, Any] | None:
         """Read a JSON file from the execution folder"""
         if not self.execution_folder:
             logger.warning(f"No execution folder configured - cannot read {filename}")
@@ -669,7 +667,7 @@ class FileBasedResultCollector:
                 logger.debug(f"File {filename} does not exist in execution folder")
                 return None
 
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, encoding='utf-8') as f:
                 data = json.load(f)
 
             logger.debug(f"Successfully read {filename}")
@@ -682,7 +680,7 @@ class FileBasedResultCollector:
             logger.error(f"Failed to read {filename}: {e}")
             return None
 
-    async def _collect_figure_files(self) -> List[Path]:
+    async def _collect_figure_files(self) -> list[Path]:
         """Collect all figure files from execution directory and all subdirectories except attempts"""
         figure_paths = []
 
@@ -695,7 +693,7 @@ class FileBasedResultCollector:
             image_extensions = ['*.png', '*.jpg', '*.jpeg', '*.svg']
 
             # Scan main directory and all subdirectories except 'attempts'
-            for root_path in [self.execution_folder] + [d for d in self.execution_folder.iterdir() 
+            for root_path in [self.execution_folder] + [d for d in self.execution_folder.iterdir()
                                                        if d.is_dir() and d.name != 'attempts']:
                 for extension in image_extensions:
                     for figure_file in sorted(root_path.glob(extension)):
@@ -791,7 +789,7 @@ class ContainerExecutor:
     def __init__(
         self,
         endpoint: ContainerEndpoint,
-        execution_folder: Optional[Path] = None,
+        execution_folder: Path | None = None,
         timeout: int = 300
     ):
         """Initialize with endpoint and execution parameters."""
@@ -854,9 +852,9 @@ class ContainerExecutor:
 async def execute_python_code_in_container(
     code: str,
     endpoint: ContainerEndpoint,
-    figures_dir: Optional[Path] = None,  # Legacy parameter, not used
+    figures_dir: Path | None = None,  # Legacy parameter, not used
     timeout: int = 300,
-    execution_folder: Optional[Path] = None
+    execution_folder: Path | None = None
 ) -> PythonExecutionEngineResult:
     """
     Execute Python code in container using file-based result communication.
@@ -884,4 +882,4 @@ async def execute_python_code_in_container(
         execution_folder=execution_folder,
         timeout=timeout
     )
-    return await executor.execute_code(code) 
+    return await executor.execute_code(code)

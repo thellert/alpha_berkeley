@@ -12,9 +12,6 @@ Modules:
 """
 
 # Make the main modules available at package level
-from . import config
-from . import logger
-from . import streaming
-from . import log_filter
+from . import config, log_filter, logger, streaming
 
 __all__ = ['config', 'logger', 'streaming', 'log_filter']

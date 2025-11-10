@@ -8,36 +8,36 @@ The helper functions eliminate boilerplate code and provide a clean,
 intuitive API for application developers to define their registries.
 """
 
-from typing import List, Optional
+
 from .base import (
-    RegistryConfig,
-    ExtendedRegistryConfig,
-    NodeRegistration,
     CapabilityRegistration,
     ContextClassRegistration,
     DataSourceRegistration,
-    ServiceRegistration,
+    ExtendedRegistryConfig,
     FrameworkPromptProviderRegistration,
-    ProviderRegistration
+    NodeRegistration,
+    ProviderRegistration,
+    RegistryConfig,
+    ServiceRegistration,
 )
 
 
 def extend_framework_registry(
-    capabilities: Optional[List[CapabilityRegistration]] = None,
-    context_classes: Optional[List[ContextClassRegistration]] = None,
-    data_sources: Optional[List[DataSourceRegistration]] = None,
-    services: Optional[List[ServiceRegistration]] = None,
-    framework_prompt_providers: Optional[List[FrameworkPromptProviderRegistration]] = None,
-    providers: Optional[List[ProviderRegistration]] = None,
-    core_nodes: Optional[List[NodeRegistration]] = None,
-    exclude_capabilities: Optional[List[str]] = None,
-    exclude_nodes: Optional[List[str]] = None,
-    exclude_context_classes: Optional[List[str]] = None,
-    exclude_data_sources: Optional[List[str]] = None,
-    exclude_providers: Optional[List[str]] = None,
-    override_capabilities: Optional[List[CapabilityRegistration]] = None,
-    override_nodes: Optional[List[NodeRegistration]] = None,
-    override_providers: Optional[List[ProviderRegistration]] = None,
+    capabilities: list[CapabilityRegistration] | None = None,
+    context_classes: list[ContextClassRegistration] | None = None,
+    data_sources: list[DataSourceRegistration] | None = None,
+    services: list[ServiceRegistration] | None = None,
+    framework_prompt_providers: list[FrameworkPromptProviderRegistration] | None = None,
+    providers: list[ProviderRegistration] | None = None,
+    core_nodes: list[NodeRegistration] | None = None,
+    exclude_capabilities: list[str] | None = None,
+    exclude_nodes: list[str] | None = None,
+    exclude_context_classes: list[str] | None = None,
+    exclude_data_sources: list[str] | None = None,
+    exclude_providers: list[str] | None = None,
+    override_capabilities: list[CapabilityRegistration] | None = None,
+    override_nodes: list[NodeRegistration] | None = None,
+    override_providers: list[ProviderRegistration] | None = None,
 ) -> ExtendedRegistryConfig:
     """Create application registry configuration that extends the framework.
 
@@ -241,11 +241,11 @@ def generate_explicit_registry_code(
     app_class_name: str,
     app_display_name: str,
     package_name: str,
-    capabilities: Optional[List[CapabilityRegistration]] = None,
-    context_classes: Optional[List[ContextClassRegistration]] = None,
-    data_sources: Optional[List[DataSourceRegistration]] = None,
-    services: Optional[List[ServiceRegistration]] = None,
-    framework_prompt_providers: Optional[List[FrameworkPromptProviderRegistration]] = None,
+    capabilities: list[CapabilityRegistration] | None = None,
+    context_classes: list[ContextClassRegistration] | None = None,
+    data_sources: list[DataSourceRegistration] | None = None,
+    services: list[ServiceRegistration] | None = None,
+    framework_prompt_providers: list[FrameworkPromptProviderRegistration] | None = None,
 ) -> str:
     """Generate explicit registry Python code with all framework + app components.
 
@@ -358,37 +358,37 @@ def generate_explicit_registry_code(
 
     # Build the code sections
     code_lines = [
-        f'"""',
+        '"""',
         f'Component registry for {app_display_name}.',
-        f'',
-        f'This registry uses the EXPLICIT style, listing all framework components',
-        f'alongside application-specific components for full visibility and control.',
-        f'"""',
-        f'',
-        f'from osprey.registry import (',
-        f'    RegistryConfigProvider,',
-        f'    RegistryConfig,',
-        f'    NodeRegistration,',
-        f'    CapabilityRegistration,',
-        f'    ContextClassRegistration,',
-        f'    DataSourceRegistration,',
-        f'    ServiceRegistration,',
-        f'    FrameworkPromptProviderRegistration,',
-        f'    ProviderRegistration',
-        f')',
-        f'',
-        f'',
+        '',
+        'This registry uses the EXPLICIT style, listing all framework components',
+        'alongside application-specific components for full visibility and control.',
+        '"""',
+        '',
+        'from osprey.registry import (',
+        '    RegistryConfigProvider,',
+        '    RegistryConfig,',
+        '    NodeRegistration,',
+        '    CapabilityRegistration,',
+        '    ContextClassRegistration,',
+        '    DataSourceRegistration,',
+        '    ServiceRegistration,',
+        '    FrameworkPromptProviderRegistration,',
+        '    ProviderRegistration',
+        ')',
+        '',
+        '',
         f'class {app_class_name}(RegistryConfigProvider):',
         f'    """Registry provider for {app_display_name}."""',
-        f'    ',
-        f'    def get_registry_config(self):',
+        '    ',
+        '    def get_registry_config(self):',
         f'        """Return registry configuration for {app_display_name}."""',
-        f'        # EXPLICIT REGISTRY: All framework + application components listed',
-        f'        return RegistryConfig(',
-        f'            # ================================================================',
-        f'            # FRAMEWORK CORE NODES',
-        f'            # ================================================================',
-        f'            core_nodes=[',
+        '        # EXPLICIT REGISTRY: All framework + application components listed',
+        '        return RegistryConfig(',
+        '            # ================================================================',
+        '            # FRAMEWORK CORE NODES',
+        '            # ================================================================',
+        '            core_nodes=[',
     ]
 
     # Add framework nodes
@@ -514,10 +514,10 @@ def generate_explicit_registry_code(
 
     # Add framework AI model providers
     for prov in framework.providers:
-        code_lines.append(f'                ProviderRegistration(')
+        code_lines.append('                ProviderRegistration(')
         code_lines.append(f'                    module_path="{prov.module_path}",')
         code_lines.append(f'                    class_name="{prov.class_name}"')
-        code_lines.append(f'                ),')
+        code_lines.append('                ),')
 
     code_lines.extend([
         '            ],',
@@ -530,29 +530,29 @@ def generate_explicit_registry_code(
 
     # Add framework prompt providers
     for prov in framework.framework_prompt_providers:
-        code_lines.append(f'                FrameworkPromptProviderRegistration(')
+        code_lines.append('                FrameworkPromptProviderRegistration(')
         code_lines.append(f'                    application_name="{prov.application_name}",')
         code_lines.append(f'                    module_path="{prov.module_path}",')
         code_lines.append(f'                    description="{prov.description}",')
-        code_lines.append(f'                    prompt_builders={{')
+        code_lines.append('                    prompt_builders={')
         for key, value in prov.prompt_builders.items():
             code_lines.append(f'                        "{key}": "{value}",')
-        code_lines.append(f'                    }}')
-        code_lines.append(f'                ),')
+        code_lines.append('                    }')
+        code_lines.append('                ),')
 
     # Add application prompt providers if any
     if framework_prompt_providers:
         code_lines.append('')
         for prov in framework_prompt_providers:
-            code_lines.append(f'                FrameworkPromptProviderRegistration(')
+            code_lines.append('                FrameworkPromptProviderRegistration(')
             code_lines.append(f'                    application_name="{prov.application_name}",')
             code_lines.append(f'                    module_path="{prov.module_path}",')
             code_lines.append(f'                    description="{prov.description}",')
-            code_lines.append(f'                    prompt_builders={{')
+            code_lines.append('                    prompt_builders={')
             for key, value in prov.prompt_builders.items():
                 code_lines.append(f'                        "{key}": "{value}",')
-            code_lines.append(f'                    }}')
-            code_lines.append(f'                ),')
+            code_lines.append('                    }')
+            code_lines.append('                ),')
 
     code_lines.extend([
         '            ],',

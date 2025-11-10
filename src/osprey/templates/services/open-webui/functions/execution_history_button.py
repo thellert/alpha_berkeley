@@ -10,7 +10,7 @@ Description: View ALS Assistant Agent execution history for the last response
 import json
 import logging
 from datetime import datetime
-from typing import Optional, Callable, Awaitable, Any
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -237,7 +237,7 @@ class Action:
         __user__=None,
         __event_emitter__=None,
         __event_call__=None,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Display formatted execution history using a popup modal."""
         logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Assistant execution history")
 
@@ -557,8 +557,8 @@ class Action:
 actions = [
     {
         "id": "als_assistant_execution_history",
-        "name": "Execution History", 
+        "name": "Execution History",
         "description": "View ALS Assistant execution history for the last response",
         "icon_url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+"
     }
-] 
+]

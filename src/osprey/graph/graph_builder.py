@@ -12,17 +12,15 @@ Creates the main Osprey agent graph using existing components from the registry:
 - Modern async/await patterns for concurrent execution
 """
 
-from typing import List, Dict, Any, Optional
-from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.base import BaseCheckpointSaver
-
 import os
 
-from osprey.state import AgentState
-from osprey.registry.manager import RegistryManager, get_registry
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.graph import END, StateGraph
+
 from osprey.infrastructure.router_node import router_conditional_edge
+from osprey.registry.manager import RegistryManager
+from osprey.state import AgentState
 from osprey.utils.logger import get_logger
-from osprey.utils.config import get_current_application
 
 logger = get_logger(name="builder", color="white")
 
@@ -33,10 +31,10 @@ class GraphBuildError(Exception):
 
 def create_graph(
     registry: RegistryManager,
-    checkpointer: Optional[BaseCheckpointSaver] = None,
+    checkpointer: BaseCheckpointSaver | None = None,
     enable_debug: bool = False,
     use_postgres: bool = False,
-    recursion_limit: Optional[int] = None,
+    recursion_limit: int | None = None,
 ) -> StateGraph:
     """
     Create the main Osprey agent graph using registry components.
@@ -171,7 +169,7 @@ def _setup_router_controlled_flow(workflow: StateGraph, node_names):
 # Checkpointing - Modern PostgreSQL by Default
 # ==============================================================================
 
-def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseCheckpointSaver:
+def create_async_postgres_checkpointer(db_uri: str | None = None) -> BaseCheckpointSaver:
     """
     Create async PostgreSQL checkpointer for production use.
 
@@ -199,9 +197,9 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
 
     # Import required components
     try:
+        import psycopg_pool
         from langgraph.checkpoint.postgres import PostgresSaver
         from psycopg.rows import dict_row
-        import psycopg_pool
     except ImportError as e:
         raise ImportError(
             f"Required PostgreSQL dependencies not installed: {e}. "
@@ -228,7 +226,7 @@ def create_async_postgres_checkpointer(db_uri: Optional[str] = None) -> BaseChec
         # Setup tables on first use
         checkpointer.setup()
 
-        logger.info(f"Created PostgreSQL checkpointer with sync connection pool")
+        logger.info("Created PostgreSQL checkpointer with sync connection pool")
         return checkpointer
 
     except Exception as e:

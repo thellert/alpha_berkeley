@@ -18,19 +18,11 @@ from typing import Any
 
 # Load environment variables before any other imports
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
-from osprey.registry import initialize_registry, get_registry
 from langgraph.checkpoint.memory import MemorySaver
-from osprey.graph import create_graph
-from osprey.infrastructure.gateway import Gateway
-from osprey.utils.config import get_full_configuration
-from osprey.utils.logger import get_logger
-from rich.console import Console
-
-# Centralized styles
-from osprey.cli.styles import OspreyColors, Styles
 
 # Modern CLI dependencies
 from prompt_toolkit import PromptSession
@@ -40,9 +32,19 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.styles import Style
+from rich.console import Console
+
+# Centralized styles
+from osprey.cli.styles import OspreyColors, Styles
+
 # Centralized command system
-from osprey.commands import get_command_registry, CommandContext, CommandResult
+from osprey.commands import CommandContext, CommandResult, get_command_registry
 from osprey.commands.completer import UnifiedCommandCompleter
+from osprey.graph import create_graph
+from osprey.infrastructure.gateway import Gateway
+from osprey.registry import get_registry, initialize_registry
+from osprey.utils.config import get_full_configuration
+from osprey.utils.logger import get_logger
 
 logger = get_logger("cli")
 

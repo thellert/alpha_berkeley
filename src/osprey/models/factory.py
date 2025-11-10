@@ -21,15 +21,14 @@ requirements for API keys, base URLs, and model identifiers that are validated a
 
 import logging
 import os
-from typing import Optional, Union
 from urllib.parse import urlparse
+
 import httpx
-from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.models.gemini import GeminiModel
 from pydantic_ai.models.anthropic import AnthropicModel
+from pydantic_ai.models.gemini import GeminiModel
+from pydantic_ai.models.openai import OpenAIModel
 
 from osprey.utils.config import get_provider_config
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +61,14 @@ def _validate_proxy_url(proxy_url: str) -> bool:
 
 
 def get_model(
-    provider: Optional[str] = None,
-    model_config: Optional[dict] = None,
-    model_id: Optional[str] = None,
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
-    timeout: Optional[float] = None,
+    provider: str | None = None,
+    model_config: dict | None = None,
+    model_id: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+    timeout: float | None = None,
     max_tokens: int = 100000,
-) -> Union[OpenAIModel, AnthropicModel, GeminiModel]:
+) -> OpenAIModel | AnthropicModel | GeminiModel:
     """Create a configured LLM model instance for structured generation with PydanticAI.
 
     This factory function creates and configures LLM model instances optimized for
@@ -187,7 +186,7 @@ def get_model(
         raise ValueError(f"Model ID required for {provider}")
 
     # Setup HTTP client (proxy + timeout)
-    async_http_client: Optional[httpx.AsyncClient] = None
+    async_http_client: httpx.AsyncClient | None = None
     if provider_class.supports_proxy:
         proxy_url = os.getenv("HTTP_PROXY")
         if proxy_url and _validate_proxy_url(proxy_url):
@@ -203,4 +202,4 @@ def get_model(
         base_url=base_url,
         timeout=timeout,
         http_client=async_http_client
-    ) 
+    )

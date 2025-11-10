@@ -58,10 +58,9 @@ Examples:
    settings will default to the most secure option (approval required).
 """
 
-from dataclasses import dataclass
-from typing import Literal, Union
-from enum import Enum
 import logging
+from dataclasses import dataclass
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +104,7 @@ class ApprovalMode(Enum):
        :class:`GlobalApprovalConfig` : Global configuration that can override mode settings
     """
     DISABLED = "disabled"
-    EPICS_WRITES = "epics_writes" 
+    EPICS_WRITES = "epics_writes"
     ALL_CODE = "all_code"
 
 
@@ -223,7 +222,7 @@ class PythonExecutionApprovalConfig:
         return cls(enabled=enabled, mode=mode)
 
 
-@dataclass(frozen=True) 
+@dataclass(frozen=True)
 class MemoryApprovalConfig:
     """Configuration model for memory operation approval settings.
 
@@ -254,7 +253,7 @@ class MemoryApprovalConfig:
     enabled: bool
 
     @classmethod
-    def from_dict(cls, data: Union[bool, dict]) -> 'MemoryApprovalConfig':
+    def from_dict(cls, data: bool | dict) -> 'MemoryApprovalConfig':
         """Create configuration instance from flexible input format with validation.
 
         Factory method that creates a MemoryApprovalConfig instance from either
@@ -436,4 +435,4 @@ class GlobalApprovalConfig:
             global_mode=global_mode,
             python_execution=python_config,
             memory=memory_config
-        ) 
+        )

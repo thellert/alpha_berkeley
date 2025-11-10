@@ -49,7 +49,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any, Union, Optional
+
 from typing_extensions import TypedDict
 
 logger = logging.getLogger(__name__)
@@ -130,9 +130,9 @@ class PlannedStep(TypedDict, total=False):
     capability: str                                     # Name of the capability to execute for this step
     task_objective: str                                 # Complete, self-sufficient description of what this step must accomplish
     success_criteria: str                               # Criteria for determining successful step completion
-    expected_output: Optional[str]                      # Context type key where results will be stored (e.g., "PV_ADDRESSES")
-    parameters: Optional[Dict[str, Union[str, int, float]]]  # Optional capability-specific configuration parameters
-    inputs: Optional[List[Dict[str, str]]]             # Step inputs as list of {context_type: context_key} mappings
+    expected_output: str | None                      # Context type key where results will be stored (e.g., "PV_ADDRESSES")
+    parameters: dict[str, str | int | float] | None  # Optional capability-specific configuration parameters
+    inputs: list[dict[str, str]] | None             # Step inputs as list of {context_type: context_key} mappings
 
 
 class ExecutionPlan(TypedDict, total=False):
@@ -229,7 +229,7 @@ class ExecutionPlan(TypedDict, total=False):
        :func:`save_execution_plan_to_file` : Plan persistence utilities
        :func:`load_execution_plan_from_file` : Plan loading utilities
     """
-    steps: List[PlannedStep]                           # Ordered list of execution steps comprising the plan
+    steps: list[PlannedStep]                           # Ordered list of execution steps comprising the plan
 
 
 # Utility functions for working with execution plans (optional convenience functions)
@@ -267,7 +267,7 @@ def load_execution_plan_from_file(file_path: str) -> ExecutionPlan:
     """
     file_path = Path(file_path)
 
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, encoding='utf-8') as f:
         data = json.load(f)
 
     # Remove metadata if present
@@ -276,4 +276,4 @@ def load_execution_plan_from_file(file_path: str) -> ExecutionPlan:
 
     logger.info(f"Loaded ExecutionPlan with {len(data.get('steps', []))} steps from: {file_path}")
 
-    return ExecutionPlan(data) 
+    return ExecutionPlan(data)

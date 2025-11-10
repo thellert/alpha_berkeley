@@ -48,13 +48,15 @@ The approval system provides human-in-the-loop control for sensitive operations:
 """
 
 from __future__ import annotations
-from typing import List, Optional, Dict, Any
-from typing_extensions import TypedDict
-from dataclasses import dataclass, field
 
-from osprey.base import BaseCapability
+from dataclasses import dataclass
+from typing import Any
+
+from typing_extensions import TypedDict
+
 from osprey.base.planning import ExecutionPlan
 from osprey.base.results import ExecutionRecord, ExecutionResult
+
 # Context data is now stored as pure dictionaries - no import needed
 from osprey.utils.config import get_config_value
 
@@ -152,7 +154,7 @@ class ApprovalRequest:
     approval_type: str  # e.g., "python_code_execution", "memory_save"
     timestamp: float
     approved: bool = False
-    approval_data: Optional[Any] = None  # Store original approval exception for capability-specific access
+    approval_data: Any | None = None  # Store original approval exception for capability-specific access
 
     @property
     def is_approved(self) -> bool:
@@ -195,8 +197,8 @@ class PlanningState(TypedDict, total=False):
     - execution_plan: None
     - current_step_index: 0
     """
-    active_capabilities: List[str]               # List of capability names available for the current task
-    execution_plan: Optional[ExecutionPlan]      # Current execution plan with ordered steps
+    active_capabilities: list[str]               # List of capability names available for the current task
+    execution_plan: ExecutionPlan | None      # Current execution plan with ordered steps
     current_step_index: int                      # Index of the currently executing step
 
 
@@ -216,11 +218,11 @@ class ExecutionState(TypedDict, total=False):
     - last_result: None
     - pending_approvals: {}
     """
-    step_results: Dict[str, Any]                     # Dictionary of results keyed by step context
-    execution_history: List[ExecutionRecord]         # List of completed execution records
-    capability_context_data: Dict[str, Dict[str, Dict[str, Any]]]  # Raw capability context data for LangGraph compatibility
-    last_result: Optional[ExecutionResult]           # Most recent execution result
-    pending_approvals: Dict[str, ApprovalRequest]    # Dictionary of pending approval requests (format: {step_context_key: ApprovalRequest})
+    step_results: dict[str, Any]                     # Dictionary of results keyed by step context
+    execution_history: list[ExecutionRecord]         # List of completed execution records
+    capability_context_data: dict[str, dict[str, dict[str, Any]]]  # Raw capability context data for LangGraph compatibility
+    last_result: ExecutionResult | None           # Most recent execution result
+    pending_approvals: dict[str, ApprovalRequest]    # Dictionary of pending approval requests (format: {step_context_key: ApprovalRequest})
 
 
 class ControlFlowState(TypedDict, total=False):
@@ -249,7 +251,7 @@ class ControlFlowState(TypedDict, total=False):
     - validation_timestamp: None
     """
     # Reclassification control
-    reclassification_reason: Optional[str]          # Reason for requesting reclassification
+    reclassification_reason: str | None          # Reason for requesting reclassification
     max_reclassifications: int                      # Maximum number of reclassifications allowed
     reclassification_count: int                     # Current number of reclassifications performed
 
@@ -257,17 +259,17 @@ class ControlFlowState(TypedDict, total=False):
     current_step_retry_count: int                   # Number of retries for the current step
     max_step_retries: int                          # Maximum retries allowed per step
 
-    # Execution safety and loop prevention  
-    execution_start_time: Optional[float]          # Unix timestamp when execution started
-    total_execution_time: Optional[float]          # Total execution time in seconds
+    # Execution safety and loop prevention
+    execution_start_time: float | None          # Unix timestamp when execution started
+    total_execution_time: float | None          # Total execution time in seconds
     max_execution_time_seconds: int                # Maximum execution time allowed
     is_killed: bool                                # Whether execution has been killed
-    kill_reason: Optional[str]                     # Reason for killing execution
+    kill_reason: str | None                     # Reason for killing execution
 
     # Human-in-the-loop validation state
     is_awaiting_validation: bool                   # Whether execution is awaiting human validation
-    validation_context: Optional[Dict[str, Any]]   # Store context about what needs validation
-    validation_timestamp: Optional[float]          # When validation was requested
+    validation_context: dict[str, Any] | None   # Store context about what needs validation
+    validation_timestamp: float | None          # When validation was requested
 
 
 def create_control_flow_state_from_config() -> ControlFlowState:
@@ -304,6 +306,6 @@ class ClassificationResult:
     :param dynamic_graph: Execution graph built for the classified task
     :type dynamic_graph: Any
     """
-    requirements: Dict[str, bool]
-    active_capabilities: List[str]  # Store capability names instead of instances
+    requirements: dict[str, bool]
+    active_capabilities: list[str]  # Store capability names instead of instances
     dynamic_graph: Any  # Graph type to avoid circular import

@@ -45,14 +45,13 @@ compatibility.
 """
 
 from __future__ import annotations
-from typing import Dict, Any, Optional, Union
-from typing_extensions import TypedDict
-from dataclasses import dataclass, field
+
 import logging
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from osprey.utils.config import get_execution_limits
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -164,8 +163,8 @@ class AgentControlState(TypedDict, total=False):
 
 
 def apply_slash_commands_to_agent_control_state(
-    agent_control_state: AgentControlState, 
-    command_changes: Dict[str, Any]
+    agent_control_state: AgentControlState,
+    command_changes: dict[str, Any]
 ) -> AgentControlState:
     """Apply processed command changes to agent control configuration.
 

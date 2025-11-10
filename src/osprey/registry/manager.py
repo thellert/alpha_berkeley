@@ -97,24 +97,24 @@ Examples:
    :doc:`/developer-guides/03_core-framework-systems/03_registry-and-discovery` : Component registration patterns
 """
 
-import logging
 import importlib
 import inspect
 import json
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
+
+from osprey.base.errors import ConfigurationError, RegistryError
+from osprey.utils.config import get_agent_dir, get_config_value
+from osprey.utils.logger import get_logger
 
 from .base import RegistryConfig, RegistryConfigProvider
-from osprey.base.errors import RegistryError, ConfigurationError
-from osprey.utils.logger import get_logger
-from osprey.utils.config import get_config_value, get_agent_dir
 
 # Import for prompt loading
 try:
-    from osprey.prompts.loader import _prompt_loader, set_default_framework_prompt_provider
     from osprey.prompts.defaults import DefaultPromptProvider
+    from osprey.prompts.loader import _prompt_loader, set_default_framework_prompt_provider
 except ImportError:
     _prompt_loader = None
     set_default_framework_prompt_provider = None
@@ -154,7 +154,7 @@ class RegistryManager:
        can be accessed. Failed initialization will raise RegistryError.
     """
 
-    def __init__(self, registry_path: Optional[str] = None):
+    def __init__(self, registry_path: str | None = None):
         """Initialize registry manager with optional application registry.
 
         Creates a new registry manager instance that builds configuration from
@@ -285,6 +285,7 @@ class RegistryManager:
         :raises RegistryError: If registry loading fails
         """
         from pathlib import Path
+
         from .base import ExtendedRegistryConfig
 
         # No application registry? Framework only
@@ -437,8 +438,8 @@ class RegistryManager:
 
                 >>> config = self._load_registry_from_path("/path/to/app/registry.py")
         """
-        import sys
         import importlib.util
+        import sys
         from pathlib import Path
 
         # Normalize path (handles absolute/relative, resolves .., etc.)
@@ -593,7 +594,7 @@ class RegistryManager:
             ) from e
 
 
-    def _apply_framework_exclusions(self, merged: RegistryConfig, exclusions: Dict[str, List[str]], app_name: str) -> None:
+    def _apply_framework_exclusions(self, merged: RegistryConfig, exclusions: dict[str, list[str]], app_name: str) -> None:
         """Apply framework component exclusions to the merged registry configuration.
 
         Removes specified framework components from the merged configuration based on
@@ -1345,7 +1346,7 @@ class RegistryManager:
     # EXPORT FUNCTIONALITY
     # ==============================================================================
 
-    def export_registry_to_json(self, output_dir: str = None) -> Dict[str, Any]:
+    def export_registry_to_json(self, output_dir: str = None) -> dict[str, Any]:
         """Export registry metadata for external tools and plan editors.
 
         Creates comprehensive JSON export of all registered components including
@@ -1386,7 +1387,7 @@ class RegistryManager:
 
         return export_data
 
-    def _export_capabilities(self) -> List[Dict[str, Any]]:
+    def _export_capabilities(self) -> list[dict[str, Any]]:
         """Export capability metadata for external consumption.
 
         Transforms internal capability registrations into standardized format
@@ -1412,7 +1413,7 @@ class RegistryManager:
 
         return capabilities
 
-    def _export_context_types(self) -> List[Dict[str, Any]]:
+    def _export_context_types(self) -> list[dict[str, Any]]:
         """Export context type metadata for external consumption.
 
         Transforms internal context class registrations into standardized format
@@ -1435,7 +1436,7 @@ class RegistryManager:
 
         return context_types
 
-    def _save_export_data(self, export_data: Dict[str, Any], output_dir: str) -> None:
+    def _save_export_data(self, export_data: dict[str, Any], output_dir: str) -> None:
         """Save registry export data to JSON files.
 
         Creates directory if needed and saves both complete export and individual
@@ -1491,7 +1492,7 @@ class RegistryManager:
         """
         return self._registries['capabilities'].get(name)
 
-    def get_always_active_capability_names(self) -> List[str]:
+    def get_always_active_capability_names(self) -> list[str]:
         """Get names of capabilities marked as always active.
 
         :return: List of capability names that are always active
@@ -1499,7 +1500,7 @@ class RegistryManager:
         """
         return [cap_reg.name for cap_reg in self.config.capabilities if cap_reg.always_active]
 
-    def get_all_capabilities(self) -> List['BaseCapability']:
+    def get_all_capabilities(self) -> list['BaseCapability']:
         """Retrieve all registered capability instances.
 
         :return: List of all registered capability instances
@@ -1535,7 +1536,7 @@ class RegistryManager:
         """
         return self._registries['nodes'].get(name)
 
-    def get_all_nodes(self) -> Dict[str, Any]:
+    def get_all_nodes(self) -> dict[str, Any]:
         """Retrieve all registered nodes as (name, callable) pairs.
 
         :return: Dictionary mapping node names to their callable instances
@@ -1543,7 +1544,7 @@ class RegistryManager:
         """
         return dict(self._registries['nodes'].items())
 
-    def get_context_class(self, context_type: str) -> Optional[Type['CapabilityContext']]:
+    def get_context_class(self, context_type: str) -> type['CapabilityContext'] | None:
         """Retrieve context class by type identifier.
 
         :param context_type: Context type identifier (e.g., 'PV_ADDRESSES')
@@ -1576,7 +1577,7 @@ class RegistryManager:
         """
         return context_type in self._registries['contexts']
 
-    def get_all_context_types(self) -> List[str]:
+    def get_all_context_types(self) -> list[str]:
         """Get list of all registered context types.
 
         :return: List of all registered context type identifiers
@@ -1584,7 +1585,7 @@ class RegistryManager:
         """
         return list(self._registries['contexts'].keys())
 
-    def get_all_context_classes(self) -> Dict[str, Type['CapabilityContext']]:
+    def get_all_context_classes(self) -> dict[str, type['CapabilityContext']]:
         """Get dictionary of all registered context classes by context type.
 
         This method provides access to all registered context classes indexed by their
@@ -1605,7 +1606,7 @@ class RegistryManager:
         """
         return dict(self._registries['contexts'])
 
-    def get_data_source(self, name: str) -> Optional[Any]:
+    def get_data_source(self, name: str) -> Any | None:
         """Retrieve data source provider instance by name.
 
         :param name: Unique data source name from registration
@@ -1615,7 +1616,7 @@ class RegistryManager:
         """
         return self._registries['data_sources'].get(name)
 
-    def get_all_data_sources(self) -> List[Any]:
+    def get_all_data_sources(self) -> list[Any]:
         """Retrieve all registered data source provider instances.
 
         :return: List of all registered data source provider instances
@@ -1623,7 +1624,7 @@ class RegistryManager:
         """
         return list(self._registries['data_sources'].values())
 
-    def get_provider(self, name: str) -> Optional[Type[Any]]:
+    def get_provider(self, name: str) -> type[Any] | None:
         """Retrieve registered provider class by name.
 
         :param name: Unique provider name from registration
@@ -1636,7 +1637,7 @@ class RegistryManager:
 
         return self._registries['providers'].get(name)
 
-    def get_provider_registration(self, name: str) -> Optional[Any]:
+    def get_provider_registration(self, name: str) -> Any | None:
         """Get provider registration metadata.
 
         :param name: Provider name
@@ -1646,7 +1647,7 @@ class RegistryManager:
         """
         return self._provider_registrations.get(name)
 
-    def list_providers(self) -> List[str]:
+    def list_providers(self) -> list[str]:
         """Get list of all registered provider names.
 
         :return: List of provider names
@@ -1654,7 +1655,7 @@ class RegistryManager:
         """
         return list(self._registries['providers'].keys())
 
-    def get_service(self, name: str) -> Optional[Any]:
+    def get_service(self, name: str) -> Any | None:
         """Retrieve registered service graph by name.
 
         :param name: Unique service name from registration
@@ -1664,7 +1665,7 @@ class RegistryManager:
         """
         return self._registries['services'].get(name)
 
-    def get_all_services(self) -> List[Any]:
+    def get_all_services(self) -> list[Any]:
         """Retrieve all registered service graph instances.
 
         :return: List of all registered service graph instances
@@ -1672,7 +1673,7 @@ class RegistryManager:
         """
         return list(self._registries['services'].values())
 
-    def get_execution_policy_analyzers(self) -> List[Any]:
+    def get_execution_policy_analyzers(self) -> list[Any]:
         """Retrieve all registered execution policy analyzer instances.
 
         Creates instances of execution policy analyzers with empty configurable.
@@ -1692,7 +1693,7 @@ class RegistryManager:
                 logger.warning(f"Failed to instantiate execution policy analyzer {name}: {e}")
         return analyzers
 
-    def get_domain_analyzers(self) -> List[Any]:
+    def get_domain_analyzers(self) -> list[Any]:
         """Retrieve all registered domain analyzer instances.
 
         Creates instances of domain analyzers with empty configurable.
@@ -1712,7 +1713,7 @@ class RegistryManager:
                 logger.warning(f"Failed to instantiate domain analyzer {name}: {e}")
         return analyzers
 
-    def get_available_data_sources(self, state: Any) -> List[Any]:
+    def get_available_data_sources(self, state: Any) -> list[Any]:
         """Retrieve available data sources for current execution context.
 
         Filters all registered data sources based on their availability for the
@@ -1829,7 +1830,7 @@ class RegistryManager:
     # VALIDATION AND DEBUGGING
     # ==============================================================================
 
-    def validate_configuration(self) -> List[str]:
+    def validate_configuration(self) -> list[str]:
         """Validate registry configuration for consistency and completeness.
 
         Performs comprehensive validation of the registry configuration including
@@ -1891,7 +1892,7 @@ class RegistryManager:
         # Build the summary with better formatting
         summary_lines = [
             "Registry initialization complete!",
-            f"   Components loaded:",
+            "   Components loaded:",
             f"      • {stats['capabilities']} capabilities: {', '.join(stats['capability_names'])}",
             f"      • {stats['nodes']} nodes (including {len(self.config.core_nodes)} core infrastructure)",
             f"      • {stats['context_classes']} context types: {', '.join(stats['context_types'])}",
@@ -1901,7 +1902,7 @@ class RegistryManager:
 
         return "\n".join(summary_lines)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Retrieve comprehensive registry statistics for debugging.
 
         :return: Dictionary containing counts and lists of registered components
@@ -1950,10 +1951,10 @@ class RegistryManager:
 # GLOBAL REGISTRY INSTANCE
 # ==============================================================================
 
-_registry: Optional[RegistryManager] = None
-_registry_config_path: Optional[str] = None
+_registry: RegistryManager | None = None
+_registry_config_path: str | None = None
 
-def get_registry(config_path: Optional[str] = None) -> RegistryManager:
+def get_registry(config_path: str | None = None) -> RegistryManager:
     """Retrieve the global registry manager singleton instance.
 
     Returns the global registry manager instance, creating it automatically if it
@@ -2043,7 +2044,7 @@ def get_registry(config_path: Optional[str] = None) -> RegistryManager:
 
     return _registry
 
-def _create_registry_from_config(config_path: Optional[str] = None) -> RegistryManager:
+def _create_registry_from_config(config_path: str | None = None) -> RegistryManager:
     """Create registry manager from global configuration.
 
     Supports multiple configuration formats for registry path specification:
@@ -2131,7 +2132,7 @@ def _create_registry_from_config(config_path: Optional[str] = None) -> RegistryM
         logger.error(f"Failed to create registry from config: {e}")
         raise RuntimeError(f"Registry creation failed: {e}") from e
 
-def initialize_registry(auto_export: bool = True, config_path: Optional[str] = None) -> None:
+def initialize_registry(auto_export: bool = True, config_path: str | None = None) -> None:
     """Initialize the global registry system with all components.
 
     Performs complete initialization of the global registry system, including

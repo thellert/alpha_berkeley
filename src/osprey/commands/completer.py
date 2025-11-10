@@ -16,7 +16,8 @@ The completion system integrates with CLI interfaces to provide a modern, IDE-li
 experience for command discovery and usage.
 """
 
-from typing import Iterable
+from collections.abc import Iterable
+
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.document import Document
 from prompt_toolkit.formatted_text import HTML
@@ -99,11 +100,11 @@ class UnifiedCommandCompleter(Completer):
             if command:
                 # Get colors from active theme
                 theme = get_active_theme()
-                
+
                 # Map categories to theme colors
                 category_colors = {
                     "cli": theme.info,        # info/blue for CLI commands
-                    "agent": theme.success,   # success/green for agent commands  
+                    "agent": theme.success,   # success/green for agent commands
                     "service": theme.warning, # warning/yellow for service commands
                     "custom": theme.accent    # accent/pink for custom commands
                 }

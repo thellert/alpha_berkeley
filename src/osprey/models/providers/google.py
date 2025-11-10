@@ -1,11 +1,13 @@
 """Google Provider Adapter Implementation."""
 
-from typing import Optional, Any, Union
+from typing import Any
+
 import httpx
-from pydantic_ai.models.gemini import GeminiModel
-from pydantic_ai.providers.google_gla import GoogleGLAProvider
 from google import genai
 from google.genai import types as genai_types
+from pydantic_ai.models.gemini import GeminiModel
+from pydantic_ai.providers.google_gla import GoogleGLAProvider
+
 from .base import BaseProvider
 
 
@@ -31,14 +33,14 @@ class GoogleProviderAdapter(BaseProvider):
     def create_model(
         self,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
-        timeout: Optional[float],
-        http_client: Optional[httpx.AsyncClient]
+        api_key: str | None,
+        base_url: str | None,
+        timeout: float | None,
+        http_client: httpx.AsyncClient | None
     ) -> GeminiModel:
         """Create Google Gemini model instance for PydanticAI."""
         provider = GoogleGLAProvider(
-            api_key=api_key, 
+            api_key=api_key,
             http_client=http_client
         )
         return GeminiModel(model_name=model_id, provider=provider)
@@ -47,13 +49,13 @@ class GoogleProviderAdapter(BaseProvider):
         self,
         message: str,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         max_tokens: int = 1024,
         temperature: float = 0.0,
-        thinking: Optional[dict] = None,
-        system_prompt: Optional[str] = None,
-        output_format: Optional[Any] = None,
+        thinking: dict | None = None,
+        system_prompt: str | None = None,
+        output_format: Any | None = None,
         **kwargs
     ) -> str:
         """Execute Google Gemini chat completion with thinking support."""
@@ -62,7 +64,7 @@ class GoogleProviderAdapter(BaseProvider):
         google_logger = logging.getLogger('google.genai')
         original_level = google_logger.level
         google_logger.setLevel(logging.WARNING)
-        
+
         try:
             client = genai.Client(api_key=api_key)
         finally:
@@ -92,10 +94,10 @@ class GoogleProviderAdapter(BaseProvider):
 
     def check_health(
         self,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         timeout: float = 5.0,
-        model_id: Optional[str] = None
+        model_id: str | None = None
     ) -> tuple[bool, str]:
         """Check Google API health with minimal test call.
 
@@ -118,7 +120,7 @@ class GoogleProviderAdapter(BaseProvider):
             google_logger = logging.getLogger('google.genai')
             original_level = google_logger.level
             google_logger.setLevel(logging.WARNING)
-            
+
             try:
                 client = genai.Client(api_key=api_key)
             finally:

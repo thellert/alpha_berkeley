@@ -5,6 +5,7 @@ Data models for memory storage operations.
 """
 
 from datetime import datetime
+
 from pydantic import BaseModel, Field
 
 
@@ -88,4 +89,4 @@ class MemoryContent(BaseModel):
 
 __all__ = [
     'MemoryContent',
-] 
+]

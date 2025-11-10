@@ -6,34 +6,31 @@ Implemented using convention-based class architecture for LangGraph compatibilit
 """
 
 from __future__ import annotations
-from typing import Optional, List, Dict, Any
+
 import asyncio
-import time
-
-# Updated imports for LangGraph compatibility with TypedDict state
-from osprey.state import AgentState
-from osprey.base.decorators import infrastructure_node
-from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.base.nodes import BaseInfrastructureNode
-from osprey.registry import get_registry
-from osprey.models import get_chat_completion
-from osprey.prompts.loader import get_framework_prompts
-
-from osprey.utils.logger import get_logger
-from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_model_config, get_config_value
-
-
-from osprey.prompts.defaults.task_extraction import ExtractedTask
-from osprey.data_management import (
-    get_data_source_manager, 
-    create_data_source_request, 
-    DataSourceRequester
-)
+from typing import Any
 
 # Native LangGraph message types for checkpointing compatibility
 from langchain_core.messages import BaseMessage
 
+from osprey.base.decorators import infrastructure_node
+from osprey.base.errors import ErrorClassification, ErrorSeverity
+from osprey.base.nodes import BaseInfrastructureNode
+from osprey.data_management import (
+    DataSourceRequester,
+    create_data_source_request,
+    get_data_source_manager,
+)
+from osprey.models import get_chat_completion
+from osprey.prompts.defaults.task_extraction import ExtractedTask
+from osprey.prompts.loader import get_framework_prompts
+from osprey.registry import get_registry
+
+# Updated imports for LangGraph compatibility with TypedDict state
+from osprey.state import AgentState
+from osprey.utils.config import get_model_config
+from osprey.utils.logger import get_logger
+from osprey.utils.streaming import get_streamer
 
 logger = get_logger("task_extraction")
 registry = get_registry()
@@ -42,7 +39,7 @@ registry = get_registry()
 # PROMPT BUILDING HELPER FUNCTIONS
 # =============================================================================
 
-def _format_task_context(messages: List[BaseMessage], retrieval_result, logger) -> ExtractedTask:
+def _format_task_context(messages: list[BaseMessage], retrieval_result, logger) -> ExtractedTask:
     """Format task context for bypass mode without LLM processing.
 
     Creates an ExtractedTask using the same context formatting as normal extraction
@@ -80,7 +77,7 @@ def _format_task_context(messages: List[BaseMessage], retrieval_result, logger) 
                     logger.warning(f"Could not format content from source {source_name}: {e}")
 
             if formatted_contexts:
-                data_context = f"\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
+                data_context = "\n\n**Retrieved Data:**\n" + "\n\n".join(formatted_contexts)
             else:
                 # Fallback to summary if no content could be formatted
                 data_context = f"\n\n**Available Data Sources:**\n{retrieval_result.get_summary()}"
@@ -100,7 +97,7 @@ def _format_task_context(messages: List[BaseMessage], retrieval_result, logger) 
     )
 
 
-def _build_task_extraction_prompt(messages: List[BaseMessage], retrieval_result) -> str:
+def _build_task_extraction_prompt(messages: list[BaseMessage], retrieval_result) -> str:
     """Build the system prompt with examples, current chat, and integrated data sources context.
 
     :param messages: The native LangGraph messages to extract task from
@@ -118,7 +115,7 @@ def _build_task_extraction_prompt(messages: List[BaseMessage], retrieval_result)
     )
 
 
-def _extract_task(messages: List[BaseMessage], retrieval_result, logger) -> ExtractedTask:
+def _extract_task(messages: list[BaseMessage], retrieval_result, logger) -> ExtractedTask:
     """Extract actionable task from native LangGraph messages with integrated data sources.
 
     Uses PydanticAI agent to analyze conversation and extract structured
@@ -188,7 +185,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
                 metadata={"technical_details": str(exc)}
             )
 
-        # Don't retry on validation or configuration errors  
+        # Don't retry on validation or configuration errors
         if isinstance(exc, (ValueError, TypeError)):
             return ErrorClassification(
                 severity=ErrorSeverity.CRITICAL,
@@ -213,7 +210,7 @@ class TaskExtractionNode(BaseInfrastructureNode):
         )
 
     @staticmethod
-    def get_retry_policy() -> Dict[str, Any]:
+    def get_retry_policy() -> dict[str, Any]:
         """Custom retry policy for LLM-based task extraction operations.
 
         Task extraction uses LLM calls to parse user queries and can be flaky due to:
@@ -232,9 +229,9 @@ class TaskExtractionNode(BaseInfrastructureNode):
 
     @staticmethod
     async def execute(
-        state: AgentState, 
+        state: AgentState,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Main task extraction logic with bypass support and error handling.
 
         Converts conversational exchanges into clear, actionable task descriptions.
@@ -315,4 +312,4 @@ class TaskExtractionNode(BaseInfrastructureNode):
             # Task extraction failed
             logger.error(f"Task extraction failed: {e}")
             streamer.error(f"Task extraction failed: {str(e)}")
-            raise e  # Raise original error for better debugging 
+            raise e  # Raise original error for better debugging

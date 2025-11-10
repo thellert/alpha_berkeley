@@ -13,7 +13,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict
+
 from pydantic import BaseModel, Field
 
 # Set up logger for this function module
@@ -53,7 +53,7 @@ class Action:
         safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "-_")
         return Path(self.valves.memory_base_path) / f"{safe_user_id}.json"
 
-    def _load_memory_data(self, user_id: str) -> Dict:
+    def _load_memory_data(self, user_id: str) -> dict:
         """Load memory data from user's JSON file."""
         try:
             # DEBUG: Print extensive debug information
@@ -81,13 +81,13 @@ class Action:
                     logger.error(f"DEBUG: Error listing directory contents: {dir_e}")
 
             if memory_file.exists():
-                logger.info(f"DEBUG: Memory file found, attempting to read...")
-                with open(memory_file, 'r', encoding='utf-8') as f:
+                logger.info("DEBUG: Memory file found, attempting to read...")
+                with open(memory_file, encoding='utf-8') as f:
                     data = json.load(f)
                 logger.info(f"DEBUG: Successfully loaded memory data with {len(data.get('entries', []))} entries")
                 return data
             else:
-                logger.info(f"DEBUG: Memory file does not exist, returning empty structure")
+                logger.info("DEBUG: Memory file does not exist, returning empty structure")
                 # Return empty structure if file doesn't exist
                 return {
                     "user_id": user_id,
@@ -100,7 +100,7 @@ class Action:
             logger.error(f"Error loading memory for user {user_id}: {e}")
             raise
 
-    def _validate_memory_data(self, data: Dict) -> bool:
+    def _validate_memory_data(self, data: dict) -> bool:
         """Validate memory data structure before saving."""
         try:
             # Check required fields
@@ -130,7 +130,7 @@ class Action:
             logger.error(f"Error validating memory data: {e}")
             return False
 
-    def _save_memory_data(self, user_id: str, data: Dict) -> bool:
+    def _save_memory_data(self, user_id: str, data: dict) -> bool:
         """Save memory data to user's JSON file with validation."""
         try:
             # Validate data structure
@@ -203,14 +203,14 @@ class Action:
             logger.error(f"Error restoring backup for user {user_id}: {e}")
             return False
 
-    def _format_memory_display(self, data: Dict, user_valves) -> str:
+    def _format_memory_display(self, data: dict, user_valves) -> str:
         """Format memory data as readable markdown."""
         entries = data.get("entries", [])
         user_id = data.get("user_id", "Unknown")
         created = data.get("created", "Unknown")
         last_updated = data.get("last_updated", "Unknown")
 
-        markdown = f"# 🧠 Personal Memory Manager\n\n"
+        markdown = "# 🧠 Personal Memory Manager\n\n"
         markdown += f"**User ID:** `{user_id}`\n"
         markdown += f"**Created:** {created}\n"
         markdown += f"**Last Updated:** {last_updated}\n"
@@ -254,17 +254,17 @@ class Action:
 
         # Add edit hint
         if user_valves.enable_editing:
-            markdown += f"\n\n🔧 **Want to edit your memories?** Click the memory button again to open the interactive editor.\n"
+            markdown += "\n\n🔧 **Want to edit your memories?** Click the memory button again to open the interactive editor.\n"
 
         return markdown
 
     async def create_memory_editor_interface(
         self,
-        data: Dict,
+        data: dict,
         user_id: str,
         __event_emitter__=None,
         __event_call__=None,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """Create an interactive memory editing interface using JavaScript."""
 
         entries = data.get("entries", [])
@@ -672,7 +672,7 @@ class Action:
         __user__=None,
         __event_emitter__=None,
         __event_call__=None,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Main action handler for memory manager."""
         logger.info(f"Memory Manager Action - User: {__user__.get('name', 'Unknown')}, ID: {__user__.get('id', 'Unknown')}")
 

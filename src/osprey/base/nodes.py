@@ -41,7 +41,7 @@ The infrastructure pattern follows these principles:
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from osprey.base.errors import ErrorClassification, ErrorSeverity
 
@@ -156,7 +156,7 @@ class BaseInfrastructureNode(ABC):
     async def execute(
         state: 'AgentState',
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute the infrastructure operation with comprehensive system coordination.
 
         This is the core method that all infrastructure nodes must implement.
@@ -281,7 +281,7 @@ class BaseInfrastructureNode(ABC):
         )
 
     @staticmethod
-    def get_retry_policy() -> Dict[str, Any]:
+    def get_retry_policy() -> dict[str, Any]:
         """Get conservative retry policy configuration for infrastructure operations.
 
         This method provides retry configuration optimized for infrastructure
@@ -342,4 +342,4 @@ class BaseInfrastructureNode(ABC):
            The format follows the pattern '<ClassName: node_name>' for
            consistency across all framework components.
         """
-        return f"<{self.__class__.__name__}: {self.name}>" 
+        return f"<{self.__class__.__name__}: {self.name}>"

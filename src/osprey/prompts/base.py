@@ -12,15 +12,15 @@ contextually appropriate prompts.
 import os
 import textwrap
 from abc import ABC, abstractmethod
-from typing import Optional, List, Any, Dict, TYPE_CHECKING
-from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
-from osprey.utils.logger import get_logger
-from osprey.utils.config import get_config_value, get_agent_dir
 from osprey.base import TaskClassifierGuide
+from osprey.utils.config import get_agent_dir, get_config_value
+from osprey.utils.logger import get_logger
+
 if TYPE_CHECKING:
-    from osprey.base import OrchestratorGuide, BaseExample
+    from osprey.base import BaseExample, OrchestratorGuide
 logger = get_logger("osprey")
 
 
@@ -106,7 +106,7 @@ class FrameworkPromptBuilder(ABC):
         """
         pass
 
-    def get_task_definition(self) -> Optional[str]:
+    def get_task_definition(self) -> str | None:
         """Define the specific task or objective for the prompt.
 
         This method provides an explicit task statement when the role definition
@@ -155,7 +155,7 @@ class FrameworkPromptBuilder(ABC):
         """
         pass
 
-    def _get_examples(self, **kwargs) -> Optional[List['BaseExample']]:
+    def _get_examples(self, **kwargs) -> list['BaseExample'] | None:
         """Provide few-shot examples to guide agent behavior and output format.
 
         This method can return static examples or generate dynamic examples based
@@ -190,7 +190,7 @@ class FrameworkPromptBuilder(ABC):
         """
         return None
 
-    def _get_dynamic_context(self, **kwargs) -> Optional[str]:
+    def _get_dynamic_context(self, **kwargs) -> str | None:
         """Inject runtime context information into the prompt.
 
         This method allows prompts to incorporate dynamic information such as
@@ -300,7 +300,7 @@ class FrameworkPromptBuilder(ABC):
 
         return final_prompt
 
-    def debug_print_prompt(self, prompt: str, name: Optional[str] = None) -> None:
+    def debug_print_prompt(self, prompt: str, name: str | None = None) -> None:
         """Output prompt content for debugging and development visibility.
 
         This method integrates with the framework's development configuration to
@@ -368,7 +368,7 @@ class FrameworkPromptBuilder(ABC):
         return getattr(self, 'PROMPT_TYPE', self.__class__.__name__.replace('PromptBuilder', '').lower())
 
 
-    def _format_examples(self, examples: List['BaseExample']) -> str:
+    def _format_examples(self, examples: list['BaseExample']) -> str:
         """Format example objects into prompt-ready text representation.
 
         This method converts a list of BaseExample objects into a formatted string
@@ -493,7 +493,7 @@ class FrameworkPromptBuilder(ABC):
         return None
 
 
-def debug_print_prompt(prompt: str, name: str, builder_class: Optional[str] = None) -> None:
+def debug_print_prompt(prompt: str, name: str, builder_class: str | None = None) -> None:
     """Output prompt content for debugging across the entire framework.
 
     This standalone function provides prompt debugging capabilities that can be

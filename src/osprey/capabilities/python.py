@@ -37,24 +37,30 @@ including streaming, configuration management, error handling, and checkpoint su
    :class:`osprey.approval.ApprovalManager` : Code execution approval workflows
 """
 
-from typing import Dict, Any, Optional, ClassVar
+from typing import Any, ClassVar
+
 from langgraph.types import Command
 
-from osprey.base.decorators import capability_node
+from osprey.approval import (
+    clear_approval_state,
+    create_approval_type,
+    get_approval_resume_data,
+    handle_service_with_interrupts,
+)
 from osprey.base.capability import BaseCapability
+from osprey.base.decorators import capability_node
+from osprey.base.errors import ErrorClassification, ErrorSeverity
+from osprey.base.examples import OrchestratorGuide, TaskClassifierGuide
 from osprey.context.base import CapabilityContext
 from osprey.context.context_manager import ContextManager, recursively_summarize_data
-from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.state import AgentState, StateManager
+from osprey.prompts.loader import get_framework_prompts
 from osprey.registry import get_registry
-from osprey.base.examples import OrchestratorGuide, TaskClassifierGuide
 from osprey.services.python_executor import PythonServiceResult
 from osprey.services.python_executor.models import PythonExecutionRequest
-from osprey.approval import get_approval_resume_data, clear_approval_state, create_approval_type, handle_service_with_interrupts
+from osprey.state import AgentState, StateManager
+from osprey.utils.config import get_full_configuration
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_full_configuration
-from osprey.prompts.loader import get_framework_prompts
 
 logger = get_logger("python")
 
@@ -109,13 +115,13 @@ class PythonResultsContext(CapabilityContext):
 
     code: str
     output: str
-    results: Optional[Dict[str, Any]] = None  # Actual computed results from results.json
-    error: Optional[str] = None
+    results: dict[str, Any] | None = None  # Actual computed results from results.json
+    error: str | None = None
     execution_time: float = 0.0
-    folder_path: Optional[str] = None
-    notebook_path: Optional[str] = None
-    notebook_link: Optional[str] = None
-    figure_paths: Optional[list] = None
+    folder_path: str | None = None
+    notebook_path: str | None = None
+    notebook_link: str | None = None
+    figure_paths: list | None = None
 
     CONTEXT_TYPE: ClassVar[str] = "PYTHON_RESULTS"
     CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
@@ -128,7 +134,7 @@ class PythonResultsContext(CapabilityContext):
     def context_type(self) -> str:
         return self.CONTEXT_TYPE
 
-    def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_access_details(self, key_name: str | None = None) -> dict[str, Any]:
         """Provide comprehensive access information for Python execution results.
 
         Generates detailed access information for other capabilities to understand
@@ -148,7 +154,7 @@ class PythonResultsContext(CapabilityContext):
         key_ref = key_name if key_name else "key_name"
         return {
             "code": "Python code that was executed",
-            "output": "Stdout/stderr logs from code execution", 
+            "output": "Stdout/stderr logs from code execution",
             "results": "Computed results dictionary from results.json" if self.results else "No computed results",
             "error": "Error message if execution failed" if self.error else "No errors",
             "execution_time": f"Execution time: {self.execution_time:.2f} seconds",
@@ -158,7 +164,7 @@ class PythonResultsContext(CapabilityContext):
             "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.results gives the computed results dictionary"
         }
 
-    def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_summary(self, key_name: str | None = None) -> dict[str, Any]:
         """Generate summary of Python execution for display and analysis.
 
         Creates a comprehensive summary of the Python execution including both
@@ -353,7 +359,7 @@ class PythonCapability(BaseCapability):
     requires = []
 
     @staticmethod
-    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+    async def execute(state: AgentState, **kwargs) -> dict[str, Any]:
         """Execute Python capability with comprehensive service integration and approval handling.
 
         Implements the complete Python execution workflow including service invocation,
@@ -430,7 +436,7 @@ class PythonCapability(BaseCapability):
 
         if has_approval_resume:
             if approved_payload:
-                logger.resume(f"Sending approval response to Python executor service")
+                logger.resume("Sending approval response to Python executor service")
                 logger.debug(f"Additional payload keys: {list(approved_payload.keys())}")
 
                 # Resume execution with approval response
@@ -454,7 +460,7 @@ class PythonCapability(BaseCapability):
 
         else:
             # ========================================
-            # REGULAR EXECUTION CASE  
+            # REGULAR EXECUTION CASE
             # ========================================
 
             # Create execution request
@@ -519,9 +525,9 @@ class PythonCapability(BaseCapability):
 
         # Store context using StateManager
         result_updates = StateManager.store_context(
-            state, 
-            registry.context_types.PYTHON_RESULTS, 
-            step.get("context_key"), 
+            state,
+            registry.context_types.PYTHON_RESULTS,
+            step.get("context_key"),
             results_context
         )
 
@@ -609,7 +615,7 @@ class PythonCapability(BaseCapability):
             metadata={"technical_details": str(exc)}
         )
 
-    def _create_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def _create_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create orchestrator integration guide from prompt builder system.
 
         Retrieves sophisticated orchestration guidance from the application's
@@ -633,7 +639,7 @@ class PythonCapability(BaseCapability):
 
         return python_builder.get_orchestrator_guide()
 
-    def _create_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def _create_classifier_guide(self) -> TaskClassifierGuide | None:
         """Create task classification guide from prompt builder system.
 
         Retrieves task classification guidance from the application's prompt

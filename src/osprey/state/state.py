@@ -71,7 +71,7 @@ maintaining compatibility with LangGraph's checkpointing system.
 """
 
 import copy
-from typing import Annotated, List, Dict, Any, Optional
+from typing import Annotated, Any
 
 # LangGraph native imports
 from langgraph.graph import MessagesState
@@ -80,16 +80,14 @@ from langgraph.graph import MessagesState
 from osprey.base.planning import ExecutionPlan
 from osprey.base.results import ExecutionResult
 
-
 from .execution import ApprovalRequest
-
 
 # ===== CUSTOM REDUCER FOR PURE DICTIONARY CONTEXT DATA =====
 
 def merge_capability_context_data(
-    existing: Optional[Dict[str, Dict[str, Dict[str, Any]]]], 
-    new: Dict[str, Dict[str, Dict[str, Any]]]
-) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    existing: dict[str, dict[str, dict[str, Any]]] | None,
+    new: dict[str, dict[str, dict[str, Any]]]
+) -> dict[str, dict[str, dict[str, Any]]]:
     """Merge capability context data dictionaries for LangGraph-native checkpointing.
 
     This custom reducer function enables capability context data to accumulate across
@@ -251,70 +249,70 @@ class AgentState(MessagesState):
 
     # Core persistent context - LangGraph-native dictionary storage
     # Data structure: {context_type: {context_key: {field: value}}}
-    capability_context_data: Annotated[Dict[str, Dict[str, Dict[str, Any]]], merge_capability_context_data]
+    capability_context_data: Annotated[dict[str, dict[str, dict[str, Any]]], merge_capability_context_data]
 
     # ===== EXECUTION-SCOPED FIELDS (Reset each invocation) =====
 
     # Agent control state - resets to defaults each conversation turn
-    agent_control: Dict[str, Any]
+    agent_control: dict[str, Any]
 
     # Event accumulation - reset each execution
-    status_updates: List[Dict[str, Any]]
-    progress_events: List[Dict[str, Any]]
+    status_updates: list[dict[str, Any]]
+    progress_events: list[dict[str, Any]]
 
     # Task processing fields
-    task_current_task: Optional[str]
+    task_current_task: str | None
     task_depends_on_chat_history: bool
     task_depends_on_user_memory: bool
-    task_custom_message: Optional[str]
+    task_custom_message: str | None
 
     # Planning fields
-    planning_active_capabilities: List[str]
-    planning_execution_plan: Optional[ExecutionPlan]
+    planning_active_capabilities: list[str]
+    planning_execution_plan: ExecutionPlan | None
     planning_current_step_index: int
 
     # Execution fields
-    execution_step_results: Dict[str, Any]
-    execution_last_result: Optional[ExecutionResult]
-    execution_pending_approvals: Dict[str, ApprovalRequest]
-    execution_start_time: Optional[float]
-    execution_total_time: Optional[float]
+    execution_step_results: dict[str, Any]
+    execution_last_result: ExecutionResult | None
+    execution_pending_approvals: dict[str, ApprovalRequest]
+    execution_start_time: float | None
+    execution_total_time: float | None
 
     # Approval handling fields (for interrupt flows)
-    approval_approved: Optional[bool]  # True/False/None for approved/rejected/no-approval
-    approved_payload: Optional[Dict[str, Any]]  # Direct payload access
+    approval_approved: bool | None  # True/False/None for approved/rejected/no-approval
+    approved_payload: dict[str, Any] | None  # Direct payload access
 
     # Control flow fields
-    control_reclassification_reason: Optional[str]
+    control_reclassification_reason: str | None
     control_reclassification_count: int
     control_plans_created_count: int           # Number of plans created by orchestrator for current task
     control_current_step_retry_count: int
     control_retry_count: int  # Total retry count for current capability
     control_has_error: bool  # Error state for manual retry handling
-    control_error_info: Optional[Dict[str, Any]]  # Error details for retry logic
-    control_last_error: Optional[Dict[str, Any]]  # Last error information for retry logic
+    control_error_info: dict[str, Any] | None  # Error details for retry logic
+    control_last_error: dict[str, Any] | None  # Last error information for retry logic
     control_max_retries: int  # Maximum retries (typically 3)
 
     control_is_killed: bool
-    control_kill_reason: Optional[str]
+    control_kill_reason: str | None
     control_is_awaiting_validation: bool
-    control_validation_context: Optional[Dict[str, Any]]
-    control_validation_timestamp: Optional[float]
+    control_validation_context: dict[str, Any] | None
+    control_validation_timestamp: float | None
 
     # UI result fields
-    ui_captured_notebooks: List[Dict[str, Any]]  # Centralized notebook registry for displaying notebooks in the UI
-    ui_captured_figures: List[Dict[str, Any]]  # Centralized figure registry for displaying figures in the UI
-    ui_launchable_commands: List[Dict[str, Any]]  # Centralized command registry for displaying launchable commands in the UI
-    ui_agent_context: Optional[Dict[str, Any]]
+    ui_captured_notebooks: list[dict[str, Any]]  # Centralized notebook registry for displaying notebooks in the UI
+    ui_captured_figures: list[dict[str, Any]]  # Centralized figure registry for displaying figures in the UI
+    ui_launchable_commands: list[dict[str, Any]]  # Centralized command registry for displaying launchable commands in the UI
+    ui_agent_context: dict[str, Any] | None
 
     # Runtime metadata fields
-    runtime_checkpoint_metadata: Optional[Dict[str, Any]]
-    runtime_info: Optional[Dict[str, Any]]
+    runtime_checkpoint_metadata: dict[str, Any] | None
+    runtime_info: dict[str, Any] | None
 
 
 # ===== UTILITY FUNCTIONS FOR EVENT UPDATES =====
 
-def create_status_update(message: str, progress: float, complete: bool = False, **metadata) -> Dict[str, Any]:
+def create_status_update(message: str, progress: float, complete: bool = False, **metadata) -> dict[str, Any]:
     """Create a status update event for LangGraph state integration.
 
     This utility function creates properly formatted status update events that can be
@@ -377,7 +375,7 @@ def create_status_update(message: str, progress: float, complete: bool = False, 
     }
 
 
-def create_progress_event(current: int, total: int, operation: str, **metadata) -> Dict[str, Any]:
+def create_progress_event(current: int, total: int, operation: str, **metadata) -> dict[str, Any]:
     """Create a progress tracking event for LangGraph state integration.
 
     This utility function creates properly formatted progress events that track
@@ -453,4 +451,4 @@ def create_progress_event(current: int, total: int, operation: str, **metadata) 
 
 
 # Type aliases for convenience
-StateUpdate = Dict[str, Any] 
+StateUpdate = dict[str, Any]

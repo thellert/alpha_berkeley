@@ -61,23 +61,24 @@ Examples:
    :func:`render_template` : Template processing engine
 """
 
-import os
-import sys
 import argparse
-import subprocess
+import os
 import shutil
-import yaml
+import subprocess
+import sys
 from pathlib import Path
+
+import yaml
 from jinja2 import Environment, FileSystemLoader
 
+from osprey.deployment.runtime_helper import (
+    get_ps_command,
+    get_runtime_command,
+    verify_runtime_is_running,
+)
 from osprey.utils.config import ConfigBuilder
 from osprey.utils.log_filter import quiet_logger
 from osprey.utils.logger import get_logger
-from osprey.deployment.runtime_helper import (
-    get_runtime_command,
-    get_ps_command,
-    verify_runtime_is_running,
-)
 
 # Initialize component logger for deployment operations
 logger = get_logger("deployment")
@@ -255,20 +256,20 @@ def _inject_project_metadata(config):
     :rtype: dict
     """
     import datetime
-    
+
     # Extract project name with priority order
     project_name = config.get('project_name')
-    
+
     if not project_name:
         # Fallback: Extract from project_root path
         project_root = config.get('project_root', '')
         if project_root:
             project_name = os.path.basename(project_root.rstrip('/'))
-    
+
     if not project_name:
         # Final fallback: Default
         project_name = 'unnamed-project'
-    
+
     # Create enhanced config with label metadata
     config_with_labels = config.copy()
     config_with_labels['osprey_labels'] = {
@@ -276,7 +277,7 @@ def _inject_project_metadata(config):
         'project_root': config.get('project_root', os.getcwd()),
         'deployed_at': datetime.datetime.now().isoformat(),
     }
-    
+
     return config_with_labels
 
 
@@ -336,7 +337,7 @@ def render_template(template_path, config, out_dir):
     """
     env = Environment(loader=FileSystemLoader("."))
     template = env.get_template(template_path)
-    
+
     # Inject project metadata for container labels
     config_dict = _inject_project_metadata(config)
     rendered_content = template.render(config_dict)
@@ -375,8 +376,9 @@ def _copy_local_framework_for_override(out_dir):
     """
     try:
         # Try to import osprey to get its location
-        import osprey
         from pathlib import Path
+
+        import osprey
 
         # Get the osprey source root
         osprey_module_path = Path(osprey.__file__).parent
@@ -499,7 +501,7 @@ def _ensure_agent_data_structure(config):
     # Create all configured subdirectories
     subdirs = [
         'executed_python_scripts_dir',
-        'execution_plans_dir', 
+        'execution_plans_dir',
         'user_memory_dir',
         'registry_exports_dir',
         'prompts_dir',
@@ -589,7 +591,7 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
        :func:`render_kernel_templates` : Kernel template processing
        :class:`configs.config.ConfigBuilder` : Configuration flattening
     """
-    # Create the build directory for this service 
+    # Create the build directory for this service
     source_dir = os.path.relpath(os.path.dirname(template_path), os.getcwd())
 
     # Extract service name from the path for container path resolution
@@ -1158,9 +1160,11 @@ def show_status(config_path):
     :type config_path: str
     """
     try:
-        from rich.table import Table
         import json
-        from osprey.cli.styles import console, Styles
+
+        from rich.table import Table
+
+        from osprey.cli.styles import Styles, console
 
         with quiet_logger(['REGISTRY', 'CONFIG']):
             config = ConfigBuilder(config_path)
@@ -1171,7 +1175,7 @@ def show_status(config_path):
     # Get deployed services and current project name
     deployed_services = config.get('deployed_services', [])
     deployed_service_names = [str(service) for service in deployed_services] if deployed_services else []
-    
+
     # Determine current project name (same logic as _inject_project_metadata)
     current_project = config.get('project_name')
     if not current_project:
@@ -1189,12 +1193,12 @@ def show_status(config_path):
             text=True,
             timeout=10
         )
-        
+
         if result.returncode != 0:
-            console.print(f"\n[red]Error: Could not query container status[/red]")
+            console.print("\n[red]Error: Could not query container status[/red]")
             console.print(f"[dim]Command failed with return code {result.returncode}[/dim]\n")
             return
-        
+
         # Parse newline-separated JSON objects (Docker format) or JSON array (Podman format)
         all_containers = []
         if result.stdout.strip():
@@ -1206,12 +1210,12 @@ def show_status(config_path):
                 for line in result.stdout.strip().split('\n'):
                     if line.strip():
                         all_containers.append(json.loads(line))
-        
+
     except subprocess.TimeoutExpired:
         console.print("\n[red]Error: Container query timed out[/red]\n")
         return
     except json.JSONDecodeError as e:
-        console.print(f"\n[red]Error: Could not parse container data[/red]")
+        console.print("\n[red]Error: Could not parse container data[/red]")
         console.print(f"[dim]{e}[/dim]\n")
         return
     except Exception as e:
@@ -1221,12 +1225,12 @@ def show_status(config_path):
     # Separate containers into project and non-project
     project_containers = []
     other_containers = []
-    
+
     for container in all_containers:
         # Extract project label
         labels = container.get("Labels", {})
         container_project = "unknown"
-        
+
         if isinstance(labels, dict):
             container_project = labels.get("osprey.project.name", "unknown")
         elif isinstance(labels, str):
@@ -1236,22 +1240,22 @@ def show_status(config_path):
                     if key.strip() == "osprey.project.name":
                         container_project = value.strip()
                         break
-        
+
         # Check if container belongs to this project
         belongs_to_project = container_project == current_project
-        
+
         # Also check if container name matches any deployed service (for backward compatibility)
         names = container.get("Names", [])
         if isinstance(names, list):
             names_str = " ".join(str(n) for n in names).lower()
         else:
             names_str = str(names).lower()
-        
+
         matches_service = any(
-            service.split('.')[-1].lower() in names_str 
+            service.split('.')[-1].lower() in names_str
             for service in deployed_service_names
         )
-        
+
         if belongs_to_project or matches_service:
             project_containers.append(container)
         else:
@@ -1269,7 +1273,7 @@ def show_status(config_path):
         table.add_column("Ports", style=Styles.INFO)
         table.add_column("Image", style=Styles.DIM)
         return table
-    
+
     def _add_container_to_table(table, container):
         """Add a container as a row in the status table."""
         # Extract container name
@@ -1278,7 +1282,7 @@ def show_status(config_path):
             container_name = names[0]
         else:
             container_name = str(names) if names else "unknown"
-        
+
         # Extract project label
         labels = container.get("Labels", {})
         project_name = "unknown"
@@ -1291,11 +1295,11 @@ def show_status(config_path):
                     if key.strip() == "osprey.project.name":
                         project_name = value.strip()
                         break
-        
+
         # Truncate long project names
         if len(project_name) > 12:
             project_name = project_name[:9] + "..."
-        
+
         # Format status
         state = container.get("State", "unknown")
         if state == "running":
@@ -1306,7 +1310,7 @@ def show_status(config_path):
             status = f"[{Styles.WARNING}]● Restarting[/{Styles.WARNING}]"
         else:
             status = f"[{Styles.DIM}]● {state}[/{Styles.DIM}]"
-        
+
         # Format ports
         ports_raw = container.get("Ports", [])
         port_list = []
@@ -1316,26 +1320,26 @@ def show_status(config_path):
                     # Handle different port format variations
                     # podman ps format: host_port, container_port
                     # compose ps format: PublishedPort, TargetPort
-                    published = (port.get("host_port") or 
-                                port.get("PublishedPort") or 
+                    published = (port.get("host_port") or
+                                port.get("PublishedPort") or
                                 port.get("published", ""))
-                    target = (port.get("container_port") or 
-                             port.get("TargetPort") or 
+                    target = (port.get("container_port") or
+                             port.get("TargetPort") or
                              port.get("target", ""))
                     if published and target:
                         port_list.append(f"{published}→{target}")
         ports = ", ".join(port_list) if port_list else "-"
-        
+
         # Get image
         image = container.get("Image", "unknown")
         if len(image) > 40:
             image = "..." + image[-37:]
-        
+
         table.add_row(container_name, project_name, status, ports, image)
 
     # Display project containers
-    console.print(f"\n[bold]Service Status:[/bold]")
-    
+    console.print("\n[bold]Service Status:[/bold]")
+
     if project_containers:
         table = _create_status_table()
         for container in project_containers:
@@ -1347,15 +1351,15 @@ def show_status(config_path):
             console.print(f"[dim]Configured services: {', '.join(deployed_service_names)}[/dim]")
         console.print("\n[info]Start services with:[/info]")
         console.print("  • [command]osprey deploy up[/command]")
-    
+
     # Display other osprey containers
     if other_containers:
-        console.print(f"\n[bold]Other Osprey Containers:[/bold]")
+        console.print("\n[bold]Other Osprey Containers:[/bold]")
         other_table = _create_status_table()
         for container in other_containers:
             _add_container_to_table(other_table, container)
         console.print(other_table)
-    
+
     console.print()
 
 

@@ -1,4 +1,4 @@
-"""Flexible logging filter utilities for dynamic log suppression and control.
+r"""Flexible logging filter utilities for dynamic log suppression and control.
 
 This module provides utilities for fine-grained control over Python's logging output,
 allowing selective suppression or filtering of log messages based on logger name,
@@ -61,7 +61,7 @@ Examples:
 import logging
 import re
 from contextlib import contextmanager
-from typing import List, Optional, Set, Pattern, Union
+from re import Pattern
 
 
 class LoggerFilter(logging.Filter):
@@ -93,13 +93,13 @@ class LoggerFilter(logging.Filter):
 
     def __init__(
         self,
-        logger_names: Optional[List[str]] = None,
-        message_patterns: Optional[List[str]] = None,
-        levels: Optional[List[int]] = None,
+        logger_names: list[str] | None = None,
+        message_patterns: list[str] | None = None,
+        levels: list[int] | None = None,
         invert: bool = False,
         name: str = ""
     ):
-        """Initialize the log filter with filtering criteria.
+        r"""Initialize the log filter with filtering criteria.
 
         Args:
             logger_names: List of logger names to filter. If None or empty,
@@ -144,15 +144,15 @@ class LoggerFilter(logging.Filter):
         super().__init__(name=name)
 
         # Convert logger_names to set for O(1) lookup
-        self.logger_names: Set[str] = set(logger_names or [])
+        self.logger_names: set[str] = set(logger_names or [])
 
         # Compile message patterns for efficient matching
-        self.message_patterns: List[Pattern] = [
+        self.message_patterns: list[Pattern] = [
             re.compile(pattern) for pattern in (message_patterns or [])
         ]
 
         # Convert levels to set for O(1) lookup
-        self.levels: Set[int] = set(levels or [])
+        self.levels: set[int] = set(levels or [])
 
         # Invert flag for "show only" logic
         self.invert = invert
@@ -228,9 +228,9 @@ class LoggerFilter(logging.Filter):
 
 @contextmanager
 def suppress_logger(
-    logger_name: Union[str, List[str]],
-    levels: Optional[List[int]] = None,
-    message_patterns: Optional[List[str]] = None
+    logger_name: str | list[str],
+    levels: list[int] | None = None,
+    message_patterns: list[str] | None = None
 ):
     """Context manager to temporarily suppress logger output.
 
@@ -304,7 +304,7 @@ def suppress_logger(
 
 @contextmanager
 def suppress_logger_level(
-    logger_name: Union[str, List[str]],
+    logger_name: str | list[str],
     level: int
 ):
     """Context manager to temporarily raise logger level to suppress messages.
@@ -369,7 +369,7 @@ def suppress_logger_level(
 
 
 @contextmanager
-def quiet_logger(logger_name: Union[str, List[str]]):
+def quiet_logger(logger_name: str | list[str]):
     """Context manager to temporarily suppress INFO-level messages from logger(s).
 
     This is a convenience wrapper around suppress_logger_level() that specifically

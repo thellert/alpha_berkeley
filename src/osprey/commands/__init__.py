@@ -18,45 +18,37 @@ Usage:
     result = await execute_command("/task:off", context)
 """
 
+from .categories import (
+    register_agent_control_commands,
+    register_cli_commands,
+    register_service_commands,
+)
 from .registry import (
     CommandRegistry,
-    get_command_registry,
-    register_command,
     execute_command,
-    parse_command_line
+    get_command_registry,
+    parse_command_line,
+    register_command,
 )
-
-from .types import (
-    Command,
-    CommandResult,
-    CommandCategory,
-    CommandContext,
-    CommandHandler
-)
-
-from .categories import (
-    register_cli_commands,
-    register_agent_control_commands,
-    register_service_commands
-)
+from .types import Command, CommandCategory, CommandContext, CommandHandler, CommandResult
 
 __all__ = [
     # Core system
     'CommandRegistry',
-    'get_command_registry', 
+    'get_command_registry',
     'register_command',
     'execute_command',
     'parse_command_line',
 
     # Types
     'Command',
-    'CommandResult', 
+    'CommandResult',
     'CommandCategory',
     'CommandContext',
     'CommandHandler',
 
     # Command categories
     'register_cli_commands',
-    'register_agent_control_commands', 
+    'register_agent_control_commands',
     'register_service_commands'
 ]

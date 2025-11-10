@@ -45,13 +45,12 @@ The message utilities are designed for use throughout the framework:
 """
 
 from __future__ import annotations
-from typing import List, Optional, Dict, Any
+
 from dataclasses import dataclass
 from datetime import datetime
 
 # LangGraph native message types for checkpointing compatibility
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
-from typing_extensions import TypedDict
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 
 class MessageUtils:
@@ -85,19 +84,19 @@ class MessageUtils:
     """
 
     @staticmethod
-    def create_user_message(content: str, timestamp: Optional[datetime] = None) -> HumanMessage:
+    def create_user_message(content: str, timestamp: datetime | None = None) -> HumanMessage:
         """Create a user message with optional timestamp metadata."""
         metadata = {"timestamp": timestamp.isoformat()} if timestamp else {}
         return HumanMessage(content=content, additional_kwargs=metadata)
 
     @staticmethod
-    def create_assistant_message(content: str, timestamp: Optional[datetime] = None) -> AIMessage:
+    def create_assistant_message(content: str, timestamp: datetime | None = None) -> AIMessage:
         """Create an assistant message with optional timestamp metadata."""
         metadata = {"timestamp": timestamp.isoformat()} if timestamp else {}
         return AIMessage(content=content, additional_kwargs=metadata)
 
     @staticmethod
-    def get_timestamp(message: BaseMessage) -> Optional[datetime]:
+    def get_timestamp(message: BaseMessage) -> datetime | None:
         """Extract timestamp from message metadata."""
         timestamp_str = message.additional_kwargs.get("timestamp")
         if timestamp_str:
@@ -118,7 +117,7 @@ class ChatHistoryFormatter:
     """Formatting utilities for chat history using native message types."""
 
     @staticmethod
-    def format_for_llm(messages: List[BaseMessage]) -> str:
+    def format_for_llm(messages: list[BaseMessage]) -> str:
         """Format the entire chat history for LLM consumption.
 
         Creates a numbered, formatted representation of all messages in the
@@ -140,7 +139,7 @@ class ChatHistoryFormatter:
         return "\n".join(formatted_messages)
 
     @staticmethod
-    def get_latest_user_message(messages: List[BaseMessage]) -> Optional[str]:
+    def get_latest_user_message(messages: list[BaseMessage]) -> str | None:
         """Get the content of the most recent user message.
 
         Searches the message history in reverse order to find the most recent
@@ -155,7 +154,7 @@ class ChatHistoryFormatter:
         return None
 
     @staticmethod
-    def format_for_prompt(messages: List[BaseMessage]) -> str:
+    def format_for_prompt(messages: list[BaseMessage]) -> str:
         """Format chat history for inclusion in prompts.
 
         Creates a well-formatted representation of the chat history optimized
@@ -203,7 +202,7 @@ class UserMemories:
     :param entries: List of memory entry strings
     :type entries: list[str]
     """
-    entries: List[str]
+    entries: list[str]
 
     def __bool__(self) -> bool:
         """Check if memory has any entries.

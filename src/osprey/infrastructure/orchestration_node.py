@@ -6,38 +6,38 @@ Convention-based implementation with native LangGraph interrupt support.
 """
 
 from __future__ import annotations
-import time
-import json
-import datetime
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
-from pathlib import Path
-import asyncio
 
+import asyncio
+import datetime
+import json
+import time
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from langgraph.types import interrupt
+
+from osprey.approval.approval_system import (
+    clear_approval_state,
+    create_approval_type,
+    create_plan_approval_interrupt,
+    get_approval_resume_data,
+)
 from osprey.base.decorators import infrastructure_node
 from osprey.base.errors import ErrorClassification, ErrorSeverity, ReclassificationRequiredError
 from osprey.base.nodes import BaseInfrastructureNode
 from osprey.base.planning import ExecutionPlan, PlannedStep
-from osprey.base import BaseCapability
-
+from osprey.context.context_manager import ContextManager
+from osprey.models import get_chat_completion
+from osprey.prompts.loader import get_framework_prompts
+from osprey.registry import get_registry
 from osprey.state import AgentState
 from osprey.state.state import create_status_update
-from osprey.registry import get_registry
-from osprey.context.context_manager import ContextManager
+from osprey.state.state_manager import StateManager
+from osprey.utils.config import get_agent_dir, get_model_config
+
 # Factory code consolidated inline as helper function
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.utils.config import get_model_config, get_agent_dir
-from osprey.models import get_chat_completion
-from osprey.prompts.loader import get_framework_prompts
-
-from langgraph.types import interrupt
-from osprey.state.state_manager import StateManager
-from osprey.approval.approval_system import (
-    create_plan_approval_interrupt, 
-    get_approval_resume_data,
-    clear_approval_state,
-    create_approval_type
-)
 
 if TYPE_CHECKING:
     from osprey.base.errors import ErrorClassification
@@ -150,7 +150,7 @@ class OrchestrationNode(BaseInfrastructureNode):
     - Sophisticated error handling for LLM operations
     """
 
-    name = "orchestrator" 
+    name = "orchestrator"
     description = "Execution Planning and Orchestration"
 
     @staticmethod
@@ -217,7 +217,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         )
 
     @staticmethod
-    def get_retry_policy() -> Dict[str, Any]:
+    def get_retry_policy() -> dict[str, Any]:
         """Custom retry policy for LLM-based orchestration operations.
 
         Orchestration uses LLM calls heavily and can be flaky due to:
@@ -236,9 +236,9 @@ class OrchestrationNode(BaseInfrastructureNode):
 
     @staticmethod
     async def execute(
-        state: AgentState, 
+        state: AgentState,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create execution plans with LangGraph native interrupt support.
 
         This implementation creates execution plans from task requirements and
@@ -385,19 +385,19 @@ class OrchestrationNode(BaseInfrastructureNode):
                 raise ValueError("No prompt text generated. The instructions will be empty.")
 
             # Count total examples across all capabilities
-            total_examples = sum(len(cap.orchestrator_guide.examples) for cap in active_capabilities 
+            total_examples = sum(len(cap.orchestrator_guide.examples) for cap in active_capabilities
                                if cap.orchestrator_guide and hasattr(cap.orchestrator_guide, 'examples'))
 
             # Get context data from ContextManager
             raw_data = context_manager.get_raw_data()
             context_types = len(raw_data) if raw_data else 0
 
-            logger.info(f"Constructed orchestrator instructions using:")
+            logger.info("Constructed orchestrator instructions using:")
             logger.info(f" - {len(active_capabilities)} capabilities")
             logger.info(f" - {total_examples} structured examples")
             logger.info(f" - {context_types} context types from state")
             if error_context:
-                logger.info(f" - Error context for replanning (previous failure analysis)")
+                logger.info(" - Error context for replanning (previous failure analysis)")
 
             logger.debug(f"\n\n\n------------Orchestrator System Prompt:\n{system_instructions}\n------------\n\n\n")
 
@@ -476,7 +476,7 @@ class OrchestrationNode(BaseInfrastructureNode):
 # BUSINESS LOGIC HELPERS
 # =============================================================================
 
-def _clear_error_state() -> Dict[str, Any]:
+def _clear_error_state() -> dict[str, Any]:
     """Clear error state to prevent router from staying in retry handling mode.
 
     When orchestrator creates a new plan, we need to clear previous error state
@@ -510,11 +510,11 @@ def _log_execution_plan(execution_plan: ExecutionPlan, logger):
 
 
 def _save_execution_plan_to_file(
-    execution_plan: ExecutionPlan, 
-    current_task: str, 
+    execution_plan: ExecutionPlan,
+    current_task: str,
     state: AgentState,
     logger = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Save execution plan to JSON file for human approval workflow.
 
     Args:
@@ -572,7 +572,7 @@ def _save_execution_plan_to_file(
         }
 
 
-def _load_execution_plan_from_file(logger = None) -> Dict[str, Any]:
+def _load_execution_plan_from_file(logger = None) -> dict[str, Any]:
     """Load execution plan from JSON file after human approval.
 
     Args:
@@ -589,7 +589,7 @@ def _load_execution_plan_from_file(logger = None) -> Dict[str, Any]:
         # Try to load modified plan first (if user modified the plan)
         modified_plan_file = pending_plans_dir / "modified_execution_plan.json"
         if modified_plan_file.exists():
-            with open(modified_plan_file, 'r', encoding='utf-8') as f:
+            with open(modified_plan_file, encoding='utf-8') as f:
                 plan_data = json.load(f)
 
             if logger:
@@ -605,7 +605,7 @@ def _load_execution_plan_from_file(logger = None) -> Dict[str, Any]:
         # Fall back to original pending plan
         pending_plan_file = pending_plans_dir / "pending_execution_plan.json"
         if pending_plan_file.exists():
-            with open(pending_plan_file, 'r', encoding='utf-8') as f:
+            with open(pending_plan_file, encoding='utf-8') as f:
                 plan_data = json.load(f)
 
             if logger:
@@ -719,7 +719,7 @@ def _is_planning_mode_enabled(state: AgentState) -> bool:
 
 
 
-def _create_state_updates(state: AgentState, execution_plan: ExecutionPlan, approach: str) -> Dict[str, Any]:
+def _create_state_updates(state: AgentState, execution_plan: ExecutionPlan, approach: str) -> dict[str, Any]:
     """Create state updates based on orchestration results using proper LangGraph merging."""
 
     # Direct planning state update

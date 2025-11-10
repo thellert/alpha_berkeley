@@ -1,8 +1,9 @@
 """Anthropic Provider Adapter Implementation."""
 
-from typing import Optional, Any, Union
-import httpx
+from typing import Any
+
 import anthropic
+import httpx
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.providers.anthropic import AnthropicProvider as PydanticAnthropicProvider
 
@@ -21,7 +22,7 @@ class AnthropicProviderAdapter(BaseProvider):
     supports_proxy = True
     default_base_url = None
     default_model_id = "claude-sonnet-4-5"
-    health_check_model_id = "claude-sonnet-4-5" 
+    health_check_model_id = "claude-sonnet-4-5"
     available_models = [
         "claude-opus-4-1",
         "claude-sonnet-4-5",
@@ -31,10 +32,10 @@ class AnthropicProviderAdapter(BaseProvider):
     def create_model(
         self,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
-        timeout: Optional[float],
-        http_client: Optional[httpx.AsyncClient]
+        api_key: str | None,
+        base_url: str | None,
+        timeout: float | None,
+        http_client: httpx.AsyncClient | None
     ) -> AnthropicModel:
         """Create Anthropic model instance for PydanticAI."""
         provider = PydanticAnthropicProvider(
@@ -50,15 +51,15 @@ class AnthropicProviderAdapter(BaseProvider):
         self,
         message: str,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         max_tokens: int = 1024,
         temperature: float = 0.0,
-        thinking: Optional[dict] = None,
-        system_prompt: Optional[str] = None,
-        output_format: Optional[Any] = None,
+        thinking: dict | None = None,
+        system_prompt: str | None = None,
+        output_format: Any | None = None,
         **kwargs
-    ) -> Union[str, list]:
+    ) -> str | list:
         """Execute Anthropic chat completion with extended thinking support."""
         # Get http_client if provided (for proxy support)
         http_client = kwargs.get("http_client")
@@ -94,17 +95,17 @@ class AnthropicProviderAdapter(BaseProvider):
         else:
             # Concatenate text from all TextBlock instances
             text_parts = [
-                block.text for block in response.content 
+                block.text for block in response.content
                 if isinstance(block, anthropic.types.TextBlock)
             ]
             return "\n".join(text_parts)
 
     def check_health(
         self,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         timeout: float = 5.0,
-        model_id: Optional[str] = None
+        model_id: str | None = None
     ) -> tuple[bool, str]:
         """Check Anthropic API health with minimal test call.
 
@@ -142,7 +143,7 @@ class AnthropicProviderAdapter(BaseProvider):
         except anthropic.RateLimitError:
             # Rate limited = API key works, just hitting limits
             return True, "API key valid (rate limited, but functional)"
-        except anthropic.NotFoundError as e:
+        except anthropic.NotFoundError:
             # Model not found - API key works but model doesn't exist
             return False, f"Model '{test_model}' not found (check model ID)"
         except anthropic.BadRequestError as e:

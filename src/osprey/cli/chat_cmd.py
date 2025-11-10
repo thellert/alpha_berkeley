@@ -8,14 +8,15 @@ IMPORTANT: This is a thin wrapper around osprey.interfaces.cli.direct_conversati
 All existing functionality is preserved without modification.
 """
 
-import click
 import asyncio
+
+import click
+
+# Import centralized styles
+from osprey.cli.styles import Styles, console
 
 # Import existing CLI interface
 from osprey.interfaces.cli.direct_conversation import run_cli
-
-# Import centralized styles
-from osprey.cli.styles import console, Styles
 
 
 @click.command()

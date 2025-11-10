@@ -4,11 +4,11 @@ Mock APIs for Wind Turbine Monitoring
 Simulate external services for development and testing.
 """
 
-import asyncio
 import math
-from typing import List, Dict
 from datetime import datetime
+
 from pydantic import BaseModel
+
 
 def get_wind_speed(timestamp: datetime) -> float:
     """Generate predictable wind speed pattern for tutorial purposes."""
@@ -42,13 +42,13 @@ class TurbineSensorAPI:
         # Knowledge thresholds: Excellent >85%, Good 75-85%, Maintenance <75%, Critical <70%
         self.turbine_efficiency_factors = {
             "T-001": 0.90,   # Excellent: above 85% threshold
-            "T-002": 0.72,   # Below maintenance: under 75% threshold  
+            "T-002": 0.72,   # Below maintenance: under 75% threshold
             "T-003": 0.88,   # Excellent: above 85% threshold
             "T-004": 0.65,   # Critical: under 70% economic threshold
             "T-005": 0.82,   # Good: between 75-85% thresholds
         }
 
-    async def get_historical_data(self, start_time: datetime, end_time: datetime) -> List[Dict]:
+    async def get_historical_data(self, start_time: datetime, end_time: datetime) -> list[dict]:
         """Get historical turbine data for time range."""
         readings = []
 
@@ -83,7 +83,7 @@ class TurbineSensorAPI:
 class WeatherAPI:
     """Mock weather service for wind conditions."""
 
-    async def get_weather_history(self, start_time: datetime, end_time: datetime) -> List[Dict]:
+    async def get_weather_history(self, start_time: datetime, end_time: datetime) -> list[dict]:
         """Get historical weather data for time range."""
         readings = []
 
@@ -103,6 +103,6 @@ class WeatherAPI:
         return readings
 
 
-# Global instances  
+# Global instances
 turbine_api = TurbineSensorAPI()
-weather_api = WeatherAPI() 
+weather_api = WeatherAPI()

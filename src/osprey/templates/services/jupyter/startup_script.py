@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Jupyter Startup Script for ALS Agent Environment
 
@@ -7,10 +6,10 @@ for safe EPICS operations based on the execution mode.
 """
 
 import logging
-import sys
 import os
+import sys
+import traceback  # Ensure traceback is imported for the final except block
 from pathlib import Path
-import traceback # Ensure traceback is imported for the final except block
 
 # Try to configure logging, but don't fail if we can't write the log file
 log_file_path = '/home/jovyan/work/startup_script.log'
@@ -76,9 +75,9 @@ def print_environment_info():
 
 # Make common imports available
 try:
+    import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
-    import matplotlib.pyplot as plt
     print("✓ Standard scientific libraries loaded")
     import epics
     print("✓ EPICS library loaded and ready")
@@ -195,7 +194,7 @@ print_environment_info()
 print("Environment setup complete. Ready for agent-generated code execution.")
 print("")
 print("🛠️  AVAILABLE HELPER FUNCTIONS:")
-print("   📋 kernel_info() - Check current kernel mode and capabilities")  
+print("   📋 kernel_info() - Check current kernel mode and capabilities")
 print("   📊 get_archiver_data(pv_list, start_date, end_date) - Retrieve archived data")
 print("   ✏️  epics.caput() or caput() - Enhanced with user-friendly error messages")
 

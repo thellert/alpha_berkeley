@@ -11,17 +11,20 @@ Architecture:
 """
 
 from __future__ import annotations
+
 import time
-from typing import Optional, TYPE_CHECKING, Dict, Any
+from typing import Any
+
+from osprey.base.decorators import infrastructure_node
+from osprey.base.errors import ErrorSeverity
+from osprey.base.nodes import BaseInfrastructureNode
+from osprey.registry import get_registry
 
 # Fixed import to use new TypedDict state
 from osprey.state import AgentState, StateManager
-from osprey.base.decorators import infrastructure_node
-from osprey.base.nodes import BaseInfrastructureNode
-from osprey.base.errors import ErrorSeverity
-from osprey.registry import get_registry
-from osprey.utils.logger import get_logger
 from osprey.utils.config import get_execution_limits
+from osprey.utils.logger import get_logger
+
 
 @infrastructure_node(quiet=True)
 class RouterNode(BaseInfrastructureNode):
@@ -38,7 +41,7 @@ class RouterNode(BaseInfrastructureNode):
     description = "Central routing decision authority"
 
     @staticmethod
-    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+    async def execute(state: AgentState, **kwargs) -> dict[str, Any]:
         """Router node execution - updates routing metadata only.
 
         This node serves as the entry point and routing hub, but does no routing logic itself.

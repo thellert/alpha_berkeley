@@ -8,7 +8,7 @@ environment-specific adaptations.
 
 import textwrap
 from pathlib import Path
-from typing import Optional, Dict, Any
+
 from osprey.utils.logger import get_logger
 
 logger = get_logger("execution_wrapper")
@@ -38,9 +38,9 @@ class ExecutionWrapper:
         self.execution_mode = execution_mode
 
     def create_wrapper(
-        self, 
-        user_code: str, 
-        execution_folder: Optional[Path] = None
+        self,
+        user_code: str,
+        execution_folder: Path | None = None
     ) -> str:
         """
         Create complete wrapped Python script.
@@ -66,7 +66,7 @@ class ExecutionWrapper:
         wrapped_code = "\n".join([
             imports,
             environment_setup,
-            metadata_init, 
+            metadata_init,
             context_loading,
             output_capture_start,
             user_code_section,
@@ -121,12 +121,12 @@ except:
 
         return textwrap.dedent(imports).strip()
 
-    def _get_environment_setup(self, execution_folder: Optional[Path]) -> str:
+    def _get_environment_setup(self, execution_folder: Path | None) -> str:
         """Get environment-specific setup code."""
 
         if self.execution_mode == "local":
             # Local execution needs sys.path setup and directory changes
-            setup = f"""
+            setup = """
 # Local execution environment setup
 import sys
 from pathlib import Path
@@ -146,7 +146,7 @@ if project_root:
     src_path = str(project_root / "src")
     if src_path not in sys.path:
         sys.path.insert(0, src_path)
-        print(f"✅ Added framework path to sys.path: {{src_path}}")
+        print(f"✅ Added framework path to sys.path: {src_path}")
 else:
     print("⚠️ Could not locate framework src directory")
 
@@ -155,7 +155,7 @@ try:
     from osprey.registry import initialize_registry, get_registry
     initialize_registry(auto_export=False)  # Initialize without export for performance
 except Exception as e:
-    print(f"Registry initialization failed: {{e}}", file=sys.stderr)
+    print(f"Registry initialization failed: {e}", file=sys.stderr)
     print("Context loading may not work properly", file=sys.stderr)
 """
 
@@ -388,7 +388,7 @@ print(f"Container working directory: {{Path.cwd()}}")
         # Add host output section if needed (with proper indentation)
         if host_output_section:
             # Add proper indentation for the host output section (4 spaces to match finally block)
-            indented_host_section = "\n".join("    " + line if line.strip() else line 
+            indented_host_section = "\n".join("    " + line if line.strip() else line
                                             for line in host_output_section.split("\n"))
             parts.append(indented_host_section)
 
@@ -396,7 +396,7 @@ print(f"Container working directory: {{Path.cwd()}}")
 
         # Add proper indentation for metadata error handling
         if metadata_error_handling:
-            indented_error_handling = "\n".join("    " + line if line.strip() else line 
+            indented_error_handling = "\n".join("    " + line if line.strip() else line
                                               for line in metadata_error_handling.split("\n"))
             parts.append(indented_error_handling)
 
@@ -426,5 +426,5 @@ print(f"Container working directory: {{Path.cwd()}}")
 
         # Fallback: log the issue and use the folder name
         logger.warning(f"Host path {host_path} is not under configured executed scripts directory {executed_scripts_base}")
-        logger.warning(f"Using fallback container path mapping")
-        return f"/home/jovyan/work/executed_scripts/{host_path.name}" 
+        logger.warning("Using fallback container path mapping")
+        return f"/home/jovyan/work/executed_scripts/{host_path.name}"

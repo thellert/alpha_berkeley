@@ -1,7 +1,8 @@
 """Base Provider Interface for AI Model Access."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Union
+from typing import Any
+
 import httpx
 
 
@@ -40,19 +41,19 @@ class BaseProvider(ABC):
     requires_base_url: bool = NotImplemented
     requires_model_id: bool = NotImplemented
     supports_proxy: bool = NotImplemented
-    default_base_url: Optional[str] = None
-    default_model_id: Optional[str] = None  # Default model for templates/general use
-    health_check_model_id: Optional[str] = None  # Cheapest model for health checks
+    default_base_url: str | None = None
+    default_model_id: str | None = None  # Default model for templates/general use
+    health_check_model_id: str | None = None  # Cheapest model for health checks
     available_models: list[str] = []  # List of available models for this provider
 
     @abstractmethod
     def create_model(
         self,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
-        timeout: Optional[float],
-        http_client: Optional[httpx.AsyncClient]
+        api_key: str | None,
+        base_url: str | None,
+        timeout: float | None,
+        http_client: httpx.AsyncClient | None
     ) -> Any:
         """Create a model instance for PydanticAI.
 
@@ -73,15 +74,15 @@ class BaseProvider(ABC):
         self,
         message: str,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         max_tokens: int = 1024,
         temperature: float = 0.0,
-        thinking: Optional[dict] = None,
-        system_prompt: Optional[str] = None,
-        output_format: Optional[Any] = None,
+        thinking: dict | None = None,
+        system_prompt: str | None = None,
+        output_format: Any | None = None,
         **kwargs
-    ) -> Union[str, Any]:
+    ) -> str | Any:
         """Execute a direct chat completion.
 
         :param message: User message to send
@@ -101,10 +102,10 @@ class BaseProvider(ABC):
     @abstractmethod
     def check_health(
         self,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         timeout: float = 5.0,
-        model_id: Optional[str] = None
+        model_id: str | None = None
     ) -> tuple[bool, str]:
         """Test provider connectivity and authentication.
 

@@ -59,17 +59,18 @@ Examples:
 """
 
 import json
-import uuid
-import nbformat
 import os
-from pathlib import Path
-from datetime import datetime
 import textwrap
-from typing import Dict, Any, Optional, List
+import uuid
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import nbformat
 
 from osprey.utils.logger import get_logger
-from osprey.context import load_context
-from .models import PythonExecutionContext, PythonExecutionState, NotebookAttempt, NotebookType
+
+from .models import NotebookAttempt, NotebookType, PythonExecutionContext
 
 logger = get_logger("osprey")
 
@@ -190,7 +191,7 @@ class FileManager:
                 ...     results_file = context.folder_path / "results.json"
                 ...     # File operations within the execution folder
         """
-        # Create year-month subdirectory  
+        # Create year-month subdirectory
         now = datetime.now()
         month_dir = self.base_dir / now.strftime("%Y-%m")
         month_dir.mkdir(parents=True, exist_ok=True)
@@ -233,7 +234,7 @@ class FileManager:
         logger.info(f"Created execution folder: {folder_path}")
         return context
 
-    def save_results(self, results: Dict[str, Any], folder_path: Path) -> Path:
+    def save_results(self, results: dict[str, Any], folder_path: Path) -> Path:
         """
         Save results dictionary to JSON file with service-level error handling.
 
@@ -314,7 +315,6 @@ def make_json_serializable(obj: Any) -> Any:
         >>> serializable = make_json_serializable(fig)
         >>> print(serializable['_type'])  # 'matplotlib_figure'
     """
-    import json
     from datetime import datetime
     from pathlib import Path
 
@@ -361,7 +361,7 @@ def make_json_serializable(obj: Any) -> Any:
             return {"real": obj.real, "imag": obj.imag, "_type": "complex"}
 
         # Handle custom objects with to_dict method
-        elif hasattr(obj, 'to_dict') and callable(getattr(obj, 'to_dict')):
+        elif hasattr(obj, 'to_dict') and callable(obj.to_dict):
             return obj.to_dict()
 
         # Default to string representation with type info
@@ -389,8 +389,8 @@ def make_json_serializable(obj: Any) -> Any:
 
 def _is_matplotlib_figure(obj) -> bool:
     """Check if object is a matplotlib figure."""
-    return (hasattr(obj, 'savefig') and 
-            hasattr(obj, 'get_axes') and 
+    return (hasattr(obj, 'savefig') and
+            hasattr(obj, 'get_axes') and
             type(obj).__name__ == 'Figure')
 
 
@@ -456,8 +456,6 @@ def serialize_results_to_file(results: Any, file_path: str) -> dict:
         >>> else:
         >>>     print(f"Serialization failed: {metadata['error']}")
     """
-    import json
-    from pathlib import Path
 
     metadata = {
         "success": False,
@@ -577,8 +575,8 @@ class NotebookManager:
         context: PythonExecutionContext,
         code: str,
         stage: str = "execution",
-        error_context: Optional[str] = None,
-        approval_context: Optional[str] = None,
+        error_context: str | None = None,
+        approval_context: str | None = None,
         silent: bool = False
     ) -> Path:
         """
@@ -640,9 +638,9 @@ class NotebookManager:
         self,
         context: PythonExecutionContext,
         code: str,
-        results: Optional[Dict[str, Any]] = None,
-        error_context: Optional[str] = None,
-        figure_paths: List[Path] = None
+        results: dict[str, Any] | None = None,
+        error_context: str | None = None,
+        figure_paths: list[Path] = None
     ) -> Path:
         """
         Create the final notebook in the execution folder.
@@ -686,9 +684,9 @@ class NotebookManager:
         attempt_number: int,
         stage: str,
         code: str,
-        error_context: Optional[str] = None,
-        approval_context: Optional[str] = None,
-        context_file_path: Optional[Path] = None
+        error_context: str | None = None,
+        approval_context: str | None = None,
+        context_file_path: Path | None = None
     ) -> nbformat.NotebookNode:
         """Create notebook content for attempt notebooks."""
         cells = []
@@ -698,7 +696,7 @@ class NotebookManager:
         header += f"**Stage:** {stage}\n"
         header += f"**Created:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
 
-        if approval_context:    
+        if approval_context:
             header += f"{approval_context}\n\n"
 
         if error_context:
@@ -725,11 +723,11 @@ class NotebookManager:
     def _create_final_notebook_content(
         self,
         code: str,
-        results: Optional[Dict[str, Any]] = None,
-        error_context: Optional[str] = None,
-        context_file_path: Optional[Path] = None,
-        figure_paths: List[Path] = None,
-        execution_folder: Optional[Path] = None
+        results: dict[str, Any] | None = None,
+        error_context: str | None = None,
+        context_file_path: Path | None = None,
+        figure_paths: list[Path] = None,
+        execution_folder: Path | None = None
     ) -> nbformat.NotebookNode:
         """Create notebook content for final notebooks."""
         cells = []
@@ -738,7 +736,7 @@ class NotebookManager:
         if error_context:
             header = f"# Python Executor - Failed Execution\n\n## Error Context\n{error_context}\n\n"
         else:
-            header = f"# Python Executor - Successful Execution\n\nExecution completed successfully.\n\n"
+            header = "# Python Executor - Successful Execution\n\nExecution completed successfully.\n\n"
 
         cells.append(nbformat.v4.new_markdown_cell(header))
 
@@ -785,7 +783,7 @@ print(results)"""
 
                     relative_path = fig_path.relative_to(execution_folder)
                     figures_md += f"### Figure {i}\n![Figure {i}]({relative_path.as_posix()})\n\n"
-                except (ValueError, AttributeError) as e:
+                except (ValueError, AttributeError):
                     # Fallback: use just the filename if relative_to fails
                     fig_name = fig_path.name if hasattr(fig_path, 'name') else str(fig_path).split('/')[-1]
                     figures_md += f"### Figure {i}\n![Figure {i}]({fig_name})\n\n"
@@ -793,4 +791,4 @@ print(results)"""
 
         notebook = nbformat.v4.new_notebook()
         notebook.cells = cells
-        return notebook 
+        return notebook

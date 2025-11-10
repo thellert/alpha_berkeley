@@ -9,7 +9,7 @@ specific application is providing them. This achieves true dependency inversion 
 depends on abstractions, not concrete implementations.
 """
 
-from typing import Dict, Optional
+
 from .base import FrameworkPromptBuilder
 
 
@@ -358,8 +358,8 @@ class FrameworkPromptLoader:
         default provider. The first registered provider automatically becomes
         the default unless explicitly overridden.
         """
-        self._providers: Dict[str, FrameworkPromptProvider] = {}
-        self._default_provider: Optional[str] = None
+        self._providers: dict[str, FrameworkPromptProvider] = {}
+        self._default_provider: str | None = None
 
     def register_provider(self, application_name: str, provider: FrameworkPromptProvider):
         """Register a prompt provider for an application with automatic default selection.
@@ -424,7 +424,7 @@ class FrameworkPromptLoader:
             raise ValueError(f"Provider '{application_name}' not registered")
         self._default_provider = application_name
 
-    def get_provider(self, application_name: Optional[str] = None) -> FrameworkPromptProvider:
+    def get_provider(self, application_name: str | None = None) -> FrameworkPromptProvider:
         """Retrieve prompt provider with fail-fast error handling and clear diagnostics.
 
         Returns the prompt provider for the specified application, or the default
@@ -482,7 +482,7 @@ class FrameworkPromptLoader:
 _prompt_loader = FrameworkPromptLoader()
 
 
-def get_framework_prompts(application_name: Optional[str] = None) -> FrameworkPromptProvider:
+def get_framework_prompts(application_name: str | None = None) -> FrameworkPromptProvider:
     """Access the framework prompt provider system with optional application targeting.
 
     This is the primary entry point for framework components to access prompt

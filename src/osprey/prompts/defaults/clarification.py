@@ -1,10 +1,9 @@
 """Default clarification prompts."""
 
 import textwrap
-from typing import Optional
 
+from osprey.base import OrchestratorExample, OrchestratorGuide, PlannedStep, TaskClassifierGuide
 from osprey.prompts.base import FrameworkPromptBuilder
-from osprey.base import OrchestratorGuide, OrchestratorExample, PlannedStep, TaskClassifierGuide
 
 
 class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
@@ -32,7 +31,7 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
             Generate targeted questions that will help get the specific information needed to provide accurate assistance.
             """).strip()
 
-    def get_orchestrator_guide(self) -> Optional[OrchestratorGuide]:
+    def get_orchestrator_guide(self) -> OrchestratorGuide | None:
         """Create generic orchestrator guide for clarification capability."""
 
         ambiguous_system_example = OrchestratorExample(
@@ -44,7 +43,7 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
                 success_criteria="Specific questions about data type, system, and time range",
                 inputs=[]
             ),
-            scenario_description="Vague data request needing system and parameter clarification", 
+            scenario_description="Vague data request needing system and parameter clarification",
         )
 
         return OrchestratorGuide(
@@ -57,7 +56,7 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
             priority=99  # Should come near the end, but before respond
         )
 
-    def get_classifier_guide(self) -> Optional[TaskClassifierGuide]:
+    def get_classifier_guide(self) -> TaskClassifierGuide | None:
         """Clarify has no classifier guide - it's orchestrator-driven."""
         return None  # Always available, not detected from user intent
 

@@ -83,12 +83,18 @@ Message handling::
    :mod:`osprey.infrastructure.gateway` : Main entry point for state processing
 """
 
-from .state import AgentState, StateUpdate, create_status_update, create_progress_event, merge_capability_context_data
-from .state_manager import StateManager, get_execution_steps_summary
-from .session import SessionContext  # Keep as simple utility
-from .execution import ApprovalRequest  # Keep as dataclass
-from .messages import MessageUtils, ChatHistoryFormatter, UserMemories
 from .control import AgentControlState, apply_slash_commands_to_agent_control_state
+from .execution import ApprovalRequest  # Keep as dataclass
+from .messages import ChatHistoryFormatter, MessageUtils, UserMemories
+from .session import SessionContext  # Keep as simple utility
+from .state import (
+    AgentState,
+    StateUpdate,
+    create_progress_event,
+    create_status_update,
+    merge_capability_context_data,
+)
+from .state_manager import StateManager, get_execution_steps_summary
 
 # Export everything for convenient importing
 __all__ = [

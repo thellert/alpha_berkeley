@@ -2,19 +2,28 @@
 Memory Extraction Prompt Builder - Application-agnostic prompts for memory extraction
 """
 from __future__ import annotations
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
-import textwrap
 
-from osprey.state import MessageUtils, ChatHistoryFormatter, UserMemories
+import textwrap
+from dataclasses import dataclass
+from typing import Any
+
 from langchain_core.messages import BaseMessage
-from ..base import FrameworkPromptBuilder
-from osprey.base import BaseExample
 from pydantic import BaseModel, Field
 
 # Imports for orchestrator and classifier guides
-from osprey.base import OrchestratorGuide, OrchestratorExample, PlannedStep, TaskClassifierGuide, ClassifierExample, ClassifierActions
+from osprey.base import (
+    BaseExample,
+    ClassifierActions,
+    ClassifierExample,
+    OrchestratorExample,
+    OrchestratorGuide,
+    PlannedStep,
+    TaskClassifierGuide,
+)
 from osprey.registry import get_registry
+from osprey.state import ChatHistoryFormatter, MessageUtils
+
+from ..base import FrameworkPromptBuilder
 
 
 class MemoryContentExtraction(BaseModel):
@@ -28,7 +37,7 @@ class MemoryContentExtraction(BaseModel):
 class MemoryExtractionExample(BaseExample):
     """Example for memory extraction prompt."""
 
-    def __init__(self, messages: List[BaseMessage], expected_output: MemoryContentExtraction):
+    def __init__(self, messages: list[BaseMessage], expected_output: MemoryContentExtraction):
         self.messages = messages
         self.expected_output = expected_output
 
@@ -171,11 +180,11 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             - Be conservative - if unclear, set found=false
             """).strip()
 
-    def _get_examples(self, **kwargs) -> List[MemoryExtractionExample]:
+    def _get_examples(self, **kwargs) -> list[MemoryExtractionExample]:
         """Get generic memory extraction examples."""
         return self.examples
 
-    def _format_examples(self, examples: List[MemoryExtractionExample]) -> str:
+    def _format_examples(self, examples: list[MemoryExtractionExample]) -> str:
         """Format multiple MemoryExtractionExample objects for inclusion in prompts."""
         return MemoryExtractionExample.join(examples, add_numbering=True)
 
@@ -194,7 +203,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
 
 
 
-    def get_orchestrator_guide(self) -> Optional[Any]:
+    def get_orchestrator_guide(self) -> Any | None:
         """Create generic orchestrator guide for memory operations."""
         registry = get_registry()
 
@@ -251,7 +260,7 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
             priority=10  # Later in the prompt ordering since it's specialized
         )
 
-    def get_classifier_guide(self) -> Optional[Any]:
+    def get_classifier_guide(self) -> Any | None:
         """Create generic classifier guide for memory operations."""
         # Create generic memory-specific examples
         memory_examples = [

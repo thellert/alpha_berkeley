@@ -5,15 +5,13 @@ Simple file-based memory manager for user memory storage.
 Extracted from services.als_assistant.utils.memory_manager
 """
 
-import os
 import json
-from typing import Optional, List
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-from osprey.utils.config import get_framework_service_config, get_session_info, get_agent_dir
-from osprey.utils.logger import get_logger
 from osprey.state import UserMemories
+from osprey.utils.config import get_agent_dir, get_session_info
+from osprey.utils.logger import get_logger
 
 try:
     from langgraph.config import get_config
@@ -63,7 +61,7 @@ class MemoryStorageManager:
         safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "-_")
         return self.memory_dir / f"{safe_user_id}.json"
 
-    def _load_memory_data(self, user_id: str) -> List[dict]:
+    def _load_memory_data(self, user_id: str) -> list[dict]:
         """Load memory entries from user's JSON file.
 
         :param user_id: User identifier
@@ -77,7 +75,7 @@ class MemoryStorageManager:
         try:
             memory_file = self._get_memory_file_path(user_id)
             if memory_file.exists():
-                with open(memory_file, 'r', encoding='utf-8') as f:
+                with open(memory_file, encoding='utf-8') as f:
                     data = json.load(f)
                 return data.get("entries", [])
             return []
@@ -85,7 +83,7 @@ class MemoryStorageManager:
             logger.error(f"Error loading memory for user {user_id}: {e}")
             return []
 
-    def _save_memory_data(self, user_id: str, entries: List[dict]) -> bool:
+    def _save_memory_data(self, user_id: str, entries: list[dict]) -> bool:
         """Save memory entries to user's JSON file.
 
         :param user_id: User identifier
@@ -149,7 +147,7 @@ class MemoryStorageManager:
             logger.error(f"Error retrieving memory for user {user_id}: {e}")
             return ""
 
-    def get_all_memory_entries(self, user_id: str) -> List[MemoryContent]:
+    def get_all_memory_entries(self, user_id: str) -> list[MemoryContent]:
         """Get all user memory entries as list of MemoryContent objects.
 
         :param user_id: User identifier
@@ -271,7 +269,7 @@ class MemoryStorageManager:
 
 
 # Global memory storage manager instance
-_memory_storage_manager: Optional[MemoryStorageManager] = None
+_memory_storage_manager: MemoryStorageManager | None = None
 
 def get_memory_storage_manager() -> MemoryStorageManager:
     """Get the global memory storage manager instance.
@@ -292,4 +290,4 @@ def get_memory_storage_manager() -> MemoryStorageManager:
         memory_dir = get_agent_dir('user_memory_dir')
 
         _memory_storage_manager = MemoryStorageManager(memory_dir)
-    return _memory_storage_manager 
+    return _memory_storage_manager

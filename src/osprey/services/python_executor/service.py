@@ -5,20 +5,25 @@ Main service class that orchestrates Python code generation, analysis, and execu
 using LangGraph with human approval integration through interrupts.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 from langgraph.graph import StateGraph
 from langgraph.types import Command
 
-from .models import PythonExecutionState, PythonExecutionRequest, PythonServiceResult
-from .config import PythonExecutorConfig
-from .generator_node import create_generator_node
-from .analyzer_node import create_analyzer_node
-from .executor_node import create_executor_node
-from .approval_node import create_approval_node
-from .exceptions import CodeRuntimeError
-from osprey.graph.graph_builder import create_memory_checkpointer, create_async_postgres_checkpointer
+from osprey.graph.graph_builder import (
+    create_async_postgres_checkpointer,
+    create_memory_checkpointer,
+)
 from osprey.utils.config import get_full_configuration
 from osprey.utils.logger import get_logger
+
+from .analyzer_node import create_analyzer_node
+from .approval_node import create_approval_node
+from .config import PythonExecutorConfig
+from .exceptions import CodeRuntimeError
+from .executor_node import create_executor_node
+from .generator_node import create_generator_node
+from .models import PythonExecutionRequest, PythonExecutionState, PythonServiceResult
 
 logger = get_logger("python")
 
@@ -253,7 +258,7 @@ class PythonExecutorService:
             logger.debug(f"Service ainvoke received input_data type: {type(input_data)}")
             logger.debug(f"Service ainvoke input_data isinstance PythonExecutionRequest: {isinstance(input_data, PythonExecutionRequest)}")
 
-            logger.debug(f"Converting PythonExecutionRequest to internal state")
+            logger.debug("Converting PythonExecutionRequest to internal state")
             internal_state = self._create_internal_state(input_data)
             logger.debug(f"Created internal_state type: {type(internal_state)}")
             logger.debug(f"Internal state keys: {list(internal_state.keys())}")
@@ -315,7 +320,7 @@ class PythonExecutorService:
             }
         )
         workflow.add_conditional_edges(
-            "python_approval_node", 
+            "python_approval_node",
             self._approval_conditional_edge,
             {
                 "approved": "python_code_executor",
@@ -447,6 +452,6 @@ class PythonExecutorService:
             logger.info("Python executor service using in-memory checkpointer")
             return create_memory_checkpointer()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load service configuration."""
-        return get_full_configuration() 
+        return get_full_configuration()

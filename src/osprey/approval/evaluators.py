@@ -43,10 +43,10 @@ Examples:
    reused for multiple evaluations with the same configuration.
 """
 
-from typing import NamedTuple
 import logging
+from typing import NamedTuple
 
-from .config_models import PythonExecutionApprovalConfig, MemoryApprovalConfig, ApprovalMode
+from .config_models import ApprovalMode, MemoryApprovalConfig, PythonExecutionApprovalConfig
 
 logger = logging.getLogger(__name__)
 
@@ -324,4 +324,4 @@ class MemoryApprovalEvaluator:
             return ApprovalDecision(
                 needs_approval=False,
                 reasoning="Memory operation approval is disabled"
-            ) 
+            )

@@ -17,27 +17,19 @@ Architecture:
 """
 
 from __future__ import annotations
-import json
-import logging
-import os
+
 import time
-from datetime import datetime
-from pathlib import Path
-from typing import Optional, Dict, Tuple, Any, List, Union
 from dataclasses import dataclass
-import textwrap
-import re
+from typing import Any
 
-from pydantic import BaseModel
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.types import Command
+from pydantic import BaseModel
 
-from osprey.utils.logger import get_logger
-from osprey.utils.config import get_model_config
-from osprey.state import AgentState, StateManager
-from osprey.state.messages import MessageUtils
+from osprey.commands import CommandContext, CommandResult, get_command_registry
 from osprey.models import get_chat_completion
-from osprey.commands import get_command_registry, CommandContext, CommandResult
+from osprey.state import StateManager
+from osprey.utils.config import get_model_config
+from osprey.utils.logger import get_logger
 
 
 class ApprovalResponse(BaseModel):
@@ -46,25 +38,25 @@ class ApprovalResponse(BaseModel):
 
 logger = get_logger("gateway")
 
-@dataclass 
+@dataclass
 class GatewayResult:
     """Result of gateway message processing.
 
     This is the interface between Gateway and all other components.
     """
     # For normal conversation flow
-    agent_state: Optional[Dict[str, Any]] = None
+    agent_state: dict[str, Any] | None = None
 
-    # For interrupt/approval flow  
-    resume_command: Optional[Command] = None
+    # For interrupt/approval flow
+    resume_command: Command | None = None
 
     # Processing metadata
-    slash_commands_processed: List[str] = None
+    slash_commands_processed: list[str] = None
     approval_detected: bool = False
     is_interrupt_resume: bool = False
 
     # Error handling
-    error: Optional[str] = None
+    error: str | None = None
 
     def __post_init__(self):
         if self.slash_commands_processed is None:
@@ -90,7 +82,7 @@ class Gateway:
             await graph.ainvoke(result.state_updates, config=config)
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Initialize the gateway.
 
         Args:
@@ -122,10 +114,10 @@ class Gateway:
             self.logger.warning(f"Could not register agent control commands: {e}")
 
     async def process_message(
-        self, 
+        self,
         user_input: str,
         compiled_graph: Any = None,
-        config: Optional[Dict[str, Any]] = None
+        config: dict[str, Any] | None = None
     ) -> GatewayResult:
         """
         Single entry point for all message processing.
@@ -161,10 +153,10 @@ class Gateway:
             return GatewayResult(error=str(e))
 
     async def _handle_interrupt_flow(
-        self, 
-        user_input: str, 
-        compiled_graph: Any, 
-        config: Dict[str, Any]
+        self,
+        user_input: str,
+        compiled_graph: Any,
+        config: dict[str, Any]
     ) -> GatewayResult:
         """Handle interrupt/approval flow generically.
 
@@ -209,10 +201,10 @@ class Gateway:
             )
 
     async def _handle_new_message_flow(
-        self, 
+        self,
         user_input: str,
         compiled_graph: Any = None,
-        config: Optional[Dict[str, Any]] = None
+        config: dict[str, Any] | None = None
     ) -> GatewayResult:
         """Handle new message flow with fresh state creation."""
 
@@ -249,7 +241,7 @@ class Gateway:
             fresh_state['agent_control'] = apply_slash_commands_to_agent_control_state(
                 fresh_state['agent_control'], slash_commands
             )
-            self.logger.info(f"Applied agent control changes from slash commands")
+            self.logger.info("Applied agent control changes from slash commands")
 
         # Add execution metadata
         fresh_state["execution_start_time"] = time.time()
@@ -269,7 +261,7 @@ class Gateway:
             slash_commands_processed=processed_commands
         )
 
-    def _has_pending_interrupts(self, compiled_graph: Any, config: Optional[Dict[str, Any]]) -> bool:
+    def _has_pending_interrupts(self, compiled_graph: Any, config: dict[str, Any] | None) -> bool:
         """Check if there are pending interrupts.
 
         CRITICAL: Check state.interrupts (actual pending human approvals) 
@@ -288,7 +280,7 @@ class Gateway:
             self.logger.warning(f"Could not check graph interrupts: {e}")
             return False
 
-    def _detect_approval_response(self, user_input: str) -> Optional[Dict[str, Any]]:
+    def _detect_approval_response(self, user_input: str) -> dict[str, Any] | None:
         """Detect approval or rejection in user input using LLM classification."""
         try:
             # Get approval model configuration from framework config
@@ -334,7 +326,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 "timestamp": time.time()
             }
 
-    def _extract_resume_payload(self, compiled_graph: Any, config: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _extract_resume_payload(self, compiled_graph: Any, config: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
         """Extract interrupt payload from current LangGraph state.
 
         Gets the interrupt data from graph state and extracts the payload
@@ -377,7 +369,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
             self.logger.error(f"Failed to extract resume payload: {e}")
             return False, {}
 
-    def _clear_approval_state(self) -> Dict[str, Any]:
+    def _clear_approval_state(self) -> dict[str, Any]:
         """Clear approval state to prevent pollution in subsequent interrupts.
 
         This utility ensures that approval state from previous interrupts
@@ -391,7 +383,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
             "approved_payload": None
         }
 
-    async def _process_slash_commands(self, user_input: str, config: Optional[Dict[str, Any]] = None) -> Tuple[Dict[str, Any], str]:
+    async def _process_slash_commands(self, user_input: str, config: dict[str, Any] | None = None) -> tuple[dict[str, Any], str]:
         """Process slash commands using the centralized command system.
 
         Returns:

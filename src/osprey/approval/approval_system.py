@@ -39,14 +39,15 @@ Examples:
 """
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Dict, Any, List, Optional, TYPE_CHECKING
 import logging
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from osprey.state import AgentState
 
 from langgraph.types import interrupt
+
 from osprey.base.planning import ExecutionPlan
 
 logger = logging.getLogger(__name__)
@@ -105,10 +106,10 @@ def create_approval_type(capability_name: str, operation_type: str = None) -> st
 
 
 def create_plan_approval_interrupt(
-    execution_plan: "ExecutionPlan",
+    execution_plan: ExecutionPlan,
     plan_file_path: str = None,
     pending_plans_dir: str = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create structured interrupt data for execution plan approval with file-based storage support.
 
     Generates LangGraph-compatible interrupt data that presents execution plans
@@ -205,7 +206,7 @@ def create_memory_approval_interrupt(
     user_id: str,
     existing_memory: str = "",
     step_objective: str = "Save content to memory"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create structured interrupt data for memory operation approval.
 
     Generates LangGraph-compatible interrupt data for memory operations that
@@ -287,16 +288,16 @@ Memory save operation requires human approval
 
 def create_code_approval_interrupt(
     code: str,
-    analysis_details: Dict[str, Any],
+    analysis_details: dict[str, Any],
     execution_mode: str,
-    safety_concerns: List[str],
-    notebook_path: Optional[Path] = None,
-    notebook_link: Optional[str] = None,
-    execution_request: Optional[Any] = None,
-    expected_results: Optional[Dict[str, Any]] = None,
-    execution_folder_path: Optional[Path] = None,
+    safety_concerns: list[str],
+    notebook_path: Path | None = None,
+    notebook_link: str | None = None,
+    execution_request: Any | None = None,
+    expected_results: dict[str, Any] | None = None,
+    execution_folder_path: Path | None = None,
     step_objective: str = "Execute Python code"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Create structured interrupt data for Python code execution approval.
 
     Generates LangGraph-compatible interrupt data for Python code that requires
@@ -364,7 +365,7 @@ def create_code_approval_interrupt(
     else:
         notebook_section = "**Code is available for review in the execution environment.**"
 
-    reasoning = analysis_details.get('approval_reasoning', 
+    reasoning = analysis_details.get('approval_reasoning',
                                    f"Python code requires human approval for {execution_mode} mode")
 
     user_message = f"""
@@ -403,9 +404,9 @@ def create_code_approval_interrupt(
 # =============================================================================
 
 def get_approval_resume_data(
-    state: "AgentState", 
+    state: AgentState,
     expected_approval_type: str
-) -> tuple[bool, Optional[Dict[str, Any]]]:
+) -> tuple[bool, dict[str, Any] | None]:
     """Extract and validate approval resume data from agent state.
 
     Provides standardized, type-safe access to approval state with comprehensive
@@ -488,9 +489,9 @@ def get_approval_resume_data(
 
 
 def get_approved_payload_from_state(
-    state: "AgentState", 
+    state: AgentState,
     expected_approval_type: str
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Extract approved payload directly from agent state for specific approval type.
 
     Provides direct access to approved payload data from agent state with type
@@ -523,7 +524,7 @@ def get_approved_payload_from_state(
     return None
 
 
-def clear_approval_state() -> Dict[str, Any]:
+def clear_approval_state() -> dict[str, Any]:
     """Clear approval state to prevent contamination between operations.
 
     Provides centralized cleanup of approval state fields to maintain clean
@@ -565,7 +566,7 @@ def clear_approval_state() -> Dict[str, Any]:
 async def handle_service_with_interrupts(
     service: Any,
     request: Any,
-    config: Dict[str, Any],
+    config: dict[str, Any],
     logger,
     capability_name: str = "parent_capability"
 ) -> Any:

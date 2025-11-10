@@ -9,25 +9,22 @@ Convention-based LangGraph-native implementation with built-in error handling an
 """
 
 from __future__ import annotations
+
 import asyncio
+from typing import Any
 
-from typing import Optional, Dict, Any, List
-
-
+from osprey.base import BaseCapability, CapabilityMatch, ClassifierExample
 from osprey.base.decorators import infrastructure_node
-from osprey.base.errors import ReclassificationRequiredError
-from osprey.state import AgentState
-from osprey.state.state import create_status_update
-from osprey.registry import get_registry
-from osprey.base import BaseCapability, ClassifierExample, CapabilityMatch
+from osprey.base.errors import ErrorClassification, ErrorSeverity, ReclassificationRequiredError
+from osprey.base.nodes import BaseInfrastructureNode
 from osprey.models import get_chat_completion
 from osprey.prompts.loader import get_framework_prompts
-from osprey.utils.config import get_model_config, get_classification_config
+from osprey.registry import get_registry
+from osprey.state import AgentState
+from osprey.state.state import create_status_update
+from osprey.utils.config import get_classification_config, get_model_config
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.base.nodes import BaseInfrastructureNode
-
 
 # Use colored logger for classifier
 logger = get_logger("classifier")
@@ -50,7 +47,7 @@ class ClassificationNode(BaseInfrastructureNode):
     description = "Task Classification and Capability Selection"
 
     @staticmethod
-    def classify_error(exc: Exception, context: Dict[str, Any]) -> ErrorClassification:
+    def classify_error(exc: Exception, context: dict[str, Any]) -> ErrorClassification:
         """Built-in error classification for classifier operations.
 
         :param exc: Exception that occurred
@@ -124,7 +121,7 @@ class ClassificationNode(BaseInfrastructureNode):
         )
 
     @staticmethod
-    def get_retry_policy() -> Dict[str, Any]:
+    def get_retry_policy() -> dict[str, Any]:
         """Custom retry policy for LLM-based classification operations.
 
         Classification uses parallel LLM calls for capability selection and can be flaky due to:
@@ -144,9 +141,9 @@ class ClassificationNode(BaseInfrastructureNode):
 
     @staticmethod
     async def execute(
-        state: AgentState, 
+        state: AgentState,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Main classification logic with bypass support and sophisticated capability selection.
 
         Analyzes user tasks and selects appropriate capabilities using parallel
@@ -247,12 +244,12 @@ class ClassificationNode(BaseInfrastructureNode):
 # ====================================================
 
 def _create_classification_result(
-    active_capabilities: List[str],
+    active_capabilities: list[str],
     state: AgentState,
     message: str,
     is_bypass: bool = False,
-    previous_failure: Optional[str] = None
-) -> Dict[str, Any]:
+    previous_failure: str | None = None
+) -> dict[str, Any]:
     """Create standardized classification result with all required state updates.
 
     Consolidates the creation of planning fields, control flow updates, and status events
@@ -315,7 +312,7 @@ def _create_classification_result(
     return {**planning_fields, **control_flow_update, **error_state_cleanup, **status_event}
 
 
-def _detect_reclassification_scenario(state: AgentState) -> Optional[str]:
+def _detect_reclassification_scenario(state: AgentState) -> str | None:
     """Detect if this classification is a reclassification due to a previous error.
 
     Analyzes the current agent state to determine if this classification run
@@ -359,7 +356,7 @@ def _detect_reclassification_scenario(state: AgentState) -> Optional[str]:
 class CapabilityClassifier:
     """Handles individual capability classification with proper resource management."""
 
-    def __init__(self, task: str, state: AgentState, logger, previous_failure: Optional[str] = None):
+    def __init__(self, task: str, state: AgentState, logger, previous_failure: str | None = None):
         self.task = task
         self.state = state
         self.logger = logger
@@ -446,11 +443,11 @@ class CapabilityClassifier:
 
 async def select_capabilities(
     task: str,
-    available_capabilities: List[BaseCapability],
+    available_capabilities: list[BaseCapability],
     state: AgentState,
     logger,
-    previous_failure: Optional[str] = None
-) -> List[str]:
+    previous_failure: str | None = None
+) -> list[str]:
     """Select capabilities needed for the task by using classification.
 
     :param task: Task description for analysis
@@ -469,7 +466,7 @@ async def select_capabilities(
     registry = get_registry()
     always_active_names = registry.get_always_active_capability_names()
 
-    active_capabilities: List[str] = []
+    active_capabilities: list[str] = []
 
     # Step 1: Add always-active capabilities from registry configuration
     for capability in available_capabilities:

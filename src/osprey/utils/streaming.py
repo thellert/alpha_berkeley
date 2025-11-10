@@ -14,8 +14,10 @@ Usage:
 """
 
 import time
-from typing import Dict, Any, Optional
+from typing import Any
+
 from langgraph.config import get_stream_writer
+
 from osprey.utils.logger import get_logger
 
 # Hard-coded step mapping for task preparation phases
@@ -34,7 +36,7 @@ class StreamWriter:
     for task preparation phases.
     """
 
-    def __init__(self, component: str, state: Optional[Any] = None, *, source: str = None):
+    def __init__(self, component: str, state: Any | None = None, *, source: str = None):
         """
         Initialize stream writer with component context.
 
@@ -60,7 +62,7 @@ class StreamWriter:
         # Determine step context
         self.step_info = self._get_step_info(component, state)
 
-    def _get_step_info(self, component: str, state: Optional[Any]) -> Dict[str, Any]:
+    def _get_step_info(self, component: str, state: Any | None) -> dict[str, Any]:
         """Get step information for the current component"""
 
         # Check if this is a task preparation component
@@ -123,7 +125,7 @@ class StreamWriter:
         """Emit a status update event"""
         self._emit_event("status", message)
 
-    def error(self, message: str, error_data: Optional[Dict[str, Any]] = None) -> None:
+    def error(self, message: str, error_data: dict[str, Any] | None = None) -> None:
         """Emit an error event"""
         self._emit_event("status", message, error=True, complete=True, data=error_data or {})
 
@@ -132,7 +134,7 @@ class StreamWriter:
         self._emit_event("status", message, warning=True)
 
 
-def get_streamer(component: str, state: Optional[Any] = None, *, source: str = None) -> StreamWriter:
+def get_streamer(component: str, state: Any | None = None, *, source: str = None) -> StreamWriter:
     """
     Get a stream writer for consistent streaming events.
 

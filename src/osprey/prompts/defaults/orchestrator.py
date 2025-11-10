@@ -1,10 +1,10 @@
 """Default orchestrator prompts."""
 
 import textwrap
-from typing import Optional, List
-from osprey.prompts.base import FrameworkPromptBuilder
-from osprey.context import ContextManager
+
 from osprey.base import BaseCapability, OrchestratorExample
+from osprey.context import ContextManager
+from osprey.prompts.base import FrameworkPromptBuilder
 
 
 class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
@@ -22,7 +22,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
 
     def get_instructions(self) -> str:
         """Get the generic planning instructions."""
-        return textwrap.dedent(f"""
+        return textwrap.dedent("""
             Each step must follow the PlannedStep structure:
             - context_key: Unique identifier for this step's output (e.g., "data_sources", "historical_data")
             - capability: Type of execution node (determined based on available capabilities)
@@ -31,11 +31,11 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
             - success_criteria: Clear criteria for determining step success
             - inputs: List of input dictionaries mapping context types to context keys:
               [
-                {{"DATA_QUERY_RESULTS": "some_data_context"}},
-                {{"ANALYSIS_RESULTS": "some_analysis_context"}}
+                {"DATA_QUERY_RESULTS": "some_data_context"},
+                {"ANALYSIS_RESULTS": "some_analysis_context"}
               ]
               **CRITICAL**: Include ALL required context sources! Complex operations often need multiple inputs.
-            - parameters: Optional dict for step-specific configuration (e.g., {{"precision_ms": 1000}})
+            - parameters: Optional dict for step-specific configuration (e.g., {"precision_ms": 1000})
 
             Planning Guidelines:
             1. Dependencies between steps (ensure proper sequencing)
@@ -52,7 +52,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
             Never plan for simulated or fictional data - only real system operations.
             """).strip()
 
-    def _get_dynamic_context(self, context_manager: Optional[ContextManager] = None, **kwargs) -> Optional[str]:
+    def _get_dynamic_context(self, context_manager: ContextManager | None = None, **kwargs) -> str | None:
         """Get dynamic context showing available context data."""
         if context_manager and context_manager.get_raw_data():
             return self._build_context_section(context_manager)
@@ -60,11 +60,11 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
 
     def get_system_instructions(
         self,
-        active_capabilities: List[BaseCapability] = None,
+        active_capabilities: list[BaseCapability] = None,
         context_manager: ContextManager = None,
         task_depends_on_chat_history: bool = False,
         task_depends_on_user_memory: bool = False,
-        error_context: Optional[str] = None,
+        error_context: str | None = None,
         **kwargs
     ) -> str:
         """
@@ -98,7 +98,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
 
         # 2. Add context reuse guidance if task builds on previous context
         context_guidance = self._build_context_reuse_guidance(
-            task_depends_on_chat_history, 
+            task_depends_on_chat_history,
             task_depends_on_user_memory
         )
         if context_guidance:
@@ -141,10 +141,10 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
         return final_prompt
 
     def _build_context_reuse_guidance(
-        self, 
-        task_depends_on_chat_history: bool, 
+        self,
+        task_depends_on_chat_history: bool,
         task_depends_on_user_memory: bool
-    ) -> Optional[str]:
+    ) -> str | None:
         """Build context reuse guidance section when task builds on previous context."""
         if not task_depends_on_chat_history and not task_depends_on_user_memory:
             return None
@@ -175,7 +175,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
             {guidance_text}
             """).strip()
 
-    def _build_context_section(self, context_manager: ContextManager) -> Optional[str]:
+    def _build_context_section(self, context_manager: ContextManager) -> str | None:
         """Build the context section of the prompt."""
         context_data = context_manager.get_raw_data()
         if not context_data:
@@ -209,7 +209,7 @@ class DefaultOrchestratorPromptBuilder(FrameworkPromptBuilder):
             {formatted_context}
             """).strip()
 
-    def _build_capability_sections(self, active_capabilities: List[BaseCapability]) -> List[str]:
+    def _build_capability_sections(self, active_capabilities: list[BaseCapability]) -> list[str]:
         """Build capability-specific sections with examples."""
         sections = []
 

@@ -12,7 +12,6 @@ Design Philosophy:
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 from rich.console import Console
 from rich.theme import Theme
@@ -158,7 +157,7 @@ def set_theme(theme: ColorTheme):
     custom_style = _build_questionary_style(theme)
 
 
-def load_theme_from_config(config_path: Optional[str] = None) -> ColorTheme:
+def load_theme_from_config(config_path: str | None = None) -> ColorTheme:
     """Load and apply theme from configuration file.
     
     Args:
@@ -175,10 +174,10 @@ def load_theme_from_config(config_path: Optional[str] = None) -> ColorTheme:
         >>> theme = load_theme_from_config("/path/to/config.yml")
     """
     from osprey.utils.config import get_config_value
-    
+
     # Get theme name from config (default to "default")
     theme_name = get_config_value("cli.theme", "default", config_path)
-    
+
     # Handle custom theme
     if theme_name == "custom":
         custom_colors = get_config_value("cli.custom_theme", {}, config_path)
@@ -189,7 +188,7 @@ def load_theme_from_config(config_path: Optional[str] = None) -> ColorTheme:
                     if not isinstance(value, str) or not value.startswith('#'):
                         logger.warning(f"Invalid color format for {key}: {value}, using default")
                         return VULCAN_THEME
-                
+
                 # Create custom theme from config
                 theme = ColorTheme(**custom_colors)
                 return theme
@@ -199,17 +198,17 @@ def load_theme_from_config(config_path: Optional[str] = None) -> ColorTheme:
         else:
             logger.warning("Custom theme selected but no custom_theme config found, using default")
             theme_name = "default"
-    
+
     # Load predefined theme
     theme = THEME_REGISTRY.get(theme_name)
     if theme is None:
         logger.warning(f"Unknown theme '{theme_name}', using default")
         theme = VULCAN_THEME
-    
+
     return theme
 
 
-def initialize_theme_from_config(config_path: Optional[str] = None):
+def initialize_theme_from_config(config_path: str | None = None):
     """Initialize and apply theme from configuration.
     
     This should be called at CLI startup to apply the configured theme.
@@ -220,7 +219,7 @@ def initialize_theme_from_config(config_path: Optional[str] = None):
     try:
         theme = load_theme_from_config(config_path)
         set_theme(theme)
-        logger.debug(f"Applied theme from configuration")
+        logger.debug("Applied theme from configuration")
     except Exception as e:
         logger.debug(f"Failed to load theme from config: {e}, using default")
         set_theme(VULCAN_THEME)

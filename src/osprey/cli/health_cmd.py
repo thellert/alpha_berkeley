@@ -6,24 +6,21 @@ configuration validity, file system structure, container status, API providers,
 and Python environment without actually running the osprey.
 """
 
-import click
-import os
-import sys
 import json
+import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple, Any, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich import box
-from rich.spinner import Spinner
-from rich.live import Live
 
-from osprey.cli.styles import Messages, Styles, ThemeConfig, console
+import click
+from rich.live import Live
+from rich.panel import Panel
+from rich.spinner import Spinner
+
+from osprey.cli.styles import Messages, Styles, console
+from osprey.deployment.runtime_helper import get_ps_command, get_runtime_command
 from osprey.utils.log_filter import quiet_logger
-from osprey.deployment.runtime_helper import get_runtime_command, get_ps_command
 
 
 class HealthCheckResult:
@@ -42,10 +39,10 @@ class HealthCheckResult:
 class HealthChecker:
     """Comprehensive health checker for Osprey Framework."""
 
-    def __init__(self, verbose: bool = False, full: bool = False, project_path: Optional[Path] = None):
+    def __init__(self, verbose: bool = False, full: bool = False, project_path: Path | None = None):
         self.verbose = verbose
         self.full = full
-        self.results: List[HealthCheckResult] = []
+        self.results: list[HealthCheckResult] = []
         self.cwd = project_path if project_path else Path.cwd()
         self.config = {}  # Initialize empty config, will be populated in check_configuration()
 
@@ -130,7 +127,7 @@ class HealthChecker:
         # Try to load and parse YAML
         try:
             import yaml
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
 
             if config is None:
@@ -162,7 +159,7 @@ class HealthChecker:
             self.add_result("yaml_valid", "error", f"Failed to read config: {e}")
             console.print(f"  {Messages.error(f'Failed to read config: {e}')}")
 
-    def _check_config_structure(self, config: Dict):
+    def _check_config_structure(self, config: dict):
         """Check configuration structure and required sections."""
 
         # Check required framework models (8 total)
@@ -260,7 +257,7 @@ class HealthChecker:
             )
             console.print(f"  {Messages.success(f'{len(api_providers)} API providers configured')}")
 
-    def _check_environment_variables(self, config: Dict):
+    def _check_environment_variables(self, config: dict):
         """Check if environment variables referenced in config are set."""
         import re
 
@@ -361,7 +358,7 @@ class HealthChecker:
             config_path = self.cwd / "config.yml"
             if config_path.exists():
                 import yaml
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config = yaml.safe_load(f)
 
                 registry_path_str = config.get("registry_path")
@@ -380,7 +377,7 @@ class HealthChecker:
                             f"Registry file not found: {registry_path}"
                         )
                         console.print(f"  {Messages.error(f'Registry file not found: {registry_path}')}")
-        except Exception as e:
+        except Exception:
             # Don't fail if we can't check registry
             pass
 
@@ -475,7 +472,7 @@ class HealthChecker:
         try:
             runtime_cmd = get_runtime_command()
             runtime = runtime_cmd[0]  # 'docker' or 'podman'
-            
+
             result = subprocess.run(
                 [runtime, "--version"],
                 capture_output=True,
@@ -513,7 +510,7 @@ class HealthChecker:
                 return
 
             import yaml
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
 
             deployed_services = config.get("deployed_services", [])
@@ -537,7 +534,7 @@ class HealthChecker:
             for service in deployed_services:
                 # Extract service short name (handle dotted paths like "osprey.jupyter")
                 service_short = str(service).split('.')[-1].lower()
-                
+
                 # Look for containers matching the service name
                 # Use smart matching to handle underscore/hyphen variations
                 matching = []
@@ -547,9 +544,9 @@ class HealthChecker:
                         names_str = " ".join(str(n) for n in names).lower()
                     else:
                         names_str = str(names).lower()
-                    
+
                     # Check for match (handles both underscore and hyphen)
-                    if (service_short in names_str or 
+                    if (service_short in names_str or
                         service_short.replace('_', '-') in names_str or
                         service_short.replace('-', '_') in names_str):
                         matching.append(c)
@@ -595,7 +592,7 @@ class HealthChecker:
                 return
 
             import yaml
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
 
             api_config = config.get("api", {}).get("providers", {})
@@ -607,7 +604,7 @@ class HealthChecker:
             if self.verbose:
                 console.print(f"  [dim]Could not check API providers: {e}[/dim]")
 
-    def _check_provider(self, provider_name: str, provider_config: Dict):
+    def _check_provider(self, provider_name: str, provider_config: dict):
         """Check a specific API provider using the provider registry."""
         from osprey.registry import get_registry
 
@@ -681,7 +678,7 @@ class HealthChecker:
                 return
 
             import yaml
-            with open(config_path, 'r') as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
 
             models = config.get("models", {})

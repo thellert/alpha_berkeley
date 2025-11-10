@@ -6,7 +6,7 @@ validation, and type safety. Eliminates complex custom serialization logic.
 """
 
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from datetime import datetime
 from typing import ClassVar
 
@@ -93,4 +93,4 @@ class CapabilityContext(BaseModel):
             raise NotImplementedError(
                 f"{self.__class__.__name__} must implement get_summary() method. "
                 f"If you have a get_human_summary() method, please rename it to get_summary()."
-            ) 
+            )

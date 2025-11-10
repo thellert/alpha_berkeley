@@ -10,9 +10,11 @@ application-specific decisions.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, NamedTuple
 from dataclasses import dataclass
+from typing import Any, NamedTuple
+
 from osprey.utils.logger import get_logger
+
 from .execution_control import ExecutionMode
 
 logger = get_logger("python_analyzer")
@@ -23,15 +25,15 @@ class BasicAnalysisResult:
 
     # Syntax analysis
     syntax_valid: bool
-    syntax_issues: List[str]
+    syntax_issues: list[str]
 
-    # Security analysis  
-    security_issues: List[str]
+    # Security analysis
+    security_issues: list[str]
     security_risk_level: str  # "low", "medium", "high"
 
     # Import analysis
-    import_issues: List[str]
-    prohibited_imports: List[str]
+    import_issues: list[str]
+    prohibited_imports: list[str]
 
     # Structure analysis
     has_result_structure: bool
@@ -41,20 +43,20 @@ class BasicAnalysisResult:
     code_length: int
 
     # Context information
-    user_context: Optional[Dict[str, Any]] = None
-    execution_context: Optional[Dict[str, Any]] = None
+    user_context: dict[str, Any] | None = None
+    execution_context: dict[str, Any] | None = None
 
 
-@dataclass 
+@dataclass
 class DomainAnalysisResult:
     """Domain-specific analysis results that can be extended by applications."""
 
     # Base domain analysis that framework can populate
-    detected_operations: List[str]
-    risk_categories: List[str]
+    detected_operations: list[str]
+    risk_categories: list[str]
 
     # Extensible for domain-specific fields
-    domain_data: Dict[str, Any]
+    domain_data: dict[str, Any]
 
     def __post_init__(self):
         if self.domain_data is None:
@@ -66,10 +68,10 @@ class ExecutionPolicyDecision(NamedTuple):
     execution_mode: ExecutionMode
     needs_approval: bool
     approval_reasoning: str
-    additional_issues: List[str]
-    recommendations: List[str]
+    additional_issues: list[str]
+    recommendations: list[str]
     analysis_passed: bool
-    additional_context: Optional[Dict[str, Any]] = None
+    additional_context: dict[str, Any] | None = None
 
 
 # =============================================================================
@@ -96,7 +98,7 @@ class DomainAnalyzer(ABC):
 
     @abstractmethod
     async def analyze_domain(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult
     ) -> DomainAnalysisResult:
         """
@@ -119,7 +121,7 @@ class DefaultFrameworkDomainAnalyzer(DomainAnalyzer):
     while allowing applications to override with custom domain analyzers.
     """
 
-    def __init__(self, configurable: Dict[str, Any]):
+    def __init__(self, configurable: dict[str, Any]):
         self.configurable = configurable
 
     def get_name(self) -> str:
@@ -129,7 +131,7 @@ class DefaultFrameworkDomainAnalyzer(DomainAnalyzer):
         return 100  # Default priority
 
     async def analyze_domain(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult
     ) -> DomainAnalysisResult:
         """Implement existing framework EPICS detection logic"""
@@ -165,7 +167,7 @@ class DefaultFrameworkDomainAnalyzer(DomainAnalyzer):
                 domain_data["epics_write_operations"] = True
                 break
 
-        # Check for EPICS reads  
+        # Check for EPICS reads
         for pattern in epics_read_patterns:
             if re.search(pattern, code, re.IGNORECASE):
                 detected_operations.append("epics_reads")
@@ -185,9 +187,9 @@ class DomainAnalysisManager:
     Integrated with the registry system for pluggability.
     """
 
-    def __init__(self, configurable: Dict[str, Any]):
+    def __init__(self, configurable: dict[str, Any]):
         self.configurable = configurable
-        self._analyzers: List[DomainAnalyzer] = []
+        self._analyzers: list[DomainAnalyzer] = []
         self._initialized = False
 
     def initialize(self):
@@ -223,7 +225,7 @@ class DomainAnalysisManager:
             self._initialized = True
 
     async def analyze_domain(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult
     ) -> DomainAnalysisResult:
         """
@@ -276,7 +278,7 @@ class ExecutionPolicyAnalyzer(ABC):
 
     @abstractmethod
     async def analyze_policy(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult,
         domain_analysis: DomainAnalysisResult
     ) -> ExecutionPolicyDecision:
@@ -301,7 +303,7 @@ class DefaultFrameworkPolicyAnalyzer(ExecutionPolicyAnalyzer):
     while allowing applications to override with custom analyzers.
     """
 
-    def __init__(self, configurable: Dict[str, Any]):
+    def __init__(self, configurable: dict[str, Any]):
         self.configurable = configurable
 
     def get_name(self) -> str:
@@ -311,7 +313,7 @@ class DefaultFrameworkPolicyAnalyzer(ExecutionPolicyAnalyzer):
         return 100  # Default priority
 
     async def analyze_policy(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult,
         domain_analysis: DomainAnalysisResult
     ) -> ExecutionPolicyDecision:
@@ -330,7 +332,7 @@ class DefaultFrameworkPolicyAnalyzer(ExecutionPolicyAnalyzer):
 
         if basic_analysis.security_risk_level == "high":
             return ExecutionPolicyDecision(
-                execution_mode=ExecutionMode.READ_ONLY, 
+                execution_mode=ExecutionMode.READ_ONLY,
                 needs_approval=True,
                 approval_reasoning="High security risk detected",
                 additional_issues=basic_analysis.security_issues,
@@ -411,9 +413,9 @@ class ExecutionPolicyManager:
     Integrated with the registry system for pluggability.
     """
 
-    def __init__(self, configurable: Dict[str, Any]):
+    def __init__(self, configurable: dict[str, Any]):
         self.configurable = configurable
-        self._analyzers: List[ExecutionPolicyAnalyzer] = []
+        self._analyzers: list[ExecutionPolicyAnalyzer] = []
         self._initialized = False
 
     def initialize(self):
@@ -449,7 +451,7 @@ class ExecutionPolicyManager:
             self._initialized = True
 
     async def analyze_policy(
-        self, 
+        self,
         basic_analysis: BasicAnalysisResult,
         domain_analysis: DomainAnalysisResult
     ) -> ExecutionPolicyDecision:

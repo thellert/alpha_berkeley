@@ -73,10 +73,10 @@ Examples:
         ...     await execute_code(new_code)
 """
 
-from typing import Dict, Any, Optional, List
-from pathlib import Path
 from enum import Enum
-import textwrap
+from pathlib import Path
+from typing import Any
+
 
 class ErrorCategory(Enum):
     """High-level error categories that determine appropriate recovery strategies.
@@ -101,7 +101,7 @@ class ErrorCategory(Enum):
        :meth:`PythonExecutorException.should_retry_code_generation` : Code regeneration logic
     """
     INFRASTRUCTURE = "infrastructure"  # Container/connectivity issues
-    CODE_RELATED = "code_related"      # Syntax/runtime/logic errors  
+    CODE_RELATED = "code_related"      # Syntax/runtime/logic errors
     WORKFLOW = "workflow"              # Approval, timeout, etc.
     CONFIGURATION = "configuration"   # Config/setup issues
 
@@ -138,11 +138,11 @@ class PythonExecutorException(Exception):
     """
 
     def __init__(
-        self, 
+        self,
         message: str,
         category: ErrorCategory,
-        technical_details: Optional[Dict[str, Any]] = None,
-        folder_path: Optional[Path] = None
+        technical_details: dict[str, Any] | None = None,
+        folder_path: Path | None = None
     ):
         super().__init__(message)
         self.message = message
@@ -300,11 +300,11 @@ class ContainerConnectivityError(PythonExecutorException):
     """
 
     def __init__(
-        self, 
+        self,
         message: str,
         host: str,
         port: int,
-        technical_details: Optional[Dict[str, Any]] = None
+        technical_details: dict[str, Any] | None = None
     ):
         super().__init__(message, ErrorCategory.INFRASTRUCTURE, technical_details)
         self.host = host
@@ -335,7 +335,7 @@ class ContainerConnectivityError(PythonExecutorException):
 class ContainerConfigurationError(PythonExecutorException):
     """Container configuration is invalid"""
 
-    def __init__(self, message: str, technical_details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, technical_details: dict[str, Any] | None = None):
         super().__init__(message, ErrorCategory.CONFIGURATION, technical_details)
 
 
@@ -347,11 +347,11 @@ class CodeGenerationError(PythonExecutorException):
     """LLM failed to generate valid code"""
 
     def __init__(
-        self, 
+        self,
         message: str,
         generation_attempt: int,
-        error_chain: List[str],
-        technical_details: Optional[Dict[str, Any]] = None
+        error_chain: list[str],
+        technical_details: dict[str, Any] | None = None
     ):
         super().__init__(message, ErrorCategory.CODE_RELATED, technical_details)
         self.generation_attempt = generation_attempt
@@ -362,10 +362,10 @@ class CodeSyntaxError(PythonExecutorException):
     """Generated code has syntax errors"""
 
     def __init__(
-        self, 
+        self,
         message: str,
-        syntax_issues: List[str],
-        technical_details: Optional[Dict[str, Any]] = None
+        syntax_issues: list[str],
+        technical_details: dict[str, Any] | None = None
     ):
         super().__init__(message, ErrorCategory.CODE_RELATED, technical_details)
         self.syntax_issues = syntax_issues
@@ -375,12 +375,12 @@ class CodeRuntimeError(PythonExecutorException):
     """Code failed during execution due to runtime errors"""
 
     def __init__(
-        self, 
+        self,
         message: str,
         traceback_info: str,
         execution_attempt: int,
-        technical_details: Optional[Dict[str, Any]] = None,
-        folder_path: Optional[Path] = None
+        technical_details: dict[str, Any] | None = None,
+        folder_path: Path | None = None
     ):
         super().__init__(message, ErrorCategory.CODE_RELATED, technical_details, folder_path)
         self.traceback_info = traceback_info
@@ -397,10 +397,10 @@ class ExecutionTimeoutError(PythonExecutorException):
     """Code execution exceeded timeout"""
 
     def __init__(
-        self, 
+        self,
         timeout_seconds: int,
-        technical_details: Optional[Dict[str, Any]] = None,
-        folder_path: Optional[Path] = None
+        technical_details: dict[str, Any] | None = None,
+        folder_path: Path | None = None
     ):
         message = f"Python code execution timeout after {timeout_seconds} seconds"
         super().__init__(message, ErrorCategory.WORKFLOW, technical_details, folder_path)
@@ -414,9 +414,9 @@ class MaxAttemptsExceededError(PythonExecutorException):
         self,
         operation_type: str,  # "code_generation", "execution", "connectivity"
         max_attempts: int,
-        error_chain: List[str],
-        technical_details: Optional[Dict[str, Any]] = None,
-        folder_path: Optional[Path] = None
+        error_chain: list[str],
+        technical_details: dict[str, Any] | None = None,
+        folder_path: Path | None = None
     ):
         message = f"Maximum {operation_type} attempts ({max_attempts}) exceeded"
         super().__init__(message, ErrorCategory.WORKFLOW, technical_details, folder_path)
@@ -432,9 +432,9 @@ class WorkflowError(PythonExecutorException):
         self,
         message: str,
         stage: str,  # "code_generation", "static_analysis", "execution", "orchestration"
-        original_exception: Optional[Exception] = None,
-        technical_details: Optional[Dict[str, Any]] = None,
-        folder_path: Optional[Path] = None
+        original_exception: Exception | None = None,
+        technical_details: dict[str, Any] | None = None,
+        folder_path: Path | None = None
     ):
         super().__init__(message, ErrorCategory.WORKFLOW, technical_details, folder_path)
         self.stage = stage

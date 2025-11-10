@@ -16,21 +16,15 @@ and extensible patterns for application-specific command extensions. Each catego
 provides specialized handlers with appropriate error handling and user feedback.
 """
 
-import asyncio
-from typing import Dict, Any, Optional
+from typing import Any
+
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 from osprey.cli.styles import Styles
 
-from .types import (
-    Command, 
-    CommandResult, 
-    CommandCategory, 
-    CommandContext,
-    CommandExecutionError
-)
+from .types import Command, CommandCategory, CommandContext, CommandExecutionError, CommandResult
 
 
 def register_cli_commands(registry) -> None:
@@ -296,7 +290,7 @@ def register_agent_control_commands(registry) -> None:
             /caps:off             # Bypass capability selection for performance
     """
 
-    def planning_handler(args: str, context: CommandContext) -> Dict[str, Any]:
+    def planning_handler(args: str, context: CommandContext) -> dict[str, Any]:
         """Control planning mode."""
         if args in ["on", "enabled", "true"] or args == "":
             return {"planning_mode_enabled": True}
@@ -304,12 +298,12 @@ def register_agent_control_commands(registry) -> None:
             return {"planning_mode_enabled": False}
         else:
             raise CommandExecutionError(
-                f"Invalid option '{args}' for /planning", 
+                f"Invalid option '{args}' for /planning",
                 "planning",
                 "Use 'on' or 'off'"
             )
 
-    def approval_handler(args: str, context: CommandContext) -> Dict[str, Any]:
+    def approval_handler(args: str, context: CommandContext) -> dict[str, Any]:
         """Control approval workflows."""
         if args in ["on", "enabled", "true"] or args == "":
             return {"approval_mode": "enabled"}
@@ -320,11 +314,11 @@ def register_agent_control_commands(registry) -> None:
         else:
             raise CommandExecutionError(
                 f"Invalid option '{args}' for /approval",
-                "approval", 
+                "approval",
                 "Use 'on', 'off', or 'selective'"
             )
 
-    def task_handler(args: str, context: CommandContext) -> Dict[str, Any]:
+    def task_handler(args: str, context: CommandContext) -> dict[str, Any]:
         """Control task extraction bypass."""
         if args in ["off", "disabled", "false"]:
             return {"task_extraction_bypass_enabled": True}
@@ -337,7 +331,7 @@ def register_agent_control_commands(registry) -> None:
                 "Use 'on' or 'off'"
             )
 
-    def caps_handler(args: str, context: CommandContext) -> Dict[str, Any]:
+    def caps_handler(args: str, context: CommandContext) -> dict[str, Any]:
         """Control capability selection bypass."""
         if args in ["off", "disabled", "false"]:
             return {"capability_selection_bypass_enabled": True}

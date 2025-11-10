@@ -13,7 +13,8 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 # Set up logger
@@ -81,7 +82,7 @@ def load_registry_data(agent_data_dir: str = None) -> dict:
         registry_export_file = registry_exports_dir / "registry_export.json"
 
         if registry_export_file.exists():
-            with open(registry_export_file, 'r', encoding='utf-8') as f:
+            with open(registry_export_file, encoding='utf-8') as f:
                 registry_data = json.load(f)
 
             logger.info(f"Loaded registry data from: {registry_export_file}")
@@ -150,7 +151,7 @@ class Action:
     def __init__(self):
         self.valves = self.Valves()
 
-    def extract_context_summary_from_messages(self, messages: list) -> Optional[Dict[str, Any]]:
+    def extract_context_summary_from_messages(self, messages: list) -> dict[str, Any] | None:
         """Extract agent context summary from assistant messages."""
 
         try:
@@ -188,7 +189,7 @@ class Action:
             logger.error(f"Full traceback: {traceback.format_exc()}")
             return None
 
-    def extract_available_context_keys(self, context_summary: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def extract_available_context_keys(self, context_summary: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract available context keys from agent context summary."""
         available_contexts = []
 
@@ -239,7 +240,7 @@ class Action:
 
         return type_mapping.get(context_type_name, context_type_name.upper().replace(" ", "_"))
 
-    def _get_user_id(self, user_info: Dict) -> str:
+    def _get_user_id(self, user_info: dict) -> str:
         """Get user ID from user info, using email prefix if available."""
         if not user_info:
             raise ValueError("User information not available")
@@ -262,7 +263,7 @@ class Action:
         safe_user_id = "".join(c for c in user_id if c.isalnum() or c in "-_")
         return Path(self.valves.plans_data_path) / safe_user_id
 
-    def _validate_plan(self, plan_steps: List[Dict], available_context_keys: List[Dict] = None) -> Dict[str, Any]:
+    def _validate_plan(self, plan_steps: list[dict], available_context_keys: list[dict] = None) -> dict[str, Any]:
         """Enhanced validation of execution plan using registry data and agent context."""
         errors = []
         warnings = []
@@ -339,7 +340,7 @@ class Action:
             "warnings": warnings
         }
 
-    def _save_plan(self, plan_steps: List[Dict], user_id: str) -> Dict[str, Any]:
+    def _save_plan(self, plan_steps: list[dict], user_id: str) -> dict[str, Any]:
         """Save execution plan to file."""
         try:
             user_plans_dir = self._get_user_plans_directory(user_id)
@@ -388,10 +389,10 @@ class Action:
             plan_file = pending_plans_dir / "pending_execution_plan.json"
 
             if plan_file.exists():
-                with open(plan_file, 'r', encoding='utf-8') as f:
+                with open(plan_file, encoding='utf-8') as f:
                     plan_data = json.load(f)
                 return {
-                    "has_pending": True, 
+                    "has_pending": True,
                     "plan_data": plan_data,
                     "message": "Found pending execution plan for review"
                 }
@@ -427,7 +428,7 @@ class Action:
                 else:
                     # Add metadata if missing
                     plan_data["__metadata__"] = {
-                        "version": "1.0", 
+                        "version": "1.0",
                         "modified_at": datetime.now().isoformat(),
                         "serialization_type": "modified_execution_plan"
                     }
@@ -450,7 +451,7 @@ class Action:
         __event_call__=None,
         user_id: str = None,
         body: dict = None
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """Create interactive execution plan editor using JavaScript."""
 
         # Check for pending plan first
@@ -1958,7 +1959,7 @@ Note: Your modifications are preserved in this session until you reload the page
         __user__=None,
         __event_emitter__=None,
         __event_call__=None,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Main action handler for execution plan editor."""
 
         try:
@@ -2071,7 +2072,7 @@ Note: Your modifications are preserved in this session until you reload the page
                 # User wants to use the original plan as-is
                 await __event_emitter__(
                     {
-                        "type": "message", 
+                        "type": "message",
                         "data": {"content": "# ✅ Original Plan Ready for Approval\\n\\n**Next Steps:**\\nReturn to chat and respond with **'yes'** to approve the original execution plan."},
                     }
                 )
@@ -2132,4 +2133,4 @@ Note: Your modifications are preserved in this session until you reload the page
                     "type": "status",
                     "data": {"description": "Execution plan editor failed", "done": True},
                 }
-            ) 
+            )

@@ -4,8 +4,8 @@ Data Source Request Abstraction
 Provides structured request information for data source providers.
 """
 
-from typing import Optional, Dict, Any, TYPE_CHECKING
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from osprey.state import AgentState
@@ -29,16 +29,16 @@ class DataSourceRequest:
     Provides flexible interface for data source providers to receive
     specific queries and contextual metadata for intelligent retrieval.
     """
-    user_id: Optional[str]
+    user_id: str | None
     requester: DataSourceRequester
-    query: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    query: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 def create_data_source_request(
-    state: 'AgentState', 
+    state: 'AgentState',
     requester: DataSourceRequester,
-    query: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None
+    query: str | None = None,
+    metadata: dict[str, Any] | None = None
 ) -> DataSourceRequest:
     """
     Create a data source request from AgentState and requester information.
@@ -67,4 +67,4 @@ def create_data_source_request(
         requester=requester,
         query=query,
         metadata=metadata or {}
-    ) 
+    )

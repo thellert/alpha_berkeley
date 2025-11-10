@@ -11,13 +11,14 @@ LangGraph contexts. Features:
 Clean, modern configuration architecture supporting both standalone and graph execution.
 """
 
+import logging
 import os
 import re
 import sys
-import yaml
-import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Union, List
+from typing import Any
+
+import yaml
 
 try:
     from langgraph.config import get_config
@@ -90,7 +91,7 @@ class ConfigBuilder:
                 return default
         return value
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         Initialize configuration builder.
 
@@ -134,10 +135,10 @@ class ConfigBuilder:
         self.configurable = self._build_configurable()
 
 
-    def _load_yaml_file(self, file_path: Path) -> Dict[str, Any]:
+    def _load_yaml_file(self, file_path: Path) -> dict[str, Any]:
         """Load and validate a YAML configuration file."""
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path) as f:
                 config = yaml.safe_load(f)
 
             if config is None:
@@ -179,7 +180,7 @@ class ConfigBuilder:
         else:
             return data
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from single file."""
         # Load the config file
         config = self._load_yaml_file(self.config_path)
@@ -190,7 +191,7 @@ class ConfigBuilder:
         logger.info(f"Loaded configuration from {self.config_path}")
         return config
 
-    def _build_configurable(self) -> Dict[str, Any]:
+    def _build_configurable(self) -> dict[str, Any]:
         """Build the configurable dictionary with pre-computed nested structures."""
         configurable = {
             # ===== SESSION INFORMATION =====
@@ -222,7 +223,7 @@ class ConfigBuilder:
             "epics_config": self.get('execution.epics', {}),
             "approval_config": self.get('approval', {}),
 
-            # ===== PROJECT CONFIGURATION ===== 
+            # ===== PROJECT CONFIGURATION =====
             # Essential for absolute path resolution across deployment environments
             "project_root": self.get('project_root'),
 
@@ -234,19 +235,19 @@ class ConfigBuilder:
 
         return configurable
 
-    def _build_model_configs(self) -> Dict[str, Any]:
+    def _build_model_configs(self) -> dict[str, Any]:
         """Get model configs from flat structure."""
         return self.get('models', {})
 
-    def _build_provider_configs(self) -> Dict[str, Any]:
+    def _build_provider_configs(self) -> dict[str, Any]:
         """Build provider configs."""
         return self.get('api.providers', {})
 
-    def _build_service_configs(self) -> Dict[str, Any]:
+    def _build_service_configs(self) -> dict[str, Any]:
         """Get service configs from flat structure."""
         return self.get('services', {})
 
-    def _build_execution_limits(self) -> Dict[str, Any]:
+    def _build_execution_limits(self) -> dict[str, Any]:
         """Build execution limits"""
 
         return {
@@ -258,7 +259,7 @@ class ConfigBuilder:
             "max_concurrent_classifications": self._require_config('execution_control.limits.max_concurrent_classifications', 5),
         }
 
-    def _build_agent_control_defaults(self) -> Dict[str, Any]:
+    def _build_agent_control_defaults(self) -> dict[str, Any]:
         """Build agent control defaults with explicit configuration control."""
 
         return {
@@ -278,11 +279,11 @@ class ConfigBuilder:
             "task_extraction_bypass_enabled": self._require_config('execution_control.agent_control.task_extraction_bypass_enabled', False),
             "capability_selection_bypass_enabled": self._require_config('execution_control.agent_control.capability_selection_bypass_enabled', False),
 
-            # Note: Execution limits (max_reclassifications, max_planning_attempts, etc.) 
+            # Note: Execution limits (max_reclassifications, max_planning_attempts, etc.)
             # are now centralized in get_execution_limits() utility function
         }
 
-    def _get_current_application(self) -> Optional[str]:
+    def _get_current_application(self) -> str | None:
         """Get the current/primary application name."""
         applications = self.get('applications', [])
         if isinstance(applications, dict) and applications:
@@ -310,14 +311,14 @@ class ConfigBuilder:
 
 # Global configuration instances
 # Default config (singleton pattern for backward compatibility)
-_default_config: Optional[ConfigBuilder] = None
-_default_configurable: Optional[Dict[str, Any]] = None
+_default_config: ConfigBuilder | None = None
+_default_configurable: dict[str, Any] | None = None
 
 # Per-path config cache for explicit config paths
-_config_cache: Dict[str, ConfigBuilder] = {}
+_config_cache: dict[str, ConfigBuilder] = {}
 
 
-def _get_config(config_path: Optional[str] = None, set_as_default: bool = False) -> ConfigBuilder:
+def _get_config(config_path: str | None = None, set_as_default: bool = False) -> ConfigBuilder:
     """Get configuration instance (singleton pattern with optional explicit path).
 
     This function supports two modes:
@@ -378,7 +379,7 @@ def _get_config(config_path: Optional[str] = None, set_as_default: bool = False)
     return _config_cache[resolved_path]
 
 
-def _get_configurable(config_path: Optional[str] = None, set_as_default: bool = False) -> Dict[str, Any]:
+def _get_configurable(config_path: str | None = None, set_as_default: bool = False) -> dict[str, Any]:
     """Get configurable dict with automatic context detection.
 
     This function supports both LangGraph execution contexts and standalone execution,
@@ -418,8 +419,8 @@ def _get_configurable(config_path: Optional[str] = None, set_as_default: bool = 
 # CONTEXT-AWARE UTILITY FUNCTIONS
 # =============================================================================
 
-def get_model_config(app_or_framework: str, service: str = None, model_type: str = None, 
-                     config_path: Optional[str] = None) -> Dict[str, Any]:
+def get_model_config(app_or_framework: str, service: str = None, model_type: str = None,
+                     config_path: str | None = None) -> dict[str, Any]:
     """
     Get model configuration with automatic context detection.
 
@@ -474,7 +475,7 @@ def get_model_config(app_or_framework: str, service: str = None, model_type: str
         return {}
 
 
-def get_provider_config(provider_name: str, config_path: Optional[str] = None) -> Dict[str, Any]:
+def get_provider_config(provider_name: str, config_path: str | None = None) -> dict[str, Any]:
     """Get API provider configuration with automatic context detection.
 
     Args:
@@ -489,7 +490,7 @@ def get_provider_config(provider_name: str, config_path: Optional[str] = None) -
     return provider_configs.get(provider_name, {})
 
 
-def get_framework_service_config(service_name: str, config_path: Optional[str] = None) -> Dict[str, Any]:
+def get_framework_service_config(service_name: str, config_path: str | None = None) -> dict[str, Any]:
     """Get framework service configuration with automatic context detection.
 
     Args:
@@ -513,7 +514,7 @@ def get_framework_service_config(service_name: str, config_path: Optional[str] =
     return framework_services.get(service_name, {})
 
 
-def get_application_service_config(app_name: str, service_name: str) -> Dict[str, Any]:
+def get_application_service_config(app_name: str, service_name: str) -> dict[str, Any]:
     """Get application service configuration with automatic context detection."""
     configurable = _get_configurable()
     service_configs = configurable.get("service_configs", {})
@@ -529,7 +530,7 @@ def get_application_service_config(app_name: str, service_name: str) -> Dict[str
     return app_services.get(service_name, {})
 
 
-def get_pipeline_config(app_name: str = None) -> Dict[str, Any]:
+def get_pipeline_config(app_name: str = None) -> dict[str, Any]:
     """Get pipeline configuration with automatic context detection."""
     configurable = _get_configurable()
     config = _get_config()
@@ -555,14 +556,14 @@ def get_pipeline_config(app_name: str = None) -> Dict[str, Any]:
 
     # Fall back to framework pipeline config
     logger.warning(
-        f"DEPRECATED: Using legacy nested config format for osprey.pipeline. "
-        f"Please migrate to flat config structure with pipeline at top level."
+        "DEPRECATED: Using legacy nested config format for osprey.pipeline. "
+        "Please migrate to flat config structure with pipeline at top level."
     )
     framework = configurable.get("osprey", {})
     return framework.get("pipeline", {})
 
 
-def get_execution_limits() -> Dict[str, Any]:
+def get_execution_limits() -> dict[str, Any]:
     """Get execution limits with automatic context detection."""
     configurable = _get_configurable()
     execution_limits = configurable.get("execution_limits")
@@ -577,13 +578,13 @@ def get_execution_limits() -> Dict[str, Any]:
     return execution_limits
 
 
-def get_agent_control_defaults() -> Dict[str, Any]:
+def get_agent_control_defaults() -> dict[str, Any]:
     """Get agent control defaults with automatic context detection."""
     configurable = _get_configurable()
     return configurable.get("agent_control_defaults", {})
 
 
-def get_session_info() -> Dict[str, Any]:
+def get_session_info() -> dict[str, Any]:
     """Get session information with automatic context detection."""
     configurable = _get_configurable()
     return {
@@ -621,7 +622,7 @@ def get_interface_context() -> str:
     return configurable.get("interface_context", "unknown")
 
 
-def get_current_application() -> Optional[str]:
+def get_current_application() -> str | None:
     """Get current application with automatic context detection."""
     configurable = _get_configurable()
     return configurable.get("current_application")
@@ -715,7 +716,7 @@ def get_agent_dir(sub_dir: str, host_path: bool = False) -> str:
 # LANGGRAPH NATIVE ACCESS
 # =============================================================================
 
-def get_config_value(path: str, default: Any = None, config_path: Optional[str] = None) -> Any:
+def get_config_value(path: str, default: Any = None, config_path: str | None = None) -> Any:
     """
     Get a specific configuration value by dot-separated path.
 
@@ -761,7 +762,7 @@ def get_config_value(path: str, default: Any = None, config_path: Optional[str] 
     return value
 
 
-def get_classification_config() -> Dict[str, Any]:
+def get_classification_config() -> dict[str, Any]:
     """
     Get classification configuration with sensible defaults.
 
@@ -785,7 +786,7 @@ def get_classification_config() -> Dict[str, Any]:
     }
 
 
-def get_full_configuration(config_path: Optional[str] = None) -> Dict[str, Any]:
+def get_full_configuration(config_path: str | None = None) -> dict[str, Any]:
     """
     Get the complete configuration dictionary.
 
@@ -829,4 +830,4 @@ try:
 except FileNotFoundError:
     # Allow deferred initialization if config not available at import time
     # Config will be initialized on first access via the singleton pattern
-    pass 
+    pass

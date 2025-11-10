@@ -24,10 +24,10 @@ The module supports advanced features including:
    :doc:`/developer-guides/01_understanding-the-framework/02_convention-over-configuration` : Model setup and configuration guide
 """
 
-from .factory import get_model
 from .completion import get_chat_completion
+from .factory import get_model
 
 __all__ = [
     'get_model',
     'get_chat_completion'
-] 
+]

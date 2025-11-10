@@ -1,9 +1,10 @@
 """CBORG Provider Adapter Implementation."""
 
-from typing import Optional, Any, Union
+import logging
+from typing import Any
+
 import httpx
 import openai
-import logging
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider as PydanticOpenAIProvider
 
@@ -37,10 +38,10 @@ class CBorgProviderAdapter(BaseProvider):
     def create_model(
         self,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
-        timeout: Optional[float],
-        http_client: Optional[httpx.AsyncClient]
+        api_key: str | None,
+        base_url: str | None,
+        timeout: float | None,
+        http_client: httpx.AsyncClient | None
     ) -> OpenAIModel:
         """Create CBORG model instance for PydanticAI."""
         if http_client:
@@ -70,15 +71,15 @@ class CBorgProviderAdapter(BaseProvider):
         self,
         message: str,
         model_id: str,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         max_tokens: int = 1024,
         temperature: float = 0.0,
-        thinking: Optional[dict] = None,
-        system_prompt: Optional[str] = None,
-        output_format: Optional[Any] = None,
+        thinking: dict | None = None,
+        system_prompt: str | None = None,
+        output_format: Any | None = None,
         **kwargs
-    ) -> Union[str, Any]:
+    ) -> str | Any:
         """Execute CBORG chat completion."""
         # Check for thinking parameters (not supported by CBORG)
         enable_thinking = kwargs.get("enable_thinking", False)
@@ -128,10 +129,10 @@ class CBorgProviderAdapter(BaseProvider):
 
     def check_health(
         self,
-        api_key: Optional[str],
-        base_url: Optional[str],
+        api_key: str | None,
+        base_url: str | None,
         timeout: float = 5.0,
-        model_id: Optional[str] = None
+        model_id: str | None = None
     ) -> tuple[bool, str]:
         """Check CBORG API health by testing /v1/models endpoint."""
         import requests

@@ -10,8 +10,9 @@ Performance Note: Uses lazy imports to avoid loading heavy dependencies
 This keeps `osprey --help` fast.
 """
 
-import click
 import sys
+
+import click
 
 # Import version from osprey package
 try:
@@ -48,7 +49,7 @@ class LazyGroup(click.Group):
         # Get the command function from the module
         # Convention: module name without _cmd suffix
         if cmd_name == 'export-config':
-            cmd_func = getattr(mod, 'export_config')
+            cmd_func = mod.export_config
         else:
             cmd_func = getattr(mod, cmd_name)
 
@@ -88,7 +89,7 @@ def cli(ctx):
         # Silent failure - default theme will be used
         # CLI must work even if theme loading fails
         pass
-    
+
     # NEW: If no command provided, launch interactive menu
     if ctx.invoked_subcommand is None:
         from .interactive_menu import launch_tui

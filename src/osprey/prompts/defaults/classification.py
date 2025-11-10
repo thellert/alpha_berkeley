@@ -2,7 +2,7 @@
 
 import json
 import textwrap
-from typing import Optional, Dict
+
 from osprey.prompts.base import FrameworkPromptBuilder
 
 
@@ -27,11 +27,11 @@ class DefaultClassificationPromptBuilder(FrameworkPromptBuilder):
             Respond ONLY with the JSON object. Do not provide any explanation, preamble, or additional text.
             """).strip()
 
-    def _get_dynamic_context(self, 
+    def _get_dynamic_context(self,
                           capability_instructions: str = "",
                           classifier_examples: str = "",
-                          context: Optional[Dict] = None,
-                          previous_failure: Optional[str] = None,
+                          context: dict | None = None,
+                          previous_failure: str | None = None,
                           **kwargs) -> str:
         """Build dynamic context with capability info and context."""
         sections = []
@@ -54,11 +54,11 @@ class DefaultClassificationPromptBuilder(FrameworkPromptBuilder):
 
         return "\n\n".join(sections)
 
-    def get_system_instructions(self, 
+    def get_system_instructions(self,
                           capability_instructions: str = "",
                           classifier_examples: str = "",
-                          context: Optional[Dict] = None,
-                          previous_failure: Optional[str] = None,
+                          context: dict | None = None,
+                          previous_failure: str | None = None,
                           **kwargs) -> str:
         """Get system instructions for task classification agent configuration."""
         sections = []

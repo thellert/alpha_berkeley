@@ -5,12 +5,12 @@ Unified data source management system that replaces both the registry and integr
 with a cleaner approach supporting core and application-specific data sources.
 """
 
-import logging
 import asyncio
-import warnings
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field
+import logging
 import time
+import warnings
+from dataclasses import dataclass, field
+from typing import Any
 
 from .providers import DataSourceContext, DataSourceProvider
 from .request import DataSourceRequest
@@ -20,11 +20,11 @@ logger = logging.getLogger(__name__)
 @dataclass
 class DataRetrievalResult:
     """Result of data retrieval from multiple sources."""
-    context_data: Dict[str, DataSourceContext] = field(default_factory=dict)
-    successful_sources: List[str] = field(default_factory=list)
-    failed_sources: List[str] = field(default_factory=list)
+    context_data: dict[str, DataSourceContext] = field(default_factory=dict)
+    successful_sources: list[str] = field(default_factory=list)
+    failed_sources: list[str] = field(default_factory=list)
     total_sources_attempted: int = 0
-    retrieval_time_sec: Optional[float] = None
+    retrieval_time_sec: float | None = None
 
     @property
     def has_data(self) -> bool:
@@ -39,7 +39,7 @@ class DataRetrievalResult:
         return len(self.successful_sources) / self.total_sources_attempted
 
     @property
-    def retrieval_time_ms(self) -> Optional[float]:
+    def retrieval_time_ms(self) -> float | None:
         """
         Deprecated: Use retrieval_time_sec instead.
         Returns retrieval time in milliseconds for backwards compatibility.
@@ -51,7 +51,7 @@ class DataRetrievalResult:
         )
         return self.retrieval_time_sec * 1000 if self.retrieval_time_sec is not None else None
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of the retrieval results."""
         return {
             'sources_attempted': self.total_sources_attempted,
@@ -71,7 +71,7 @@ class DataSourceManager:
     """
 
     def __init__(self):
-        self._providers: Dict[str, DataSourceProvider] = {}
+        self._providers: dict[str, DataSourceProvider] = {}
         self._initialized = False
 
     def register_provider(self, provider: DataSourceProvider) -> None:
@@ -85,7 +85,7 @@ class DataSourceManager:
         logger.info(f"Registered data source: {provider.name}")
 
 
-    def get_responding_providers(self, request: DataSourceRequest) -> List[DataSourceProvider]:
+    def get_responding_providers(self, request: DataSourceRequest) -> list[DataSourceProvider]:
         """
         Get all providers that should respond to the current request in registration order.
 
@@ -97,7 +97,7 @@ class DataSourceManager:
         """
         return [p for p in self._providers.values() if p.should_respond(request)]
 
-    async def retrieve_all_context(self, request: DataSourceRequest, 
+    async def retrieve_all_context(self, request: DataSourceRequest,
                                   timeout_seconds: float = 30.0) -> DataRetrievalResult:
         """
         Retrieve context from all responding data sources.
@@ -135,7 +135,7 @@ class DataSourceManager:
                 asyncio.gather(*[task for _, task in tasks], return_exceptions=True),
                 timeout=timeout_seconds
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Data source retrieval timed out after {timeout_seconds}s")
             # Cancel remaining tasks
             for _, task in tasks:
@@ -206,7 +206,7 @@ class DataSourceManager:
 
         return retrieval_result
 
-    def get_provider(self, provider_name: str) -> Optional[DataSourceProvider]:
+    def get_provider(self, provider_name: str) -> DataSourceProvider | None:
         """
         Get a specific data source provider by name.
 
@@ -218,7 +218,7 @@ class DataSourceManager:
         """
         return self._providers.get(provider_name)
 
-    async def retrieve_from_provider(self, provider_name: str, request: DataSourceRequest) -> Optional[DataSourceContext]:
+    async def retrieve_from_provider(self, provider_name: str, request: DataSourceRequest) -> DataSourceContext | None:
         """
         Retrieve data from a specific provider by name.
 
@@ -240,8 +240,8 @@ class DataSourceManager:
 
         return await self._retrieve_from_provider(provider, request)
 
-    async def _retrieve_from_provider(self, provider: DataSourceProvider, 
-                                     request: DataSourceRequest) -> Optional[DataSourceContext]:
+    async def _retrieve_from_provider(self, provider: DataSourceProvider,
+                                     request: DataSourceRequest) -> DataSourceContext | None:
         """
         Retrieve data from a single provider with error handling.
 
@@ -264,7 +264,7 @@ class DataSourceManager:
 
 
 # Global manager instance
-_data_source_manager: Optional[DataSourceManager] = None
+_data_source_manager: DataSourceManager | None = None
 
 def get_data_source_manager() -> DataSourceManager:
     """
@@ -293,4 +293,4 @@ def get_data_source_manager() -> DataSourceManager:
         except Exception as e:
             logger.warning(f"Failed to load data sources from registry: {e}")
 
-    return _data_source_manager 
+    return _data_source_manager

@@ -6,13 +6,12 @@ into the Osprey Agentic Framework. Data sources can include user memory, knowled
 databases, APIs, and custom user-defined sources.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, TYPE_CHECKING
-from dataclasses import dataclass, field
 import logging
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
-    from osprey.state import AgentState
     from .request import DataSourceRequest
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ class DataSourceContext:
     source_name: str                    # Unique identifier for the data source
     context_type: str                   # Type of context data (for validation)
     data: Any                          # The actual retrieved data
-    metadata: Dict[str, Any] = field(default_factory=dict)  # Additional source metadata
+    metadata: dict[str, Any] = field(default_factory=dict)  # Additional source metadata
     provider: Optional['DataSourceProvider'] = None  # Reference to the provider that created this context
 
     def format_for_prompt(self) -> str:
@@ -49,7 +48,7 @@ class DataSourceContext:
         else:
             return str(self.data)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get a summary of this data source context for logging/debugging."""
         return {
             'source_name': self.source_name,
@@ -87,7 +86,7 @@ class DataSourceProvider(ABC):
         pass
 
     @abstractmethod
-    async def retrieve_data(self, request: 'DataSourceRequest') -> Optional[DataSourceContext]:
+    async def retrieve_data(self, request: 'DataSourceRequest') -> DataSourceContext | None:
         """
         Retrieve data from this source given the current request.
 
@@ -126,7 +125,7 @@ class DataSourceProvider(ABC):
         """Human-readable description of this data source."""
         return f"Data source: {self.name}"
 
-    def get_config_requirements(self) -> Dict[str, Any]:
+    def get_config_requirements(self) -> dict[str, Any]:
         """
         Get configuration requirements for this data source.
 
@@ -185,4 +184,4 @@ class DataSourceProvider(ABC):
 
         except Exception as e:
             logger.warning(f"Failed to format context from {self.name}: {e}")
-            return f"**{source_title}:**\n(Error formatting content: {e})" 
+            return f"**{source_title}:**\n(Error formatting content: {e})"

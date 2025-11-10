@@ -42,17 +42,14 @@ Decorator Architecture:
 """
 
 import time
-import asyncio
-from functools import wraps
-from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
-from osprey.utils.logger import get_logger
 from osprey.base.errors import ErrorSeverity
-
+from osprey.utils.logger import get_logger
 
 try:
-    from langgraph.config import get_stream_writer, get_config
+    from langgraph.config import get_config, get_stream_writer
 except ImportError:
     get_stream_writer = None
     get_config = None
@@ -60,8 +57,6 @@ except ImportError:
 # Import types for type hints
 if TYPE_CHECKING:
     from osprey.state import AgentState
-    from osprey.base.planning import PlannedStep
-    from osprey.base.errors import ErrorClassification
 
 # Lazy imports to avoid circular dependencies
 def _import_error_classification():
@@ -194,7 +189,7 @@ def capability_node(cls):
     async def langgraph_node(
         state: 'AgentState',
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """LangGraph-native node function with manual retry handling via router."""
 
         # Get streaming capability for status updates
@@ -232,7 +227,7 @@ def capability_node(cls):
                     config = get_config()
                     configurable = config.get("configurable", {})
                     if configurable.get('development', {}).get('raise_raw_errors', False):
-                        logger.error(f"Development mode: Re-raising original exception directly for debugging")
+                        logger.error("Development mode: Re-raising original exception directly for debugging")
                         raise exc
             except (RuntimeError, ImportError, AttributeError, KeyError):
                 # If config access fails (outside runnable context), continue with normal error handling
@@ -310,14 +305,14 @@ def capability_node(cls):
 
 
 def _handle_capability_state_updates(
-    state: Dict[str, Any],
-    result: Dict[str, Any],
-    step: Dict[str, Any],
+    state: dict[str, Any],
+    result: dict[str, Any],
+    step: dict[str, Any],
     capability_name: str,
     start_time: float,
     execution_time: float,
     logger
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Handle comprehensive state updates for capability execution."""
 
     # Lazy import to avoid circular imports
@@ -550,7 +545,7 @@ def _create_infrastructure_node(cls, quiet=False):
     async def langgraph_node(
         state: 'AgentState',
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """LangGraph-native node function with manual error handling.
 
         This function is called by LangGraph during execution. Infrastructure nodes
@@ -604,7 +599,7 @@ def _create_infrastructure_node(cls, quiet=False):
                     config = get_config()
                     configurable = config.get("configurable", {})
                     if configurable.get('development', {}).get('raise_raw_errors', False):
-                        logger.error(f"Development mode: Re-raising original exception for debugging")
+                        logger.error("Development mode: Re-raising original exception for debugging")
                         raise exc
             except (RuntimeError, ImportError, AttributeError, KeyError):
                 # If config access fails (outside runnable context), continue with normal error handling

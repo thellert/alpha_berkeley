@@ -33,9 +33,10 @@ and inter-process communication.
 """
 
 
-from typing import Optional, Any, TYPE_CHECKING
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
+
 from pydantic import BaseModel, Field
 
 from .errors import ExecutionError
@@ -118,11 +119,11 @@ class ExecutionResult:
        :class:`ExecutionRecord` : Historical execution records with steps
     """
     success: bool
-    data: Optional[Any] = None
-    error: Optional[ExecutionError] = None
-    execution_time: Optional[float] = None  # Duration in seconds
-    start_time: Optional[datetime] = None   # When execution started
-    end_time: Optional[datetime] = None     # When execution completed
+    data: Any | None = None
+    error: ExecutionError | None = None
+    execution_time: float | None = None  # Duration in seconds
+    start_time: datetime | None = None   # When execution started
+    end_time: datetime | None = None     # When execution completed
 
 
 @dataclass
@@ -209,7 +210,7 @@ class ExecutionRecord:
     step: 'PlannedStep'  # Import handled at runtime
     start_time: datetime
     result: ExecutionResult
-    end_time: Optional[datetime] = None 
+    end_time: datetime | None = None
 
 
 class CapabilityMatch(BaseModel):
@@ -274,4 +275,4 @@ class CapabilityMatch(BaseModel):
        :class:`TaskClassifierGuide` : Classification guidance for capabilities
        :class:`ClassifierExample` : Few-shot examples for classification
     """
-    is_match: bool = Field(description="A boolean (true or false) indicating if the user's request matches the capability.") 
+    is_match: bool = Field(description="A boolean (true or false) indicating if the user's request matches the capability.")

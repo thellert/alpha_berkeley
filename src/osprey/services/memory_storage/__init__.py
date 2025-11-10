@@ -47,9 +47,9 @@ Architecture Overview:
    :func:`configs.config.get_agent_dir` : Configuration system integration
 """
 
-from .storage_manager import MemoryStorageManager, get_memory_storage_manager
 from .memory_provider import UserMemoryProvider
 from .models import MemoryContent
+from .storage_manager import MemoryStorageManager, get_memory_storage_manager
 
 __all__ = [
     # Core storage layer
@@ -59,4 +59,4 @@ __all__ = [
 
     # Data source integration
     'UserMemoryProvider',
-] 
+]

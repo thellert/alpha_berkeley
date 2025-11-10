@@ -45,13 +45,10 @@ with the framework's prompt building and LLM integration systems.
    :mod:`osprey.infrastructure.classifier` : Classification system integration
 """
 
-import dataclasses
 import json
-import random
-import textwrap
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -138,9 +135,9 @@ class BaseExample(ABC):
 
     @staticmethod
     def join(
-        examples: List['BaseExample'], 
+        examples: list['BaseExample'],
         separator: str = "\n",
-        max_examples: Optional[int] = None,
+        max_examples: int | None = None,
         randomize: bool = False,
         add_numbering: bool = False
     ) -> str:
@@ -229,8 +226,8 @@ class OrchestratorExample(BaseExample):
     """
     step: PlannedStep
     scenario_description: str  # Human-readable description of when/why to use this
-    context_requirements: Optional[Dict[str, str]] = None  # What needs to be in context
-    notes: Optional[str] = None  # Additional guidance or caveats
+    context_requirements: dict[str, str] | None = None  # What needs to be in context
+    notes: str | None = None  # Additional guidance or caveats
 
     def format_for_prompt(self) -> str:
         """Format this orchestrator example for execution planning with comprehensive context.
@@ -288,7 +285,7 @@ class OrchestratorExample(BaseExample):
                 formatted_text += f"     * {key}: {desc}\n"
 
         # Format the step dynamically based on actual PlannedStep structure
-        formatted_text += f"   PlannedStep(\n"
+        formatted_text += "   PlannedStep(\n"
 
         # Get all fields from the PlannedStep TypedDict dynamically
         step_fields = PlannedStep.__annotations__.keys()
@@ -518,7 +515,7 @@ class TaskClassifierGuide(BaseModel):
        :mod:`osprey.infrastructure.classifier` : Classification system integration
     """
     instructions: str
-    examples: List[ClassifierExample] = Field(default_factory=list)
+    examples: list[ClassifierExample] = Field(default_factory=list)
     actions_if_true: ClassifierActions = Field(default_factory=ClassifierActions)
 
 
@@ -587,6 +584,6 @@ class OrchestratorGuide(BaseModel):
        :mod:`osprey.infrastructure.orchestration` : Orchestration system integration
     """
     instructions: str
-    examples: List[OrchestratorExample] = Field(default_factory=list)
+    examples: list[OrchestratorExample] = Field(default_factory=list)
     # Priority for orchestrator guide ordering
-    priority: int = 0 
+    priority: int = 0

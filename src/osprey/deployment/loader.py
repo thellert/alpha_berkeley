@@ -62,13 +62,14 @@ Examples:
 import copy
 import logging
 import os
+
 import yaml
 
 all = ["Params", "load_params"]
 
 logging.basicConfig(
-    level=logging.INFO, 
-    format=f"%(levelname)s [Params] - %(asctime)s - %(message)s")
+    level=logging.INFO,
+    format="%(levelname)s [Params] - %(asctime)s - %(message)s")
 
 def _deep_update_dict(source_dict, update_dict):
     """Recursively merge dictionary updates while preserving nested structure.
@@ -190,7 +191,7 @@ def _load_yaml(file_path, visited=[]):
     newVisited = visited.copy()
     newVisited.append(abs_file_path)
 
-    with open(file_path, 'r') as file:
+    with open(file_path) as file:
         values = yaml.safe_load(file)
 
         if "import" in values:
@@ -379,7 +380,7 @@ class InvalidParam(AbstractParam):
            Unlike dot notation (__getattr__), bracket notation immediately raises
            an error to provide clear feedback about the invalid parameter access.
         """
-        raise TypeError(f"'{str(self)}'")    
+        raise TypeError(f"'{str(self)}'")
 
     def __bool__(self):
         """Evaluate InvalidParam objects as False in boolean contexts.
@@ -582,7 +583,7 @@ class Params(AbstractParam):
                 out += f"{pad}  {k}: {v_repr}\n"
             out += f"{pad}}}"
         elif self._is_list:
-            out += f"["
+            out += "["
             for i, v in enumerate(self._data):
                 v = self.__expand_vars(v)
                 v_repr = v.__get_repr(indent + 1) if isinstance(v, Params) else v
@@ -591,7 +592,7 @@ class Params(AbstractParam):
                     out += f"\n{pad}  {v_repr}{comma}"
                 else:
                     out += f"{v_repr}{comma}"
-            out += f"]"
+            out += "]"
         else:
             out += f"{self._data}"
 
@@ -610,8 +611,8 @@ class Params(AbstractParam):
 
 
 if __name__ == "__main__":
-    import sys
     import pprint
+    import sys
 
     if len(sys.argv) > 0:
         for arg in sys.argv[1:]:

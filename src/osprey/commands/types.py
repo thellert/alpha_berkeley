@@ -19,7 +19,7 @@ a unified command registry and execution model.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Callable, Any, Union, Protocol
+from typing import Any, Protocol
 
 
 class CommandCategory(Enum):
@@ -129,23 +129,23 @@ class CommandContext:
     """
     # Interface context
     interface_type: str = "unknown"  # "cli", "openwebui", "api", etc.
-    user_id: Optional[str] = None
-    session_id: Optional[str] = None
+    user_id: str | None = None
+    session_id: str | None = None
 
     # CLI-specific context
-    cli_instance: Optional[Any] = None
-    console: Optional[Any] = None
+    cli_instance: Any | None = None
+    console: Any | None = None
 
     # Agent context
-    agent_state: Optional[Dict[str, Any]] = None
-    gateway: Optional[Any] = None
-    config: Optional[Dict[str, Any]] = None
+    agent_state: dict[str, Any] | None = None
+    gateway: Any | None = None
+    config: dict[str, Any] | None = None
 
     # Service context
-    service_instance: Optional[Any] = None
+    service_instance: Any | None = None
 
     # Additional context data
-    extra: Dict[str, Any] = field(default_factory=dict)
+    extra: dict[str, Any] = field(default_factory=dict)
 
 
 class CommandHandler(Protocol):
@@ -168,10 +168,10 @@ class CommandHandler(Protocol):
     """
 
     async def __call__(
-        self, 
-        args: str, 
+        self,
+        args: str,
         context: CommandContext
-    ) -> Union[CommandResult, Dict[str, Any]]:
+    ) -> CommandResult | dict[str, Any]:
         """Execute the command.
 
         Args:
@@ -272,14 +272,14 @@ class Command:
     handler: CommandHandler
 
     # Command metadata
-    aliases: List[str] = field(default_factory=list)
-    help_text: Optional[str] = None
-    syntax: Optional[str] = None
+    aliases: list[str] = field(default_factory=list)
+    help_text: str | None = None
+    syntax: str | None = None
 
     # Execution constraints
     requires_args: bool = False
-    valid_options: Optional[List[str]] = None
-    interface_restrictions: Optional[List[str]] = None  # ["cli", "openwebui"]
+    valid_options: list[str] | None = None
+    interface_restrictions: list[str] | None = None  # ["cli", "openwebui"]
 
     # Display properties
     hidden: bool = False
@@ -325,7 +325,7 @@ class Command:
             return True
         return interface_type in self.interface_restrictions
 
-    def validate_option(self, option: Optional[str]) -> bool:
+    def validate_option(self, option: str | None) -> bool:
         """Validate command arguments against defined constraints.
 
         Performs validation of command arguments based on requires_args and
@@ -357,20 +357,20 @@ class Command:
         return True
 
 
-@dataclass 
+@dataclass
 class ParsedCommand:
     """Result of parsing a command line."""
     command_name: str
-    option: Optional[str] = None
+    option: str | None = None
     remaining_text: str = ""
     is_valid: bool = True
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class CommandExecutionError(Exception):
     """Exception raised during command execution."""
 
-    def __init__(self, message: str, command_name: str, suggestion: Optional[str] = None):
+    def __init__(self, message: str, command_name: str, suggestion: str | None = None):
         super().__init__(message)
         self.command_name = command_name
         self.suggestion = suggestion

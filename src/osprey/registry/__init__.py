@@ -93,35 +93,34 @@ Examples:
 """
 
 # Core registry system
-from .manager import RegistryManager, get_registry, initialize_registry, reset_registry, registry
-
 # Framework components for application use - all shared definitions in base
 from .base import (
-    RegistryConfigProvider,
-    NodeRegistration,
     CapabilityRegistration,
     ContextClassRegistration,
     DataSourceRegistration,
-    ServiceRegistration,
+    DomainAnalyzerRegistration,
+    ExecutionPolicyAnalyzerRegistration,
+    ExtendedRegistryConfig,
     FrameworkPromptProviderRegistration,
+    NodeRegistration,
     ProviderRegistration,
     RegistryConfig,
-    ExtendedRegistryConfig,
-    ExecutionPolicyAnalyzerRegistration,
-    DomainAnalyzerRegistration
+    RegistryConfigProvider,
+    ServiceRegistration,
 )
 
 # Helper functions for simplified registry creation
 from .helpers import (
     extend_framework_registry,
+    generate_explicit_registry_code,
     get_framework_defaults,
-    generate_explicit_registry_code
 )
+from .manager import RegistryManager, get_registry, initialize_registry, registry, reset_registry
 
 __all__ = [
     # Core registry system
     'RegistryManager',
-    'get_registry', 
+    'get_registry',
     'initialize_registry',
     'reset_registry',
     'registry',
@@ -129,7 +128,7 @@ __all__ = [
     # Configuration classes for applications
     'RegistryConfigProvider',
     'NodeRegistration',
-    'CapabilityRegistration', 
+    'CapabilityRegistration',
     'ContextClassRegistration',
     'DataSourceRegistration',
     'ServiceRegistration',
@@ -142,4 +141,4 @@ __all__ = [
     'extend_framework_registry',
     'get_framework_defaults',
     'generate_explicit_registry_code',
-] 
+]

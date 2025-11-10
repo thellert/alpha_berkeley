@@ -8,23 +8,20 @@ intent before proceeding with technical operations.
 
 import asyncio
 import logging
-from typing import List, Dict, Optional, Any
-from dataclasses import dataclass
+
+from langchain_core.messages import AIMessage
+from langgraph.config import get_stream_writer
 from pydantic import BaseModel, Field
-import textwrap
 
 from osprey.base import BaseCapability
 from osprey.base.decorators import capability_node
 from osprey.base.errors import ErrorClassification, ErrorSeverity
 from osprey.context.context_manager import ContextManager
-from osprey.state import AgentState, ChatHistoryFormatter, StateManager
-from osprey.base.planning import PlannedStep
 from osprey.models import get_chat_completion
 from osprey.prompts.loader import get_framework_prompts
+from osprey.state import AgentState, ChatHistoryFormatter, StateManager
+from osprey.utils.config import get_model_config
 from osprey.utils.logger import get_logger
-from osprey.utils.config import get_full_configuration, get_model_config
-from langchain_core.messages import AIMessage
-from langgraph.config import get_stream_writer
 
 logger = logging.getLogger(__name__)
 
@@ -46,12 +43,12 @@ class ClarifyingQuestionsResponse(BaseModel):
     """
 
     reason: str = Field(description="Brief explanation of why clarification is needed")
-    questions: List[str] = Field(
+    questions: list[str] = Field(
         description="List of specific, targeted questions to clarify the user's request",
         min_length=1,
         max_length=4
     )
-    missing_info: List[str] = Field(
+    missing_info: list[str] = Field(
         description="List of types of missing information (e.g., 'time_range', 'system_specification')",
         default=[]
     )
@@ -132,7 +129,6 @@ class ClarifyCapability(BaseCapability):
     @staticmethod
     def classify_error(exc: Exception, context: dict):
         """Clarify error classification."""
-        from osprey.base.errors import ErrorClassification, ErrorSeverity
 
         return ErrorClassification(
             severity=ErrorSeverity.RETRIABLE,
@@ -198,7 +194,7 @@ def _generate_clarifying_questions(state, task_objective: str) -> ClarifyingQues
         context_items = []
         for context_key, context_data in relevant_context.items():
             context_items.append(f"- {context_key}: {context_data}")
-        context_info = f"\n\nAvailable context data:\n" + "\n".join(context_items)
+        context_info = "\n\nAvailable context data:\n" + "\n".join(context_items)
 
     message = f"{system_instructions}\n\n{clarification_query}{context_info}"
 

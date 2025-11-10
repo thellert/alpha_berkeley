@@ -25,23 +25,22 @@ a structured fallback response to ensure users always receive meaningful error i
 """
 
 import asyncio
-import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
 
-from osprey.base.decorators import infrastructure_node
-from osprey.base.nodes import BaseInfrastructureNode
-from osprey.base.errors import ErrorClassification, ErrorSeverity
-from osprey.state import AgentState, StateManager
-from osprey.models import get_chat_completion
-from osprey.registry import get_registry
-from osprey.prompts.loader import get_framework_prompts
-from osprey.utils.config import get_full_configuration, get_model_config
-from osprey.utils.logger import get_logger
 from langchain_core.messages import AIMessage
 from langgraph.config import get_stream_writer
 
+from osprey.base.decorators import infrastructure_node
+from osprey.base.errors import ErrorClassification, ErrorSeverity
+from osprey.base.nodes import BaseInfrastructureNode
+from osprey.models import get_chat_completion
+from osprey.prompts.loader import get_framework_prompts
+from osprey.registry import get_registry
+from osprey.state import AgentState, StateManager
+from osprey.utils.config import get_model_config
+from osprey.utils.logger import get_logger
 
 logger = get_logger("error")
 
@@ -125,10 +124,10 @@ class ErrorContext:
     current_task: str
     failed_operation: str
     total_operations: int = 0
-    execution_time: Optional[float] = None
-    retry_count: Optional[int] = None
-    successful_steps: List[str] = None
-    failed_steps: List[str] = None
+    execution_time: float | None = None
+    retry_count: int | None = None
+    successful_steps: list[str] = None
+    failed_steps: list[str] = None
 
     def __post_init__(self):
         """Initialize list fields to empty lists if None."""
@@ -151,7 +150,7 @@ class ErrorContext:
         """
         return self.error_classification.severity
 
-    @property 
+    @property
     def error_message(self) -> str:
         """Extract user-friendly error message from the error classification.
 
@@ -166,7 +165,7 @@ class ErrorContext:
         return self.error_classification.user_message or "Unknown error occurred"
 
     @property
-    def capability_name(self) -> Optional[str]:
+    def capability_name(self) -> str | None:
         """Extract the name of the specific capability that encountered the error.
 
         :return: Name of the failing capability if available in context, None otherwise
@@ -329,7 +328,7 @@ class ErrorNode(BaseInfrastructureNode):
         )
 
     @staticmethod
-    async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
+    async def execute(state: AgentState, **kwargs) -> dict[str, Any]:
         """Generate comprehensive error response with structured analysis and LLM insights.
 
         This method orchestrates the complete error response generation pipeline,
@@ -430,8 +429,8 @@ class ErrorNode(BaseInfrastructureNode):
         streaming = get_stream_writer()
         if streaming:
             streaming({
-                "event_type": "status", 
-                "message": "Generating error response...", 
+                "event_type": "status",
+                "message": "Generating error response...",
                 "progress": 0.1
             })
 
@@ -441,8 +440,8 @@ class ErrorNode(BaseInfrastructureNode):
 
             if streaming:
                 streaming({
-                    "event_type": "status", 
-                    "message": "Generating LLM explanation...", 
+                    "event_type": "status",
+                    "message": "Generating LLM explanation...",
                     "progress": 0.5
                 })
 
@@ -450,9 +449,9 @@ class ErrorNode(BaseInfrastructureNode):
 
             if streaming:
                 streaming({
-                    "event_type": "status", 
-                    "message": "Error response generated", 
-                    "progress": 1.0, 
+                    "event_type": "status",
+                    "message": "Error response generated",
+                    "progress": 1.0,
                     "complete": True
                 })
 
@@ -468,9 +467,9 @@ class ErrorNode(BaseInfrastructureNode):
 
             if streaming:
                 streaming({
-                    "event_type": "status", 
-                    "message": "Using fallback error response", 
-                    "progress": 1.0, 
+                    "event_type": "status",
+                    "message": "Using fallback error response",
+                    "progress": 1.0,
                     "complete": True
                 })
 
@@ -730,7 +729,7 @@ def _populate_error_context(error_context: ErrorContext, state: AgentState) -> N
 
     # Sort by step_index to maintain chronological order
     ordered_results = sorted(
-        step_results.items(), 
+        step_results.items(),
         key=lambda x: x[1].get('step_index', 0)
     )
 

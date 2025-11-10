@@ -7,10 +7,9 @@ icon_url: data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdC
 Description: View current ALS Assistant Agent context data and available information
 """
 
-import json
 import logging
-from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ class Action:
     def __init__(self):
         self.valves = self.Valves()
 
-    def extract_context_summary_from_messages(self, messages: list) -> Optional[Dict[str, Any]]:
+    def extract_context_summary_from_messages(self, messages: list) -> dict[str, Any] | None:
         """Extract agent context summary from assistant messages."""
 
         try:
@@ -72,7 +71,7 @@ class Action:
             logger.error(f"Full traceback: {traceback.format_exc()}")
             return None
 
-    def format_context_summary_markdown(self, context_summary: Dict[str, Any], user_valves) -> str:
+    def format_context_summary_markdown(self, context_summary: dict[str, Any], user_valves) -> str:
         """Format the agent context summary as a well-structured markdown string."""
         # Handle both new and old data formats
         context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
@@ -124,7 +123,7 @@ class Action:
         """Get appropriate emoji for context category."""
         emoji_map = {
             "PV_ADDRESSES": "📍",
-            "TIME_RANGE": "⏰", 
+            "TIME_RANGE": "⏰",
             "PV_VALUES": "📊",
             "ARCHIVER_DATA": "📈",
             "ANALYSIS_RESULTS": "🔬",
@@ -135,7 +134,7 @@ class Action:
         }
         return emoji_map.get(context_type, "📁")
 
-    def _add_context_summary_table(self, markdown: str, context_info: Dict[str, Any], user_valves) -> str:
+    def _add_context_summary_table(self, markdown: str, context_info: dict[str, Any], user_valves) -> str:
         """Add a summary table for the context item."""
         # Common fields
         summary_table = "| Field | Value |\n|-------|-------|\n"
@@ -193,7 +192,7 @@ class Action:
 
         return markdown + summary_table + "\n"
 
-    def _add_detailed_values(self, markdown: str, context_info: Dict[str, Any], user_valves) -> str:
+    def _add_detailed_values(self, markdown: str, context_info: dict[str, Any], user_valves) -> str:
         """Add detailed values section."""
         context_type = context_info.get("type", "Unknown")
 
@@ -285,7 +284,7 @@ class Action:
         __user__=None,
         __event_emitter__=None,
         __event_call__=None,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """Display formatted agent context using a popup modal."""
         logger.info(f"User - Name: {__user__['name']}, ID: {__user__['id']} - Requesting ALS Assistant agent context")
 
@@ -601,7 +600,7 @@ class Action:
                 }
             )
 
-    def format_context_summary_html(self, context_summary: Dict[str, Any], user_valves) -> str:
+    def format_context_summary_html(self, context_summary: dict[str, Any], user_valves) -> str:
         """Format the agent context summary as HTML for the popup display."""
         # Handle both new and old data formats
         context_data = context_summary.get("context_data") or context_summary.get("context_details", {})
@@ -677,7 +676,7 @@ class Action:
 
         return html
 
-    def _add_context_summary_table_html(self, context_info: Dict[str, Any], user_valves) -> str:
+    def _add_context_summary_table_html(self, context_info: dict[str, Any], user_valves) -> str:
         """Add a summary table for the context item in HTML format."""
         # Common fields
         summary_html = """
@@ -807,7 +806,7 @@ class Action:
         summary_html += '</tbody></table></div>'
         return summary_html
 
-    def _add_detailed_values_html(self, context_info: Dict[str, Any], user_valves) -> str:
+    def _add_detailed_values_html(self, context_info: dict[str, Any], user_valves) -> str:
         """Add detailed values section in HTML format."""
         context_type = context_info.get("type", "Unknown")
         html = ""
@@ -927,8 +926,8 @@ class Action:
 actions = [
     {
         "id": "als_assistant_agent_context",
-        "name": "Agent Context", 
+        "name": "Agent Context",
         "description": "View current ALS Assistant agent context data and available information",
         "icon_url": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyUzYuNDggMjIgMTIgMjJTMjIgMTcuNTIgMjIgMTJTMTcuNTIgMiAxMiAyWk0xMiAyMEM3LjU5IDIwIDQgMTYuNDEgNCAxMlM3LjU5IDQgMTIgNFMyMCA3LjU5IDIwIDEyUzE2LjQxIDIwIDEyIDIwWiIgZmlsbD0iY3VycmVudENvbG9yIi8+CjxwYXRoIGQ9Ik0xMiA2VjhNMTIgMTZWMThNMTAgMTJIMTRNOCAxMkg2TTE4IDEySDE2IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+"
     }
-] 
+]

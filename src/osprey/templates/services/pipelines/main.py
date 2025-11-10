@@ -11,28 +11,26 @@ The Pipeline handles OpenWebUI interaction and delegates all processing to the G
 """
 
 import asyncio
-import json
+import logging
 import os
 import queue
-import sys
 import threading
 import time
-import uuid
-from typing import Any, Dict, Generator, Iterator, List, Optional, Union
 from collections import deque
-import logging
+from collections.abc import Generator, Iterator
+from typing import Any
+
+from langgraph.checkpoint.memory import MemorySaver
+from pydantic import BaseModel, Field
+
+from osprey.graph import create_graph
+from osprey.infrastructure.gateway import Gateway
 
 # NOTE: sys.path manipulation removed - osprey is pip-installed
 # In pip-installable architecture, osprey modules are directly importable
-
-from osprey.registry import initialize_registry, get_registry
-from osprey.graph import create_graph
-from osprey.infrastructure.gateway import Gateway
-from langgraph.checkpoint.memory import MemorySaver
-from langchain_core.messages import HumanMessage, AIMessage
-from pydantic import BaseModel, Field
+from osprey.registry import get_registry, initialize_registry
+from osprey.utils.config import get_current_application, get_full_configuration, get_pipeline_config
 from osprey.utils.logger import get_logger
-from osprey.utils.config import get_full_configuration, get_current_application, get_pipeline_config
 
 logger = get_logger("pipeline")
 
@@ -606,7 +604,7 @@ class Pipeline:
         configurable.update({
             "user_id": user_id,
             "thread_id": f"{user_id}_{chat_id}",
-            "chat_id": chat_id, 
+            "chat_id": chat_id,
             "session_id": session_id,
             "interface_context": "openwebui"
         })
@@ -647,12 +645,12 @@ class Pipeline:
         return config
 
     def pipe(
-        self, 
-        user_message: str, 
-        model_id: str, 
-        messages: List[dict], 
+        self,
+        user_message: str,
+        model_id: str,
+        messages: list[dict],
         body: dict
-    ) -> Union[str, Generator, Iterator]:
+    ) -> str | Generator | Iterator:
         """Main pipeline execution method compatible with OpenWebUI protocol.
 
         This method serves as the primary entry point for OpenWebUI message processing,
@@ -723,7 +721,7 @@ class Pipeline:
         # Use generator pattern following LangGraph Pipelines standards
         return self._execute_pipeline(user_message, user_id, chat_id, session_id)
 
-    def _execute_pipeline(self, user_message: str, user_id: str, chat_id: str, session_id: str) -> Iterator[Union[str, dict]]:
+    def _execute_pipeline(self, user_message: str, user_id: str, chat_id: str, session_id: str) -> Iterator[str | dict]:
         """Execute the complete pipeline processing flow with streaming and error handling.
 
         Handles the core pipeline execution including framework initialization,
@@ -945,7 +943,7 @@ class Pipeline:
             yield self._create_status_event("", True)
             yield f"❌ Execution error: {exception_holder[0]}"
 
-    def _extract_response_from_event(self, event: Dict[str, Any]) -> Optional[str]:
+    def _extract_response_from_event(self, event: dict[str, Any]) -> str | None:
         """Extract response from a streaming event"""
 
         for node_name, node_data in event.items():
@@ -960,7 +958,7 @@ class Pipeline:
 
         return None
 
-    def _extract_response_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_response_from_state(self, state: dict[str, Any]) -> str | None:
         """Extract response from final state and include any generated figures and commands"""
 
         messages = state.get("messages", [])
@@ -999,7 +997,7 @@ class Pipeline:
         else:
             return text_response
 
-    def _extract_figures_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_figures_from_state(self, state: dict[str, Any]) -> str | None:
         """
         Extract figures from centralized registry and convert to base64 HTML.
 
@@ -1054,7 +1052,7 @@ class Pipeline:
             return f"*❌ Figure display error: {str(e)}*"
 
 
-    def _convert_figure_to_static_url(self, figure_path: str, figure_number: int, capability: str, created_at: str) -> Optional[str]:
+    def _convert_figure_to_static_url(self, figure_path: str, figure_number: int, capability: str, created_at: str) -> str | None:
         """Convert agent directory figure to static URL - enforces our architectural constraint"""
 
         try:
@@ -1073,11 +1071,11 @@ class Pipeline:
 
             if not project_root:
                 logger.error("PROJECT_ROOT environment variable not set")
-                return f"*❌ Configuration error: PROJECT_ROOT not set*"
+                return "*❌ Configuration error: PROJECT_ROOT not set*"
 
             if not agent_data_dir:
-                logger.error("AGENT_DATA_DIR environment variable not set")  
-                return f"*❌ Configuration error: AGENT_DATA_DIR not set*"
+                logger.error("AGENT_DATA_DIR environment variable not set")
+                return "*❌ Configuration error: AGENT_DATA_DIR not set*"
 
             # Construct expected paths
             host_agent_prefix = f"{project_root}/{agent_data_dir}/"
@@ -1092,7 +1090,7 @@ class Pipeline:
                 relative_path = str(figure_path)[len(container_agent_prefix):]
             else:
                 # Architecture constraint violation
-                logger.error(f"ARCHITECTURE VIOLATION: Figure not in agent directory")
+                logger.error("ARCHITECTURE VIOLATION: Figure not in agent directory")
                 logger.error(f"Figure path: {figure_path}")
                 logger.error(f"Expected host prefix: {host_agent_prefix}")
                 logger.error(f"Expected container prefix: {container_agent_prefix}")
@@ -1116,7 +1114,7 @@ class Pipeline:
             logger.error(f"Failed to convert figure to static URL: {e}")
             return None
 
-    def _extract_commands_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_commands_from_state(self, state: dict[str, Any]) -> str | None:
         """
         Extract launchable commands from centralized registry and format for display.
 
@@ -1164,7 +1162,7 @@ class Pipeline:
             logger.error(f"Critical error in command extraction: {e}")
             return f"*❌ Command display error: {str(e)}*"
 
-    def _format_command_for_display(self, launch_uri: str, display_name: str) -> Optional[str]:
+    def _format_command_for_display(self, launch_uri: str, display_name: str) -> str | None:
         """Format a launchable command for display in the response"""
 
         try:
@@ -1175,7 +1173,7 @@ class Pipeline:
             logger.error(f"Failed to format command for display: {e}")
             return None
 
-    def _extract_notebooks_from_state(self, state: Dict[str, Any]) -> Optional[str]:
+    def _extract_notebooks_from_state(self, state: dict[str, Any]) -> str | None:
         """
         Extract notebook links from centralized registry and format for display.
 
@@ -1212,7 +1210,7 @@ class Pipeline:
             logger.error(f"Critical error in notebook extraction: {e}")
             return f"*❌ Notebook display error: {str(e)}*"
 
-    def _handle_log_command(self, command: str) -> Iterator[Union[str, dict]]:
+    def _handle_log_command(self, command: str) -> Iterator[str | dict]:
         """Handle log viewer commands like /logs, /logs 50, /logs follow"""
 
         try:

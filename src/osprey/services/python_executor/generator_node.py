@@ -6,16 +6,15 @@ Transformed for LangGraph integration with TypedDict state management.
 """
 
 import textwrap
-from typing import List, Dict, Any
+from typing import Any
 
 from osprey.models import get_chat_completion
-from osprey.utils.logger import get_logger
 from osprey.utils.config import get_model_config
+from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
 
-from .exceptions import CodeGenerationError, MaxAttemptsExceededError
+from .exceptions import CodeGenerationError
 from .models import PythonExecutionState
-from .services import FileManager, NotebookManager
 
 logger = get_logger("python_generator")
 
@@ -30,7 +29,7 @@ class LLMCodeGenerator:
             # Get model config from LangGraph configurable
             self.model_config = get_model_config("osprey", "python_code_generator")
 
-    async def generate_code(self, request, error_chain: List[str]) -> str:
+    async def generate_code(self, request, error_chain: list[str]) -> str:
         """Generate Python code - raises exceptions on failure"""
         try:
             # Build prompt with error feedback
@@ -69,7 +68,7 @@ class LLMCodeGenerator:
                 technical_details={"original_error": str(e)}
             )
 
-    def _build_code_generation_prompt(self, request, error_chain: List[str]) -> str:
+    def _build_code_generation_prompt(self, request, error_chain: list[str]) -> str:
         """Build prompt for code generation with error feedback"""
         prompt_parts = []
 
@@ -150,7 +149,7 @@ class LLMCodeGenerator:
 def create_generator_node():
     """Create the code generator node function."""
 
-    async def generator_node(state: PythonExecutionState) -> Dict[str, Any]:
+    async def generator_node(state: PythonExecutionState) -> dict[str, Any]:
         """Generate Python code using LLM."""
 
         # Debug log what we received in state

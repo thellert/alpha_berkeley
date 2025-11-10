@@ -54,12 +54,13 @@ Examples:
         >>> human_response = interrupt(interrupt_data)  # LangGraph handles this
 """
 
-from typing import Dict, Any
+from typing import Any
 
 from langgraph.types import interrupt
 
-from .models import PythonExecutionState
 from osprey.utils.logger import get_logger
+
+from .models import PythonExecutionState
 
 logger = get_logger("python")
 
@@ -106,7 +107,7 @@ def create_approval_node():
             >>> print(f"Approved: {result['approved']}")
     """
 
-    async def approval_node(state: PythonExecutionState) -> Dict[str, Any]:
+    async def approval_node(state: PythonExecutionState) -> dict[str, Any]:
         """Process approval interrupt and return user response for workflow routing.
 
         This function implements the core approval node logic, serving as a pure
@@ -168,4 +169,4 @@ def create_approval_node():
             "approved": approved
         }
 
-    return approval_node 
+    return approval_node

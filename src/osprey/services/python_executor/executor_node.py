@@ -5,23 +5,17 @@ Executes validated Python code using clean exception handling.
 Transformed for LangGraph integration with TypedDict state management.
 """
 
-import asyncio
-from typing import Optional, Dict, Any, TYPE_CHECKING, List
-from pathlib import Path
-
-from datetime import datetime
 import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-from .exceptions import (
-    ContainerConnectivityError, ContainerConfigurationError,
-    CodeRuntimeError, MaxAttemptsExceededError,
-    PythonExecutorException
-)
-from .models import PythonExecutionState, PythonExecutionSuccess
-from .services import FileManager, NotebookManager
-from .config import PythonExecutorConfig
 from osprey.context.context_manager import ContextManager
 from osprey.utils.logger import get_logger
+
+from .config import PythonExecutorConfig
+from .exceptions import CodeRuntimeError, ContainerConfigurationError, ContainerConnectivityError
+from .models import PythonExecutionState, PythonExecutionSuccess
+from .services import FileManager, NotebookManager
 
 logger = get_logger("python_executor")
 
@@ -40,7 +34,7 @@ class LocalCodeExecutor:
         self,
         code: str,
         execution_mode: 'ExecutionMode' = None,
-        execution_folder: Optional[Path] = None
+        execution_folder: Path | None = None
     ) -> PythonExecutionSuccess:
         """Execute Python code locally with unified wrapper - raises exceptions on failure"""
 
@@ -59,7 +53,7 @@ class LocalCodeExecutor:
         # Execute with automatic Python environment detection
         return await self._execute_with_subprocess(wrapped_code, execution_folder)
 
-    async def _execute_with_subprocess(self, wrapped_code: str, execution_folder: Optional[Path]) -> PythonExecutionSuccess:
+    async def _execute_with_subprocess(self, wrapped_code: str, execution_folder: Path | None) -> PythonExecutionSuccess:
         """Execute code using subprocess with automatic Python environment detection"""
         import subprocess
         import tempfile
@@ -151,7 +145,7 @@ class LocalCodeExecutor:
 
             try:
                 import json
-                with open(metadata_path, 'r') as f:
+                with open(metadata_path) as f:
                     metadata = json.load(f)
 
                 # Check if execution was actually successful
@@ -181,7 +175,7 @@ class LocalCodeExecutor:
                 results_data = {"execution_method": "local_subprocess", "python_env": python_path}
                 if results_path.exists():
                     try:
-                        with open(results_path, 'r') as f:
+                        with open(results_path) as f:
                             results_data.update(json.load(f))
                         logger.info(f"Loaded results from {results_path}")
                     except Exception as e:
@@ -274,7 +268,7 @@ class LocalCodeExecutor:
 
         return "unknown"
 
-    def _collect_figure_files(self, execution_folder: Path) -> List[Path]:
+    def _collect_figure_files(self, execution_folder: Path) -> list[Path]:
         """Collect all figure files from execution directory and all subdirectories except attempts.
 
         Scans for image files in the main execution directory and all subdirectories,
@@ -293,7 +287,7 @@ class LocalCodeExecutor:
             image_extensions = ['*.png', '*.jpg', '*.jpeg', '*.svg']
 
             # Scan main directory and all subdirectories except 'attempts'
-            for root_path in [execution_folder] + [d for d in execution_folder.iterdir() 
+            for root_path in [execution_folder] + [d for d in execution_folder.iterdir()
                                                   if d.is_dir() and d.name != 'attempts']:
                 for extension in image_extensions:
                     for figure_file in sorted(root_path.glob(extension)):
@@ -325,7 +319,7 @@ class ContainerCodeExecutor:
         self,
         code: str,
         execution_mode: 'ExecutionMode' = None,
-        execution_folder: Optional[Path] = None
+        execution_folder: Path | None = None
     ) -> PythonExecutionSuccess:
         """Execute Python code in container - raises exceptions on failure"""
 
@@ -347,7 +341,7 @@ class ContainerCodeExecutor:
                 timeout=self.executor_config.execution_timeout_seconds
             )
 
-            if not result.success:               
+            if not result.success:
                 # Convert execution failure to appropriate exception
                 error_msg = result.error_message or "Python code execution failed"
 
@@ -387,7 +381,7 @@ class ContainerCodeExecutor:
             # Re-raise infrastructure errors as-is
             raise
         except CodeRuntimeError:
-            # Re-raise code errors as-is  
+            # Re-raise code errors as-is
             raise
         except Exception as e:
             # Convert unexpected errors to infrastructure errors
@@ -410,7 +404,7 @@ class ContainerCodeExecutor:
 
             # Test connectivity
             working_host = await self._determine_working_host(
-                endpoint_config.host, 
+                endpoint_config.host,
                 endpoint_config.port
             )
 
@@ -429,7 +423,6 @@ class ContainerCodeExecutor:
 
     async def _determine_working_host(self, configured_host: str, port: int) -> str:
         """Determine working host with proper exception handling"""
-        import requests
 
         # Test configured host
         if await self._test_connectivity(configured_host, port):
@@ -461,7 +454,7 @@ class ContainerCodeExecutor:
     def _is_infrastructure_error(self, error_message: str) -> bool:
         """Detect if error is infrastructure-related"""
         infrastructure_keywords = [
-            "connection", "timeout", "unreachable", "refused", 
+            "connection", "timeout", "unreachable", "refused",
             "network", "websocket", "kernel", "session"
         ]
         error_lower = error_message.lower()
@@ -471,7 +464,7 @@ class ContainerCodeExecutor:
 def create_executor_node():
     """Create the code execution node function."""
 
-    async def executor_node(state: PythonExecutionState) -> Dict[str, Any]:
+    async def executor_node(state: PythonExecutionState) -> dict[str, Any]:
         """Execute approved Python code."""
 
         # Define streaming helper here for step awareness
@@ -537,8 +530,8 @@ def create_executor_node():
 
             # Create final notebook and save results
             final_notebook = await _create_final_notebook(
-                notebook_manager, 
-                execution_folder, 
+                notebook_manager,
+                execution_folder,
                 generated_code,
                 execution_result,
                 state
@@ -622,7 +615,7 @@ def _get_execution_mode_from_state(state: PythonExecutionState):
         return ExecutionMode.READ_ONLY
 
 
-def _get_execution_method(configurable: Dict[str, Any]) -> str:
+def _get_execution_method(configurable: dict[str, Any]) -> str:
     """Get execution method from configuration (container or local)"""
     try:
         framework_config = configurable.get('framework', {})
@@ -665,4 +658,4 @@ async def _create_error_notebook(notebook_manager: NotebookManager, execution_fo
         return notebook_path
     except Exception as e:
         logger.warning(f"Failed to create error notebook: {e}")
-        return None 
+        return None

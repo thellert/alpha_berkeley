@@ -8,21 +8,20 @@ IMPORTANT: This is a thin wrapper around osprey.deployment.container_manager.
 All existing functionality is preserved without modification.
 """
 
-import click
-from pathlib import Path
 
-from osprey.cli.styles import console, Styles
-from osprey.utils.log_filter import quiet_logger
+import click
+
+from osprey.cli.styles import Styles, console
 
 # Import existing container manager functions (Phase 1.5 refactored)
 from osprey.deployment.container_manager import (
-    deploy_up,
+    clean_deployment,
     deploy_down,
     deploy_restart,
-    show_status,
-    clean_deployment,
+    deploy_up,
+    prepare_compose_files,
     rebuild_deployment,
-    prepare_compose_files
+    show_status,
 )
 
 from .project_utils import resolve_config_path
@@ -120,41 +119,41 @@ def deploy(action: str, project: str, config: str, detached: bool, dev: bool):
     try:
         # Resolve config path from project and config args
         config_path = resolve_config_path(project, config)
-        
+
         # Validate config file exists with helpful error message
         from pathlib import Path
         config_file = Path(config_path)
         if not config_file.exists():
             console.print(f"\n❌ Configuration file not found: [accent]{config_path}[/accent]", style=Styles.ERROR)
-            console.print(f"\n💡 Are you in a project directory?", style=Styles.WARNING)
+            console.print("\n💡 Are you in a project directory?", style=Styles.WARNING)
             console.print(f"   Current directory: [dim]{Path.cwd()}[/dim]\n")
-            
+
             # Look for nearby project directories with config.yml
             # Exclude common non-project directories
-            excluded_dirs = {'docs', 'tests', 'test', 'build', 'dist', 'venv', '.venv', 
+            excluded_dirs = {'docs', 'tests', 'test', 'build', 'dist', 'venv', '.venv',
                            'node_modules', '.git', '__pycache__', 'src', 'lib'}
             nearby_projects = []
             try:
                 for item in Path.cwd().iterdir():
-                    if (item.is_dir() and 
+                    if (item.is_dir() and
                         item.name not in excluded_dirs and
                         not item.name.startswith('.') and
                         (item / "config.yml").exists()):
                         nearby_projects.append(item.name)
             except PermissionError:
                 pass  # Skip if can't read directory
-            
+
             if nearby_projects:
-                console.print(f"   Found project(s) in current directory:", style=Styles.WARNING)
+                console.print("   Found project(s) in current directory:", style=Styles.WARNING)
                 for proj in nearby_projects[:5]:  # Limit to 5 suggestions
                     console.print(f"     • [command]cd {proj} && osprey deploy {action}[/command] or: ")
                     console.print(f"       [command]osprey deploy {action} --project {proj}[/command]")
             else:
-                console.print(f"   Try:", style=Styles.WARNING)
-                console.print(f"     • Navigate to your project directory first")
-                console.print(f"     • Use [command]--project[/command] flag to specify project location")
-            
-            console.print(f"\n   Or use interactive menu: [command]osprey[/command]\n")
+                console.print("   Try:", style=Styles.WARNING)
+                console.print("     • Navigate to your project directory first")
+                console.print("     • Use [command]--project[/command] flag to specify project location")
+
+            console.print("\n   Or use interactive menu: [command]osprey[/command]\n")
             raise click.Abort()
 
         # Dispatch to existing container_manager functions

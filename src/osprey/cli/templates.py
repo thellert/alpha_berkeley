@@ -11,7 +11,8 @@ import os
 import re
 import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from osprey.cli.styles import console
@@ -149,7 +150,7 @@ class TemplateManager:
         output_dir: Path,
         template_name: str = "minimal",
         registry_style: str = "extend",
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
         force: bool = False
     ) -> Path:
         """Create complete project from template.
@@ -470,7 +471,7 @@ class TemplateManager:
         from osprey.registry import (
             CapabilityRegistration,
             ContextClassRegistration,
-            generate_explicit_registry_code
+            generate_explicit_registry_code,
         )
 
         # Read the compact template to extract app-specific components

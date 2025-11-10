@@ -7,18 +7,15 @@ Implements the LangGraph-native architecture with configuration-driven patterns.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 from osprey.base.errors import ErrorClassification, ErrorSeverity
 
 # Import types for type hints
 if TYPE_CHECKING:
     from osprey.state import AgentState
-    from osprey.base.planning import PlannedStep
 
 # Direct imports - no circular dependencies in practice
-from .examples import OrchestratorGuide
-from .examples import TaskClassifierGuide
 
 
 class BaseCapability(ABC):
@@ -132,8 +129,8 @@ class BaseCapability(ABC):
     description: str = None
 
     # Optional class attributes - defaults provided
-    provides: List[str] = []
-    requires: List[str] = []
+    provides: list[str] = []
+    requires: list[str] = []
 
     def __init__(self):
         """Initialize the capability and validate required components.
@@ -181,7 +178,7 @@ class BaseCapability(ABC):
     async def execute(
         state: 'AgentState',
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute the main capability logic with comprehensive state management.
 
         This is the core method that all capabilities must implement. It contains
@@ -342,7 +339,7 @@ class BaseCapability(ABC):
         )
 
     @staticmethod
-    def get_retry_policy() -> Dict[str, Any]:
+    def get_retry_policy() -> dict[str, Any]:
         """Get retry policy configuration for failure recovery strategies.
 
         This method provides retry configuration that the framework uses for
@@ -395,7 +392,7 @@ class BaseCapability(ABC):
             "backoff_factor": 1.5
         }
 
-    def _create_orchestrator_guide(self) -> Optional[Any]:
+    def _create_orchestrator_guide(self) -> Any | None:
         """Template Method: Create orchestrator guide for planning integration.
 
         IMPLEMENTATION APPROACHES (choose based on your needs):
@@ -435,7 +432,7 @@ class BaseCapability(ABC):
                       "_create_orchestrator_guide() for proper integration.")
         return None
 
-    def _create_classifier_guide(self) -> Optional[Any]:
+    def _create_classifier_guide(self) -> Any | None:
         """Template Method: Create classifier guide for capability activation.
 
         IMPLEMENTATION APPROACHES (choose based on your needs):
@@ -478,7 +475,7 @@ class BaseCapability(ABC):
     # Properties for compatibility and introspection
 
     @property
-    def orchestrator_guide(self) -> Optional[Any]:
+    def orchestrator_guide(self) -> Any | None:
         """Get the orchestrator guide for this capability (lazy-loaded).
 
         Standardized interface used by the framework. Automatically calls 
@@ -492,7 +489,7 @@ class BaseCapability(ABC):
         return self._orchestrator_guide
 
     @property
-    def classifier_guide(self) -> Optional[Any]:
+    def classifier_guide(self) -> Any | None:
         """Get the classifier guide for this capability (lazy-loaded).
 
         Standardized interface used by the framework. Automatically calls 
@@ -511,4 +508,4 @@ class BaseCapability(ABC):
         :return: String representation including class name and capability name
         :rtype: str
         """
-        return f"<{self.__class__.__name__}: {self.name}>" 
+        return f"<{self.__class__.__name__}: {self.name}>"

@@ -5,13 +5,14 @@ the osprey's default configuration template. This helps users understand what
 configuration options are available when creating new projects.
 """
 
+from pathlib import Path
+
 import click
 import yaml
-from pathlib import Path
-from rich.syntax import Syntax
 from jinja2 import Template
+from rich.syntax import Syntax
 
-from osprey.cli.styles import console, Styles
+from osprey.cli.styles import Styles, console
 
 
 @click.command(name="export-config")
@@ -74,7 +75,7 @@ def export_config(project: str, output: str, format: str):
             raise click.Abort()
 
         # Read and render the template with example values
-        with open(template_path, 'r') as f:
+        with open(template_path) as f:
             template_content = f.read()
 
         template = Template(template_content)
@@ -121,7 +122,7 @@ def export_config(project: str, output: str, format: str):
             )
             console.print(syntax)
             console.print(
-                f"\n[dim]💡 Tip: Save to file with --output flag[/dim]"
+                "\n[dim]💡 Tip: Save to file with --output flag[/dim]"
             )
 
     except KeyboardInterrupt:

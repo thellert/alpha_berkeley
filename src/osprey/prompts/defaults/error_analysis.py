@@ -1,7 +1,6 @@
 """Default error analysis prompts."""
 
 import textwrap
-from typing import Optional
 
 from osprey.prompts.base import FrameworkPromptBuilder
 
@@ -15,7 +14,7 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
         """Get the generic role definition."""
         return "You are providing error analysis for the assistant system."
 
-    def get_task_definition(self) -> Optional[str]:
+    def get_task_definition(self) -> str | None:
         """Task definition is embedded in instructions."""
         return None
 
@@ -41,7 +40,7 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
             - Use a professional, technical tone
             """).strip()
 
-    def _get_dynamic_context(self, 
+    def _get_dynamic_context(self,
                           capabilities_overview: str = "",
                           error_context=None,
                           **kwargs) -> str:

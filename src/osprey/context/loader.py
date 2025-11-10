@@ -8,14 +8,13 @@ for use with the ContextManager system.
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 from .context_manager import ContextManager
 
 logger = logging.getLogger(__name__)
 
 
-def load_context(context_file: str = "context.json") -> Optional[ContextManager]:
+def load_context(context_file: str = "context.json") -> ContextManager | None:
     """
     Load agent execution context from a JSON file in the current directory.
 
@@ -46,13 +45,13 @@ def load_context(context_file: str = "context.json") -> Optional[ContextManager]
             return None
 
         # Load JSON data
-        with open(context_path, 'r', encoding='utf-8') as f:
+        with open(context_path, encoding='utf-8') as f:
             context_data = json.load(f)
 
         # Ensure registry is initialized before creating ContextManager
         # This is required for context reconstruction to work properly
         try:
-            from osprey.registry import initialize_registry, get_registry
+            from osprey.registry import get_registry, initialize_registry
             registry = get_registry()
             if not getattr(registry, '_initialized', False):
                 logger.debug("Registry not initialized, initializing now...")

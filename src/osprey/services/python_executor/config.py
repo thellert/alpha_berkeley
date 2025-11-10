@@ -5,7 +5,7 @@ This module contains configuration classes for the Python executor service.
 Separated from service.py to avoid circular import issues.
 """
 
-from typing import Dict, Any
+from typing import Any
 
 
 class PythonExecutorConfig:
@@ -16,7 +16,7 @@ class PythonExecutorConfig:
     via framework configuration.
     """
 
-    def __init__(self, configurable: Dict[str, Any] = None):
+    def __init__(self, configurable: dict[str, Any] = None):
         config = configurable or {}
         executor_config = config.get("framework", {}).get("python_executor", {})
 

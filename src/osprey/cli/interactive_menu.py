@@ -30,13 +30,12 @@ import asyncio
 import os
 import shutil
 import sys
-import yaml
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
+import yaml
 from rich.markdown import Markdown
 from rich.panel import Panel
-from osprey.deployment.runtime_helper import get_runtime_command
 
 # Import centralized styles
 from osprey.cli.styles import (
@@ -46,6 +45,7 @@ from osprey.cli.styles import (
     console,
     get_questionary_style,
 )
+from osprey.deployment.runtime_helper import get_runtime_command
 
 try:
     import questionary
@@ -67,7 +67,7 @@ custom_style = get_questionary_style()
 # BANNER AND BRANDING
 # ============================================================================
 
-def show_banner(context: str = "interactive", config_path: Optional[str] = None):
+def show_banner(context: str = "interactive", config_path: str | None = None):
     """Display the unified osprey banner with ASCII art.
 
     Args:
@@ -531,8 +531,8 @@ def check_directory_has_active_mounts(directory: Path) -> tuple[bool, list[str]]
         >>> if has_mounts:
         ...     print(f"Active mounts: {details}")
     """
-    import subprocess
     import json
+    import subprocess
 
     mount_details = []
 
@@ -1603,9 +1603,9 @@ def handle_export_action(project_path: Path | None = None):
         project_path: Optional project directory path (defaults to current directory)
     """
     try:
-        import yaml
         from pathlib import Path
 
+        import yaml
         from jinja2 import Template
         from rich.syntax import Syntax
 

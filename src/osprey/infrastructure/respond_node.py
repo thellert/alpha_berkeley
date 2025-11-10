@@ -7,24 +7,23 @@ chooses the appropriate response strategy based on query type and available cont
 """
 
 import asyncio
-import logging
-from typing import List, Dict, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
+
+from langchain_core.messages import AIMessage
 
 from osprey.base import BaseCapability
 from osprey.base.decorators import capability_node
 from osprey.base.errors import ErrorClassification, ErrorSeverity
 from osprey.context.context_manager import ContextManager
-from osprey.registry import get_registry
-from osprey.state import AgentState, StateManager
-from osprey.base.planning import PlannedStep
 from osprey.models import get_chat_completion
 from osprey.prompts.loader import get_framework_prompts
-from osprey.utils.config import get_full_configuration, get_model_config
+from osprey.registry import get_registry
+from osprey.state import AgentState, StateManager
+from osprey.utils.config import get_model_config
 from osprey.utils.logger import get_logger
 from osprey.utils.streaming import get_streamer
-from langchain_core.messages import AIMessage
 
 # Use colored logger for message generator with light_cyan1 color
 logger = get_logger("message_generator")
@@ -67,13 +66,13 @@ class ResponseContext:
     :type interface_context: str
     """
     current_task: str
-    execution_history: List[Any]
-    relevant_context: Dict[str, Any]
+    execution_history: list[Any]
+    relevant_context: dict[str, Any]
     is_killed: bool
-    kill_reason: Optional[str]
-    capabilities_overview: Optional[str]
+    kill_reason: str | None
+    capabilities_overview: str | None
     total_steps_executed: int
-    execution_start_time: Optional[float]
+    execution_start_time: float | None
     reclassification_count: int
     current_date: str
     figures_available: int
@@ -280,7 +279,7 @@ def _gather_information(state: AgentState) -> ResponseContext:
     )
 
 
-def _determine_response_mode(state: AgentState, current_step: Dict[str, Any]) -> str:
+def _determine_response_mode(state: AgentState, current_step: dict[str, Any]) -> str:
     """Determine the appropriate response mode based on available context.
 
     Args:
@@ -300,7 +299,7 @@ def _determine_response_mode(state: AgentState, current_step: Dict[str, Any]) ->
     if not has_step_inputs and not has_capability_data:
         return "conversational"
     elif has_step_inputs:
-        return "specific_context" 
+        return "specific_context"
     else:
         return "general_context"
 
@@ -313,7 +312,7 @@ def _get_capabilities_overview() -> str:
         return "General AI Assistant capabilities available"
 
 
-def _get_execution_history(state: AgentState) -> List[Dict[str, Any]]:
+def _get_execution_history(state: AgentState) -> list[dict[str, Any]]:
     """Get execution history from state for technical mode."""
     execution_step_results = state.get("execution_step_results", {})
     ordered_results = sorted(execution_step_results.items(), key=lambda x: x[1].get('step_index', 0))

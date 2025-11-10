@@ -55,10 +55,9 @@ Examples:
 """
 
 import logging
-from typing import Optional
 
-from .config_models import GlobalApprovalConfig, PythonExecutionApprovalConfig, MemoryApprovalConfig
-from .evaluators import PythonExecutionApprovalEvaluator, MemoryApprovalEvaluator
+from .config_models import GlobalApprovalConfig, MemoryApprovalConfig, PythonExecutionApprovalConfig
+from .evaluators import MemoryApprovalEvaluator, PythonExecutionApprovalEvaluator
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +135,7 @@ class ApprovalManager:
             self.config = GlobalApprovalConfig.from_dict(approval_config)
 
             # Log configuration summary for security audit trail
-            logger.info(f"✅ Loaded approval configuration successfully!")
+            logger.info("✅ Loaded approval configuration successfully!")
             logger.info(f"   - Global mode: {self.config.global_mode}")
             logger.info(f"   - Python execution enabled: {self.config.python_execution.enabled}")
             logger.info(f"   - Python execution mode: {self.config.python_execution.mode.value}")
@@ -230,7 +229,7 @@ class ApprovalManager:
 
 
 # Global instance
-_approval_manager: Optional[ApprovalManager] = None
+_approval_manager: ApprovalManager | None = None
 
 
 def get_approval_manager() -> ApprovalManager:
@@ -417,4 +416,4 @@ def get_memory_evaluator() -> MemoryApprovalEvaluator:
        and manager.get_memory_evaluator().
     """
     manager = get_approval_manager()
-    return manager.get_memory_evaluator() 
+    return manager.get_memory_evaluator()

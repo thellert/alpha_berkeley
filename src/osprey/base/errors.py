@@ -43,9 +43,9 @@ compatibility with LangGraph's checkpoint and streaming systems.
    :class:`BaseCapability` : Capability error classification methods
 """
 
-from enum import Enum
-from typing import Optional, List, Any, Dict
 from dataclasses import dataclass
+from enum import Enum
+from typing import Any
 
 
 class ErrorSeverity(Enum):
@@ -118,7 +118,7 @@ class ErrorSeverity(Enum):
     """
     CRITICAL = "critical"           # End execution
     RETRIABLE = "retriable"         # Retry execution step
-    REPLANNING = "replanning"       # Replan the execution plan  
+    REPLANNING = "replanning"       # Replan the execution plan
     RECLASSIFICATION = "reclassification"  # Reclassify task capabilities
     FATAL = "fatal"                 # System-level failure - raise exception immediately
 
@@ -212,8 +212,8 @@ class ErrorClassification:
        :class:`ExecutionError` : Complete error information container
     """
     severity: ErrorSeverity
-    user_message: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    user_message: str | None = None
+    metadata: dict[str, Any] | None = None
 
     def format_for_llm(self) -> str:
         """Format this error classification for LLM consumption during replanning.
@@ -356,9 +356,9 @@ class ExecutionError:
     """
     severity: ErrorSeverity
     message: str
-    capability_name: Optional[str] = None  # Which capability generated this error
+    capability_name: str | None = None  # Which capability generated this error
 
-    metadata: Optional[Dict[str, Any]] = None  # Structured error context and debugging information
+    metadata: dict[str, Any] | None = None  # Structured error context and debugging information
 
 
 

@@ -14,10 +14,9 @@ Key simplifications:
 """
 
 import json
-import logging
-from typing import Dict, Any, Optional, List, TYPE_CHECKING
-from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, Optional
+
 from osprey.utils.logger import get_logger
 
 if TYPE_CHECKING:
@@ -62,7 +61,7 @@ def recursively_summarize_data(data, max_depth: int = 3, current_depth: int = 0)
     if isinstance(data, list):
         if len(data) > LARGE_LIST_THRESHOLD:
             # For large lists, show count and first few items
-            sample_items = [recursively_summarize_data(item, max_depth, current_depth + 1) 
+            sample_items = [recursively_summarize_data(item, max_depth, current_depth + 1)
                            for item in data[:LIST_SAMPLE_SIZE]]
             return f"List with {len(data):,} items: {sample_items}... (truncated)"
         else:
@@ -119,7 +118,7 @@ class ContextManager:
             raise ValueError("AgentState must contain 'capability_context_data' key")
 
         self._data = state['capability_context_data']
-        self._object_cache: Dict[str, Dict[str, 'CapabilityContext']] = {}
+        self._object_cache: dict[str, dict[str, CapabilityContext]] = {}
 
     def __getattr__(self, context_type: str):
         """Enable dot notation access to context data with lazy namespace creation."""
@@ -191,7 +190,7 @@ class ContextManager:
             Reconstructed CapabilityContext object or None if not found
         """
         # Check cache first
-        if (context_type in self._object_cache and 
+        if (context_type in self._object_cache and
             key in self._object_cache[context_type]):
             cached_obj = self._object_cache[context_type][key]
             logger.debug(f"Retrieved cached context: {context_type}.{key} = {type(cached_obj).__name__}")
@@ -223,7 +222,7 @@ class ContextManager:
             logger.error(f"Failed to reconstruct {context_type}: {e}")
             return None
 
-    def get_all_of_type(self, context_type: str) -> Dict[str, 'CapabilityContext']:
+    def get_all_of_type(self, context_type: str) -> dict[str, 'CapabilityContext']:
         """Get all contexts of a specific type as reconstructed objects.
 
         Args:
@@ -242,7 +241,7 @@ class ContextManager:
 
         return result
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         """Get all context data in flattened format for reporting/summary purposes.
 
         Returns:
@@ -256,7 +255,7 @@ class ContextManager:
                 flattened[flattened_key] = context
         return flattened
 
-    def get_context_access_description(self, context_filter: Optional[List[Dict[str, str]]] = None) -> str:
+    def get_context_access_description(self, context_filter: list[dict[str, str]] | None = None) -> str:
         """Create detailed description of available context data for use in prompts.
 
         Args:
@@ -320,7 +319,7 @@ class ContextManager:
         return "\n".join(description_parts)
 
 
-    def get_summaries(self, step: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def get_summaries(self, step: dict[str, Any] | None = None) -> dict[str, Any]:
         """Get summaries for specific step contexts or all contexts.
 
         Args:
@@ -355,7 +354,7 @@ class ContextManager:
         # Step 2: Convert contexts to summaries (single consolidated logic)
         return self._contexts_to_summaries(contexts_dict)
 
-    def _contexts_to_summaries(self, contexts_dict: Dict[str, 'CapabilityContext']) -> Dict[str, Any]:
+    def _contexts_to_summaries(self, contexts_dict: dict[str, 'CapabilityContext']) -> dict[str, Any]:
         """Convert flattened contexts dict to summaries dict.
 
         Args:
@@ -388,7 +387,7 @@ class ContextManager:
 
         return summaries
 
-    def get_raw_data(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    def get_raw_data(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the raw dictionary data for state updates.
 
         Returns:
@@ -441,7 +440,7 @@ class ContextManager:
             logger.error(f"Failed to save context to {context_file}: {e}")
             raise
 
-    def _get_context_class(self, context_type: str) -> Optional[type]:
+    def _get_context_class(self, context_type: str) -> type | None:
         """Get context class from registry or direct mapping.
 
         Args:
@@ -461,11 +460,11 @@ class ContextManager:
 
     def extract_from_step(
         self,
-        step: Dict[str, Any],
-        state: Dict[str, Any],
-        constraints: Optional[List[str]] = None,
+        step: dict[str, Any],
+        state: dict[str, Any],
+        constraints: list[str] | None = None,
         constraint_mode: str = "hard"
-    ) -> Dict[str, 'CapabilityContext']:
+    ) -> dict[str, 'CapabilityContext']:
         """Extract all contexts specified in step.inputs with optional type constraints.
 
         This method consolidates the common pattern of extracting context data from
@@ -575,4 +574,4 @@ class ContextNamespace:
         else:
             # This would require the value to be a CapabilityContext object
             # For now, raise an error as direct assignment should go through set_context
-            raise AttributeError(f"Cannot directly assign to context key '{key}'. Use context_manager.set_context() instead.") 
+            raise AttributeError(f"Cannot directly assign to context key '{key}'. Use context_manager.set_context() instead.")
