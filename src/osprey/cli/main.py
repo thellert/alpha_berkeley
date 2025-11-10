@@ -18,7 +18,7 @@ import click
 try:
     from osprey import __version__
 except ImportError:
-    __version__ = "0.8.4"
+    __version__ = "0.8.5"
 
 
 # PERFORMANCE OPTIMIZATION: Lazy command loading

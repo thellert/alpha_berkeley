@@ -5,6 +5,23 @@ All notable changes to the Osprey Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.5] - 2025-11-10
+
+### Fixed
+- **Python Executor Configuration**: Removed deprecated 'framework' config nesting from python_executor components
+- **Subprocess Execution**: Added `CONFIG_FILE` environment variable support for proper registry/context loading in subprocesses
+  - Critical fix for execution scenarios where CWD ≠ project root
+  - Updated `execution_wrapper.py` to pass config_path to registry initialization
+  - Fixed `LocalCodeExecutor` to correctly access python_env_path from flat config structure
+- **Exception Handling**: Improved exception chaining with `from e` for better error traceability across multiple modules
+- **Configuration Access**: Updated `utils/config.py` to remove legacy nested format references
+
+### Changed
+- **Code Quality**: Removed all trailing whitespace (W291, W293) across codebase
+- **Formatting**: Applied automatic ruff formatting fixes for consistency
+- **Logging**: Improved logging with reduced verbosity and structured formatting
+- **CLI**: Extracted duplicate streaming logic into reusable helper method
+
 ## [0.8.4] - 2025-11-09
 
 ### Added

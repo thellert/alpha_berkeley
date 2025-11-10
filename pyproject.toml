@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "osprey-framework"
-version = "0.8.4"
+version = "0.8.5"
 description = "An open-source, domain-agnostic, capability-based architecture for building intelligent agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,7 +16,7 @@ maintainers = [
     {name = "Thorsten Hellert", email = "thellert@lbl.gov"},
 ]
 keywords = [
-    "ai", "agents", "framework", "scientific-computing", "langgraph", 
+    "ai", "agents", "framework", "scientific-computing", "langgraph",
     "epics", "accelerator-physics", "als", "berkeley", "agent-framework",
     "capability-based", "human-in-the-loop", "container-orchestration"
 ]
@@ -41,7 +41,7 @@ dependencies = [
     "langgraph>=0.5.2",
     "langchain-core>=0.3.68",
     "langgraph-sdk>=0.1.70,<0.2.0",
-    
+
     # Core framework dependencies
     "rich>=14.0.0",
     "click>=8.1.0",
@@ -51,23 +51,23 @@ dependencies = [
     "PyYAML>=6.0.2",
     "Jinja2>=3.1.6",
     "requests>=2.32.3",
-    
+
     # Container runtime (Docker or Podman) must be installed separately via system package managers
     # Framework uses CLI tools (docker/podman commands), not Python packages
     # Install Docker Desktop 4.0+ OR Podman 4.0+:
     #   - Docker: https://docs.docker.com/get-docker/
     #   - Podman: https://podman.io/getting-started/installation
-    
+
     # Jupyter notebook support
     "nbformat>=5.0.0",
     "nbclient",
-    
+
     # AI/ML provider integrations
     "openai",
     "anthropic",
     "google-generativeai",
     "ollama>=0.5.1",
-    
+
     # Networking and protocols
     "websocket-client>=1.7.0",
     "urllib3>=2.4.0",
