@@ -9,34 +9,6 @@ LangGraph-native approval system for production-ready human-in-the-loop workflow
 
 .. currentmodule:: osprey.approval
 
-Core Components
-===============
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   ApprovalManager
-   GlobalApprovalConfig
-   PythonExecutionApprovalConfig
-   MemoryApprovalConfig
-   ApprovalMode
-   PythonExecutionApprovalEvaluator
-   MemoryApprovalEvaluator
-   ApprovalDecision
-
-System Functions
-================
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   create_approval_type
-   create_code_approval_interrupt
-   create_plan_approval_interrupt
-   create_memory_approval_interrupt
-   get_approval_resume_data
-   get_approval_manager
-
 Configuration Management
 ========================
 
@@ -100,6 +72,6 @@ Utility Functions
 
    :doc:`../../../developer-guides/05_production-systems/01_human-approval-workflows`
        Complete implementation guide and examples
-   
+
    :class:`osprey.services.python_executor.PythonExecutorService`
        Service that integrates with approval system

@@ -9,17 +9,6 @@ User memory infrastructure with persistent storage, data source integration, and
 
 .. currentmodule:: osprey.services.memory_storage
 
-Core Components
-===============
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   MemoryStorageManager
-   UserMemoryProvider
-   MemoryContent
-   get_memory_storage_manager
-
 Storage Management
 ==================
 
@@ -50,6 +39,6 @@ Utility Functions
 
    :doc:`../../../developer-guides/05_production-systems/04_memory-storage-service`
        Complete implementation guide and examples
-   
+
    :class:`osprey.data_management.DataSourceProvider`
        Base provider interface implemented by UserMemoryProvider

@@ -9,21 +9,6 @@ Data orchestration system for integrating heterogeneous data sources into agent 
 
 .. currentmodule:: osprey.data_management
 
-Core Components
-===============
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   DataSourceManager
-   DataRetrievalResult
-   DataSourceProvider
-   DataSourceContext
-   DataSourceRequest
-   DataSourceRequester
-   get_data_source_manager
-   create_data_source_request
-
 Management Classes
 ==================
 
@@ -68,6 +53,6 @@ Utility Functions
 
    :doc:`../../../developer-guides/05_production-systems/02_data-source-integration`
        Complete implementation guide and examples
-   
+
    :class:`osprey.services.memory_storage.UserMemoryProvider`
        Example core data source provider implementation

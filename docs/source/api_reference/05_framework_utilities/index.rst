@@ -4,27 +4,6 @@ Framework Utilities
 
 Supporting systems for advanced usage and development tooling.
 
-.. currentmodule:: osprey
-
-Core Components
-===============
-
-.. autosummary::
-   :toctree: _autosummary
-
-   models.get_model
-   models.get_chat_completion
-
-.. currentmodule:: osprey.utils
-
-.. autosummary::
-   :toctree: _autosummary
-
-   logger.get_logger
-   logger.ComponentLogger
-   streaming.get_streamer
-   streaming.StreamWriter
-
 Model Factory
 =============
 

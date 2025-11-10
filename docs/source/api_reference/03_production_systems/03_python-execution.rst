@@ -9,38 +9,6 @@ Python code generation and execution service with LangGraph-based workflow, appr
 
 .. currentmodule:: osprey.services.python_executor
 
-Core Components
-===============
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   PythonExecutorService
-   PythonExecutionRequest
-   PythonServiceResult
-   PythonExecutionSuccess
-   PythonExecutionState
-   PythonExecutionContext
-   PythonExecutorConfig
-   ExecutionModeConfig
-   ExecutionControlConfig
-   ContainerEndpointConfig
-   NotebookAttempt
-   NotebookType
-
-Exception Hierarchy
-===================
-
-.. autosummary::
-   :toctree: _autosummary
-   
-   PythonExecutorException
-   CodeRuntimeError
-   CodeGenerationError
-   ContainerConnectivityError
-   ExecutionTimeoutError
-   ErrorCategory
-
 Service Interface
 =================
 
@@ -173,6 +141,6 @@ Serialization Utilities
 
    :doc:`../../../developer-guides/05_production-systems/03_python-execution-service`
        Complete implementation guide and examples
-   
+
    :class:`osprey.capabilities.python.PythonCapability`
        Capability interface that uses this service
