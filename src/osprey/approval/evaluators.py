@@ -165,7 +165,7 @@ class PythonExecutionApprovalEvaluator:
 
         :param has_epics_writes: Whether code contains EPICS write operations
         :type has_epics_writes: bool
-        :param has_epics_reads: Whether code contains EPICS read operations  
+        :param has_epics_reads: Whether code contains EPICS read operations
         :type has_epics_reads: bool
         :return: Decision object with approval requirement and reasoning
         :rtype: ApprovalDecision

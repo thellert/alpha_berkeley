@@ -2,12 +2,12 @@
 Context Management Framework
 
 Clean, production-ready context system using Pydantic for automatic serialization,
-validation, and type safety. LangGraph-native with ContextManager providing 
+validation, and type safety. LangGraph-native with ContextManager providing
 sophisticated functionality over dictionary data.
 
 Key benefits:
 - Automatic JSON serialization/deserialization via Pydantic
-- Built-in validation and type safety  
+- Built-in validation and type safety
 - Zero custom serialization logic needed
 - 86% reduction in complexity from previous implementation
 - Production-proven robustness

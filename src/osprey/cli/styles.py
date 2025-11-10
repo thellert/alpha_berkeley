@@ -159,17 +159,17 @@ def set_theme(theme: ColorTheme):
 
 def load_theme_from_config(config_path: str | None = None) -> ColorTheme:
     """Load and apply theme from configuration file.
-    
+
     Args:
         config_path: Optional path to config file (uses default if None)
-    
+
     Returns:
         The loaded ColorTheme instance
-    
+
     Examples:
         >>> # Load theme from default config
         >>> theme = load_theme_from_config()
-        
+
         >>> # Load theme from specific config
         >>> theme = load_theme_from_config("/path/to/config.yml")
     """
@@ -210,9 +210,9 @@ def load_theme_from_config(config_path: str | None = None) -> ColorTheme:
 
 def initialize_theme_from_config(config_path: str | None = None):
     """Initialize and apply theme from configuration.
-    
+
     This should be called at CLI startup to apply the configured theme.
-    
+
     Args:
         config_path: Optional path to config file
     """

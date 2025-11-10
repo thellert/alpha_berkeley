@@ -493,7 +493,7 @@ class ContextManager:
             # With hard constraints (all required)
             try:
                 contexts = context_manager.extract_from_step(
-                    step, state, 
+                    step, state,
                     constraints=["PV_ADDRESSES", "TIME_RANGE"]
                 )
                 pv_context = contexts["PV_ADDRESSES"]
@@ -505,7 +505,7 @@ class ContextManager:
             try:
                 contexts = context_manager.extract_from_step(
                     step, state,
-                    constraints=["PV_VALUES", "ARCHIVER_DATA"], 
+                    constraints=["PV_VALUES", "ARCHIVER_DATA"],
                     constraint_mode="soft"
                 )
             except ValueError as e:

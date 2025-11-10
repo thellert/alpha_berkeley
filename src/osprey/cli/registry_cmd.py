@@ -29,7 +29,7 @@ from osprey.registry import get_registry
 
 def display_registry_contents(verbose: bool = False):
     """Display the contents of the current registry.
-    
+
     Args:
         verbose: Whether to display verbose information (descriptions, etc.)
     """
@@ -274,7 +274,7 @@ def _display_providers_table(registry, providers: list, verbose: bool):
 
 def handle_registry_action(project_path: Path | None = None, verbose: bool = False):
     """Handle registry display action from interactive menu.
-    
+
     Args:
         project_path: Optional project directory path (defaults to current directory)
         verbose: Whether to show verbose output

@@ -147,7 +147,7 @@ class ClassificationNode(BaseInfrastructureNode):
         """Main classification logic with bypass support and sophisticated capability selection.
 
         Analyzes user tasks and selects appropriate capabilities using parallel
-        LLM-based classification. Handles both initial classification and 
+        LLM-based classification. Handles both initial classification and
         reclassification scenarios with state preservation.
 
         Supports bypass mode where all available capabilities are activated,

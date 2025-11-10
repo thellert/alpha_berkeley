@@ -48,10 +48,10 @@ Examples:
     Basic registry usage::
 
         >>> from osprey.registry import initialize_registry, get_registry
-        >>> 
+        >>>
         >>> # Initialize the registry system
         >>> initialize_registry()
-        >>> 
+        >>>
         >>> # Access components
         >>> registry = get_registry()
         >>> capability = registry.get_capability("pv_address_finding")
@@ -61,7 +61,7 @@ Examples:
 
         >>> from osprey.registry import RegistryConfigProvider, RegistryConfig
         >>> from osprey.registry import CapabilityRegistration, ContextClassRegistration
-        >>> 
+        >>>
         >>> class MyAppRegistryProvider(RegistryConfigProvider):
         ...     def get_registry_config(self) -> RegistryConfig:
         ...         return RegistryConfig(

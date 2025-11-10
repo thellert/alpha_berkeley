@@ -238,7 +238,7 @@ def get_logger(component_name: str = None,
         logger = get_logger(name="test_graph_execution", color="white")
         logger = get_logger(name="custom_component", color="blue", level=logging.DEBUG)
 
-    .. deprecated:: 
+    .. deprecated::
         The two-parameter API get_logger(source, component_name) is deprecated.
         Use get_logger(component_name) instead. The flat configuration structure
         (logging.logging_colors.{component_name}) replaces the old nested structure.

@@ -62,7 +62,7 @@ def _validate_and_fix_execution_plan(execution_plan: ExecutionPlan, current_task
     If the execution plan doesn't end with a respond or clarify step, we append a respond step.
 
     :param execution_plan: The execution plan to validate
-    :param current_task: The current task for context  
+    :param current_task: The current task for context
     :param logger: Logger instance
     :return: Fixed execution plan that ends with respond or clarify
     :raises ValueError: If hallucinated capabilities are found requiring re-planning
@@ -143,7 +143,7 @@ class OrchestrationNode(BaseInfrastructureNode):
     Handles both initial planning and replanning scenarios with approval workflows.
 
     Features:
-    - Configuration-driven error classification and retry policies  
+    - Configuration-driven error classification and retry policies
     - LLM-based execution planning with fallback mechanisms
     - Approval workflow integration for execution plans
     - Context-aware planning with capability selection

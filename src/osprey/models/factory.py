@@ -84,7 +84,7 @@ def get_model(
 
     Provider-specific behavior:
     - **Anthropic**: Requires API key and model ID, supports HTTP proxy
-    - **Google**: Requires API key and model ID, supports HTTP proxy  
+    - **Google**: Requires API key and model ID, supports HTTP proxy
     - **OpenAI**: Requires API key and model ID, supports HTTP proxy and custom base URLs
     - **Ollama**: Requires model ID and base URL, no API key needed, no proxy support
     - **CBORG**: Requires API key, model ID, and base URL, supports HTTP proxy

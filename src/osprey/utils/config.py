@@ -1,7 +1,7 @@
 """
 Configuration System
 
-Professional configuration system that works seamlessly both inside and outside 
+Professional configuration system that works seamlessly both inside and outside
 LangGraph contexts. Features:
 - Single-file YAML loading with environment resolution
 - LangGraph integration, pre-computed structures, context awareness

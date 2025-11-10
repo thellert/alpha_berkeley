@@ -25,7 +25,7 @@ between graph invocations.
 The state fields are organized with logical prefixes for clarity:
 
 - **task_*** : Task extraction and input processing
-- **planning_*** : Classification and orchestration  
+- **planning_*** : Classification and orchestration
 - **execution_*** : Step execution and results
 - **control_*** : Control flow runtime state
 - **ui_*** : UI-specific results and commands

@@ -283,7 +283,7 @@ class Action:
             const colors = {{
                 primary: '#669bbc',      // Indigo - main action buttons
                 primaryHover: '#003049', // Darker indigo for hover
-                secondary: '#b1a7a6',    // Gray - secondary actions  
+                secondary: '#b1a7a6',    // Gray - secondary actions
                 secondaryHover: '#161a1d', // Darker gray for hover
                 success: '#669bbc',      // Green - save/confirm actions
                 successHover: '#003049', // Darker green for hover
@@ -494,10 +494,10 @@ class Action:
                     }}
 
                     const now = new Date();
-                    const currentTimestamp = now.getFullYear() + '-' + 
-                        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                        String(now.getDate()).padStart(2, '0') + ' ' + 
-                        String(now.getHours()).padStart(2, '0') + ':' + 
+                    const currentTimestamp = now.getFullYear() + '-' +
+                        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                        String(now.getDate()).padStart(2, '0') + ' ' +
+                        String(now.getHours()).padStart(2, '0') + ':' +
                         String(now.getMinutes()).padStart(2, '0');
 
                     dialog.innerHTML = `

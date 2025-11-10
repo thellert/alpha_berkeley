@@ -303,7 +303,7 @@ def make_json_serializable(obj: Any) -> Any:
     Examples:
         >>> import numpy as np
         >>> import matplotlib.pyplot as plt
-        >>> 
+        >>>
         >>> # Handle numpy arrays
         >>> arr = np.array([1, 2, 3])
         >>> serializable = make_json_serializable(arr)

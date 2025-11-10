@@ -2,7 +2,7 @@
 Unified Execution Wrapper System
 
 Consolidates wrapper logic between container and local execution.
-Both execution methods create the same wrapper infrastructure with 
+Both execution methods create the same wrapper infrastructure with
 environment-specific adaptations.
 """
 
@@ -20,7 +20,7 @@ class ExecutionWrapper:
 
     Creates wrapped Python scripts with:
     - Standard imports and setup
-    - Context loading 
+    - Context loading
     - Output capture
     - Results export
     - Error handling
@@ -177,7 +177,7 @@ else:
                 # Convert host path to container path
                 container_path = self._convert_host_path_to_container_path(execution_folder)
                 setup = f"""
-# Container execution directory setup  
+# Container execution directory setup
 execution_dir = Path("{container_path}")
 print(f"Container working directory: {{Path.cwd()}}")
 print(f"Target execution directory: {{execution_dir}}")

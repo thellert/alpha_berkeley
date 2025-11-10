@@ -11,7 +11,7 @@ The memory capability handles two primary operations:
 
 Key Features:
     - LLM-based content extraction from chat conversations
-    - Approval system integration for controlled memory modifications  
+    - Approval system integration for controlled memory modifications
     - Persistent storage through the memory storage manager
     - Context injection for other capabilities requiring user context
     - Structured memory operations with comprehensive error handling

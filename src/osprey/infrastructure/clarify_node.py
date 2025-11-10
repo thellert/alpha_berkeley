@@ -1,8 +1,8 @@
 """
 Clarify Capability
 
-This capability asks users specific questions when their queries are ambiguous 
-or missing critical information needed for execution. It helps refine user 
+This capability asks users specific questions when their queries are ambiguous
+or missing critical information needed for execution. It helps refine user
 intent before proceeding with technical operations.
 """
 

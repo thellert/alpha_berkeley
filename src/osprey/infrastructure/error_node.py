@@ -16,7 +16,7 @@ Key Components:
 
 Integration:
     - Receives error information from capability decorators via agent state
-    - Uses ErrorClassification.format_for_llm() for consistent metadata formatting  
+    - Uses ErrorClassification.format_for_llm() for consistent metadata formatting
     - Integrates with LangGraph streaming for real-time progress updates
     - Returns responses as AIMessage objects for direct user presentation
 
@@ -236,7 +236,7 @@ class ErrorNode(BaseInfrastructureNode):
 
             >>> from osprey.state import AgentState
             >>> from osprey.base.errors import ErrorClassification, ErrorSeverity
-            >>> 
+            >>>
             >>> # Construct agent state with error information
             >>> state = AgentState()
             >>> state['control_error_info'] = {
@@ -249,7 +249,7 @@ class ErrorNode(BaseInfrastructureNode):
             ...     'execution_time': 31.5
             ... }
             >>> state['task_current_task'] = "Retrieve user profile data"
-            >>> 
+            >>>
             >>> # Execute error response generation
             >>> result = await ErrorNode.execute(state)
             >>> print(f"Response type: {type(result['messages'][0])}")
@@ -380,7 +380,7 @@ class ErrorNode(BaseInfrastructureNode):
 
                 >>> from osprey.state import AgentState
                 >>> from osprey.base.errors import ErrorClassification, ErrorSeverity
-                >>> 
+                >>>
                 >>> # Prepare agent state with error information
                 >>> state = AgentState()
                 >>> state['control_error_info'] = {
@@ -393,7 +393,7 @@ class ErrorNode(BaseInfrastructureNode):
                 ...     'execution_time': 5.2
                 ... }
                 >>> state['task_current_task'] = "Fetch weather data"
-                >>> 
+                >>>
                 >>> # Generate error response
                 >>> result = await ErrorNode.execute(state)
                 >>> message = result['messages'][0]
@@ -582,7 +582,7 @@ def _create_error_context_from_state(state: AgentState) -> ErrorContext:
 
             >>> from osprey.state import AgentState
             >>> from osprey.base.errors import ErrorClassification, ErrorSeverity
-            >>> 
+            >>>
             >>> state = AgentState()
             >>> state['control_error_info'] = {
             ...     'classification': ErrorClassification(
@@ -595,7 +595,7 @@ def _create_error_context_from_state(state: AgentState) -> ErrorContext:
             ... }
             >>> state['task_current_task'] = "Fetch user preferences"
             >>> state['control_retry_count'] = 2
-            >>> 
+            >>>
             >>> context = _create_error_context_from_state(state)
             >>> print(f"Severity: {context.error_severity.value}, Retries: {context.retry_count}")
             Severity: retriable, Retries: 2

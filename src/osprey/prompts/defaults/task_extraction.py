@@ -240,7 +240,7 @@ class DefaultTaskExtractionPromptBuilder(FrameworkPromptBuilder):
 Core requirements:
 • Create self-contained task descriptions executable without conversation context
 • Resolve temporal references ("an hour ago", "yesterday") to specific times/values
-• Extract specific details and parameters from previous responses  
+• Extract specific details and parameters from previous responses
 • Determine if task builds on previous conversation context
 • Consider available data sources when interpreting requests
 • Set depends_on_user_memory=true only when the task directly incorporates specific information from user memory

@@ -10,7 +10,7 @@ The service consists of three primary components working together to provide sea
 memory operations:
 
 1. **MemoryStorageManager**: File-based persistence backend with JSON storage
-2. **UserMemoryProvider**: Data source integration for framework-wide memory access  
+2. **UserMemoryProvider**: Data source integration for framework-wide memory access
 3. **MemoryContent**: Structured data model for memory entries with timestamp context
 
 Key Features:

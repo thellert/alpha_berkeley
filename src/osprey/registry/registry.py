@@ -11,7 +11,7 @@ can build upon:
 Core Infrastructure:
     - **Infrastructure Nodes**: Core routing, classification, orchestration, and error handling
     - **Framework Capabilities**: Memory operations, time parsing, Python execution, communication
-    - **Context Classes**: Standard data structures for framework operations  
+    - **Context Classes**: Standard data structures for framework operations
     - **Data Sources**: Core user memory and system data providers
     - **Services**: Internal LangGraph service graphs for complex operations
     - **Prompt Providers**: Default prompt implementations for all framework operations
@@ -28,7 +28,7 @@ Architecture Benefits:
     - **LangGraph Integration**: All components are designed for LangGraph execution
     - **Dependency Management**: Components are initialized in proper dependency order
 
-The framework registry is loaded first during registry initialization, 
+The framework registry is loaded first during registry initialization,
 ensuring core infrastructure is available before application components are loaded.
 
 .. note::
@@ -46,7 +46,7 @@ Examples:
         >>> from osprey.registry import initialize_registry, get_registry
         >>> initialize_registry()  # Loads framework registry first
         >>> registry = get_registry()
-        >>> 
+        >>>
         >>> # Access framework components
         >>> memory_capability = registry.get_capability("memory")
         >>> time_parsing = registry.get_capability("time_range_parsing")
@@ -138,7 +138,7 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
             >>> from osprey.registry import initialize_registry, get_registry
             >>> initialize_registry()
             >>> registry = get_registry()
-            >>> 
+            >>>
             >>> # Framework components are available to all applications
             >>> memory_cap = registry.get_capability("memory")
             >>> router_node = registry.get_node("router")
@@ -215,15 +215,15 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
 
                 >>> provider = FrameworkRegistryProvider()
                 >>> config = provider.get_registry_config()
-                >>> 
+                >>>
                 >>> # Framework provides core nodes
                 >>> assert any(node.name == "router" for node in config.core_nodes)
                 >>> assert any(node.name == "orchestrator" for node in config.core_nodes)
-                >>> 
-                >>> # Framework provides base capabilities  
+                >>>
+                >>> # Framework provides base capabilities
                 >>> assert any(cap.name == "memory" for cap in config.capabilities)
                 >>> assert any(cap.name == "python" for cap in config.capabilities)
-                >>> 
+                >>>
                 >>> # Framework provides standard context classes
                 >>> assert any(ctx.context_type == "TIME_RANGE" for ctx in config.context_classes)
 

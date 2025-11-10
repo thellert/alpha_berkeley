@@ -38,10 +38,10 @@ class PythonExecutorService:
 
     ## 🎯 **Unique Capabilities**
 
-    ### **1. Flexible Execution Environments** 
+    ### **1. Flexible Execution Environments**
     Switch between container and local execution with a single configuration change:
     - **Container Mode**: Secure, isolated Jupyter environments with full dependency management
-    - **Local Mode**: Direct host execution with automatic Python environment detection  
+    - **Local Mode**: Direct host execution with automatic Python environment detection
     - **Seamless Switching**: Same interface, same results, different isolation levels
 
     ### **2. Comprehensive Jupyter Notebook Generation**
@@ -64,7 +64,7 @@ class PythonExecutorService:
     The service orchestrates a sophisticated multi-stage workflow:
 
     1. **Code Generation**: LLM-based Python code generation with context awareness and iterative improvement
-    2. **Static Analysis**: Security and policy analysis with configurable domain-specific rules  
+    2. **Static Analysis**: Security and policy analysis with configurable domain-specific rules
     3. **Approval Workflows**: Human oversight system with rich context and safety assessments
     4. **Flexible Execution**: Container or local execution with unified result collection
     5. **Notebook Generation**: Comprehensive Jupyter notebook creation for human evaluation
@@ -114,7 +114,7 @@ class PythonExecutorService:
             ...     execution_folder_name="epics_analysis"
             ... )
             >>> result = await service.ainvoke(request, config=service_config)
-            >>> 
+            >>>
             >>> # Rich results with notebook access
             >>> print(f"Generated code: {result.generated_code}")
             >>> print(f"Execution time: {result.execution_result.execution_time}s")
@@ -126,8 +126,8 @@ class PythonExecutorService:
             >>> # Container execution (config: execution_method: "container")
             >>> result_container = await service.ainvoke(request, config=container_config)
             >>> # Executes in secure Jupyter container
-            >>> 
-            >>> # Local execution (config: execution_method: "local") 
+            >>>
+            >>> # Local execution (config: execution_method: "local")
             >>> result_local = await service.ainvoke(request, config=local_config)
             >>> # Executes on host Python - same results, faster execution
 
@@ -144,7 +144,7 @@ class PythonExecutorService:
             >>> # - Safety analysis and concerns
             >>> # - Execution environment details
             >>> # - Clear approve/reject options
-            >>> 
+            >>>
             >>> # After user approval, execution resumes automatically
             >>> resume_command = Command(resume={"approved": True})
             >>> result = await service.ainvoke(resume_command, config=service_config)

@@ -73,7 +73,7 @@ logger = get_logger(name="StateManager", color="white")
 def get_agent_control_defaults() -> dict[str, Any]:
     """Get agent control configuration defaults with robust error handling.
 
-    This function retrieves the default agent control configuration from the 
+    This function retrieves the default agent control configuration from the
     configuration system with comprehensive error handling and safe fallbacks. The
     configuration includes planning mode settings, EPICS execution controls, approval
     workflows, and execution limits.
@@ -421,7 +421,7 @@ class StateManager:
                 >>> async def execute(state: AgentState, **kwargs):
                 ...     # Capability logic here
                 ...     result = PVAddresses(pvs=found_pvs, description="Found PVs")
-                ...     
+                ...
                 ...     # Store and return state updates (one-liner)
                 ...     step = StateManager.get_current_step(state)
                 ...     return StateManager.store_context(
@@ -482,7 +482,7 @@ class StateManager:
         """Get current execution plan from state with type validation.
 
         Performs type validation to ensure the returned ExecutionPlan is properly
-        formed (TypedDict with 'get' method). This eliminates the need for 
+        formed (TypedDict with 'get' method). This eliminates the need for
         downstream callers to perform hasattr checks.
 
         Args:
@@ -602,7 +602,7 @@ class StateManager:
             Rich figure registration::
 
                 >>> figure_update = StateManager.register_figure(
-                ...     state, 
+                ...     state,
                 ...     capability="python_executor",
                 ...     figure_path="figures/analysis.png",
                 ...     display_name="Performance Analysis",

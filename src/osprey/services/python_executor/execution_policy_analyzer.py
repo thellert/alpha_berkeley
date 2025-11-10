@@ -5,7 +5,7 @@ This module provides a clean extension point for applications to customize
 both domain analysis and execution policy decisions based on code analysis results.
 
 The framework handles basic safety checks (syntax, security) as hard-coded steps,
-then delegates to configurable domain analyzers and policy analyzers for 
+then delegates to configurable domain analyzers and policy analyzers for
 application-specific decisions.
 """
 

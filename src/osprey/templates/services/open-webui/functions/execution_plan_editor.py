@@ -504,7 +504,7 @@ Error: {escaped_error}
    • Verify capabilities are properly registered
    • Check that registry initialization is working
 
-2. Export Registry Data  
+2. Export Registry Data
    • Send a message to the ALS Assistant agent to trigger registry export
    • Registry data is exported every time the agent processes a message
 
@@ -888,7 +888,7 @@ No modifications were made - the original plan will be used as-is.`;
 
 To save your modifications and proceed with approval:
 
-1. Close this editor 
+1. Close this editor
 2. Return to chat
 3. Use the execution plan editor again (this will trigger a save of your modifications)
 4. Then respond with "yes" to approve the modified plan
@@ -1029,7 +1029,7 @@ Note: Your modifications are preserved in this session until you reload the page
                 function getCategoryEmoji(category) {{
                     const emojiMap = {{
                         "PV_ADDRESSES": "📍",
-                        "TIME_RANGE": "⏰", 
+                        "TIME_RANGE": "⏰",
                         "PV_VALUES": "📊",
                         "ARCHIVER_DATA": "📈",
                         "ANALYSIS_RESULTS": "🔬",
@@ -1051,8 +1051,8 @@ Note: Your modifications are preserved in this session until you reload the page
                         const requiresText = cap.requires && cap.requires.length > 0 ? cap.requires.join(', ') : 'None';
 
                         html += `
-                            <div style="border: 1px solid ${{colors.borderLight}}; border-radius: 3px; padding: 16px; margin-bottom: 12px; background: ${{colors.panelBackground}}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);" 
-                                 onmouseover="this.style.borderColor='${{colors.primary}}'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'" 
+                            <div style="border: 1px solid ${{colors.borderLight}}; border-radius: 3px; padding: 16px; margin-bottom: 12px; background: ${{colors.panelBackground}}; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+                                 onmouseover="this.style.borderColor='${{colors.primary}}'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.1)'"
                                  onmouseout="this.style.borderColor='${{colors.borderLight}}'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)'"
                                  onclick="addStepFromCapability('${{cap.name}}')">
                                 <div style="font-weight: 600; color: ${{colors.text}}; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; font-size: 13px;">${{cap.name}}</div>
@@ -1159,8 +1159,8 @@ Note: Your modifications are preserved in this session until you reload the page
                     if (currentPlan.length > 0) {{
                         html += `
                             <div style="text-align: center; margin-top: 20px; padding: 20px;">
-                                <button onclick="addNewStepAtBottom()" style="background: ${{colors.success}}; color: white; border: 1px solid ${{colors.success}}; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
-                                       onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'" 
+                                <button onclick="addNewStepAtBottom()" style="background: ${{colors.success}}; color: white; border: 1px solid ${{colors.success}}; padding: 12px 20px; border-radius: 50px; cursor: pointer; font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+                                       onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)'"
                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
                                     <span style="font-size: 16px; font-weight: bold;">+</span>
                                     Add New Step
@@ -1307,7 +1307,7 @@ Note: Your modifications are preserved in this session until you reload the page
                     `;
 
                     // Generate capability options
-                    const capabilityOptions = capabilities.map(cap => 
+                    const capabilityOptions = capabilities.map(cap =>
                         `<option value="${{cap.name}}" ${{cap.name === step.capability ? 'selected' : ''}}>${{cap.name}} - ${{cap.description}}</option>`
                     ).join('');
 
@@ -1433,7 +1433,7 @@ Note: Your modifications are preserved in this session until you reload the page
                                 validContextTypes = [...new Set(validContextTypes)];
 
                                 // Generate context type options (filtered by capability requirements)
-                                const contextTypeOptions = validContextTypes.map(contextType => 
+                                const contextTypeOptions = validContextTypes.map(contextType =>
                                     `<option value="${{contextType}}" ${{contextType === key ? 'selected' : ''}}>${{contextType}}</option>`
                                 ).join('');
 
@@ -1558,7 +1558,7 @@ Note: Your modifications are preserved in this session until you reload the page
                             for (let i = index + 1; i < currentPlan.length; i++) {{
                                 const laterStep = currentPlan[i];
                                 if (laterStep.inputs && laterStep.inputs.length > 0) {{
-                                    const hasReference = laterStep.inputs.some(input => 
+                                    const hasReference = laterStep.inputs.some(input =>
                                         Object.values(input).includes(currentContextKey)
                                     );
                                     if (hasReference) {{
@@ -1599,7 +1599,7 @@ Note: Your modifications are preserved in this session until you reload the page
                         let validContexts = availableContexts;
                         if (selectedCap && selectedCap.requires && selectedCap.requires.length > 0) {{
                             // Only show context types that this capability requires
-                            validContexts = availableContexts.filter(ctx => 
+                            validContexts = availableContexts.filter(ctx =>
                                 selectedCap.requires.includes(ctx.contextType)
                             );
                         }}

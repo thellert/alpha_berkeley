@@ -98,11 +98,11 @@ def execute_startup_hook(hook_function_path: str):
        time minimal to avoid OpenWebUI timeout issues.
 
     Examples:
-        Execute NLTK resource setup::\n        
+        Execute NLTK resource setup::\n
             >>> execute_startup_hook("initialization.setup_nltk_resources")
             # Calls applications.als_assistant.initialization.setup_nltk_resources()
 
-        Execute database initialization::\n        
+        Execute database initialization::\n
             >>> execute_startup_hook("database.initialize_connections")
             # Calls applications.my_application.database.initialize_connections()
 
@@ -199,12 +199,12 @@ class Pipeline:
        OpenWebUI startup. Heavy operations occur in on_startup().
 
     Examples:
-        Basic pipeline usage in OpenWebUI::\n        
+        Basic pipeline usage in OpenWebUI::\n
             >>> pipeline = Pipeline()
             >>> await pipeline.on_startup()
             >>> result = pipeline.pipe("Hello, agent!", "model_id", [], {})
 
-        Configure pipeline behavior::\n        
+        Configure pipeline behavior::\n
             >>> pipeline = Pipeline()
             >>> pipeline.valves.debug_mode = True
             >>> pipeline.valves.approval_mode = "enabled"
@@ -248,12 +248,12 @@ class Pipeline:
            Use caution in production environments.
 
         Examples:
-            Configure for development::\n            
+            Configure for development::\n
                 >>> pipeline.valves.debug_mode = True
                 >>> pipeline.valves.verbose_logging = True
                 >>> pipeline.valves.approval_mode = "disabled"
 
-            Configure for production::\n            
+            Configure for production::\n
                 >>> pipeline.valves.epics_writes_enabled = False
                 >>> pipeline.valves.approval_mode = "enabled"
                 >>> pipeline.valves.max_execution_time = 60
@@ -349,12 +349,12 @@ class Pipeline:
            completes successfully. Check _initialized flag before use.
 
         Examples:
-            Basic initialization::\n            
+            Basic initialization::\n
                 >>> pipeline = Pipeline()
                 >>> print(f"Pipeline: {pipeline.name}")
                 >>> print(f"App: {pipeline.valves.app_name}")
 
-            Check initialization status::\n            
+            Check initialization status::\n
                 >>> pipeline = Pipeline()
                 >>> print(f"Ready: {pipeline._initialized}")
                 False
@@ -488,7 +488,7 @@ class Pipeline:
            initialization. Critical hooks should implement their own error handling.
 
         Examples:
-            Manual startup (typically handled by OpenWebUI)::\n            
+            Manual startup (typically handled by OpenWebUI)::\n
                 >>> pipeline = Pipeline()
                 >>> await pipeline.on_startup()
                 >>> print(f"Initialized: {pipeline._initialized}")
@@ -530,7 +530,7 @@ class Pipeline:
            called automatically during pipeline shutdown sequences.
 
         Examples:
-            Manual shutdown (typically handled by OpenWebUI)::\n            
+            Manual shutdown (typically handled by OpenWebUI)::\n
                 >>> await pipeline.on_shutdown()
                 # Logs shutdown event and performs cleanup
 
@@ -566,7 +566,7 @@ class Pipeline:
            any messages. Ensure all dependencies are available before startup.
 
         Examples:
-            Internal usage (called by on_startup)::\n            
+            Internal usage (called by on_startup)::\n
                 >>> await self._initialize_framework()
                 # Creates graph, gateway, and other components
 
@@ -693,11 +693,11 @@ class Pipeline:
            Missing or malformed session data may affect conversation continuity.
 
         Examples:
-            OpenWebUI integration (automatic)::\n            
+            OpenWebUI integration (automatic)::\n
                 # Called automatically by OpenWebUI
                 >>> response = pipeline.pipe(
                 ...     "Hello, agent!",
-                ...     "pipeline_id", 
+                ...     "pipeline_id",
                 ...     [{"role": "user", "content": "Hello"}],
                 ...     {"user": {"id": "user123"}, "chat_id": "chat456"}
                 ... )
@@ -763,7 +763,7 @@ class Pipeline:
            execution until approval is provided through subsequent requests.
 
         Examples:
-            Process new conversation::\n            
+            Process new conversation::\n
                 >>> for chunk in pipeline._execute_pipeline(
                 ...     "Hello", "user123", "chat456", "session789"
                 ... ):

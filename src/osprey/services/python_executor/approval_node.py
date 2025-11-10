@@ -98,7 +98,7 @@ def create_approval_node():
 
             >>> approval_node_func = create_approval_node()
             >>> workflow.add_node("python_approval_node", approval_node_func)
-            >>> 
+            >>>
             >>> # The node processes states with interrupt data
             >>> state = PythonExecutionState(
             ...     approval_interrupt_data={"code": "...", "concerns": [...]}

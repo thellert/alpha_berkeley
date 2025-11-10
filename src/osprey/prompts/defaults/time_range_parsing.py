@@ -43,7 +43,7 @@ class DefaultTimeRangeParsingPromptBuilder(FrameworkPromptBuilder):
 
             SUPPORTED PATTERNS:
             - Relative: "last X hours/days", "yesterday", "this week"
-            - Absolute: "from YYYY-MM-DD to YYYY-MM-DD" 
+            - Absolute: "from YYYY-MM-DD to YYYY-MM-DD"
             - Implicit: "current", "recent" (default to last few minutes)
             """).strip()
 

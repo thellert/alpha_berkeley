@@ -144,7 +144,7 @@ class FrameworkPromptBuilder(ABC):
                 return textwrap.dedent('''
                     Follow these steps:
                     1. Analyze the user's request for key requirements
-                    2. Identify necessary data sources and dependencies  
+                    2. Identify necessary data sources and dependencies
                     3. Create a step-by-step execution plan
 
                     Guidelines:

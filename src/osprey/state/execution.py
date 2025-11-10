@@ -33,7 +33,7 @@ to provide comprehensive execution tracking and control.
 
 The approval system provides human-in-the-loop control for sensitive operations:
 - Python code execution approval
-- Memory operation approval  
+- Memory operation approval
 - EPICS write operation approval
 - Custom capability-specific approvals
 

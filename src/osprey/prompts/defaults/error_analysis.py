@@ -32,7 +32,7 @@ class DefaultErrorAnalysisPromptBuilder(FrameworkPromptBuilder):
 
             Requirements:
             - Write 2-3 sentences explaining what likely went wrong
-            - Focus on the "why" rather than repeating the "what" 
+            - Focus on the "why" rather than repeating the "what"
             - Do NOT repeat the error message, recovery options, or execution details
             - Be specific to system operations when relevant
             - Consider the system capabilities context when suggesting alternatives

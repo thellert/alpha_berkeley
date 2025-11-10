@@ -31,7 +31,7 @@ Examples:
           host: localhost
           port: 5432
 
-        # app_config.yml  
+        # app_config.yml
         import: base_config.yml
         database:
           name: myapp  # Merged with base config
@@ -103,7 +103,7 @@ def _deep_update_dict(source_dict, update_dict):
             >>> update = {'db': {'name': 'myapp'}, 'cache': {'enabled': True}}
             >>> _deep_update_dict(source, update)
             >>> print(source)
-            {'db': {'host': 'localhost', 'port': 5432, 'name': 'myapp'}, 
+            {'db': {'host': 'localhost', 'port': 5432, 'name': 'myapp'},
              'cache': {'enabled': True}}
 
         Value replacement behavior::

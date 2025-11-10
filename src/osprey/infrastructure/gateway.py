@@ -160,7 +160,7 @@ class Gateway:
     ) -> GatewayResult:
         """Handle interrupt/approval flow generically.
 
-        Gateway detects approval/rejection and uses Command(update=...) to inject 
+        Gateway detects approval/rejection and uses Command(update=...) to inject
         interrupt payload into agent state while resuming execution.
         """
 
@@ -264,10 +264,10 @@ class Gateway:
     def _has_pending_interrupts(self, compiled_graph: Any, config: dict[str, Any] | None) -> bool:
         """Check if there are pending interrupts.
 
-        CRITICAL: Check state.interrupts (actual pending human approvals) 
+        CRITICAL: Check state.interrupts (actual pending human approvals)
         NOT state.next (scheduled nodes to execute).
 
-        When graphs crash during routing, state.next can remain populated with 
+        When graphs crash during routing, state.next can remain populated with
         failed transitions, causing false interrupt detection.
         """
         if not compiled_graph or not config:

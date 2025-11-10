@@ -10,7 +10,7 @@ WHAT IS A CAPABILITY?
 
 A capability is a self-contained module that:
 ✓ Performs a specific function (API call, computation, data retrieval, etc.)
-✓ Accepts inputs (context) from the agent state  
+✓ Accepts inputs (context) from the agent state
 ✓ Returns outputs (context) back to the agent state
 ✓ Can be orchestrated by the LLM to accomplish complex tasks
 
@@ -110,7 +110,7 @@ class WeatherAPICapability(BaseCapability):
 
         # Store and return
         return StateManager.store_context(
-            state, "WEATHER_DATA", 
+            state, "WEATHER_DATA",
             step.get("context_key"), weather_data
         )
 ```
@@ -274,7 +274,7 @@ SCENARIO 1: REST API Integration
 → Create one capability per major API endpoint or logical grouping
 → Example: weather_current.py, weather_forecast.py, weather_historical.py
 
-SCENARIO 2: Database Integration  
+SCENARIO 2: Database Integration
 → Create capabilities for different query types
 → Example: db_fetch.py, db_aggregate.py, db_search.py
 
@@ -328,7 +328,7 @@ NEED HELP?
 2. Look at working examples: wind/ and weather/ directories
 3. Check Osprey documentation:
    https://als-apg.github.io/osprey/developer-guides/building-first-capability.html
-4. Debug with: 
+4. Debug with:
    >>> from osprey.registry import get_registry
    >>> registry = get_registry()
    >>> print([c.name for c in registry.capabilities])

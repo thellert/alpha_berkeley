@@ -81,7 +81,7 @@ class DefaultClarificationPromptBuilder(FrameworkPromptBuilder):
 
             EXTRACTED TASK OBJECTIVE: {task_objective}
 
-            Based on the full conversation history and the extracted task, generate specific clarifying questions. 
+            Based on the full conversation history and the extracted task, generate specific clarifying questions.
             Consider:
             - What has already been discussed in the conversation
             - What information is still missing to execute the task

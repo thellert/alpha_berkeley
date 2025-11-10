@@ -94,7 +94,7 @@ class BaseCapability(ABC):
 
         Capability with custom error handling::
 
-            @capability_node  
+            @capability_node
             class DatabaseCapability(BaseCapability):
                 name = "database_query"
                 description = "Execute database queries with connection handling"
@@ -241,7 +241,7 @@ class BaseCapability(ABC):
                     processing_config = state.get("processing_config", {})
 
                     processed_data = await transform_sensor_data(
-                        raw_data, 
+                        raw_data,
                         config=processing_config
                     )
 
@@ -478,7 +478,7 @@ class BaseCapability(ABC):
     def orchestrator_guide(self) -> Any | None:
         """Get the orchestrator guide for this capability (lazy-loaded).
 
-        Standardized interface used by the framework. Automatically calls 
+        Standardized interface used by the framework. Automatically calls
         _create_orchestrator_guide() on first access and caches the result.
 
         :return: Orchestrator guide for execution planning integration, or None if not needed
@@ -492,7 +492,7 @@ class BaseCapability(ABC):
     def classifier_guide(self) -> Any | None:
         """Get the classifier guide for this capability (lazy-loaded).
 
-        Standardized interface used by the framework. Automatically calls 
+        Standardized interface used by the framework. Automatically calls
         _create_classifier_guide() on first access and caches the result.
 
         :return: Classifier guide for capability activation, or None if not needed

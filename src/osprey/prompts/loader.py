@@ -572,7 +572,7 @@ def register_framework_prompt_provider(application_name: str, provider: Framewor
             from applications.als_assistant.framework_prompts import ALSPromptProvider
 
             register_framework_prompt_provider(
-                "als_assistant", 
+                "als_assistant",
                 ALSPromptProvider()
             )
 

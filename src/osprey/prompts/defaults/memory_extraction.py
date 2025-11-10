@@ -241,8 +241,8 @@ class DefaultMemoryExtractionPromptBuilder(FrameworkPromptBuilder):
                 - When the user asks to show, display, or view their saved memory
                 - When the user explicitly mentions memory operations
 
-                **IMPORTANT**: This capability has a VERY STRICT classifier. Only use when users 
-                explicitly mention memory-related operations. Do NOT use for general information 
+                **IMPORTANT**: This capability has a VERY STRICT classifier. Only use when users
+                explicitly mention memory-related operations. Do NOT use for general information
                 storage or context management.
 
                 **Step Structure:**

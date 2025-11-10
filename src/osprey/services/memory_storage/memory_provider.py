@@ -392,7 +392,7 @@ class UserMemoryProvider(DataSourceProvider):
                 **🧠 User Memory** (3 saved entries):
                   **Personal Notes & Insights:**
                     • User prefers morning meetings
-                    • Working on project Alpha  
+                    • Working on project Alpha
                     • Completed training module
 
             Empty memory formatting::

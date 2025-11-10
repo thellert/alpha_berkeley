@@ -140,13 +140,13 @@ osprey:
 ```python
 >>> from osprey.capabilities.python import PythonCapability
 >>> from osprey.state import AgentState
->>> 
+>>>
 >>> state = AgentState()
 >>> result = await PythonCapability.execute(
-...     state, 
+...     state,
 ...     task_objective="Analyze EPICS PV trends and generate plots"
 ... )
->>> 
+>>>
 >>> # Execution results with notebook access
 >>> print(f"Execution successful: {result['is_successful']}")
 >>> print(f"Notebook available at: {result['PYTHON_RESULTS'].notebook_link}")
@@ -162,7 +162,7 @@ osprey:
 >>> result = await PythonCapability.execute(state, task_objective="Process data")
 >>> # Executes in secure Jupyter container
 
-# Switch to local execution (faster, direct)  
+# Switch to local execution (faster, direct)
 >>> # config.yml: execution_method: "local"
 >>> result = await PythonCapability.execute(state, task_objective="Process data")
 >>> # Executes on local Python environment - same interface!
@@ -191,7 +191,7 @@ osprey:
 ```python
 >>> from osprey.services.python_executor import PythonExecutorService
 >>> from osprey.services.python_executor import PythonExecutionRequest
->>> 
+>>>
 >>> service = PythonExecutorService()
 >>> request = PythonExecutionRequest(
 ...     user_query="Analyze accelerator performance data",
@@ -199,7 +199,7 @@ osprey:
 ...     expected_results="Statistical analysis and trend visualizations"
 ... )
 >>> result = await service.ainvoke(request, config=service_config)
->>> 
+>>>
 >>> # Rich result structure with notebook access
 >>> print(f"Generated code: {result.generated_code}")
 >>> print(f"Execution time: {result.execution_result.execution_time}s")

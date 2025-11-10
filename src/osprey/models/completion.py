@@ -260,7 +260,7 @@ def get_chat_completion(
             ...     summary: str
             ...     confidence: float
             ...     recommendations: list[str]
-            >>> 
+            >>>
             >>> result = get_chat_completion(
             ...     message="Analyze this data and provide structured results",
             ...     provider="openai",

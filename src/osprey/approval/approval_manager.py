@@ -24,17 +24,17 @@ Architecture:
     business logic, and enables consistent approval behavior across the system.
 
 Examples:
-    Initialize approval manager::\n    
+    Initialize approval manager::\n
         >>> manager = get_approval_manager()  # Loads from global config
         >>> summary = manager.get_config_summary()
         >>> print(f"Global mode: {summary['global_mode']}")
 
-    Get capability-specific configuration::\n    
+    Get capability-specific configuration::\n
         >>> python_config = manager.get_python_execution_config()
         >>> print(f"Python approval enabled: {python_config.enabled}")
         >>> print(f"Python approval mode: {python_config.mode.value}")
 
-    Create configured evaluators::\n    
+    Create configured evaluators::\n
         >>> evaluator = manager.get_python_execution_evaluator()
         >>> decision = evaluator.evaluate(has_epics_writes=True, has_epics_reads=False)
 
@@ -96,7 +96,7 @@ class ApprovalManager:
     :type approval_config: dict
 
     Examples:
-        Initialize with configuration::\n        
+        Initialize with configuration::\n
             >>> config_dict = {
             ...     'global_mode': 'selective',
             ...     'capabilities': {
@@ -106,11 +106,11 @@ class ApprovalManager:
             ... }
             >>> manager = ApprovalManager(config_dict)
 
-        Access resolved configuration::\n        
+        Access resolved configuration::\n
             >>> python_config = manager.get_python_execution_config()
             >>> print(f"Effective setting: {python_config.enabled}")
 
-        Create evaluators::\n        
+        Create evaluators::\n
             >>> evaluator = manager.get_python_execution_evaluator()
             >>> # Evaluator is configured with resolved settings
 
@@ -352,7 +352,7 @@ def get_python_execution_evaluator() -> PythonExecutionApprovalEvaluator:
     :raises ValueError: If approval configuration is missing or invalid
 
     Examples:
-        Evaluate code approval requirement::\n        
+        Evaluate code approval requirement::\n
             >>> evaluator = get_python_execution_evaluator()
             >>> decision = evaluator.evaluate(
             ...     has_epics_writes=True,
@@ -361,7 +361,7 @@ def get_python_execution_evaluator() -> PythonExecutionApprovalEvaluator:
             >>> if decision.needs_approval:
             ...     print(f"Approval required: {decision.reasoning}")
 
-        Use in capability implementation::\n        
+        Use in capability implementation::\n
             >>> def execute_python_code(code: str):
             ...     evaluator = get_python_execution_evaluator()
             ...     # Analyze code for EPICS operations (implementation specific)
@@ -394,13 +394,13 @@ def get_memory_evaluator() -> MemoryApprovalEvaluator:
     :raises ValueError: If approval configuration is missing or invalid
 
     Examples:
-        Evaluate memory operation approval::\n        
+        Evaluate memory operation approval::\n
             >>> evaluator = get_memory_evaluator()
             >>> decision = evaluator.evaluate(operation_type="create")
             >>> if decision.needs_approval:
             ...     print(f"Memory approval required: {decision.reasoning}")
 
-        Use in memory service::\n        
+        Use in memory service::\n
             >>> def save_memory(content: str, user_id: str):
             ...     evaluator = get_memory_evaluator()
             ...     decision = evaluator.evaluate(operation_type="save")

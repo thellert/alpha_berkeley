@@ -1,8 +1,8 @@
 """
 Respond Capability
 
-This capability responds to user queries by generating appropriate responses - both technical 
-queries requiring execution context and conversational queries that don't. It adaptively 
+This capability responds to user queries by generating appropriate responses - both technical
+queries requiring execution context and conversational queries that don't. It adaptively
 chooses the appropriate response strategy based on query type and available context.
 """
 

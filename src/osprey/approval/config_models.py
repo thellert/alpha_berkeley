@@ -29,12 +29,12 @@ Design Philosophy:
     - Separation of concerns: Pure data models with no business logic
 
 Examples:
-    Create Python execution config from dictionary::\n    
+    Create Python execution config from dictionary::\n
         >>> config_dict = {'enabled': True, 'mode': 'epics_writes'}
         >>> config = PythonExecutionApprovalConfig.from_dict(config_dict)
         >>> print(f"Mode: {config.mode.value}")
 
-    Create global configuration::\n    
+    Create global configuration::\n
         >>> global_config = GlobalApprovalConfig.from_dict({
         ...     'global_mode': 'selective',
         ...     'capabilities': {
@@ -43,7 +43,7 @@ Examples:
         ...     }
         ... })
 
-    Handle validation errors::\n    
+    Handle validation errors::\n
         >>> try:
         ...     config = PythonExecutionApprovalConfig.from_dict({'mode': 'invalid'})
         ... except ValueError as e:
@@ -82,12 +82,12 @@ class ApprovalMode(Enum):
         ALL_CODE: Approval required for all code execution operations
 
     Examples:
-        Use in configuration::\n        
+        Use in configuration::\n
             >>> mode = ApprovalMode.EPICS_WRITES
             >>> print(f"Mode value: {mode.value}")
             >>> print(f"Mode name: {mode.name}")
 
-        Validate mode from string::\n        
+        Validate mode from string::\n
             >>> try:
             ...     mode = ApprovalMode("epics_writes")
             ...     print(f"Valid mode: {mode}")
@@ -127,7 +127,7 @@ class PythonExecutionApprovalConfig:
     :type mode: ApprovalMode
 
     Examples:
-        Create configuration for EPICS writes approval::\n        
+        Create configuration for EPICS writes approval::\n
             >>> config = PythonExecutionApprovalConfig(
             ...     enabled=True,
             ...     mode=ApprovalMode.EPICS_WRITES
@@ -135,7 +135,7 @@ class PythonExecutionApprovalConfig:
             >>> print(f"Approval enabled: {config.enabled}")
             >>> print(f"Mode: {config.mode.value}")
 
-        Create configuration with all code approval::\n        
+        Create configuration with all code approval::\n
             >>> config = PythonExecutionApprovalConfig(
             ...     enabled=True,
             ...     mode=ApprovalMode.ALL_CODE
@@ -174,17 +174,17 @@ class PythonExecutionApprovalConfig:
         :raises ValueError: If data is not a dict or contains invalid mode values
 
         Examples:
-            Create from complete configuration::\n            
+            Create from complete configuration::\n
                 >>> config_dict = {'enabled': True, 'mode': 'epics_writes'}
                 >>> config = PythonExecutionApprovalConfig.from_dict(config_dict)
                 >>> print(f"Enabled: {config.enabled}, Mode: {config.mode.value}")
 
-            Create with defaults (secure fallbacks)::\n            
+            Create with defaults (secure fallbacks)::\n
                 >>> config = PythonExecutionApprovalConfig.from_dict({})
                 >>> print(f"Default enabled: {config.enabled}")  # True
                 >>> print(f"Default mode: {config.mode.value}")    # 'all_code'
 
-            Handle validation errors::\n            
+            Handle validation errors::\n
                 >>> try:
                 ...     config = PythonExecutionApprovalConfig.from_dict({'mode': 'invalid'})
                 ... except ValueError as e:
@@ -238,11 +238,11 @@ class MemoryApprovalConfig:
     :type enabled: bool
 
     Examples:
-        Create memory approval configuration::\n        
+        Create memory approval configuration::\n
             >>> config = MemoryApprovalConfig(enabled=True)
             >>> print(f"Memory approval enabled: {config.enabled}")
 
-        Create disabled configuration::\n        
+        Create disabled configuration::\n
             >>> config = MemoryApprovalConfig(enabled=False)
             >>> # Memory operations will not require approval
 
@@ -271,20 +271,20 @@ class MemoryApprovalConfig:
         :raises ValueError: If data is neither bool nor dict, or bool value is invalid
 
         Examples:
-            Create from boolean::\n            
+            Create from boolean::\n
                 >>> config = MemoryApprovalConfig.from_dict(True)
                 >>> print(f"Enabled: {config.enabled}")
 
-            Create from dictionary::\n            
+            Create from dictionary::\n
                 >>> config_dict = {'enabled': False}
                 >>> config = MemoryApprovalConfig.from_dict(config_dict)
                 >>> print(f"Enabled: {config.enabled}")
 
-            Create with secure default::\n            
+            Create with secure default::\n
                 >>> config = MemoryApprovalConfig.from_dict({})
                 >>> print(f"Default enabled: {config.enabled}")  # True
 
-            Handle invalid input::\n            
+            Handle invalid input::\n
                 >>> try:
                 ...     config = MemoryApprovalConfig.from_dict(\"invalid\")
                 ... except ValueError as e:
@@ -330,7 +330,7 @@ class GlobalApprovalConfig:
     :type memory: MemoryApprovalConfig
 
     Examples:
-        Create global configuration::\n        
+        Create global configuration::\n
             >>> python_config = PythonExecutionApprovalConfig(
             ...     enabled=True, mode=ApprovalMode.EPICS_WRITES
             ... )
@@ -341,7 +341,7 @@ class GlobalApprovalConfig:
             ...     memory=memory_config
             ... )
 
-        Access capability configurations::\n        
+        Access capability configurations::\n
             >>> print(f"Global mode: {global_config.global_mode}")
             >>> print(f"Python enabled: {global_config.python_execution.enabled}")
             >>> print(f"Memory enabled: {global_config.memory.enabled}")
@@ -378,7 +378,7 @@ class GlobalApprovalConfig:
         :raises ValueError: If configuration structure is invalid or contains invalid values
 
         Examples:
-            Create from complete configuration::\n            
+            Create from complete configuration::\n
                 >>> config_dict = {
                 ...     'global_mode': 'selective',
                 ...     'capabilities': {
@@ -389,12 +389,12 @@ class GlobalApprovalConfig:
                 >>> config = GlobalApprovalConfig.from_dict(config_dict)
                 >>> print(f\"Global mode: {config.global_mode}\")
 
-            Create with missing sections (secure defaults)::\n            
+            Create with missing sections (secure defaults)::\n
                 >>> minimal_config = {'global_mode': 'selective', 'capabilities': {}}
                 >>> config = GlobalApprovalConfig.from_dict(minimal_config)
                 >>> # Missing capabilities will use secure defaults
 
-            Handle validation errors::\n            
+            Handle validation errors::\n
                 >>> try:
                 ...     config = GlobalApprovalConfig.from_dict({'global_mode': 'invalid'})
                 ... except ValueError as e:

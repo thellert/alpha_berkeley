@@ -197,12 +197,12 @@ class ExecutionControlConfig:
             Mode selection with different code patterns::
 
                 >>> config = ExecutionControlConfig(epics_writes_enabled=True)
-                >>> 
+                >>>
                 >>> # Code with only read operations
                 >>> mode = config.get_execution_mode(has_epics_writes=False, has_epics_reads=True)
                 >>> print(f"Read-only code: {mode}")
                 Read-only code: ExecutionMode.READ_ONLY
-                >>> 
+                >>>
                 >>> # Code with write operations (and writes enabled)
                 >>> mode = config.get_execution_mode(has_epics_writes=True, has_epics_reads=True)
                 >>> print(f"Write code: {mode}")

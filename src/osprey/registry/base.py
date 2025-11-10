@@ -43,7 +43,7 @@ Examples:
 
         >>> from osprey.registry.base import RegistryConfigProvider, RegistryConfig
         >>> from osprey.registry.base import CapabilityRegistration, ContextClassRegistration
-        >>> 
+        >>>
         >>> class MyAppRegistryProvider(RegistryConfigProvider):
         ...     def get_registry_config(self) -> RegistryConfig:
         ...         return RegistryConfig(

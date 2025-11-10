@@ -68,7 +68,7 @@ class BaseInfrastructureNode(ABC):
     Infrastructure Node Responsibilities:
 
     - **Task Extraction**: Parse and structure user requests into actionable tasks
-    - **Classification**: Determine which capabilities should handle specific requests  
+    - **Classification**: Determine which capabilities should handle specific requests
     - **Orchestration**: Plan and coordinate execution sequences across capabilities
     - **Routing**: Direct execution flow based on state conditions and results
     - **Monitoring**: Track execution progress and system health
@@ -135,7 +135,7 @@ class BaseInfrastructureNode(ABC):
 
     :param name: Infrastructure node identifier (required class attribute)
     :type name: str
-    :param description: Human-readable description (required class attribute)  
+    :param description: Human-readable description (required class attribute)
     :type description: str
 
     .. note::
@@ -216,7 +216,7 @@ class BaseInfrastructureNode(ABC):
 
         .. note::
            Infrastructure nodes should focus on orchestration, routing, and state
-           management logic. Retrieve loggers explicitly using get_logger() for 
+           management logic. Retrieve loggers explicitly using get_logger() for
            professional code. The @infrastructure_node decorator handles timing,
            error handling, and retry policies. Use get_streamer() for streaming updates.
         """

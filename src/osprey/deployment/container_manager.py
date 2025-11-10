@@ -240,16 +240,16 @@ def get_templates(config):
 
 def _inject_project_metadata(config):
     """Add project tracking metadata for container labels.
-    
+
     This function injects deployment metadata into the configuration that will
     be used as Docker labels in the rendered compose files. These labels enable
     tracking which project/agent owns each container.
-    
+
     The project name is extracted with the following priority:
     1. Root-level 'project_name' attribute (preferred, explicit)
     2. Last component of 'project_root' path (smart fallback)
     3. Default to 'unnamed-project'
-    
+
     :param config: Configuration dictionary
     :type config: dict
     :return: Configuration with added osprey_labels section
@@ -442,7 +442,7 @@ def render_kernel_templates(source_dir, config, out_dir):
             >>> # services/jupyter/
             >>> #   ├── python3-epics-readonly/kernel.json.j2
             >>> #   └── python3-epics-write/kernel.json.j2
-            >>> 
+            >>>
             >>> render_kernel_templates(
             ...     'services/jupyter',
             ...     {'project_root': '/home/user/project'},
@@ -1152,7 +1152,7 @@ def deploy_restart(config_path, detached=False):
 
 def show_status(config_path):
     """Show detailed status of services with formatted output.
-    
+
     Uses direct container runtime ps to show actual container state, independent of compose files.
     Displays containers for this project separately from other running containers.
 

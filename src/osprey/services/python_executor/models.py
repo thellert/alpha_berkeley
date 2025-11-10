@@ -1,7 +1,7 @@
 """Core Models and State Management for Python Executor Service.
 
 This module provides the foundational data structures, state management classes,
-and configuration utilities that support the Python executor service's 
+and configuration utilities that support the Python executor service's
 LangGraph-based workflow. It implements a clean separation between request/response
 models, internal execution state, and configuration management.
 
