@@ -306,7 +306,7 @@ Respond with true if the message indicates approval (yes, okay, proceed, continu
                 message=prompt,
                 model_config=approval_config,
                 output_model=ApprovalResponse,
-                max_tokens=10  # Very short response needed
+                max_tokens=50  # Enough tokens for structured JSON output
             )
 
             # Convert to expected format
