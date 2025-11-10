@@ -614,7 +614,7 @@ def get_execution_control_config_from_configurable(configurable: dict[str, Any])
         raise ContainerConfigurationError(
             f"Failed to parse execution control configuration: {str(e)}",
             technical_details={"original_error": str(e)}
-        )
+        ) from e
 
 
 def get_execution_mode_config_from_configurable(configurable: dict[str, Any], mode_name: str) -> ExecutionModeConfig:
@@ -622,8 +622,7 @@ def get_execution_mode_config_from_configurable(configurable: dict[str, Any], mo
     try:
         # Navigate to framework execution modes in configurable
         # This should be available through the service configs or similar structure
-        framework_config = configurable.get('framework', {})
-        execution_config = framework_config.get('execution', {})
+        execution_config = configurable.get('execution', {})
         modes_config = execution_config.get('modes', {})
 
         mode_config = modes_config.get(mode_name)
@@ -673,7 +672,7 @@ def get_execution_mode_config_from_configurable(configurable: dict[str, Any], mo
         raise ContainerConfigurationError(
             f"Failed to parse execution mode configuration: {str(e)}",
             technical_details={"mode_name": mode_name, "error": str(e)}
-        )
+        ) from e
 
 
 
@@ -687,12 +686,11 @@ def get_container_endpoint_config_from_configurable(configurable: dict[str, Any]
 
         # Find the container that supports this execution mode
         service_configs = configurable.get("service_configs", {})
-        framework_services = service_configs.get("framework", {})
-        jupyter_config = framework_services.get("jupyter", {})
+        jupyter_config = service_configs.get("jupyter", {})
         containers_config = jupyter_config.get("containers", {})
 
         target_container = None
-        for container_key, container_config in containers_config.items():
+        for _container_key, container_config in containers_config.items():
             execution_modes = container_config.get("execution_modes", [])
             if execution_mode in execution_modes:
                 target_container = container_config
@@ -739,7 +737,7 @@ def get_container_endpoint_config_from_configurable(configurable: dict[str, Any]
                 "execution_mode": execution_mode,
                 "original_error": str(e)
             }
-        )
+        ) from e
 
 
 

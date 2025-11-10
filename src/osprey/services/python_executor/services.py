@@ -270,10 +270,8 @@ class FileManager:
             if folder_path.is_relative_to(self.base_dir):
                 relative_path = folder_path.relative_to(self.base_dir)
                 # Get Jupyter configuration from configurable
-                # TODO: cleanup
                 service_configs = self.configurable.get('service_configs', {})
-                framework_services = service_configs.get('osprey', {})
-                jupyter_config = framework_services.get('jupyter', {})
+                jupyter_config = service_configs.get('jupyter', {})
                 containers = jupyter_config.get('containers', {})
                 read_container = containers.get('read', {})
                 port = read_container.get('port_host', 8088)

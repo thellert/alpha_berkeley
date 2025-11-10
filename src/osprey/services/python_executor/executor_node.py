@@ -204,14 +204,14 @@ class LocalCodeExecutor:
                     message=f"Python execution failed: corrupted execution metadata ({e})",
                     traceback_info=full_output,
                     execution_attempt=1
-                )
+                ) from e
             except Exception as e:
                 logger.error(f"CRITICAL: Failed to read execution metadata: {e}")
                 raise CodeRuntimeError(
                     message=f"Python execution failed: cannot read execution metadata ({e})",
                     traceback_info=full_output,
                     execution_attempt=1
-                )
+                ) from e
 
         finally:
             # Clean up temporary file
@@ -234,8 +234,7 @@ class LocalCodeExecutor:
                 logger.warning(f"Container Python environment not found: {container_python_env}")
 
         # Second: Try configured Python environment from config
-        framework_config = self.configurable.get('framework', {})
-        execution_config = framework_config.get('execution', {})
+        execution_config = self.configurable.get('execution', {})
         configured_python_path = execution_config.get('python_env_path')
 
         if configured_python_path:
@@ -618,8 +617,7 @@ def _get_execution_mode_from_state(state: PythonExecutionState):
 def _get_execution_method(configurable: dict[str, Any]) -> str:
     """Get execution method from configuration (container or local)"""
     try:
-        framework_config = configurable.get('framework', {})
-        execution_config = framework_config.get('execution', {})
+        execution_config = configurable.get('execution', {})
         execution_method = execution_config.get('execution_method', 'container')
 
         if execution_method not in ['container', 'local']:

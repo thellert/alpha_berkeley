@@ -51,11 +51,18 @@ def load_context(context_file: str = "context.json") -> ContextManager | None:
         # Ensure registry is initialized before creating ContextManager
         # This is required for context reconstruction to work properly
         try:
+            import os
+
             from osprey.registry import get_registry, initialize_registry
-            registry = get_registry()
+
+            # Get config path from environment variable if available
+            # This is critical for subprocess execution where cwd is not project root
+            config_path = os.environ.get('CONFIG_FILE')
+
+            registry = get_registry(config_path=config_path)
             if not getattr(registry, '_initialized', False):
                 logger.debug("Registry not initialized, initializing now...")
-                initialize_registry(auto_export=False)
+                initialize_registry(auto_export=False, config_path=config_path)
                 logger.debug("Registry initialization completed")
         except Exception as e:
             logger.warning(f"Failed to initialize registry: {e}")

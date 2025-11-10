@@ -18,7 +18,7 @@ class PythonExecutorConfig:
 
     def __init__(self, configurable: dict[str, Any] = None):
         config = configurable or {}
-        executor_config = config.get("framework", {}).get("python_executor", {})
+        executor_config = config.get("python_executor", {})
 
         # Retry configuration - how many times to retry failed operations
         self.max_generation_retries = executor_config.get("max_generation_retries", 3)

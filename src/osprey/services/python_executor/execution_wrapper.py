@@ -150,10 +150,13 @@ if project_root:
 else:
     print("⚠️ Could not locate framework src directory")
 
-# Initialize registry for context loading (AFTER sys.path is configured)
+# Initialize registry for context loading
+# Uses CONFIG_FILE environment variable for proper path resolution in subprocesses
 try:
-    from osprey.registry import initialize_registry, get_registry
-    initialize_registry(auto_export=False)  # Initialize without export for performance
+    from osprey.registry import initialize_registry
+    import os
+    config_file = os.environ.get('CONFIG_FILE')
+    initialize_registry(auto_export=False, config_path=config_file)
 except Exception as e:
     print(f"Registry initialization failed: {e}", file=sys.stderr)
     print("Context loading may not work properly", file=sys.stderr)

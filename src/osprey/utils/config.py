@@ -155,7 +155,7 @@ class ConfigBuilder:
         except yaml.YAMLError as e:
             error_msg = f"Error parsing YAML configuration: {e}"
             logger.error(error_msg)
-            raise yaml.YAMLError(error_msg)
+            raise yaml.YAMLError(error_msg) from e
 
 
     def _resolve_env_vars(self, data: Any) -> Any:
@@ -212,8 +212,10 @@ class ConfigBuilder:
             "provider_configs": self._build_provider_configs(),
             "service_configs": self._build_service_configs(),
 
-            # ===== FRAMEWORK CONFIGURATION =====
-            "framework": self.get('osprey', {}),
+            # ===== FRAMEWORK EXECUTION CONFIGURATION =====
+            # Python execution settings and executor service configuration
+            "execution": self.get('execution', {}),
+            "python_executor": self.get('python_executor', {}),
 
             # ===== LOGGING CONFIGURATION =====
             "logging": self.get('logging', {}),
@@ -502,16 +504,7 @@ def get_framework_service_config(service_name: str, config_path: str | None = No
     """
     configurable = _get_configurable(config_path)
     service_configs = configurable.get("service_configs", {})
-    # Try new flat format first (single-config)
-    if service_name in service_configs:
-        return service_configs.get(service_name, {})
-    # Fall back to legacy nested format
-    logger.warning(
-        f"DEPRECATED: Using legacy nested config format for osprey.services.{service_name}. "
-        f"Please migrate to flat config structure with services at top level."
-    )
-    framework_services = service_configs.get("osprey", {})
-    return framework_services.get(service_name, {})
+    return service_configs.get(service_name, {})
 
 
 def get_application_service_config(app_name: str, service_name: str) -> dict[str, Any]:
