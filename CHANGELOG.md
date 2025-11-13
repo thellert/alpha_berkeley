@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **OrchestratorExample Formatting**: Fixed PlannedStep fields not appearing in orchestrator prompt examples
+  - Changed from `getattr()` to `.get()` for TypedDict field access in `OrchestratorExample.format_for_prompt()`
+  - Previously resulted in empty `PlannedStep()` blocks, now correctly displays all fields
 - **Approval Detection**: Increased max_tokens for approval detection from 10 to 50
   - Critical fix for models that require more tokens to generate complete JSON structures
   - Previously caused "yes" responses to be rejected due to incomplete structured output

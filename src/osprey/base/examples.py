@@ -291,7 +291,7 @@ class OrchestratorExample(BaseExample):
         step_fields = PlannedStep.__annotations__.keys()
 
         for field_name in step_fields:
-            field_value = getattr(self.step, field_name, None)
+            field_value = self.step.get(field_name, None)
 
             # Skip fields that are None or empty
             if field_value is None or (isinstance(field_value, (list, dict)) and not field_value):
