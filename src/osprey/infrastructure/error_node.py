@@ -1014,7 +1014,7 @@ def _generate_llm_explanation(error_context: ErrorContext) -> str:
         )
 
         explanation = get_chat_completion(
-            model_config=get_model_config("osprey", "response"),
+            model_config=get_model_config("response"),
             message=prompt,
             max_tokens=500
         )

@@ -198,7 +198,7 @@ def _generate_clarifying_questions(state, task_objective: str) -> ClarifyingQues
 
     message = f"{system_instructions}\n\n{clarification_query}{context_info}"
 
-    response_config = get_model_config("osprey", "response")
+    response_config = get_model_config("response")
     result = get_chat_completion(
         message=message,
         model_config=response_config,

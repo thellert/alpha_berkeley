@@ -19,7 +19,7 @@ Core Framework
    :icon: book
 
    **Essential APIs for daily development:**
-   
+
    - **BaseCapability & BaseInfrastructureNode** - Foundation classes with LangGraph integration
    - **AgentState & StateManager** - LangGraph-native state management with selective persistence
    - **ContextManager & CapabilityContext** - Type-safe data exchange between components
@@ -29,9 +29,9 @@ Core Framework
    - **CommandRegistry & slash commands** - Centralized command system with autocompletion
 
    **Prerequisites:** Basic Python knowledge and agentic system concepts
-   
+
    **Target Audience:** Framework developers, capability authors, infrastructure builders
-   
+
 The Core Framework provides the **essential foundation APIs** that enable reliable, type-safe agentic system development. These five interconnected systems form the backbone of every capability, infrastructure node, and production deployment in the Osprey Framework.
 
 
@@ -50,9 +50,9 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :class-header: bg-primary text-white
       :class-body: text-center
       :shadow: md
-            
+
       **Foundation & LangGraph Integration**
-      
+
       BaseCapability, BaseInfrastructureNode, and decorators for seamless framework integration with error handling and planning.
 
    .. grid-item-card:: 🔄 State & Context Management
@@ -61,9 +61,9 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :class-header: bg-success text-white
       :class-body: text-center
       :shadow: md
-            
+
       **Data Persistence & Exchange**
-      
+
       AgentState with selective persistence, ContextManager for type-safe data access, and Pydantic-based serialization.
 
 .. grid:: 1 1 2 2
@@ -75,9 +75,9 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :class-header: bg-info text-white
       :class-body: text-center
       :shadow: md
-            
+
       **Component Discovery & Management**
-      
+
       Configuration-driven component loading with lazy initialization, dependency resolution, and type-safe access.
 
    .. grid-item-card:: ⚙️ Configuration System
@@ -88,7 +88,7 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :shadow: md
 
       **Environment & Settings Management**
-      
+
       YAML-based configuration with environment resolution, model settings, and LangGraph integration.
 
 .. grid:: 1 1 2 2
@@ -102,7 +102,7 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :shadow: md
 
       **Domain-Agnostic Prompt System**
-      
+
       Dependency injection for prompt customization with builder patterns, defaults, and application-specific overrides.
 
    .. grid-item-card:: ⚡ Command System
@@ -113,7 +113,7 @@ The Core Framework implements a **Type-Safe, Convention-Driven Architecture** wi
       :shadow: md
 
       **Centralized Slash Commands**
-      
+
       Unified command registry with categorization, autocompletion, and extensible handlers for all interfaces.
 
 Framework Integration Patterns
@@ -131,13 +131,13 @@ These systems work together to provide a unified development experience:
 
          from osprey.registry import initialize_registry, get_registry
          from osprey.state import StateManager
-         
+
          # 1. Initialize the global registry system (application startup)
          initialize_registry()  # Loads all applications and components
-         
+
          # 2. Access the initialized registry
          registry = get_registry()
-         
+
          # 3. Components are now available for use
          capability = registry.get_capability('data_analysis')
          context_class = registry.get_context_class('ANALYSIS_RESULTS')
@@ -151,19 +151,19 @@ These systems work together to provide a unified development experience:
 
          from osprey.state import StateManager
          from osprey.context import ContextManager
-         
+
          # 1. Create fresh state for new conversation
          state = StateManager.create_fresh_state(
              user_input="Analyze beam performance data",
              current_state=previous_state  # Preserves context
          )
-         
+
          # 2. Access context through ContextManager
          context = ContextManager(state)
-         
+
          # 3. Retrieve typed context objects
          pv_data = context.get_context('PV_ADDRESSES', 'beam_current')
-         
+
          # 4. Store new context results
          return StateManager.store_context(
              state, 'ANALYSIS_RESULTS', 'step_1', analysis_results
@@ -178,14 +178,14 @@ These systems work together to provide a unified development experience:
          from osprey.utils.config import (
              get_config_value, get_model_config, get_full_configuration
          )
-         
+
          # Simple configuration access with defaults
          timeout = get_config_value('execution.timeout', 30)
          debug_mode = get_config_value('development.debug', False)
-         
+
          # Model-specific configuration
-         model_config = get_model_config('osprey', 'orchestrator')
-         
+         model_config = get_model_config('orchestrator')
+
          # Full configuration for service passing
          full_config = get_full_configuration()
          service_config = {
@@ -206,45 +206,45 @@ These systems work together to provide a unified development experience:
          from osprey.context import ContextManager
          from osprey.utils.config import get_model_config
          from applications.als_assistant.context_classes import AnalysisResultsContext
-         
+
          @capability_node
          class DataAnalysisCapability(BaseCapability):
              name = "data_analysis"
              description = "General data analysis capability"
              provides = ["ANALYSIS_RESULTS"]
-             
+
              @staticmethod
              async def execute(state: AgentState, **kwargs) -> Dict[str, Any]:
                  # Extract current execution step
                  step = StateManager.get_current_step(state)
-                 
+
                  # Access context manager for input data
                  context = ContextManager(state)
-                 
+
                  # Get configuration for models/services
-                 model_config = get_model_config('osprey', 'python_code_generator')
-                 
+                 model_config = get_model_config('python_code_generator')
+
                  # Process data (actual implementation logic)
                  analysis_results = await process_analysis(step, context)
-                 
+
                  # Create typed context object
                  result_context = AnalysisResultsContext(
                      analysis_summary=analysis_results.summary,
                      confidence_score=analysis_results.confidence,
                      **analysis_results.data
                  )
-                 
+
                  # Store results in state
                  return StateManager.store_context(
-                     state, 'ANALYSIS_RESULTS', 
-                     step.get('context_key', 'default'), 
+                     state, 'ANALYSIS_RESULTS',
+                     step.get('context_key', 'default'),
                      result_context
                  )
 
 .. dropdown:: Next Steps
    :color: primary
    :icon: arrow-up-right
-   
+
    After mastering the Core Framework APIs, explore related systems:
 
    .. grid:: 1 1 2 2
@@ -257,7 +257,7 @@ These systems work together to provide a unified development experience:
          :class-header: bg-success text-white
          :class-body: text-center
          :shadow: md
-         
+
          Gateway, task extraction, classification, and orchestration APIs for building intelligent processing pipelines
 
       .. grid-item-card:: 🚀 Production Systems
@@ -266,7 +266,7 @@ These systems work together to provide a unified development experience:
          :class-header: bg-info text-white
          :class-body: text-center
          :shadow: md
-         
+
          Human approval, data management, container deployment for production-ready agentic systems
 
       .. grid-item-card:: 🔧 Framework Utilities
@@ -275,7 +275,7 @@ These systems work together to provide a unified development experience:
          :class-header: bg-warning text-white
          :class-body: text-center
          :shadow: md
-         
+
          Model factory, logging, streaming, and developer tools for advanced framework customization
 
       .. grid-item-card:: 📖 Developer Guides
@@ -284,5 +284,5 @@ These systems work together to provide a unified development experience:
          :class-header: bg-primary text-white
          :class-body: text-center
          :shadow: md
-         
+
          Learning-oriented guides for understanding core framework architecture and advanced patterns

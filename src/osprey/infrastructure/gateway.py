@@ -284,7 +284,7 @@ class Gateway:
         """Detect approval or rejection in user input using LLM classification."""
         try:
             # Get approval model configuration from framework config
-            approval_config = get_model_config("osprey", "approval")
+            approval_config = get_model_config("approval")
             if not approval_config:
                 self.logger.warning("No approval model configuration found - defaulting to not approved")
                 return {

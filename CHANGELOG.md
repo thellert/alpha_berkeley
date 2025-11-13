@@ -5,6 +5,46 @@ All notable changes to the Osprey Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Configuration API Simplification**: Streamlined `get_model_config()` function signature
+  - Removed unused `service` and `model_type` parameters
+  - Function now accepts only `(model_name, config_path)` for cleaner API
+  - Removed 50+ lines of legacy nested config format support
+  - All internal framework calls updated to use new signature
+  - Updated documentation examples across 6 files
+
+### Fixed
+- **Approval Detection**: Increased max_tokens for approval detection from 10 to 50
+  - Critical fix for models that require more tokens to generate complete JSON structures
+  - Previously caused "yes" responses to be rejected due to incomplete structured output
+  - Ensures reliable approval parsing across all supported models
+- **Environment Variable Substitution**: Added support for bash-style default value syntax `${VAR:-default}`
+  - Previously only supported simple `${VAR}` and `$VAR` forms
+  - Now properly resolves environment variables with fallback defaults
+  - Enables flexible configuration for both local and remote deployments
+- **Configuration Override**: Fixed `set_as_default` parameter to properly override existing default config
+  - Previously ignored when a default config was already set
+  - Now honors explicit caller intent when `set_as_default=True`
+  - Fixes issues with CONFIG_FILE environment variable initialization
+- **Documentation Build**: Fixed v0.8.5 documentation build failures
+  - Resolved compatibility issues with Sphinx build system
+
+### Breaking Changes
+- **`get_model_config()` signature changed**: `(model_name, service, model_type, config_path)` → `(model_name, config_path)`
+  - **Impact**: Low - Framework model calls are internal and already updated
+  - **User Action Required**: Only if you have custom application code using application-specific models
+  - **Migration**:
+    ```python
+    # Old (if you have this in your application code):
+    get_model_config('my_app', 'custom_model')
+
+    # New:
+    get_model_config('custom_model')
+    ```
+  - **Note**: Most users will not need to change anything - framework models (orchestrator, classifier, response, etc.) are handled internally
+
 ## [0.8.5] - 2025-11-10
 
 ### Fixed

@@ -556,7 +556,7 @@ class TimeRangeParsingCapability(BaseCapability):
 
         try:
             # Get model config from LangGraph configurable
-            model_config = get_model_config("framework", "time_parsing")
+            model_config = get_model_config("time_parsing")
 
             # LLM call with structured output
             response_data = await asyncio.to_thread(

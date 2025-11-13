@@ -387,7 +387,7 @@ class CapabilityClassifier:
         try:
             response_data = await asyncio.to_thread(
                 get_chat_completion,
-                model_config=get_model_config("osprey", "classifier"),
+                model_config=get_model_config("classifier"),
                 message=message,
                 output_model=CapabilityMatch,
             )

@@ -8,14 +8,14 @@ Task Extraction
    :icon: book
 
    **Key Concepts:**
-   
+
    - How conversations become structured, actionable tasks
    - Context compression and dependency detection
    - Data source integration during extraction
    - Task-specific context optimization
 
    **Prerequisites:** Understanding of :doc:`../03_core-framework-systems/05_message-and-execution-flow`
-   
+
    **Time Investment:** 10 minutes for complete understanding
 
 Core Problem
@@ -39,7 +39,7 @@ Task extraction operates as the first pipeline step, converting raw conversation
        HumanMessage("Remember that data from yesterday?"),
        HumanMessage("Can you analyze the trends?")
    ]
-   
+
    # Output: Structured task
    ExtractedTask(
        task="Analyze trends in the data from yesterday's conversation",
@@ -63,18 +63,18 @@ Implementation
    class TaskExtractionNode(BaseInfrastructureNode):
        name = "task_extraction"
        description = "Task Extraction and Processing"
-       
+
        @staticmethod
        async def execute(state: AgentState, **kwargs):
            # Get native LangGraph messages
            messages = state["messages"]
-           
+
            # Retrieve external context if available
            retrieval_result = await data_manager.retrieve_all_context(state)
-           
+
            # Extract task using LLM
            extracted_task = await _extract_task(messages, retrieval_result)
-           
+
            return {
                "task_current_task": extracted_task.task,
                "task_depends_on_chat_history": extracted_task.depends_on_chat_history,
@@ -92,17 +92,17 @@ Implementation
     - Passes full conversation history and retrieved datasource results as the "extracted task"
     - Sets dependency flags to True (assumes full context and chat history needed)
     - Maintains compatibility with downstream orchestration
-   
+
    **When to Use Bypass Mode:**
     - Code R&D scenarios where full conversational context aids development
     - Short conversation histories where task extraction overhead exceeds benefits
     - Minimal external data scenarios where context compression isn't needed
     - High-throughput applications requiring reduced LLM call latency (trades orchestrator processing cost for extraction speed)
-   
+
    **Advantages:**
     - Faster upstream pipeline (skips LLM-based task extraction)
     - No risk of losing conversational context or nuance
-   
+
    **Disadvantages:**
     - Longer capability selection process (full conversation history included)
     - Longer orchestrator prompts (full conversation history included)
@@ -130,11 +130,11 @@ Task extraction uses structured LLM generation for consistency:
    User: "What's the weather like?"
    → Task: "Get current weather conditions"
    → Dependencies: history=False, memory=False
-   
+
    User: "How does that compare to yesterday?"
    → Task: "Compare current weather to yesterday's weather data"
    → Dependencies: history=True, memory=False
-   
+
    User: "Use my preferred location"
    → Task: "Get weather for the Bay Area"
    → Dependencies: history=False, memory=True
@@ -173,7 +173,7 @@ Task extraction includes retry policies optimized for LLM operations:
                severity=ErrorSeverity.RETRIABLE,
                user_message="Network timeout during task extraction, retrying..."
            )
-       
+
        # Don't retry validation errors
        if isinstance(exc, (ValueError, TypeError)):
            return ErrorClassification(
@@ -217,10 +217,7 @@ Task extraction uses configuration:
 .. code-block:: python
 
    # Osprey configuration
-   task_extraction_config = get_model_config("osprey", "task_extraction")
-   
-   # Application-specific overrides
-   als_config = get_model_config("als_assistant", "task_extraction")
+   task_extraction_config = get_model_config("task_extraction")
 
 Troubleshooting
 ---------------
@@ -262,11 +259,11 @@ Performance Considerations
 
    :doc:`../../api_reference/02_infrastructure/02_task-extraction`
        API reference for task extraction classes and functions
-   
+
    :doc:`../03_core-framework-systems/02_context-management-system`
        Context compression and dependency detection patterns
-   
-   :doc:`../04_orchestrator-planning` 
+
+   :doc:`../04_orchestrator-planning`
        How tasks become execution plans
 
    :doc:`../03_core-framework-systems/05_message-and-execution-flow`

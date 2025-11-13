@@ -372,7 +372,7 @@ async def _classify_memory_operation(task_objective: str, logger) -> MemoryOpera
 
     try:
         # Use config helper for model configuration
-        classifier_config = get_model_config("osprey", "classifier")
+        classifier_config = get_model_config("classifier")
 
         # Create full message combining system and user prompts
         full_message = f"{system_prompt}\n\nUser task: {user_prompt}"
@@ -667,7 +667,7 @@ class MemoryOperationsCapability(BaseCapability):
                     query = f"Please analyze this chat history{' and available context' if context_section else ''} and extract any content to save:\n\n{chat_formatted}{context_section}"
 
                     try:
-                        memory_model_config = get_model_config("osprey", "memory")
+                        memory_model_config = get_model_config("memory")
 
                         # Use structured LLM generation for memory extraction
                         message = f"{system_instructions}\n\n{query}"

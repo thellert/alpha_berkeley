@@ -8,14 +8,14 @@ Message Generation
    :icon: book
 
    **Key Concepts:**
-   
+
    - How the framework generates responses for technical and conversational queries
    - Response mode detection and context integration
    - Clarification workflows for ambiguous requests
    - Prompt builder customization patterns
 
    **Prerequisites:** Understanding of :doc:`../03_core-framework-systems/02_context-management-system`
-   
+
    **Time Investment:** 10 minutes for complete understanding
 
 Core Capabilities
@@ -44,24 +44,24 @@ Generates responses by analyzing available context and using appropriate prompts
        description = "Generate responses for technical and conversational questions"
        provides = ["FINAL_RESPONSE"]
        requires = []  # Works with any context or none
-       
+
        @staticmethod
        async def execute(state: AgentState, **kwargs):
            # Gather response information
            response_context = _gather_information(state)
-           
+
            # Build dynamic prompt
            prompt = _get_base_system_prompt(
                response_context.current_task, response_context
            )
-           
+
            # Generate response
            response = await asyncio.to_thread(
                get_chat_completion,
-               model_config=get_model_config("osprey", "response"),
+               model_config=get_model_config("response"),
                message=prompt
            )
-           
+
            return {"messages": [AIMessage(content=response)]}
 
 **Response Mode Detection:**
@@ -71,7 +71,7 @@ Generates responses by analyzing available context and using appropriate prompts
    def _determine_response_mode(state, current_step):
        has_step_inputs = current_step and current_step.get("inputs")
        has_capability_data = bool(state.get("capability_context_data", {}))
-       
+
        if not has_step_inputs and not has_capability_data:
            return "conversational"      # General assistance
        elif has_step_inputs:
@@ -106,9 +106,9 @@ System aggregates information using structured context:
        context_manager = ContextManager(state)
        current_step = StateManager.get_current_step(state)
        relevant_context = context_manager.get_summaries(current_step)
-       
+
        response_mode = _determine_response_mode(state, current_step)
-       
+
        # Adapt data based on response mode
        if response_mode == "conversational":
            execution_history = []
@@ -116,10 +116,10 @@ System aggregates information using structured context:
        else:
            execution_history = _get_execution_history(state)
            capabilities_overview = None
-       
+
        return ResponseContext(...)
 
-ClarifyCapability  
+ClarifyCapability
 -----------------
 
 Generates targeted questions for ambiguous user requests:
@@ -132,21 +132,21 @@ Generates targeted questions for ambiguous user requests:
        description = "Ask questions when queries are ambiguous or incomplete"
        provides = []  # Communication capability
        requires = []  # Works with any context
-       
+
        @staticmethod
        async def execute(state: AgentState, **kwargs):
            step = kwargs.get('step', {})
-           
+
            # Generate clarifying questions
            questions_response = await asyncio.to_thread(
                _generate_clarifying_questions,
                state,
                step.get('task_objective', 'unknown')
            )
-           
+
            # Format for user interaction
            formatted_questions = _format_questions_for_user(questions_response)
-           
+
            return {"messages": [AIMessage(content=formatted_questions)]}
 
 **Structured Question Generation:**
@@ -172,18 +172,18 @@ Generates targeted questions for ambiguous user requests:
        # Format conversation history
        messages = state.get("input_output", {}).get("messages", [])
        chat_history_str = ChatHistoryFormatter.format_for_llm(messages)
-       
+
        # Get clarification prompt
        clarification_builder = prompt_provider.get_clarification_prompt_builder()
        system_instructions = clarification_builder.get_system_instructions()
        clarification_query = clarification_builder.build_clarification_query(
            chat_history_str, task_objective
        )
-       
+
        # Generate structured questions
        return get_chat_completion(
            message=f"{system_instructions}\n\n{clarification_query}",
-           model_config=get_model_config("osprey", "response"),
+           model_config=get_model_config("response"),
            output_model=ClarifyingQuestionsResponse
        )
 
@@ -197,7 +197,7 @@ Message generation uses the framework's prompt builder architecture:
    def _get_base_system_prompt(current_task, info=None):
        prompt_provider = get_framework_prompts()
        response_builder = prompt_provider.get_response_generation_prompt_builder()
-       
+
        return response_builder.get_system_instructions(
            current_task=current_task,
            info=info
@@ -210,19 +210,19 @@ Message generation uses the framework's prompt builder architecture:
    class DefaultResponseGenerationPromptBuilder(FrameworkPromptBuilder):
        def _get_dynamic_context(self, current_task="", info=None, **kwargs):
            sections = []
-           
-           # Base role with current task  
+
+           # Base role with current task
            sections.append(f"You are an expert assistant.\n\nCURRENT TASK: {current_task}")
-           
+
            if info:
                # Show execution context if available
                if hasattr(info, 'execution_history') and info.execution_history:
                    sections.append(self._get_execution_section(info))
-               
+
                # Show capabilities for conversational responses
                elif hasattr(info, 'capabilities_overview') and info.capabilities_overview:
                    sections.append(self._get_capabilities_section(info.capabilities_overview))
-           
+
            return "\n\n".join(sections)
 
 **Domain Customization:**
@@ -233,7 +233,7 @@ Message generation uses the framework's prompt builder architecture:
    class CustomResponsePromptBuilder(DefaultResponseGenerationPromptBuilder):
        def get_role_definition(self):
            return "You are a specialized domain expert assistant."
-       
+
        def _get_dynamic_context(self, current_task="", info=None, **kwargs):
            # Customize response generation for specific domain
            return super()._get_dynamic_context(current_task, info, **kwargs)
@@ -252,7 +252,7 @@ Both capabilities include error classification for framework integration:
            severity=ErrorSeverity.CRITICAL,
            user_message=f"Failed to generate response: {str(exc)}"
        )
-   
+
    # ClarifyCapability error classification
    @staticmethod
    def classify_error(exc: Exception, context: dict):
@@ -280,11 +280,11 @@ Integration Patterns
        task_objective="Present results to user",
        inputs=["previous_step_data"]
    )
-   
+
    # Clarification step
    PlannedStep(
        context_key="clarification",
-       capability="clarify", 
+       capability="clarify",
        task_objective="Ask for missing parameters",
        inputs=[]
    )
@@ -297,7 +297,7 @@ Integration Patterns
    class ApplicationPrompts(FrameworkPrompts):
        def get_response_generation_prompt_builder(self):
            return CustomResponsePromptBuilder()
-       
+
        def get_clarification_prompt_builder(self):
            return CustomClarificationPromptBuilder()
 
@@ -324,19 +324,19 @@ Key Features
 
    :doc:`../../api_reference/02_infrastructure/06_message-generation`
       API reference for response and clarification systems
-   
+
    :doc:`../03_core-framework-systems/02_context-management-system`
        Response mode detection and context integration
-   
+
    :doc:`../../api_reference/01_core_framework/05_prompt_management`
        Prompt builder customization patterns
 
    :doc:`06_error-handling-infrastructure`
        Error communication patterns
-   
+
    :doc:`../03_core-framework-systems/02_context-management-system`
        Context integration details
-   
+
    :doc:`../../api_reference/01_core_framework/05_prompt_management`
        Prompt builder customization
 

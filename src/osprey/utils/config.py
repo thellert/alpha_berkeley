@@ -439,60 +439,44 @@ def _get_configurable(config_path: str | None = None, set_as_default: bool = Fal
 # CONTEXT-AWARE UTILITY FUNCTIONS
 # =============================================================================
 
-def get_model_config(app_or_framework: str, service: str = None, model_type: str = None,
-                     config_path: str | None = None) -> dict[str, Any]:
+def get_model_config(model_name: str, config_path: str | None = None) -> dict[str, Any]:
     """
     Get model configuration with automatic context detection.
 
     Works both inside and outside LangGraph contexts.
-    Supports both legacy nested format and new flat format.
+    All models are configured at the top level in the 'models' section.
 
     Args:
-        app_or_framework: Application name or 'framework' for framework models
-        service: Service name or model name for framework models
-        model_type: Model type for nested services (optional)
-        config_path: Optional explicit path to configuration file
+        model_name: Name of the model (e.g., 'orchestrator', 'classifier', 'time_parsing',
+                   'response', 'approval', 'memory', 'task_extraction', 'python_code_generator')
+        config_path: Optional explicit path to configuration file for multi-project workflows
 
     Returns:
-        Dictionary with model configuration
+        Dictionary with model configuration containing provider, model_id, and optional settings
+
+    Examples:
+        Default config (searches current directory):
+            >>> get_model_config("orchestrator")
+            {'provider': 'anthropic', 'model_id': 'claude-3-5-sonnet-20241022', ...}
+
+        Multi-project workflow:
+            >>> get_model_config("orchestrator", config_path="~/other-project/config.yml")
+            {'provider': 'openai', 'model_id': 'gpt-4o', ...}
+
+    Configuration format (config.yml):
+        models:
+          orchestrator:
+            provider: anthropic
+            model_id: claude-3-5-sonnet-20241022
+          classifier:
+            provider: anthropic
+            model_id: claude-3-5-haiku-20241022
     """
     configurable = _get_configurable(config_path)
     model_configs = configurable.get("model_configs", {})
 
-    # Handle framework models
-    if app_or_framework == "osprey":
-        # Try new flat format first (single-config)
-        if service in model_configs:
-            return model_configs.get(service, {})
-        # Fall back to legacy nested format
-        logger.warning(
-            f"DEPRECATED: Using legacy nested config format for osprey.models.{service}. "
-            f"Please migrate to flat config structure with models at top level."
-        )
-        framework_models = model_configs.get("osprey", {})
-        return framework_models.get(service, {})
-
-    # Handle application models
-    # Try flat format first
-    if service and not model_type and service in model_configs:
-        return model_configs.get(service, {})
-    # Try nested application format
-    if service and model_type and service in model_configs:
-        service_models = model_configs.get(service, {})
-        return service_models.get(model_type, {})
-    # Fall back to legacy nested format
-    logger.warning(
-        f"DEPRECATED: Using legacy nested config format for applications.{app_or_framework}.models.{service}. "
-        f"Please migrate to flat config structure with models at top level."
-    )
-    app_models = model_configs.get(app_or_framework, {})
-    if service and model_type:
-        service_models = app_models.get(service, {})
-        return service_models.get(model_type, {})
-    elif service:
-        return app_models.get(service, {})
-    else:
-        return {}
+    # Direct lookup from flat structure
+    return model_configs.get(model_name, {})
 
 
 def get_provider_config(provider_name: str, config_path: str | None = None) -> dict[str, Any]:

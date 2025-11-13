@@ -417,7 +417,7 @@ class OrchestrationNode(BaseInfrastructureNode):
         plan_start_time = time.time()
 
         # Get model configuration and call LLM
-        model_config = get_model_config("osprey", "orchestrator")
+        model_config = get_model_config("orchestrator")
         message = f"{system_prompt}\n\nTASK TO PLAN: {current_task}"
 
         # Run sync LLM call in thread pool to avoid blocking event loop for streaming

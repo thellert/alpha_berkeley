@@ -134,7 +134,7 @@ def _extract_task(messages: list[BaseMessage], retrieval_result, logger) -> Extr
     prompt = _build_task_extraction_prompt(messages, retrieval_result)
 
     # Use structured LLM generation for task extraction
-    task_extraction_config = get_model_config("osprey", "task_extraction")
+    task_extraction_config = get_model_config("task_extraction")
     response = get_chat_completion(
         message=prompt,
         model_config=task_extraction_config,

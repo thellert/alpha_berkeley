@@ -27,7 +27,7 @@ class LLMCodeGenerator:
             self.model_config = model_config
         else:
             # Get model config from LangGraph configurable
-            self.model_config = get_model_config("osprey", "python_code_generator")
+            self.model_config = get_model_config("python_code_generator")
 
     async def generate_code(self, request, error_chain: list[str]) -> str:
         """Generate Python code - raises exceptions on failure"""

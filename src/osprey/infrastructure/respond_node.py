@@ -131,7 +131,7 @@ class RespondCapability(BaseCapability):
             # Single LLM call - run in thread pool to avoid blocking event loop for streaming
             response = await asyncio.to_thread(
                 get_chat_completion,
-                model_config=get_model_config("osprey", "response"),
+                model_config=get_model_config("response"),
                 message=prompt,
             )
 
