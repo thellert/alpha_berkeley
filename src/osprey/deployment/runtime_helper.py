@@ -70,19 +70,43 @@ def get_runtime_command(config: dict | None = None) -> list[str]:
                 timeout=5
             )
 
-            if result.returncode == 0:
+            if result.returncode != 0:
+                continue
+
+            # Also verify daemon is actually running
+            # This prevents selecting Docker when only Docker CLI is installed but daemon isn't running
+            ps_result = subprocess.run(
+                [runtime, 'ps'],
+                capture_output=True,
+                timeout=5
+            )
+
+            if ps_result.returncode == 0:
                 _cached_runtime_cmd = [runtime, 'compose']
                 return _cached_runtime_cmd.copy()
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
             continue
 
-    # No runtime found
-    raise RuntimeError(
-        "No container runtime found. Install Docker Desktop 4.0+ or Podman 4.0+\n"
-        "Docker: https://docs.docker.com/get-docker/\n"
-        "Podman: https://podman.io/getting-started/installation"
-    )
+    # No runtime found - check if any are installed but not running
+    docker_installed = shutil.which('docker') is not None
+    podman_installed = shutil.which('podman') is not None
+
+    if docker_installed or podman_installed:
+        # Runtimes are installed but not running
+        error_parts = ["Container runtime installed but not running:\n"]
+        if docker_installed:
+            error_parts.append("\n" + _get_docker_not_running_message())
+        if podman_installed:
+            error_parts.append("\n" + _get_podman_not_running_message())
+        raise RuntimeError("".join(error_parts))
+    else:
+        # No runtime installed at all
+        raise RuntimeError(
+            "No container runtime found. Install Docker Desktop 4.0+ or Podman 4.0+\n"
+            "Docker: https://docs.docker.com/get-docker/\n"
+            "Podman: https://podman.io/getting-started/installation"
+        )
 
 
 def verify_runtime_is_running(config: dict | None = None) -> tuple[bool, str]:

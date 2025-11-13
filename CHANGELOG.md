@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **Container Runtime Detection**: Fixed auto-detection to verify daemon is running, enabling proper fallback from Docker to Podman when Docker Desktop isn't running
 - **OrchestratorExample Formatting**: Fixed PlannedStep fields not appearing in orchestrator prompt examples
   - Changed from `getattr()` to `.get()` for TypedDict field access in `OrchestratorExample.format_for_prompt()`
   - Previously resulted in empty `PlannedStep()` blocks, now correctly displays all fields
