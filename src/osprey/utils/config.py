@@ -391,7 +391,7 @@ def _get_config(config_path: str | None = None, set_as_default: bool = False) ->
         _config_cache[resolved_path] = ConfigBuilder(resolved_path)
 
     # If requested, also set this as the default config
-    if set_as_default and _default_config is None:
+    if set_as_default:
         _default_config = _config_cache[resolved_path]
         _default_configurable = _default_config.configurable.copy()
         logger.debug(f"Set explicit config as default: {resolved_path}")
