@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Control System Connectors**: Two-layer pluggable abstraction for control systems and archivers
+  - **MockConnector**: Development/R&D mode - works with any PV names, no hardware required
+  - **EPICSConnector**: Production EPICS Channel Access with gateway support (requires `pyepics`)
+  - **MockArchiverConnector**: Generates synthetic historical time series data
+  - **EPICSArchiverConnector**: EPICS Archiver Appliance integration (requires `archivertools`)
+  - **ConnectorFactory**: Centralized creation with automatic registration via registry system
+  - **Pattern Detection**: Config-based regex patterns for detecting control system operations in generated code
+  - **Plugin Architecture**: Custom connectors (LabVIEW, Tango, etc.) via `ConnectorRegistration`
+  - Seamless switching between mock and production via config.yml `type` field
+  - Comprehensive API reference and developer guide with LabVIEW example
+- **Control Assistant Template**: Production-ready template for accelerator control applications
+  - Complete multi-capability system with PV value retrieval, archiver integration, and Channel Finder
+  - Dual-mode support (mock for R&D, production for control room)
+  - 4-part tutorial series (setup, Channel Finder integration, production deployment, customization)
+  - Python execution service with read/write container separation and approval workflows
+  - Full documentation with screenshots and step-by-step guides
+- **Pattern Detection Service**: Static code analysis for control system operations
+  - Configurable regex patterns per control system type
+  - Used by approval system to identify read vs write operations
+  - Location: `osprey.services.python_executor.pattern_detection`
+- **Registry System Enhancements**: Added `ConnectorRegistration` dataclass for connector management
+  - Automatic connector registration during framework initialization
+  - Lazy loading with unified component management
+  - Support for control_system and archiver connector types
+
+### Removed
+- **Wind Turbine Template**: Removed deprecated wind turbine application template
+  - Replaced by Control Assistant template with better real-world applicability
+  - Removed `src/osprey/templates/apps/wind_turbine/` directory and all associated files
+  - Removed `docs/source/getting-started/build-your-first-agent.rst` (superseded by control assistant tutorials)
+
 ### Changed
 - **Provider API Key Metadata**: Established providers as single source of truth for API key acquisition information
   - Added `api_key_url`, `api_key_instructions`, and `api_key_note` fields to `BaseProvider`
