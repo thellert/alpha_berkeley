@@ -12,8 +12,8 @@ git checkout feature/v0.9-control-assistant-connectors
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# 3. Install Osprey in development mode
-pip install -e .
+# 3. Install Osprey in development mode with docs dependencies
+pip install -e ".[docs]"
 
 # 4. Launch documentation locally
 cd docs
