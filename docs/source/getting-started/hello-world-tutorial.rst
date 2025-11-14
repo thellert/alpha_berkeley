@@ -419,6 +419,8 @@ Every capability needs basic error handling and retry policies:
 
    The Framework Handles Everything Else: Error routing, retry logic, user messaging, and execution flow are automatically managed by the framework infrastructure.
 
+.. _hello-world-orchestrator-guide:
+
 **4.4: Orchestrator Guide**
 
 The orchestrator guide teaches the LLM how to plan execution steps and use your capability effectively:
@@ -460,6 +462,8 @@ The orchestrator guide teaches the LLM how to plan execution steps and use your 
 .. admonition:: For Complex Capabilities
 
    When building more sophisticated capabilities with multiple steps, dependencies, or complex planning logic, providing comprehensive orchestrator examples becomes crucial. The orchestrator uses these examples to understand when and how to integrate your capability into multi-step execution plans.
+
+.. _hello-world-classifier-guide:
 
 **4.5: Classifier Guide**
 
@@ -1039,4 +1043,4 @@ By completing this tutorial, you've created an agentic system that demonstrates:
 
    Try using the OpenWebUI interface by running your agent through the pipeline container service.
 
-   **Ready for more?** :doc:`Build your first production agent <build-your-first-agent>` with advanced capabilities, multi-step workflows, and external data source provider integrations.
+   **Ready for more?** :doc:`Build a control system assistant <control-assistant-entry>` with production-grade patterns: channel finding pipelines, service layer architecture, and comprehensive tooling.

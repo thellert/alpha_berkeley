@@ -95,7 +95,7 @@ Structural Evolution
    │   ├── framework/              # Core (old name)
    │   └── applications/           # ❌ All apps embedded
    │       ├── als_assistant/
-   │       └── wind_turbine/
+   │       └── control_assistant/
    ├── interfaces/                 # Top-level
    ├── deployment/                 # Top-level
    └── config.yml                  # Global config
@@ -525,12 +525,12 @@ All ``applications.*`` imports must be updated:
 .. code-block:: python
 
    # OLD ❌
-   from applications.wind_turbine.capabilities import TurbineAnalysis
-   from applications.wind_turbine.context_classes import TurbineDataContext
+   from applications.control_assistant.capabilities import ChannelFinding
+   from applications.control_assistant.context_classes import ChannelAddressesContext
 
    # NEW ✅
-   from wind_turbine.capabilities import TurbineAnalysis
-   from wind_turbine.context_classes import TurbineDataContext
+   from control_assistant.capabilities import ChannelFinding
+   from control_assistant.context_classes import ChannelAddressesContext
 
 2. Framework Import Paths Changed (Rename)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -585,7 +585,7 @@ Each application now has its own ``config.yml``:
    # OLD: Global framework config
    applications:
      - als_assistant
-     - wind_turbine
+     - accelerator_assistant
 
    # NEW: Per-application config
    project_name: "my-app"
@@ -806,7 +806,7 @@ For more help, see:
 Tutorial Applications
 ~~~~~~~~~~~~~~~~~~~~~
 
-For tutorial applications (``hello_world_weather``, ``wind_turbine``), **regenerate instead of migrating**:
+For tutorial applications (``hello_world_weather``, ``control_assistant``), **regenerate instead of migrating**:
 
 .. code-block:: bash
 
@@ -814,16 +814,16 @@ For tutorial applications (``hello_world_weather``, ``wind_turbine``), **regener
    osprey init my-weather --template hello_world_weather
    cd my-weather
 
-   # Turbine tutorial
-   osprey init my-turbine --template wind_turbine
-   cd my-turbine
+   # Control Assistant tutorial
+   osprey init my-assistant --template control_assistant
+   cd my-assistant
 
 Templates are kept up-to-date with framework changes and use latest patterns.
 
 For detailed guidance on using these templates:
 
 * :doc:`Hello World Tutorial <hello-world-tutorial>` - Complete walkthrough of the weather template
-* :doc:`Build Your First Agent <build-your-first-agent>` - Comprehensive guide to the wind turbine template
+* :doc:`Control Systems Tutorial <control-assistant-entry>` - Comprehensive guide to the control assistant template
 
 
 What's New in v0.8.0
@@ -898,7 +898,7 @@ If you're coming from v0.6.x, you also get:
 .. code-block:: bash
 
    osprey init my-app --template hello_world_weather
-   osprey init my-app --template wind_turbine
+   osprey init my-app --template control_assistant
    osprey init my-app --template minimal
 
 Getting Help
@@ -929,7 +929,7 @@ Next Steps
 After successful migration:
 
 1. **Learn Best Practices** - Follow the :doc:`Hello World Tutorial <hello-world-tutorial>`
-2. **Build Advanced Features** - Work through :doc:`Build Your First Agent <build-your-first-agent>`
+2. **Build Advanced Features** - Work through :doc:`Control Systems Tutorial <control-assistant-entry>`
 3. **Explore CLI** - Try all the unified ``osprey`` commands
 4. **Update Documentation** - Document your application's new structure
 5. **Set Up CI/CD** - Configure automated testing with new imports
