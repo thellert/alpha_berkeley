@@ -32,10 +32,8 @@ from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import clear
 from prompt_toolkit.styles import Style
-from rich.console import Console
-
 # Centralized styles
-from osprey.cli.styles import OspreyColors, Styles
+from osprey.cli.styles import OspreyColors, Styles, console
 
 # Centralized command system
 from osprey.commands import CommandContext, CommandResult, get_command_registry
@@ -137,7 +135,7 @@ class CLI:
         self.gateway = None
         self.thread_id = None
         self.base_config = None
-        self.console = Console()
+        self.console = console  # Use themed console from osprey.cli.styles
 
         # Modern CLI components
         self.prompt_session = None

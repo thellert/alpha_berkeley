@@ -270,8 +270,14 @@ class CommandRegistry:
 
     def _register_default_commands(self):
         """Register built-in commands that are always available."""
-        from .categories import register_cli_commands
+        from .categories import (
+            register_agent_control_commands,
+            register_cli_commands,
+            register_service_commands,
+        )
         register_cli_commands(self)
+        register_agent_control_commands(self)
+        register_service_commands(self)
 
 
 def parse_command_line(command_line: str) -> ParsedCommand:

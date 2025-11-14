@@ -98,20 +98,8 @@ class Gateway:
         except Exception as e:
             self.logger.warning(f"Could not load config system: {e}")
 
-        # Register agent control commands in centralized registry
-        self._register_agent_commands()
-
+        # Agent control commands are now registered by default in CommandRegistry
         self.logger.info("Gateway initialized")
-
-    def _register_agent_commands(self):
-        """Register agent control commands with the centralized registry."""
-        try:
-            from osprey.commands.categories import register_agent_control_commands
-            registry = get_command_registry()
-            register_agent_control_commands(registry)
-            self.logger.debug("Registered agent control commands")
-        except Exception as e:
-            self.logger.warning(f"Could not register agent control commands: {e}")
 
     async def process_message(
         self,

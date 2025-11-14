@@ -18,12 +18,10 @@ provides specialized handlers with appropriate error handling and user feedback.
 
 from typing import Any
 
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from osprey.cli.styles import Styles
-
+from osprey.cli.styles import Styles, console as themed_console
 from .types import Command, CommandCategory, CommandContext, CommandExecutionError, CommandResult
 
 
@@ -57,7 +55,7 @@ def register_cli_commands(registry) -> None:
 
     def help_handler(args: str, context: CommandContext) -> CommandResult:
         """Show available commands or help for specific command."""
-        console = context.console or Console()
+        console = context.console or themed_console
 
         if args.strip():
             # Show help for specific command
@@ -108,29 +106,180 @@ def register_cli_commands(registry) -> None:
 
     def exit_handler(args: str, context: CommandContext) -> CommandResult:
         """Exit the CLI."""
-        console = context.console or Console()
+        console = context.console or themed_console
         console.print("👋 Goodbye!", style=Styles.WARNING)
         return CommandResult.EXIT
 
     def config_handler(args: str, context: CommandContext) -> CommandResult:
         """Show current configuration."""
-        console = context.console or Console()
+        console = context.console or themed_console
 
         if context.config:
-            config_info = []
-            config = context.config
+            # Handle both direct config and LangGraph base_config structure
+            config = context.config.get('configurable', context.config)
 
-            if 'llm' in config:
-                config_info.append(f"LLM: {config['llm'].get('model', 'Unknown')}")
-            if 'capabilities' in config:
-                caps = list(config['capabilities'].keys())
-                config_info.append(f"Capabilities: {', '.join(caps[:3])}{'...' if len(caps) > 3 else ''}")
+            # SESSION INFORMATION
+            session_info = []
+            if 'thread_id' in config:
+                thread_display = config['thread_id'][:16] + "..." if len(config['thread_id']) > 16 else config['thread_id']
+                session_info.append(f"Thread ID: {thread_display}")
+            if 'session_id' in config and config['session_id']:
+                session_display = str(config['session_id'])[:16] + "..." if len(str(config['session_id'])) > 16 else str(config['session_id'])
+                session_info.append(f"Session ID: {session_display}")
+            if 'interface_context' in config:
+                session_info.append(f"Interface: {config['interface_context']}")
+            if 'user_id' in config and config['user_id']:
+                session_info.append(f"User ID: {config['user_id']}")
+            if 'chat_id' in config and config['chat_id']:
+                session_info.append(f"Chat ID: {config['chat_id']}")
 
-            if config_info:
+            # MODEL CONFIGURATION
+            model_info = []
+            if 'model_configs' in config:
+                models = config['model_configs']
+                for role, model_config in models.items():
+                    model_name = model_config.get('model_id', 'Unknown')
+                    provider = model_config.get('provider', 'Unknown')
+                    max_tokens = model_config.get('max_tokens', 'N/A')
+                    model_info.append(f"  {role}:")
+                    model_info.append(f"    Model: {model_name}")
+                    model_info.append(f"    Provider: {provider}")
+                    model_info.append(f"    Max Tokens: {max_tokens}")
+
+            # PROVIDER CONFIGURATION
+            provider_info = []
+            if 'provider_configs' in config:
+                providers = config['provider_configs']
+                for name, provider_config in providers.items():
+                    base_url = provider_config.get('base_url', 'N/A')
+                    timeout = provider_config.get('timeout', 'N/A')
+                    provider_info.append(f"  {name}: {base_url} (timeout: {timeout}s)")
+
+            # EXECUTION LIMITS
+            execution_info = []
+            if 'execution_limits' in config:
+                limits = config['execution_limits']
+                execution_info.append(f"Max Steps: {limits.get('max_steps', 'N/A')}")
+                execution_info.append(f"Max Reclassifications: {limits.get('max_reclassifications', 'N/A')}")
+                execution_info.append(f"Max Planning Attempts: {limits.get('max_planning_attempts', 'N/A')}")
+                execution_info.append(f"Max Step Retries: {limits.get('max_step_retries', 'N/A')}")
+                execution_info.append(f"Max Execution Time: {limits.get('max_execution_time_seconds', 'N/A')}s")
+                execution_info.append(f"Max Concurrent Classifications: {limits.get('max_concurrent_classifications', 'N/A')}")
+
+            # Check recursion_limit in base config
+            if 'recursion_limit' in context.config:
+                execution_info.append(f"Graph Recursion Limit: {context.config['recursion_limit']}")
+
+            # AGENT CONTROL
+            agent_info = []
+            if 'agent_control_defaults' in config:
+                agent_control = config['agent_control_defaults']
+
+                # Planning and bypass modes
+                planning = agent_control.get('planning_mode_enabled', False)
+                agent_info.append(f"Planning Mode: {'✅ Enabled' if planning else '❌ Disabled'}")
+
+                task_bypass = agent_control.get('task_extraction_bypass_enabled', False)
+                agent_info.append(f"Task Extraction Bypass: {'✅ Enabled' if task_bypass else '❌ Disabled'}")
+
+                caps_bypass = agent_control.get('capability_selection_bypass_enabled', False)
+                agent_info.append(f"Capability Selection Bypass: {'✅ Enabled' if caps_bypass else '❌ Disabled'}")
+
+                # EPICS control
+                epics_writes = agent_control.get('epics_writes_enabled', False)
+                agent_info.append(f"EPICS Writes: {'✅ Enabled' if epics_writes else '❌ Disabled'}")
+
+                # Approval settings
+                approval_global = agent_control.get('approval_global_mode', 'N/A')
+                agent_info.append(f"Approval Global Mode: {approval_global}")
+
+                python_approval = agent_control.get('python_execution_approval_enabled', False)
+                agent_info.append(f"Python Approval: {'✅ Enabled' if python_approval else '❌ Disabled'}")
+
+                python_approval_mode = agent_control.get('python_execution_approval_mode', 'N/A')
+                agent_info.append(f"Python Approval Mode: {python_approval_mode}")
+
+                memory_approval = agent_control.get('memory_approval_enabled', False)
+                agent_info.append(f"Memory Approval: {'✅ Enabled' if memory_approval else '❌ Disabled'}")
+
+            # PYTHON EXECUTOR
+            python_info = []
+            if 'python_executor' in config:
+                py_config = config['python_executor']
+                if py_config:
+                    jupyter_url = py_config.get('jupyter_url', 'N/A')
+                    python_info.append(f"Jupyter URL: {jupyter_url}")
+                    execution_mode = py_config.get('execution_mode', 'N/A')
+                    python_info.append(f"Execution Mode: {execution_mode}")
+
+            # SERVICES
+            service_info = []
+            if 'service_configs' in config:
+                services = config['service_configs']
+                for service_name in list(services.keys())[:5]:  # Show first 5 services
+                    service_info.append(f"  {service_name}")
+
+            # DEVELOPMENT SETTINGS
+            dev_info = []
+            if 'development' in config:
+                dev = config['development']
+                if dev:
+                    debug = dev.get('debug', False)
+                    dev_info.append(f"Debug Mode: {'✅ Enabled' if debug else '❌ Disabled'}")
+
+                    prompts = dev.get('prompts', {})
+                    if prompts:
+                        print_all = prompts.get('print_all', False)
+                        dev_info.append(f"Print Prompts: {'✅ Enabled' if print_all else '❌ Disabled'}")
+
+                    raise_raw = dev.get('raise_raw_errors', False)
+                    dev_info.append(f"Raise Raw Errors: {'✅ Enabled' if raise_raw else '❌ Disabled'}")
+
+            # PROJECT INFO
+            project_info = []
+            if 'project_root' in config and config['project_root']:
+                project_info.append(f"Root: {config['project_root']}")
+            if 'current_application' in config and config['current_application']:
+                project_info.append(f"Application: {config['current_application']}")
+            if 'registry_path' in config and config['registry_path']:
+                project_info.append(f"Registry: {config['registry_path']}")
+
+            # Build output
+            output_parts = []
+
+            if session_info:
+                output_parts.append("[bold]Session:[/bold]\n" + "\n".join(session_info))
+
+            if model_info:
+                output_parts.append("[bold]Models:[/bold]\n" + "\n".join(model_info))
+
+            if provider_info:
+                output_parts.append("[bold]Providers:[/bold]\n" + "\n".join(provider_info))
+
+            if execution_info:
+                output_parts.append("[bold]Execution Limits:[/bold]\n" + "\n".join(execution_info))
+
+            if agent_info:
+                output_parts.append("[bold]Agent Control:[/bold]\n" + "\n".join(agent_info))
+
+            if python_info:
+                output_parts.append("[bold]Python Executor:[/bold]\n" + "\n".join(python_info))
+
+            if service_info:
+                output_parts.append("[bold]Services:[/bold]\n" + "\n".join(service_info))
+
+            if dev_info:
+                output_parts.append("[bold]Development:[/bold]\n" + "\n".join(dev_info))
+
+            if project_info:
+                output_parts.append("[bold]Project:[/bold]\n" + "\n".join(project_info))
+
+            if output_parts:
                 panel = Panel(
-                    "\n".join(config_info),
-                    title="Current Configuration",
-                    border_style=Styles.SUCCESS
+                    "\n\n".join(output_parts),
+                    title="Framework Configuration",
+                    border_style=Styles.SUCCESS,
+                    padding=(1, 2)
                 )
                 console.print(panel)
             else:
@@ -142,7 +291,7 @@ def register_cli_commands(registry) -> None:
 
     def status_handler(args: str, context: CommandContext) -> CommandResult:
         """Show comprehensive system status using Osprey health check."""
-        console = context.console or Console()
+        console = context.console or themed_console
 
         try:
             # Import and run the health checker with full diagnostics
@@ -389,7 +538,7 @@ def register_service_commands(registry) -> None:
     def logs_handler(args: str, context: CommandContext) -> CommandResult:
         """Handle log viewer command."""
         if not context.service_instance:
-            console = context.console or Console()
+            console = context.console or themed_console
             console.print("❌ Log viewer not available in this context", style=Styles.ERROR)
             return CommandResult.HANDLED
 
@@ -398,7 +547,7 @@ def register_service_commands(registry) -> None:
             # This would be called by the service
             return CommandResult.HANDLED
         else:
-            console = context.console or Console()
+            console = context.console or themed_console
             console.print("❌ Log viewer not implemented", style=Styles.ERROR)
             return CommandResult.HANDLED
 
