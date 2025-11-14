@@ -19,18 +19,18 @@ This installation guide covers the complete framework setup process:
    :icon: list-unordered
 
    **System Requirements:**
-   
+
    - **Operating System:** Linux, macOS, or Windows with WSL2
    - **Admin/sudo access:** Required for installing container runtime and Python
    - **Internet connection:** For downloading packages and container images
    - **Disk space:** At least 5GB free for containers and dependencies
-   
+
    **What You'll Install:**
 
    - Docker Desktop 4.0+ OR Podman 4.0+ (container runtime)
    - Python 3.11 (programming language)
    - Osprey Framework (pip package)
-   
+
    **Time estimate:** 30-60 minutes for complete setup
 
 Installation Steps
@@ -126,7 +126,7 @@ After creating and activating the virtual environment, install the framework pac
 
    # Upgrade pip to latest version
    pip install --upgrade pip
-   
+
    # Install the framework
    pip install osprey-framework
 
@@ -196,7 +196,7 @@ For automation or if you prefer direct commands, use ``osprey init``:
 
    # Create a project with the hello_world_weather template
    osprey init my-weather-agent --template hello_world_weather
-   
+
    # Navigate to your project
    cd my-weather-agent
 
@@ -204,7 +204,7 @@ Available templates:
 
 * ``minimal`` - Basic skeleton for starting from scratch
 * ``hello_world_weather`` - Simple weather agent (recommended for learning)
-* ``wind_turbine`` - Advanced multi-capability agent example
+* ``control_assistant`` - Production control system integration template
 
 Both methods create identical project structures - choose whichever fits your workflow.
 
@@ -237,8 +237,8 @@ Both methods create identical project structures - choose whichever fits your wo
       ├── config.yml                       # Application settings
       └── .env.example                     # API key template
 
-   **Want to understand what each component does?** 
-   
+   **Want to understand what each component does?**
+
    The :doc:`Hello World Tutorial <hello-world-tutorial>` provides a detailed walkthrough of this structure - explaining what each file does, how components work together, and how to customize them for your needs. If you want to understand the architecture before continuing with deployment, jump to the tutorial now.
 
 .. _Configuration:
@@ -257,42 +257,42 @@ The generated project includes both a ``config.yml`` configuration file and a ``
         The generated project includes a complete ``config.yml`` file in the project root. All framework settings are pre-configured with sensible defaults. Modify the following settings as needed:
 
         **1. Project Root Path**
-        
-        Update ``project_root`` in ``config.yml`` to your project directory path. Either set ``PROJECT_ROOT`` in your ``.env`` file (recommended for multiple machines) or hard-code the path directly in the YAML file.
+
+        The ``project_root`` in ``config.yml`` is automatically set to your project directory during ``framework init``. For advanced use cases (multi-environment deployments), you can override this by setting ``PROJECT_ROOT`` in your ``.env`` file.
 
         **2. Ollama Base URL**
-        
+
         Set the base URL for `Ollama <https://ollama.com/>`_:
-        
+
         - For direct host access: ``localhost:11434``
         - For container-based agents (like OpenWebUI pipelines): ``host.containers.internal:11434``
         - See `Ollama Connection`_ for OpenWebUI-specific configuration
 
         **3. Deployed Services**
-        
+
         Ensure the following are uncommented in ``deployed_services``:
-        
+
         - ``jupyter`` - Environment for editing and running generated code
         - ``open_webui`` - Web-based chat interface
         - ``pipelines`` - Core agent runtime environment
 
         **4. API Provider URLs**
-        
+
         If using `CBorg <https://cborg.lbl.gov/>`_ (LBNL internal only), set the API URL:
-        
+
         - Global: ``https://api.cborg.lbl.gov/v1``
         - Local: ``https://api-local.cborg.lbl.gov/v1`` (requires local network)
-        
+
         In ``config.yml``: ``api: providers:cborg:base_url: https://api-local.cborg.lbl.gov/v1``
 
         **5. Model Providers (External Users)**
-        
+
         If you don't have CBorg access, configure alternative providers in ``config.yml``. Update the ``provider`` fields under the ``models`` section to use ``openai``, ``anthropic``, ``ollama``, etc. Set corresponding API keys in your ``.env`` file.
 
         .. dropdown:: Need Support for Additional Providers?
            :color: info
-           :icon: people   
-              
+           :icon: people
+
            We're happy to implement support for additional model providers beyond those currently supported. Many research institutions and national laboratories now operate their own AI/LM services similar to LBNL's CBorg system. If you need integration with your institution's internal AI services or other providers, please reach out to us. We can work with you to add native support for your preferred provider.
 
     .. tab-item:: Environment Variables
@@ -302,11 +302,11 @@ The generated project includes both a ``config.yml`` configuration file and a ``
         **Environment Variables**
 
         The framework uses environment variables for **secrets** (API keys) and **machine-specific settings** (file paths, network configuration). This allows you to run the same project on different machines - your laptop, a lab server, or a control room computer - without changing your code or ``config.yml``.
-        
+
         The generated project includes a ``.env.example`` template with all supported variables.
-        
+
         **When to use .env vs config.yml:**
-        
+
         - **Environment variables (.env):** Secrets, absolute paths, proxy settings that change per machine
         - **Configuration file (config.yml):** Application behavior, model choices, capabilities that stay the same
 
@@ -334,37 +334,32 @@ The generated project includes both a ``config.yml`` configuration file and a ``
 
            # Copy the template
            cp .env.example .env
-           
+
            # Edit with your values
            nano .env  # or your preferred editor
 
         **Required Variables:**
 
-        ``PROJECT_ROOT``
-           Absolute path to your project directory. Used in ``config.yml`` as ``${PROJECT_ROOT}`` for container path mapping.
-           
-           Example: ``/home/user/my-agent``
-
         **API Keys** (at least one required):
 
         ``OPENAI_API_KEY``
            OpenAI API key for GPT models.
-           
+
            Get from: https://platform.openai.com/api-keys
 
         ``ANTHROPIC_API_KEY``
            Anthropic API key for Claude models.
-           
+
            Get from: https://console.anthropic.com/
 
         ``GOOGLE_API_KEY``
            Google API key for Gemini models.
-           
+
            Get from: https://makersuite.google.com/app/apikey
 
         ``CBORG_API_KEY``
            CBorg API key (LBNL internal only).
-           
+
            Get from: https://cborg.lbl.gov/
 
         **Optional Variables:**
@@ -378,36 +373,43 @@ The generated project includes both a ``config.yml`` configuration file and a ``
 
         ``LOCAL_PYTHON_VENV``
            Path to Python virtual environment for local execution mode.
-           
+
            Default: Uses current active environment
 
         ``TZ``
            Timezone for timestamp formatting.
-           
+
            Default: ``America/Los_Angeles``
-           
+
            Example: ``UTC``, ``Europe/London``, ``Asia/Tokyo``
 
         ``CONFIG_FILE``
            Override config file location (advanced usage).
-           
+
            Default: ``config.yml`` in current directory
+
+        **Optional Variables** (for advanced use cases):
+
+        ``PROJECT_ROOT``
+           Override the ``project_root`` value from ``config.yml``. Useful for multi-environment deployments or if you move your project directory.
+
+           Example: ``/home/user/my-agent``
 
         **Network Settings** (for restricted environments):
 
         ``HTTP_PROXY``
            HTTP proxy server URL. Useful in production environments with firewall restrictions (labs, control rooms, corporate networks).
-           
+
            Example: ``http://proxy.company.com:8080``
 
         ``NO_PROXY``
            Comma-separated list of hosts to exclude from proxy.
-           
+
            Example: ``localhost,127.0.0.1,.internal``
 
 .. note::
    **Security & Multi-Machine Workflow:**
-   
+
    - The framework automatically loads ``.env`` from your project root
    - **Keep ``.env`` in ``.gitignore``** to protect secrets from version control
    - Environment variables in ``config.yml`` are resolved using ``${VARIABLE_NAME}`` syntax
@@ -425,7 +427,7 @@ If you want to build and serve the documentation locally:
 
    # Install documentation dependencies
    pip install -r docs/requirements.txt
-   
+
    # Build and serve documentation
    cd docs/
    python launch_docs.py
@@ -493,7 +495,7 @@ Check that services are running properly:
 
    # If using Docker
    docker ps
-   
+
    # If using Podman
    podman ps
 
@@ -535,10 +537,10 @@ The Osprey framework provides a pipeline connection to the OpenWebUI service.
 1. Go to **Admin Panel** → **Settings** (upper panel) → **Connections** (left panel)
 2. Click the **(+)** button in **Manage OpenAI API Connections**
 3. Configure the pipeline connection with these details:
-   
+
    - **URL**: ``http://pipelines:9099`` (if using default configuration)
    - **API Key**: Found in ``services/osprey/pipelines/docker-compose.yml.j2`` under ``PIPELINES_API_KEY`` (default ``0p3n-w3bu!``)
-   
+
    **Note**: The URL uses ``pipelines:9099`` instead of ``localhost:9099`` because OpenWebUI runs inside a container and communicates with the pipelines service through the container network.
 
 
@@ -575,7 +577,7 @@ For optimal performance and user experience, consider these additional configura
 
         OpenWebUI automatically generates titles and tags for conversations, which can interfere with your main agent's processing. It's recommended to use a dedicated local model for this:
 
-        1. Go to **Admin Panel** → **Settings** → **Interface** 
+        1. Go to **Admin Panel** → **Settings** → **Interface**
         2. Find **Task Model** setting
         3. Change from **Current Model** to any local Ollama model (e.g., ``mistral:7b``, ``llama3:8b``)
         4. This prevents title generation from consuming your main agent's resources
@@ -599,7 +601,7 @@ For optimal performance and user experience, consider these additional configura
         The framework includes several pre-built functions located in ``services/osprey/open-webui/functions/``:
 
         - ``execution_history_button.py`` - View and manage execution history
-        - ``agent_context_button.py`` - Access agent context information  
+        - ``agent_context_button.py`` - Access agent context information
         - ``memory_button.py`` - Memory management functionality
         - ``execution_plan_editor.py`` - Edit and manage execution plans
 
@@ -620,7 +622,7 @@ For optimal performance and user experience, consider these additional configura
         For debugging and monitoring, use the ``/logs`` command in chat to view application logs without accessing container logs directly:
 
         - ``/logs`` - Show last 100 log entries
-        - ``/logs 50`` - Show last 50 log entries  
+        - ``/logs 50`` - Show last 50 log entries
         - ``/logs help`` - Show available options
 
         This is particularly useful for troubleshooting when OpenWebUI provides minimal feedback by design.
@@ -642,7 +644,7 @@ For optimal performance and user experience, consider these additional configura
         1. **Remove Default Prompts**: Clear the existing default prompts if they don't fit your workflow
         2. **Add Custom Prompts**: Replace them with prompts tailored to your agent's capabilities
         3. **Use Cases**:
-           
+
            - **Production**: Set prompts that guide users toward your agent's core functionalities
            - **R&D Testing**: Create prompts that help test specific features or edge cases
            - **Domain-Specific**: Add prompts relevant to your application domain (e.g., ALS operations, data analysis)
@@ -695,15 +697,15 @@ Next Steps
 
    :doc:`hello-world-tutorial`
       Build your first simple weather agent
-   
-   :doc:`build-your-first-agent`
-      Multi-capability wind turbine agent with advanced patterns
-   
+
+   :doc:`control-assistant-entry`
+      Production control system assistant with channel finding and comprehensive tooling
+
    :doc:`../developer-guides/02_quick-start-patterns/00_cli-reference`
       Complete CLI command reference
-   
+
    :doc:`../api_reference/01_core_framework/04_configuration_system`
       Deep dive into configuration system
-   
+
    :doc:`../developer-guides/03_core-framework-systems/03_registry-and-discovery`
       Understanding the registry and component discovery

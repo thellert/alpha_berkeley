@@ -715,26 +715,56 @@ def setup_build_dir(template_path, config, container_cfg, dev_mode=False):
                 global_config = ConfigBuilder()
                 flattened_config = global_config.raw_config  # This contains the already-merged configuration
 
-            # Adjust registry_path for container environment
-            # In containers, src/ is copied to repo_src/, and the working directory varies by service
+            # Adjust paths for container environment
+            # In containers, src/ is copied to repo_src/, so config paths must be updated
             # For pipelines service: working directory is /app but files are mounted at /pipelines
             # For other services: working directory matches mount point
-            if 'registry_path' in flattened_config:
-                registry_path = flattened_config['registry_path']
-                if isinstance(registry_path, str) and registry_path.startswith('./src/'):
-                    # Determine if this is a pipelines service by checking the source directory
-                    is_pipelines_service = 'pipelines' in source_dir
 
-                    if is_pipelines_service:
-                        # For pipelines: use absolute path since working dir (/app) != mount point (/pipelines)
-                        # ./src/weather/registry.py -> /pipelines/repo_src/weather/registry.py
-                        flattened_config['registry_path'] = registry_path.replace('./src/', '/pipelines/repo_src/')
-                        logger.debug(f"Adjusted registry_path for pipelines container: {registry_path} -> {flattened_config['registry_path']}")
-                    else:
-                        # For other services: use relative path since working dir == mount point
-                        # ./src/weather/registry.py -> ./repo_src/weather/registry.py
-                        flattened_config['registry_path'] = registry_path.replace('./src/', './repo_src/')
-                        logger.debug(f"Adjusted registry_path for container: {registry_path} -> {flattened_config['registry_path']}")
+            def adjust_src_paths_recursive(obj, is_pipelines):
+                """Recursively adjust all src/ paths in config for container environment.
+
+                When deploying to containers, the deployment system copies src/ → repo_src/.
+                Any config values that are paths starting with 'src/' must be updated to
+                'repo_src/' (or '/pipelines/repo_src/' for pipelines service) to work correctly
+                in the container environment.
+
+                Args:
+                    obj: Config dictionary or list to process
+                    is_pipelines: Whether this is the pipelines service (needs absolute paths)
+                """
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if isinstance(value, str):
+                            # Only adjust paths that clearly start with src/ directory reference
+                            # This is safe because 'src/' at start is always a path to source files
+                            if value.startswith('src/'):
+                                if is_pipelines:
+                                    # Pipelines: absolute path since working dir (/app) != mount point (/pipelines)
+                                    obj[key] = f'/pipelines/repo_src/{value[4:]}'  # Remove 'src/' prefix
+                                    logger.debug(f"Container path adjustment: {value} -> {obj[key]}")
+                                else:
+                                    # Other services: relative path since working dir == mount point
+                                    obj[key] = f'repo_src/{value[4:]}'
+                                    logger.debug(f"Container path adjustment: {value} -> {obj[key]}")
+                            elif value.startswith('./src/'):
+                                if is_pipelines:
+                                    obj[key] = f'/pipelines/repo_src/{value[6:]}'  # Remove './src/' prefix
+                                    logger.debug(f"Container path adjustment: {value} -> {obj[key]}")
+                                else:
+                                    obj[key] = f'./repo_src/{value[6:]}'
+                                    logger.debug(f"Container path adjustment: {value} -> {obj[key]}")
+                        elif isinstance(value, (dict, list)):
+                            adjust_src_paths_recursive(value, is_pipelines)
+                elif isinstance(obj, list):
+                    for item in obj:
+                        if isinstance(item, (dict, list)):
+                            adjust_src_paths_recursive(item, is_pipelines)
+
+            # Determine if this is a pipelines service
+            is_pipelines_service = 'pipelines' in source_dir
+
+            # Recursively adjust all src/ paths in the config
+            adjust_src_paths_recursive(flattened_config, is_pipelines_service)
 
             config_yml_dst = os.path.join(out_dir, "config.yml")
             with open(config_yml_dst, 'w') as f:

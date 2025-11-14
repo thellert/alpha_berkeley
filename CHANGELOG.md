@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **Container Path Resolution**: Fixed database and file paths in containerized deployments
+  - Deployment system now automatically adjusts `src/` paths to `repo_src/` (or `/pipelines/repo_src/` for pipelines service) in container configs
+  - Fixes channel finder database loading and other file-based resources in containers
+  - Simplifies configuration by removing `PROJECT_ROOT` environment variable requirement for basic usage
+  - `project_root` now hardcoded in `config.yml` during `framework init` for simpler tutorial experience
+  - `PROJECT_ROOT` environment variable remains available for advanced multi-environment deployments
 - **Dev Mode Pipeline Container**: Fixed namespace collision by switching from editable source install to wheel-based installation
   - Prevents osprey's `utils` module from shadowing OpenWebUI base image's `/app/utils/pipelines`
 - **Container Runtime Detection**: Fixed auto-detection to verify daemon is running, enabling proper fallback from Docker to Podman when Docker Desktop isn't running

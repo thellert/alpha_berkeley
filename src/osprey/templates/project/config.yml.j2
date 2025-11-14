@@ -135,12 +135,12 @@ execution_control:
   # EPICS writes (hardware control) - Master safety switch
   epics:
     writes_enabled: false    # Set true only for production hardware control
-  
+
   # Agent control - Runtime behavior configuration
   agent_control:
     task_extraction_bypass_enabled: false    # Skip LLM task extraction
     capability_selection_bypass_enabled: false  # Skip LLM capability selection
-  
+
   # Execution safety limits and control flow
   limits:
     max_reclassifications: 1          # Maximum times a task can be reclassified
@@ -176,7 +176,7 @@ file_paths:
 execution:
   execution_method: "local"              # Options: local | container
   python_env_path: {{ current_python_env }}  # Path to Python with dependencies
-  
+
   # EPICS infrastructure (for hardware control applications)
   epics:
     timeout: 5.0
@@ -187,7 +187,7 @@ execution:
       write_access:
         address: cagw-alsdmz.als.lbl.gov
         port: 5084
-  
+
   # Python/Jupyter execution modes
   modes:
     read_only:
@@ -228,7 +228,7 @@ pipeline:
 cli:
   # Theme selection - Options: default | vulcan | custom
   theme: "default"
-  
+
   # Custom theme colors (only used when theme: custom)
   # Uncomment and modify to create your own color scheme
   # custom_theme:
@@ -238,12 +238,12 @@ cli:
   #   command: "#9988A1"     # Shell commands
   #   path: "#A2AE9D"        # File paths
   #   info: "#9988A1"        # Info messages
-  
+
   # Custom ASCII banner (optional)
   # Uncomment to override the default Osprey banner
   # banner: |
   #   Your custom ASCII art here
-  
+
 
 # Note: Theme system logging uses the existing 'base' logger color
 # No additional logging configuration needed
@@ -255,7 +255,7 @@ cli:
 development:
   # If true, exceptions raised directly instead of wrapped
   raise_raw_errors: false
-  
+
   # Prompt debugging configuration
   prompts:
     show_all: false      # Print prompts to console
@@ -271,7 +271,7 @@ logging:
   rich_tracebacks: false
   show_traceback_locals: false
   show_full_paths: false
-  
+
   # Component colors (for terminal output)
   logging_colors:
     # Core framework components
@@ -285,24 +285,24 @@ logging:
     error: "red"
     gateway: "light_salmon1"
     approval: "light_salmon1"
-    
+
     # Framework capabilities
     time_range_parsing: "dodger_blue1"
     memory: "light_salmon1"
     python: "light_salmon1"
-    
+
     # Communication capabilities
     respond: "thistle1"
     clarify: "thistle1"
     message_generator: "thistle1"
-    
+
     # Execution infrastructure
     python_generator: "sandy_brown"
     python_analyzer: "salmon1"
     python_executor: "misty_rose1"
     python_workflow: "light_steel_blue1"
     python_services: "light_steel_blue1"
-    
+
     # Interface components
     cli: "deep_sky_blue1"
     pipeline: "deep_sky_blue1"
