@@ -59,8 +59,8 @@ Step 1: Create the Project
 
       .. code-block:: bash
 
-         osprey init weather-demo --template hello_world_weather
-         cd weather-demo
+         osprey init weather-agent --template hello_world_weather
+         cd weather-agent
 
       This is perfect for scripts, automation, or when you already know exactly what you want.
 
@@ -72,9 +72,9 @@ Either method generates a complete, self-contained project with the following st
 
 .. code-block::
 
-   weather-demo/
+   weather-agent/
    ├── src/
-   │   └── weather_demo/
+   │   └── weather_agent/
    │       ├── __init__.py
    │       ├── mock_weather_api.py
    │       ├── context_classes.py
@@ -529,8 +529,8 @@ The classifier guide teaches the LLM when to activate your capability based on u
       from osprey.utils.logger import get_logger
       from osprey.utils.streaming import get_streamer
 
-      from weather_demo.context_classes import CurrentWeatherContext
-      from weather_demo.mock_weather_api import weather_api
+      from weather_agent.context_classes import CurrentWeatherContext
+      from weather_agent.mock_weather_api import weather_api
 
       logger = get_logger("current_weather")
       registry = get_registry()
@@ -702,7 +702,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
        RegistryConfigProvider
    )
 
-   class WeatherRegistryProvider(RegistryConfigProvider):
+   class WeatherAgentRegistryProvider(RegistryConfigProvider):
        """Registry provider for the weather application."""
 
        def get_registry_config(self) -> ExtendedRegistryConfig:
@@ -710,7 +710,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
                capabilities=[
                    CapabilityRegistration(
                        name="current_weather",
-                       module_path="weather.capabilities.current_weather",
+                       module_path="weather_agent.capabilities.current_weather",
                        class_name="CurrentWeatherCapability",
                        description="Get current weather conditions",
                        provides=["CURRENT_WEATHER"],
@@ -720,7 +720,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
                context_classes=[
                    ContextClassRegistration(
                        context_type="CURRENT_WEATHER",
-                       module_path="weather.context_classes",
+                       module_path="weather_agent.context_classes",
                        class_name="CurrentWeatherContext"
                    )
                ]
@@ -746,24 +746,24 @@ For advanced use cases requiring complete control, you can use Standalone mode b
        RegistryConfigProvider
    )
 
-   class WeatherDemoRegistryProvider(RegistryConfigProvider):
+   class WeatherAgentRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
            # Standalone mode: Must provide ALL components including framework
            return RegistryConfig(
                capabilities=[
-                   CapabilityRegistration(
-                       name="current_weather",
-                       module_path="weather_demo.capabilities.current_weather",
-                       class_name="CurrentWeatherCapability",
-                       description="Get current weather conditions for a location",
-                       provides=["CURRENT_WEATHER"],
-                       requires=[]
-                   )
+                  CapabilityRegistration(
+                      name="current_weather",
+                      module_path="weather_agent.capabilities.current_weather",
+                      class_name="CurrentWeatherCapability",
+                      description="Get current weather conditions for a location",
+                      provides=["CURRENT_WEATHER"],
+                      requires=[]
+                  )
                ],
                context_classes=[
                    ContextClassRegistration(
                        context_type="CURRENT_WEATHER",
-                       module_path="weather_demo.context_classes",
+                       module_path="weather_agent.context_classes",
                        class_name="CurrentWeatherContext"
                    )
                ]
@@ -795,32 +795,32 @@ For advanced use cases requiring complete control, you can use Standalone mode b
          RegistryConfigProvider
      )
 
-     class WeatherRegistryProvider(RegistryConfigProvider):
-         """Registry provider for weather tutorial application."""
+     class WeatherAgentRegistryProvider(RegistryConfigProvider):
+        """Registry provider for weather tutorial application."""
 
-         def get_registry_config(self) -> ExtendedRegistryConfig:
+        def get_registry_config(self) -> ExtendedRegistryConfig:
              """Provide registry configuration with framework + weather components."""
              return extend_framework_registry(
-                  # Add weather-specific capability
-                  capabilities=[
-                      CapabilityRegistration(
-                          name="current_weather",
-                          module_path="weather.capabilities.current_weather",
-                          class_name="CurrentWeatherCapability",
-                          description="Get current weather conditions for a location",
-                          provides=["CURRENT_WEATHER"],
-                          requires=[]
-                      )
-                  ],
+                 # Add weather-specific capability
+                 capabilities=[
+                     CapabilityRegistration(
+                         name="current_weather",
+                         module_path="weather_agent.capabilities.current_weather",
+                         class_name="CurrentWeatherCapability",
+                         description="Get current weather conditions for a location",
+                         provides=["CURRENT_WEATHER"],
+                         requires=[]
+                     )
+                 ],
 
-                  # Add weather-specific context class
-                  context_classes=[
-                      ContextClassRegistration(
-                          context_type="CURRENT_WEATHER",
-                          module_path="weather.context_classes",
-                          class_name="CurrentWeatherContext"
-                      )
-                  ]
+                 # Add weather-specific context class
+                 context_classes=[
+                     ContextClassRegistration(
+                         context_type="CURRENT_WEATHER",
+                         module_path="weather_agent.context_classes",
+                         class_name="CurrentWeatherContext"
+                     )
+                 ]
               )
 
    This automatically includes all framework capabilities (memory, Python, time parsing, etc.) while adding only your weather-specific components!
@@ -842,10 +842,10 @@ The ``config.yml`` includes:
 .. code-block:: yaml
 
    # Project name
-   project_name: "weather-demo"
+   project_name: "weather-agent"
 
    # Registry discovery - tells framework where your application code is
-   registry_path: src/weather/registry.py
+   registry_path: src/weather_agent/registry.py
 
    # Model configurations
    models:
@@ -861,7 +861,7 @@ The ``config.yml`` includes:
 
    # Pipeline configuration
    pipeline:
-     name: "Weather Demo"
+     name: "Weather Agent"
 
 **Customization:**
 

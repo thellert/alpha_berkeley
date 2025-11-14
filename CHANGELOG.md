@@ -59,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **Hello World Tutorial**: Fixed project naming inconsistencies (`weather-demo` → `weather-agent` to match template output)
 - **Container Path Resolution**: Fixed database and file paths in containerized deployments
   - Deployment system now automatically adjusts `src/` paths to `repo_src/` (or `/pipelines/repo_src/` for pipelines service) in container configs
   - Fixes channel finder database loading and other file-based resources in containers
