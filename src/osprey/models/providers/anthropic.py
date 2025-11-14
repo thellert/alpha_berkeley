@@ -29,6 +29,16 @@ class AnthropicProviderAdapter(BaseProvider):
         "claude-haiku-4-5"
     ]
 
+    # API key acquisition information
+    api_key_url = "https://console.anthropic.com/"
+    api_key_instructions = [
+        "Sign up or log in with your account",
+        "Navigate to 'API Keys' in the settings",
+        "Click 'Create Key' and name your key",
+        "Copy the key (shown only once!)"
+    ]
+    api_key_note = None
+
     def create_model(
         self,
         model_id: str,

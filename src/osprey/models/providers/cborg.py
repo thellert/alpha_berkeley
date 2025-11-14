@@ -35,6 +35,15 @@ class CBorgProviderAdapter(BaseProvider):
         "openai/gpt-4o-mini"
     ]
 
+    # API key acquisition information
+    api_key_url = "https://cborg.lbl.gov"
+    api_key_instructions = [
+        "As a Berkeley Lab employee, go to 'API' -> 'Request API Key'",
+        "Create an API key ($50/month per user allocation)",
+        "Copy the key provided"
+    ]
+    api_key_note = "Must have affiliation with Berkeley Lab to request an API key."
+
     def create_model(
         self,
         model_id: str,

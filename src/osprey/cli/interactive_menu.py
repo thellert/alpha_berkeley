@@ -397,7 +397,10 @@ def get_provider_metadata() -> dict[str, dict[str, Any]]:
                     'requires_base_url': provider_class.requires_base_url,
                     'models': provider_class.available_models,
                     'default_model': provider_class.default_model_id,
-                    'health_check_model': provider_class.health_check_model_id
+                    'health_check_model': provider_class.health_check_model_id,
+                    'api_key_url': provider_class.api_key_url,
+                    'api_key_instructions': provider_class.api_key_instructions,
+                    'api_key_note': provider_class.api_key_note
                 }
             except Exception as e:
                 # Skip providers that fail to load, but log for debugging
@@ -856,52 +859,52 @@ def write_env_file(project_path: Path, key_name: str, api_key: str):
 def show_api_key_help(provider: str):
     """Show provider-specific instructions for getting API keys.
 
+    Reads metadata from provider class to ensure single source of truth.
+
     Args:
         provider: Provider name
     """
     console.print()
 
-    if provider == 'cborg':
-        console.print("[bold]Getting a CBorg API Key:[/bold]")
-        console.print("  1. Visit: https://cborg.lbl.gov")
-        console.print("  2. As a Berkeley Lab employee, click 'Request API Key'")
-        console.print("  3. Create an API key ($50/month per user allocation)")
-        console.print("  4. Copy the key provided\n")
+    # Try to get provider metadata from cached registry data
+    try:
+        providers = get_provider_metadata()
+        provider_data = providers.get(provider)
 
-    elif provider == 'stanford':
-        console.print("[bold]Getting a Stanford API Key:[/bold]")
-        console.print("  1. Contact Stanford AI team for access information")
-        console.print("  2. Sign in with Stanford credentials")
-        console.print("  3. Request API key for your project")
-        console.print("  4. Copy the key provided\n")
-        console.print("[dim]Note: This may require Stanford affiliation[/dim]\n")
+        if not provider_data:
+            # Fallback for unknown providers
+            console.print(f"[dim]Check {provider} documentation for API key instructions[/dim]\n")
+            input("Press ENTER to continue...")
+            return
 
-    elif provider == 'anthropic':
-        console.print("[bold]Getting an Anthropic API Key:[/bold]")
-        console.print("  1. Visit: https://console.anthropic.com/")
-        console.print("  2. Sign up or log in with your account")
-        console.print("  3. Navigate to 'API Keys' in the settings")
-        console.print("  4. Click 'Create Key' and name your key")
-        console.print("  5. Copy the key (shown only once!)\n")
+        # Display provider-specific instructions from metadata
+        provider_display = provider_data.get('description') or provider.title()
+        console.print(f"[bold]Getting a {provider_display} API Key:[/bold]")
 
-    elif provider == 'openai':
-        console.print("[bold]Getting an OpenAI API Key:[/bold]")
-        console.print("  1. Visit: https://platform.openai.com/api-keys")
-        console.print("  2. Sign up or log in to your OpenAI account")
-        console.print("  3. Add billing information if not already set up")
-        console.print("  4. Click '+ Create new secret key'")
-        console.print("  5. Name your key and copy it (shown only once!)\n")
+        # Show URL if available
+        api_key_url = provider_data.get('api_key_url')
+        if api_key_url:
+            console.print(f"  1. Visit: {api_key_url}")
+            step_offset = 2
+        else:
+            step_offset = 1
 
-    elif provider == 'google':
-        console.print("[bold]Getting a Google API Key (Gemini):[/bold]")
-        console.print("  1. Visit: https://aistudio.google.com/app/apikey")
-        console.print("  2. Sign in with your Google account")
-        console.print("  3. Click 'Create API key'")
-        console.print("  4. Select a Google Cloud project or create a new one")
-        console.print("  5. Copy the generated API key\n")
+        # Show instructions
+        api_key_instructions = provider_data.get('api_key_instructions', [])
+        if api_key_instructions:
+            for i, instruction in enumerate(api_key_instructions, start=step_offset):
+                console.print(f"  {i}. {instruction}")
+            console.print()  # Extra line after instructions
 
-    else:
-        console.print(f"[dim]Check {provider} documentation for API key instructions[/dim]\n")
+        # Show note if available
+        api_key_note = provider_data.get('api_key_note')
+        if api_key_note:
+            console.print(f"[dim]Note: {api_key_note}[/dim]\n")
+
+    except Exception as e:
+        # Fallback in case of any errors
+        console.print(f"[dim]Check {provider} documentation for API key instructions[/dim]")
+        console.print(f"[dim](Error loading provider info: {e})[/dim]\n")
 
     input("Press ENTER to continue...")
 

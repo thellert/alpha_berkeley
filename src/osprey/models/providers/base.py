@@ -29,6 +29,9 @@ class BaseProvider(ABC):
         default_model_id: Default model recommended for general use (used in templates)
         health_check_model_id: Cheapest/fastest model for health checks
         available_models: List of available model IDs for this provider (for TUI/selection)
+        api_key_url: URL where users can obtain an API key (e.g., "https://console.anthropic.com/")
+        api_key_instructions: Step-by-step instructions for obtaining an API key
+        api_key_note: Additional notes or requirements (e.g., "Requires affiliation")
 
     This interface ensures consistent provider behavior across the framework
     while allowing provider-specific implementations.
@@ -45,6 +48,11 @@ class BaseProvider(ABC):
     default_model_id: str | None = None  # Default model for templates/general use
     health_check_model_id: str | None = None  # Cheapest model for health checks
     available_models: list[str] = []  # List of available models for this provider
+
+    # API key acquisition information (for CLI help and documentation)
+    api_key_url: str | None = None  # URL where users can obtain an API key
+    api_key_instructions: list[str] = []  # Step-by-step instructions for obtaining the key
+    api_key_note: str | None = None  # Additional notes or requirements
 
     @abstractmethod
     def create_model(

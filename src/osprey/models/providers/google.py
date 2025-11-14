@@ -30,6 +30,16 @@ class GoogleProviderAdapter(BaseProvider):
         "gemini-2.5-flash-lite"
     ]
 
+    # API key acquisition information
+    api_key_url = "https://aistudio.google.com/app/apikey"
+    api_key_instructions = [
+        "Sign in with your Google account",
+        "Click 'Create API key'",
+        "Select a Google Cloud project or create a new one",
+        "Copy the generated API key"
+    ]
+    api_key_note = None
+
     def create_model(
         self,
         model_id: str,

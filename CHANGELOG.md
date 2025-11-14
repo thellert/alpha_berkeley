@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Provider API Key Metadata**: Established providers as single source of truth for API key acquisition information
+  - Added `api_key_url`, `api_key_instructions`, and `api_key_note` fields to `BaseProvider`
+  - Updated all provider implementations (Anthropic, OpenAI, Google, CBorg, Ollama) with verified metadata
+  - Refactored CLI interactive menu to dynamically read API key help from provider metadata
+  - Eliminates hardcoded API key instructions in CLI code
+  - New providers automatically inherit help system support
+  - Follows consistent metadata pattern across framework
 - **Configuration API Simplification**: Streamlined `get_model_config()` function signature
   - Removed unused `service` and `model_type` parameters
   - Function now accepts only `(model_name, config_path)` for cleaner API

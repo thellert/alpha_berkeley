@@ -32,6 +32,16 @@ class OpenAIProviderAdapter(BaseProvider):
         "gpt-5-nano"
     ]
 
+    # API key acquisition information
+    api_key_url = "https://platform.openai.com/api-keys"
+    api_key_instructions = [
+        "Sign up or log in to your OpenAI account",
+        "Add billing information if not already set up",
+        "Click '+ Create new secret key'",
+        "Name your key and copy it (shown only once!)"
+    ]
+    api_key_note = None
+
     def create_model(
         self,
         model_id: str,
