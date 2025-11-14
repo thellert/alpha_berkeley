@@ -1,5 +1,7 @@
 # V0.9 Testing Guide
 
+**Requirements**: Python 3.11+
+
 ## Quick Setup
 
 ```bash
