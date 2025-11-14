@@ -28,6 +28,11 @@ python launch_docs.py
 
 2. **Template**: Try creating a control assistant project
    ```bash
+   # Option 1: Interactive menu (recommended)
+   osprey
+   # Select "Initialize new project" → choose "control_assistant" template
+
+   # Option 2: Direct command
    osprey init my-control-assistant --template control_assistant
    cd my-control-assistant
    ```
