@@ -47,7 +47,7 @@ Step 1: Create the Project
       This launches an interactive terminal UI that will:
 
       1. Guide you through template selection (choose ``hello_world_weather``)
-      2. Help you select an AI provider and model
+      2. Help you select an AI provider and model (we recommend **Claude Haiku 4.5** for this tutorial)
       3. Automatically detect and configure API keys
       4. Create a ready-to-use project
 
@@ -850,8 +850,8 @@ The ``config.yml`` includes:
    # Model configurations
    models:
      orchestrator:
-       provider: cborg  # or openai, anthropic, ollama
-       model_id: anthropic/claude-sonnet
+       provider: anthropic
+       model_id: claude-haiku-4-20251015
 
    # Service deployments
    deployed_services:
@@ -862,6 +862,11 @@ The ``config.yml`` includes:
    # Pipeline configuration
    pipeline:
      name: "Weather Agent"
+
+.. admonition:: Model Recommendation
+   :class: tip
+
+   **We recommend Claude Haiku 4.5.** It provides excellent performance and latency for small applications.
 
 **Customization:**
 
@@ -898,9 +903,11 @@ Ensure your API keys are set in ``.env``:
    # Copy template
    cp .env.example .env
 
-   # Edit and add your API keys
-   # OPENAI_API_KEY=your-key-here
+   # Edit and add your Anthropic API key (required for Claude Haiku)
    # ANTHROPIC_API_KEY=your-key-here
+
+   # Optional: Other providers if you want to experiment
+   # OPENAI_API_KEY=your-key-here
    # CBORG_API_KEY=your-key-here
 
 **3. Start Chat Interface**

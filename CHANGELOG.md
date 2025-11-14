@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `docs/source/getting-started/build-your-first-agent.rst` (superseded by control assistant tutorials)
 
 ### Changed
+- **Hello World Tutorial**: Updated to explicitly recommend Claude Haiku 4.5 (`claude-haiku-4-20251015`)
 - **Documentation Build Instructions**: Updated installation.rst to use modern `pip install -e ".[docs]"` workflow
   - Replaced deprecated `pip install -r docs/requirements.txt` approach
   - Uses optional dependencies from pyproject.toml for cleaner package management
