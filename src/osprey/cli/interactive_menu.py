@@ -1375,7 +1375,10 @@ def handle_chat_action(project_path: Path | None = None):
                     del os.environ['CONFIG_FILE']
         else:
             # Default behavior - run in current directory
-            asyncio.run(run_cli(config_path="config.yml"))
+            # Set CONFIG_FILE for subprocess execution (critical for Python executor)
+            config_path = str(Path.cwd() / "config.yml")
+            os.environ['CONFIG_FILE'] = config_path
+            asyncio.run(run_cli(config_path=config_path))
 
     except KeyboardInterrupt:
         console.print(f"\n\n{Messages.warning('Chat session ended.')}")

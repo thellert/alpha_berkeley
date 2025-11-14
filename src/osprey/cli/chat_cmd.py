@@ -82,6 +82,11 @@ def chat(project: str, config: str):
         # Resolve config path from project and config args
         config_path = resolve_config_path(project, config)
 
+        # Set CONFIG_FILE environment variable for subprocess execution
+        # This is critical for Python executor subprocess to initialize registry
+        import os
+        os.environ['CONFIG_FILE'] = str(config_path)
+
         # Call the existing run_cli function with config_path
         # This is the ORIGINAL function from Phase 1.5, behavior unchanged
         asyncio.run(run_cli(config_path=config_path))
