@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **Dev Mode Pipeline Container**: Fixed namespace collision by switching from editable source install to wheel-based installation
+  - Prevents osprey's `utils` module from shadowing OpenWebUI base image's `/app/utils/pipelines`
 - **Container Runtime Detection**: Fixed auto-detection to verify daemon is running, enabling proper fallback from Docker to Podman when Docker Desktop isn't running
 - **OrchestratorExample Formatting**: Fixed PlannedStep fields not appearing in orchestrator prompt examples
   - Changed from `getattr()` to `.get()` for TypedDict field access in `OrchestratorExample.format_for_prompt()`

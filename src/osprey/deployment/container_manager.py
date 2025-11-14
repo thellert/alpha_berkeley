@@ -358,24 +358,25 @@ def render_template(template_path, config, out_dir):
     return output_filepath
 
 def _copy_local_framework_for_override(out_dir):
-    """Copy local osprey source to container build directory for development mode.
+    """Build and copy local osprey wheel to container build directory for development mode.
 
-    This function locates the locally installed osprey package and copies its
-    source code to a designated location in the container build directory. The
-    copied osprey can then be installed in containers to override the standard
-    PyPI version during development and testing.
+    This function builds a wheel package from the local osprey source and copies it
+    to the container build directory. This approach is cleaner and more reliable than
+    copying source files, as it properly handles package structure and avoids namespace
+    collisions with other packages.
 
-    The function automatically detects the osprey installation location and
-    copies both the source code and project metadata required for proper
-    installation within containers.
+    The wheel is built using the standard Python build process and can be installed
+    in containers to override the PyPI version during development and testing.
 
     :param out_dir: Container build output directory
     :type out_dir: str
-    :return: True if osprey was successfully copied, False otherwise
+    :return: True if osprey wheel was successfully built and copied, False otherwise
     :rtype: bool
     """
     try:
         # Try to import osprey to get its location
+        import subprocess
+        import tempfile
         from pathlib import Path
 
         import osprey
@@ -384,31 +385,40 @@ def _copy_local_framework_for_override(out_dir):
         osprey_module_path = Path(osprey.__file__).parent
         osprey_source_root = osprey_module_path.parent.parent  # Go up from src/osprey to root
 
-        # Copy the osprey source to a predictable location
-        osprey_override_dir = os.path.join(out_dir, "osprey_override")
-        src_osprey = osprey_source_root / "src" / "osprey"
+        # Build the wheel package from local source
+        logger.info("Building osprey wheel from local source...")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = subprocess.run(
+                ["python3", "-m", "build", "--wheel", "--outdir", tmpdir],
+                cwd=osprey_source_root,
+                capture_output=True,
+                text=True
+            )
 
-        if src_osprey.exists():
-            # Copy the osprey source
-            shutil.copytree(src_osprey, osprey_override_dir, dirs_exist_ok=True)
-            logger.success(f"Copied osprey source for dev override to {osprey_override_dir}")
+            if result.returncode != 0:
+                logger.warning(f"Failed to build osprey wheel: {result.stderr}")
+                return False
 
-            # Copy pyproject.toml for proper installation
-            pyproject_src = osprey_source_root / "pyproject.toml"
-            if pyproject_src.exists():
-                shutil.copy2(pyproject_src, os.path.join(out_dir, "osprey_pyproject.toml"))
-                logger.info("Copied osprey pyproject.toml for dependencies")
+            # Find the built wheel
+            wheel_files = list(Path(tmpdir).glob("*.whl"))
+            if not wheel_files:
+                logger.warning("No wheel file found after build")
+                return False
+
+            wheel_file = wheel_files[0]
+
+            # Copy wheel to output directory
+            dest_wheel = os.path.join(out_dir, wheel_file.name)
+            shutil.copy2(wheel_file, dest_wheel)
+            logger.success(f"Built and copied osprey wheel: {wheel_file.name}")
 
             return True
-        else:
-            logger.warning(f"Osprey source not found at {src_osprey}")
-            return False
 
     except ImportError:
         logger.warning("Osprey not found in local environment, containers will use PyPI version")
         return False
     except Exception as e:
-        logger.warning(f"Failed to prepare osprey override: {e}")
+        logger.warning(f"Failed to build osprey wheel for dev override: {e}")
         return False
 
 
