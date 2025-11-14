@@ -44,6 +44,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `docs/source/getting-started/build-your-first-agent.rst` (superseded by control assistant tutorials)
 
 ### Changed
+- **Dependencies**: Moved `pandas` and `numpy` from optional `scientific` dependencies to base requirements
+  - Required by archiver connectors which return pandas DataFrames for time-series data
+  - Needed for MongoDB connector support
+  - Fixes initialization error when running tutorials from scratch without manual pandas installation
+  - `scientific` extra now includes only scipy, matplotlib, seaborn, scikit-learn, and ipywidgets
 - **Provider API Key Metadata**: Established providers as single source of truth for API key acquisition information
   - Added `api_key_url`, `api_key_instructions`, and `api_key_note` fields to `BaseProvider`
   - Updated all provider implementations (Anthropic, OpenAI, Google, CBorg, Ollama) with verified metadata
