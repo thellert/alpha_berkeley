@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic connector registration during framework initialization
   - Lazy loading with unified component management
   - Support for control_system and archiver connector types
+- **CLI Template Support**: Added control_assistant template to CLI initialization system
+  - New template option in `osprey init` command
+  - Interactive menu displays control assistant with description
+  - Template validation and configuration support
 
 ### Removed
 - **Wind Turbine Template**: Removed deprecated wind turbine application template
