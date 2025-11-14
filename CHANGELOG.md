@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `docs/source/getting-started/build-your-first-agent.rst` (superseded by control assistant tutorials)
 
 ### Changed
+- **Documentation Build Instructions**: Updated installation.rst to use modern `pip install -e ".[docs]"` workflow
+  - Replaced deprecated `pip install -r docs/requirements.txt` approach
+  - Uses optional dependencies from pyproject.toml for cleaner package management
 - **Dependencies**: Moved `pandas` and `numpy` from optional `scientific` dependencies to base requirements
   - Required by archiver connectors which return pandas DataFrames for time-series data
   - Needed for MongoDB connector support
@@ -64,6 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated documentation examples across 6 files
 
 ### Fixed
+- **Jinja2 Template Syntax**: Fixed invalid `.get('KEY')` method calls in Jinja2 templates
+  - Replaced `env.get('CBORG_API_KEY')` with `env.CBORG_API_KEY` in conditionals
+  - Fixed `env.get('TZ', 'default')` to use proper Jinja2 filter syntax: `env.TZ | default('default')`
+  - Affects `project/README.md.j2` and `project/env.j2` templates
+  - Resolves "expected token 'end of print statement', got ':'" error during project creation
 - **Hello World Tutorial**: Fixed project naming inconsistencies (`weather-demo` → `weather-agent` to match template output)
 - **Container Path Resolution**: Fixed database and file paths in containerized deployments
   - Deployment system now automatically adjusts `src/` paths to `repo_src/` (or `/pipelines/repo_src/` for pipelines service) in container configs

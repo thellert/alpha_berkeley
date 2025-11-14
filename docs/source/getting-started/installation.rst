@@ -425,12 +425,11 @@ If you want to build and serve the documentation locally:
 
 .. code-block:: bash
 
-   # Install documentation dependencies
-   pip install -r docs/requirements.txt
+   # Install documentation dependencies using optional dependencies
+   pip install -e ".[docs]"
 
    # Build and serve documentation
-   cd docs/
-   python launch_docs.py
+   python docs/launch_docs.py
 
 Once running, you can view the documentation at http://localhost:8082
 
