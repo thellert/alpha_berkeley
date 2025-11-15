@@ -119,6 +119,8 @@ System aggregates information using structured context:
 
        return ResponseContext(...)
 
+.. _clarify-capability:
+
 ClarifyCapability
 -----------------
 

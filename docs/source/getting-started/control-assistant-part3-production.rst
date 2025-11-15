@@ -263,6 +263,8 @@ Your query goes through three intelligent phases that transform natural language
 
       **Further Reading:** :doc:`../developer-guides/04_infrastructure-components/04_orchestrator-planning`
 
+.. _planning-mode-example:
+
 .. dropdown:: 🔍 **Want to Review This Plan Before Execution? Use Planning Mode!**
    :color: primary
 
