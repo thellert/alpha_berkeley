@@ -3,454 +3,14 @@ Part 3: Integration & Deployment
 =============================================
 
 
-Step 5: Context Classes for Control System Data
-===============================================
+.. _step-5-observe-framework:
 
-Context classes are the structured data containers that flow between capabilities in the Osprey framework. They serve as the "shared memory" that enables capabilities to work together—one capability produces context (e.g., channel addresses), and downstream capabilities consume it (e.g., to retrieve values from those channels).
-
-**Why Context Classes Matter in Scientific Computing:**
-
-In data-intensive scientific applications, context classes do more than just store data—they provide **LLM-optimized access patterns** that guide the agent in generating correct Python code. Unlike pure ReAct agents that pass tool outputs directly back to the LLM's context window (which fails immediately with archiver data containing thousands of datapoints), context classes keep large datasets in state memory while exposing only metadata and access instructions to the LLM. Scientific data often involves complex nested structures, domain-specific identifiers with special characters (e.g., ``SR:CURRENT:RB``, ``MAG:QF[QF03]:CURRENT:SP`` in control systems), and large time series datasets that require intelligent handling. Production-grade context classes explicitly describe how to access nested data structures, handle special characters, manage large datasets, and avoid common mistakes that LLMs make when generating code for scientific data access.
-
-The control assistant template provides three production-validated context classes based on the deployed :doc:`ALS Accelerator Assistant <../example-applications/als-assistant>`. These patterns are broadly applicable to scientific computing applications beyond control systems:
-
-- **ChannelAddressesContext**: Results from channel finding (list of found addresses)
-- **ChannelValuesContext**: Live channel value reads (current measurements)
-- **ArchiverDataContext**: Historical time series data with intelligent downsampling
-
-**Demonstrating with Channel Values Context:**
-
-Let's examine the ``ChannelValuesContext`` as a complete example of production-grade patterns. This context stores live channel value reads and demonstrates critical techniques for handling scientific data with special characters and nested structures.
-
-.. admonition:: Requirements
-   :class: note
-
-   All context classes must inherit from ``CapabilityContext`` and implement two required methods: ``get_access_details()`` (for LLM code generation) and ``get_summary()`` (for human display).
-
-**Class Structure:**
-
-First, define a nested Pydantic model for individual channel values:
-
-.. code-block:: python
-
-   class ChannelValue(BaseModel):
-       """Individual channel value data - simple nested structure for Pydantic."""
-       value: str
-       timestamp: datetime  # Pydantic handles datetime serialization automatically
-       units: str
-
-Then define the context class with its data fields:
-
-.. code-block:: python
-
-   class ChannelValuesContext(CapabilityContext):
-       """
-       Result from channel value retrieval operation and context for downstream capabilities.
-       Based on ALS Assistant's PVValues pattern.
-       """
-       # Context type and category identifiers
-       CONTEXT_TYPE: ClassVar[str] = "CHANNEL_VALUES"
-       CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
-
-       # Data structure: dictionary mapping channel names to ChannelValue objects
-       channel_values: Dict[str, ChannelValue]
-
-       @property
-       def channel_count(self) -> int:
-           """Number of channels retrieved."""
-           return len(self.channel_values)
-
-**Required Method 1: get_access_details()**
-
-This method provides rich, LLM-optimized documentation for code generation. Notice how it explicitly explains the bracket vs. dot notation pattern:
-
-.. code-block:: python
-
-       def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """Rich description for LLM consumption."""
-           channels_preview = list(self.channel_values.keys())[:3]
-           example_channel = channels_preview[0] if channels_preview else "SR:CURRENT:RB"
-
-           # Get example value from the ChannelValue object
-           try:
-               example_value = self.channel_values[example_channel].value if example_channel in self.channel_values else '400.5'
-           except:
-               example_value = '400.5'
-
-           key_ref = key_name if key_name else "key_name"
-           return {
-               "channel_count": self.channel_count,
-               "channels": channels_preview,
-               "data_structure": "Dict[channel_name -> ChannelValue] where ChannelValue has .value, .timestamp, .units fields - IMPORTANT: use bracket notation for channel names (due to special characters like colons), but dot notation for fields",
-               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.channel_values['CHANNEL_NAME'].value (NOT ['value'])",
-               "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.channel_values['{example_channel}'].value gives '{example_value}' (use .value not ['value'])",
-               "available_fields": ["value", "timestamp", "units"],
-           }
-
-.. dropdown:: Critical Pattern: Understanding Context Object Access
-   :color: warning
-
-   The ``data_structure`` field in ``get_access_details()`` explicitly guides the LLM on the correct access patterns for your context data. This is critical because the framework uses **Pydantic models for type safety**, not plain dictionaries:
-
-   **Context objects are Pydantic models**:
-      - Access fields with **dot notation**: ``context.CHANNEL_VALUES.key_name.channel_values`` ✅
-      - The ``channel_values`` field is a ``Dict[str, ChannelValue]`` (dictionary)
-
-   **Dictionary fields use bracket notation**:
-      - Access dictionary keys with **brackets**: ``channel_values['SR:CURRENT:RB']`` ✅
-      - This works for any key (with or without special characters)
-
-   **Nested Pydantic models use dot notation**:
-      - ``ChannelValue`` is a Pydantic model with fields ``.value``, ``.timestamp``, ``.units``
-      - Access these fields with **dot notation**: ``.value`` ✅
-      - **NOT** bracket notation: ``['value']`` ❌ (this would fail)
-
-   **Complete access pattern**:
-      ``context.CHANNEL_VALUES.key_name.channel_values['SR:CURRENT:RB'].value``
-
-      1. ``context.CHANNEL_VALUES.key_name`` → Pydantic object (dot notation)
-      2. ``.channel_values`` → Dict field on Pydantic object (dot notation)
-      3. ``['SR:CURRENT:RB']`` → Dictionary key access (bracket notation)
-      4. ``.value`` → Field on ChannelValue Pydantic object (dot notation)
-
-   Without this explicit guidance, LLMs frequently mix up dictionary access patterns with Pydantic field access, causing runtime errors. This pattern applies to any framework using Pydantic models for type-safe data structures.
-
-**Required Method 2: get_summary()**
-
-This method provides human-readable summaries for response generation, UI display, and debugging:
-
-.. code-block:: python
-
-       def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-           """
-           FOR HUMAN DISPLAY: Create readable summary for UI/debugging.
-           Always customize for better user experience.
-           """
-           channel_data = {}
-           for channel_name, channel_info in self.channel_values.items():
-               channel_data[channel_name] = {
-                   "value": channel_info.value,
-                   "timestamp": channel_info.timestamp,
-                   "units": channel_info.units
-               }
-
-           return {
-               "type": "Channel Values",
-               "channel_data": channel_data,
-           }
-
-.. admonition:: Key Pattern
-   :class: tip
-
-   ``get_access_details()`` provides **LLM-optimized documentation** for code generation, while ``get_summary()`` provides **human-readable** output for UIs and debugging. These serve different purposes: one teaches the LLM how to write correct code, the other presents data to users.
-
-**Additional Production Context Classes:**
-
-The control assistant template includes two more production-validated context classes, each demonstrating advanced patterns for specific scientific data scenarios.
-
-.. dropdown:: Complete Channel Addresses Context Implementation
-
-   Used for storing channel finding results. This is simpler than ChannelValuesContext but demonstrates the same core patterns.
-
-   .. code-block:: python
-
-      class ChannelAddressesContext(CapabilityContext):
-          """
-          Framework context for channel finding capability results.
-
-          This is the rich context object used throughout the framework for channel address data.
-          Based on ALS Assistant's PVAddresses pattern.
-          """
-          CONTEXT_TYPE: ClassVar[str] = "CHANNEL_ADDRESSES"
-          CONTEXT_CATEGORY: ClassVar[str] = "METADATA"
-
-          channels: List[str]  # List of found channel addresses
-          description: str  # Description or additional information about the channels
-
-          def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-              """Rich description for LLM consumption."""
-              key_ref = key_name if key_name else "key_name"
-              return {
-                  "channels": self.channels,
-                  "total_available": len(self.channels),
-                  "comments": self.description,
-                  "data_structure": "List of channel address strings",
-                  "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.channels",
-                  "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.channels[0] gives '{self.channels[0] if self.channels else 'CHANNEL:NAME'}'",
-              }
-
-          def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-              """
-              FOR HUMAN DISPLAY: Create readable summary for UI/debugging.
-              Always customize for better user experience.
-              """
-              return {
-                  "type": "Channel Addresses",
-                  "total_channels": len(self.channels),
-                  "channel_list": self.channels,
-                  "description": self.description,
-              }
-
-.. dropdown:: Complete Archiver Data Context Implementation - Critical Production Pattern
-
-   The archiver data context demonstrates the **most critical production pattern**: automatic downsampling in ``get_summary()`` to prevent context window overflow while preserving full data access for analysis.
-
-   .. code-block:: python
-
-      class ArchiverDataContext(CapabilityContext):
-          """
-          Historical time series data from archiver.
-
-          This stores archiver data with datetime objects for full datetime functionality and consistency.
-          Based on ALS Assistant's ArchiverDataContext pattern with downsampling support.
-          """
-          CONTEXT_TYPE: ClassVar[str] = "ARCHIVER_DATA"
-          CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
-
-          timestamps: List[datetime]  # List of datetime objects for full datetime functionality
-          precision_ms: int  # Data precision in milliseconds
-          time_series_data: Dict[str, List[float]]  # Channel name -> time series values (aligned with timestamps)
-          available_channels: List[str]  # List of available channel names for intuitive filtering
-
-          def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-              """Rich description of the archiver data structure."""
-              total_points = len(self.timestamps)
-
-              # Get example channel for demo purposes
-              example_channel = self.available_channels[0] if self.available_channels else "SR:CURRENT:RB"
-              example_value = self.time_series_data[example_channel][0] if self.available_channels and self.time_series_data.get(example_channel) else 100.5
-
-              key_ref = key_name if key_name else "key_name"
-              start_time = self.timestamps[0]
-              end_time = self.timestamps[-1]
-              duration = end_time - start_time
-
-              return {
-                  "total_points": total_points,
-                  "precision_ms": self.precision_ms,
-                  "channel_count": len(self.available_channels),
-                  "available_channels": self.available_channels,
-                  "time_info": f"Data spans from {start_time} to {end_time} (duration: {duration})",
-                  "data_structure": "4 attributes: timestamps (list of datetime objects), precision_ms (int), time_series_data (dict of channel_name -> list of float values), available_channels (list of channel names)",
-                  "CRITICAL_ACCESS_PATTERNS": {
-                      "get_channel_names": f"channel_names = context.{self.CONTEXT_TYPE}.{key_ref}.available_channels",
-                      "get_channel_data": f"data = context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['CHANNEL_NAME']",
-                      "get_timestamps": f"timestamps = context.{self.CONTEXT_TYPE}.{key_ref}.timestamps",
-                      "get_single_value": f"value = context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['CHANNEL_NAME'][index]",
-                      "get_time_at_index": f"time = context.{self.CONTEXT_TYPE}.{key_ref}.timestamps[index]"
-                  },
-                  "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['{example_channel}'][0] gives {example_value}, context.{self.CONTEXT_TYPE}.{key_ref}.timestamps[0] gives datetime object",
-                  "datetime_features": "Full datetime functionality: arithmetic, comparison, formatting with .strftime(), timezone operations"
-              }
-
-          def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
-              """
-              FOR HUMAN DISPLAY: Format data for response generation.
-              Downsamples large datasets to prevent context window overflow.
-
-              🚨 CRITICAL PRODUCTION PATTERN 🚨
-
-              This method demonstrates intelligent downsampling for large time series data.
-              Without this, a 24-hour dataset at 1Hz (86,400 points) would consume massive
-              context window space and make the agent unusable.
-
-              The downsampling:
-              - Keeps max 10 sample points (configurable)
-              - Includes start, end, and evenly distributed middle points
-              - Adds statistics (min, max, mean, first, last)
-              - Warns LLM not to use downsampled data for final numerical answers
-              - Directs LLM to use ANALYSIS_RESULTS context instead
-              """
-              max_samples = 10
-
-              try:
-                  total_points = len(self.timestamps)
-
-                  # Create sample indices (start, middle, end)
-                  if total_points <= max_samples:
-                      sample_indices = list(range(total_points))
-                  else:
-                      # Include start, end, and evenly distributed middle points
-                      step = max(1, total_points // (max_samples - 2))
-                      sample_indices = [0] + list(range(step, total_points - 1, step))[:max_samples-2] + [total_points - 1]
-                      sample_indices = sorted(list(set(sample_indices)))  # Remove duplicates and sort
-
-                  # Sample timestamps
-                  sample_timestamps = [self.timestamps[i] for i in sample_indices]
-
-                  # Sample channel data
-                  channel_summary = {}
-                  for channel_name, values in self.time_series_data.items():
-                      sample_values = [values[i] for i in sample_indices]
-
-                      channel_summary[channel_name] = {
-                          "sample_values": sample_values,
-                          "sample_timestamps": sample_timestamps,
-                          "statistics": {
-                              "total_points": len(values),
-                              "min_value": min(values),
-                              "max_value": max(values),
-                              "first_value": values[0],
-                              "last_value": values[-1],
-                              "mean_value": sum(values) / len(values)
-                          }
-                      }
-
-                  return {
-                      "WARNING": "🚨 THIS IS DOWNSAMPLED ARCHIVER DATA - DO NOT USE FOR FINAL NUMERICAL ANSWERS! 🚨",
-                      "guidance": "For accurate analysis results, use ANALYSIS_RESULTS context instead of raw archiver data",
-                      "data_info": {
-                          "total_points": total_points,
-                          "precision_ms": self.precision_ms,
-                          "time_range": {
-                              "start": self.timestamps[0] if self.timestamps else None,
-                              "end": self.timestamps[-1] if self.timestamps else None
-                          },
-                          "downsampling_info": f"Showing {len(sample_indices)} sample points out of {total_points} total points"
-                      },
-                      "channel_data": channel_summary,
-                      "IMPORTANT_NOTE": "Use this only for understanding data structure. For analysis results, request ANALYSIS_RESULTS context."
-                  }
-
-              except Exception as e:
-                  import logging
-                  logger = logging.getLogger(__name__)
-                  logger.error(f"Error downsampling archiver data: {e}")
-                  return {
-                      "ERROR": f"Failed to downsample archiver data: {str(e)}",
-                      "WARNING": "Could not process archiver data - use ANALYSIS_RESULTS instead"
-                  }
-
-   **Critical Production Patterns:**
-
-   1. **Downsampling in get_summary()**: Prevents context window overflow by showing only 10 sample points + statistics instead of tens of thousands of data points
-   2. **Warning Messages**: Explicitly tells LLM not to use downsampled data for final numerical answers
-   3. **Statistics**: Provides min/max/mean/first/last values so LLM can understand data range without seeing all points
-   4. **Error Handling**: Gracefully handles edge cases and provides fallback error messages
-   5. **Full Data Access**: The LLM can still access the complete ``time_series_data`` dictionary directly when needed for analysis code generation
-
-Step 6: Mock Services for Development
-=====================================
-
-The Control Assistant template includes realistic mock services that let you develop and test your assistant without access to real control system hardware or archiver services.
-
-**Framework Integration**
-
-The mock services integrate seamlessly with the framework through the :doc:`connector abstraction layer <../developer-guides/05_production-systems/06_control-system-integration>`:
-
-1. **Pluggable Architecture**: Capabilities use ``ConnectorFactory`` to create connectors based on your ``config.yml`` settings
-2. **Zero Code Changes**: Switch from development to production by changing one config field (``type: mock`` → ``type: epics``) — see :ref:`migrate-to-production` for the complete migration guide
-3. **Realistic Behavior**: Mock services simulate network latency, measurement noise, and control system patterns
-4. **Universal Compatibility**: Accept any channel names—no need to predefine channel lists
-
-The mock services are automatically used when you run the generated template. This allows you to:
-
-- Complete the tutorial without hardware access
-- Verify that the framework behavior is correct
-- Understand how data flows through your capabilities
-- Test your configuration before connecting to production systems
-
-
-
-.. dropdown:: How Data is Generated
-   :color: info
-
-   .. tab-set::
-
-      .. tab-item:: Mock Control System
-
-         The mock control system simulates real-time channel value reads with realistic behavior.
-
-
-
-         The mock connector attempts to generate reasonable values based on channel naming patterns:
-
-         .. code-block:: python
-
-            def _generate_initial_value(self, pv_name: str) -> float:
-                  """Generate realistic values based on channel type."""
-                  pv_lower = pv_name.lower()
-
-                  if 'current' in pv_lower:
-                     return 500.0 if 'beam' in pv_lower else 150.0
-                  elif 'pressure' in pv_lower:
-                     return 1e-9  # Vacuum pressure in Torr
-                  elif 'voltage' in pv_lower:
-                     return 5000.0
-                  elif 'temp' in pv_lower:
-                     return 25.0  # Temperature in °C
-                  elif 'position' in pv_lower:
-                     return 0.0
-                  else:
-                     return 100.0
-
-         **Features:**
-
-         - Accepts any channel name (no predefined channel list required)
-         - Adds configurable measurement noise (default 1%)
-         - Simulates network latency (default 10ms)
-         - Maintains state between reads/writes
-         - Infers units from channel names when possible
-
-         **Configuration** (``config.yml``):
-
-         .. code-block:: yaml
-
-            control_system:
-            type: mock  # Development mode (change to 'epics' for production)
-            connector:
-               timeout: 5.0
-               # Mock uses sensible defaults - no additional config needed
-
-      .. tab-item:: Mock Archiver
-
-         The mock archiver generates synthetic historical data with realistic patterns and trends.
-
-         The mock archiver creates time series with physics-inspired patterns:
-
-         .. code-block:: python
-
-            def _generate_time_series(self, pv_name: str, num_points: int):
-                  """Generate synthetic time series with realistic patterns."""
-                  t = np.linspace(0, 1, num_points)
-                  pv_lower = pv_name.lower()
-
-                  if ('beam' in pv_lower and 'current' in pv_lower) or 'dcct' in pv_lower:
-                     # Beam current: decay with periodic refills (10 cycles, 5% loss per cycle)
-                     base = 500.0
-                     decay = base * (1 - 0.05 * (t % 0.10) / 0.10)
-                     oscillation = 5 * np.sin(2 * np.pi * t * 5)
-                     noise = np.random.normal(0, base * 0.01, num_points)
-                     return decay + oscillation + noise
-
-                  elif 'pressure' in pv_lower:
-                     # Vacuum: slow drift with fast fluctuations
-                     base = 1e-9
-                     drift = base * (1 + 0.1 * t)
-                     fluctuation = base * 0.05 * np.sin(2 * np.pi * t * 10)
-                     return drift + fluctuation
-
-         **Features:**
-
-         - Accepts any channel names (no predefined channel list required)
-         - Generates time series with trends, oscillations, and noise
-         - Adjusts point density based on time range and precision
-         - Returns pandas DataFrames matching production archiver format
-
-         **Configuration** (``config.yml``):
-
-         .. code-block:: yaml
-
-            archiver:
-            type: mock_archiver  # Development mode (change to 'epics_archiver' for production)
-            # Mock uses sensible defaults - no additional config needed
-
-.. _step-7-observe-framework:
-
-Step 7: Observe the Framework in Action
+Step 5: Observe the Framework in Action
 =======================================
 
 Let's run a real multi-step query to see how the framework orchestrates complex tasks. We'll plot historical beam current data over 24 hours - a query that requires channel finding, time parsing, archiver data retrieval, and visualization.
+
+This walkthrough uses mock services that simulate real control system hardware and archiver data. This lets you experience the complete framework workflow without requiring access to production systems. The mock services are explained in detail in :ref:`step-6-mock-services`, and switching from mock to production control systems is covered in :ref:`migrate-to-production`.
 
 Start the Chat Interface
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -992,6 +552,458 @@ With the execution plan complete, the framework executes each planned step in se
       3. Retrieved 10,000 archiver data points across the 3 channels
       4. Generated 82 lines of Python code and created 2 visualization figures
       5. Delivered this comprehensive response with execution metadata
+
+
+.. _step-6-mock-services:
+
+Step 6: Mock Services for Development
+=====================================
+
+The Control Assistant template includes realistic mock services that let you develop and test your assistant without access to real control system hardware or archiver services.
+
+**Framework Integration**
+
+The mock services integrate seamlessly with the framework through the :doc:`connector abstraction layer <../developer-guides/05_production-systems/06_control-system-integration>`:
+
+1. **Pluggable Architecture**: Capabilities use ``ConnectorFactory`` to create connectors based on your ``config.yml`` settings
+2. **Zero Code Changes**: Switch from development to production by changing one config field (``type: mock`` → ``type: epics``) — see :ref:`migrate-to-production` for the complete migration guide
+3. **Realistic Behavior**: Mock services simulate network latency, measurement noise, and control system patterns
+4. **Universal Compatibility**: Accept any channel names—no need to predefine channel lists
+
+The mock services are automatically used when you run the generated template. This allows you to:
+
+- Complete the tutorial without hardware access
+- Verify that the framework behavior is correct
+- Understand how data flows through your capabilities
+- Test your configuration before connecting to production systems
+
+
+
+.. dropdown:: How Data is Generated
+   :color: info
+
+   .. tab-set::
+
+      .. tab-item:: Mock Control System
+
+         The mock control system simulates real-time channel value reads with realistic behavior.
+
+
+
+         The mock connector attempts to generate reasonable values based on channel naming patterns:
+
+         .. code-block:: python
+
+            def _generate_initial_value(self, pv_name: str) -> float:
+                  """Generate realistic values based on channel type."""
+                  pv_lower = pv_name.lower()
+
+                  if 'current' in pv_lower:
+                     return 500.0 if 'beam' in pv_lower else 150.0
+                  elif 'pressure' in pv_lower:
+                     return 1e-9  # Vacuum pressure in Torr
+                  elif 'voltage' in pv_lower:
+                     return 5000.0
+                  elif 'temp' in pv_lower:
+                     return 25.0  # Temperature in °C
+                  elif 'position' in pv_lower:
+                     return 0.0
+                  else:
+                     return 100.0
+
+         **Features:**
+
+         - Accepts any channel name (no predefined channel list required)
+         - Adds configurable measurement noise (default 1%)
+         - Simulates network latency (default 10ms)
+         - Maintains state between reads/writes
+         - Infers units from channel names when possible
+
+         **Configuration** (``config.yml``):
+
+         .. code-block:: yaml
+
+            control_system:
+            type: mock  # Development mode (change to 'epics' for production)
+            connector:
+               timeout: 5.0
+               # Mock uses sensible defaults - no additional config needed
+
+      .. tab-item:: Mock Archiver
+
+         The mock archiver generates synthetic historical data with realistic patterns and trends.
+
+         The mock archiver creates time series with physics-inspired patterns:
+
+         .. code-block:: python
+
+            def _generate_time_series(self, pv_name: str, num_points: int):
+                  """Generate synthetic time series with realistic patterns."""
+                  t = np.linspace(0, 1, num_points)
+                  pv_lower = pv_name.lower()
+
+                  if ('beam' in pv_lower and 'current' in pv_lower) or 'dcct' in pv_lower:
+                     # Beam current: decay with periodic refills (10 cycles, 5% loss per cycle)
+                     base = 500.0
+                     decay = base * (1 - 0.05 * (t % 0.10) / 0.10)
+                     oscillation = 5 * np.sin(2 * np.pi * t * 5)
+                     noise = np.random.normal(0, base * 0.01, num_points)
+                     return decay + oscillation + noise
+
+                  elif 'pressure' in pv_lower:
+                     # Vacuum: slow drift with fast fluctuations
+                     base = 1e-9
+                     drift = base * (1 + 0.1 * t)
+                     fluctuation = base * 0.05 * np.sin(2 * np.pi * t * 10)
+                     return drift + fluctuation
+
+         **Features:**
+
+         - Accepts any channel names (no predefined channel list required)
+         - Generates time series with trends, oscillations, and noise
+         - Adjusts point density based on time range and precision
+         - Returns pandas DataFrames matching production archiver format
+
+         **Configuration** (``config.yml``):
+
+         .. code-block:: yaml
+
+            archiver:
+            type: mock_archiver  # Development mode (change to 'epics_archiver' for production)
+            # Mock uses sensible defaults - no additional config needed
+
+
+
+
+.. _step-7-context-classes:
+
+Step 7: Context Classes for Control System Data
+===============================================
+
+Context classes are the structured data containers that flow between capabilities in the Osprey framework. They serve as the "shared memory" that enables capabilities to work together—one capability produces context (e.g., channel addresses), and downstream capabilities consume it (e.g., to retrieve values from those channels).
+
+**Why Context Classes Matter in Scientific Computing:**
+
+In data-intensive scientific applications, context classes do more than just store data—they provide **LLM-optimized access patterns** that guide the agent in generating correct Python code. Unlike pure ReAct agents that pass tool outputs directly back to the LLM's context window (which fails immediately with archiver data containing thousands of datapoints), context classes keep large datasets in state memory while exposing only metadata and access instructions to the LLM. Scientific data often involves complex nested structures, domain-specific identifiers with special characters (e.g., ``SR:CURRENT:RB``, ``MAG:QF[QF03]:CURRENT:SP`` in control systems), and large time series datasets that require intelligent handling. Production-grade context classes explicitly describe how to access nested data structures, handle special characters, manage large datasets, and avoid common mistakes that LLMs make when generating code for scientific data access.
+
+The control assistant template provides three production-validated context classes based on the deployed :doc:`ALS Accelerator Assistant <../example-applications/als-assistant>`. These patterns are broadly applicable to scientific computing applications beyond control systems:
+
+- **ChannelAddressesContext**: Results from channel finding (list of found addresses)
+- **ChannelValuesContext**: Live channel value reads (current measurements)
+- **ArchiverDataContext**: Historical time series data with intelligent downsampling
+
+**Demonstrating with Channel Values Context:**
+
+Let's examine the ``ChannelValuesContext`` as a complete example of production-grade patterns. This context stores live channel value reads and demonstrates critical techniques for handling scientific data with special characters and nested structures.
+
+.. admonition:: Requirements
+   :class: note
+
+   All context classes must inherit from ``CapabilityContext`` and implement two required methods: ``get_access_details()`` (for LLM code generation) and ``get_summary()`` (for human display).
+
+**Class Structure:**
+
+First, define a nested Pydantic model for individual channel values:
+
+.. code-block:: python
+
+   class ChannelValue(BaseModel):
+       """Individual channel value data - simple nested structure for Pydantic."""
+       value: str
+       timestamp: datetime  # Pydantic handles datetime serialization automatically
+       units: str
+
+Then define the context class with its data fields:
+
+.. code-block:: python
+
+   class ChannelValuesContext(CapabilityContext):
+       """
+       Result from channel value retrieval operation and context for downstream capabilities.
+       Based on ALS Assistant's PVValues pattern.
+       """
+       # Context type and category identifiers
+       CONTEXT_TYPE: ClassVar[str] = "CHANNEL_VALUES"
+       CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
+
+       # Data structure: dictionary mapping channel names to ChannelValue objects
+       channel_values: Dict[str, ChannelValue]
+
+       @property
+       def channel_count(self) -> int:
+           """Number of channels retrieved."""
+           return len(self.channel_values)
+
+**Required Method 1: get_access_details()**
+
+This method provides rich, LLM-optimized documentation for code generation. Notice how it explicitly explains the bracket vs. dot notation pattern:
+
+.. code-block:: python
+
+       def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+           """Rich description for LLM consumption."""
+           channels_preview = list(self.channel_values.keys())[:3]
+           example_channel = channels_preview[0] if channels_preview else "SR:CURRENT:RB"
+
+           # Get example value from the ChannelValue object
+           try:
+               example_value = self.channel_values[example_channel].value if example_channel in self.channel_values else '400.5'
+           except:
+               example_value = '400.5'
+
+           key_ref = key_name if key_name else "key_name"
+           return {
+               "channel_count": self.channel_count,
+               "channels": channels_preview,
+               "data_structure": "Dict[channel_name -> ChannelValue] where ChannelValue has .value, .timestamp, .units fields - IMPORTANT: use bracket notation for channel names (due to special characters like colons), but dot notation for fields",
+               "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.channel_values['CHANNEL_NAME'].value (NOT ['value'])",
+               "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.channel_values['{example_channel}'].value gives '{example_value}' (use .value not ['value'])",
+               "available_fields": ["value", "timestamp", "units"],
+           }
+
+.. dropdown:: Critical Pattern: Understanding Context Object Access
+   :color: warning
+
+   The ``data_structure`` field in ``get_access_details()`` explicitly guides the LLM on the correct access patterns for your context data. This is critical because the framework uses **Pydantic models for type safety**, not plain dictionaries:
+
+   **Context objects are Pydantic models**:
+      - Access fields with **dot notation**: ``context.CHANNEL_VALUES.key_name.channel_values`` ✅
+      - The ``channel_values`` field is a ``Dict[str, ChannelValue]`` (dictionary)
+
+   **Dictionary fields use bracket notation**:
+      - Access dictionary keys with **brackets**: ``channel_values['SR:CURRENT:RB']`` ✅
+      - This works for any key (with or without special characters)
+
+   **Nested Pydantic models use dot notation**:
+      - ``ChannelValue`` is a Pydantic model with fields ``.value``, ``.timestamp``, ``.units``
+      - Access these fields with **dot notation**: ``.value`` ✅
+      - **NOT** bracket notation: ``['value']`` ❌ (this would fail)
+
+   **Complete access pattern**:
+      ``context.CHANNEL_VALUES.key_name.channel_values['SR:CURRENT:RB'].value``
+
+      1. ``context.CHANNEL_VALUES.key_name`` → Pydantic object (dot notation)
+      2. ``.channel_values`` → Dict field on Pydantic object (dot notation)
+      3. ``['SR:CURRENT:RB']`` → Dictionary key access (bracket notation)
+      4. ``.value`` → Field on ChannelValue Pydantic object (dot notation)
+
+   Without this explicit guidance, LLMs frequently mix up dictionary access patterns with Pydantic field access, causing runtime errors. This pattern applies to any framework using Pydantic models for type-safe data structures.
+
+**Required Method 2: get_summary()**
+
+This method provides human-readable summaries for response generation, UI display, and debugging:
+
+.. code-block:: python
+
+       def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+           """
+           FOR HUMAN DISPLAY: Create readable summary for UI/debugging.
+           Always customize for better user experience.
+           """
+           channel_data = {}
+           for channel_name, channel_info in self.channel_values.items():
+               channel_data[channel_name] = {
+                   "value": channel_info.value,
+                   "timestamp": channel_info.timestamp,
+                   "units": channel_info.units
+               }
+
+           return {
+               "type": "Channel Values",
+               "channel_data": channel_data,
+           }
+
+.. admonition:: Key Pattern
+   :class: tip
+
+   ``get_access_details()`` provides **LLM-optimized documentation** for code generation, while ``get_summary()`` provides **human-readable** output for UIs and debugging. These serve different purposes: one teaches the LLM how to write correct code, the other presents data to users.
+
+**Additional Production Context Classes:**
+
+The control assistant template includes two more production-validated context classes, each demonstrating advanced patterns for specific scientific data scenarios.
+
+.. dropdown:: Complete Channel Addresses Context Implementation
+
+   Used for storing channel finding results. This is simpler than ChannelValuesContext but demonstrates the same core patterns.
+
+   .. code-block:: python
+
+      class ChannelAddressesContext(CapabilityContext):
+          """
+          Framework context for channel finding capability results.
+
+          This is the rich context object used throughout the framework for channel address data.
+          Based on ALS Assistant's PVAddresses pattern.
+          """
+          CONTEXT_TYPE: ClassVar[str] = "CHANNEL_ADDRESSES"
+          CONTEXT_CATEGORY: ClassVar[str] = "METADATA"
+
+          channels: List[str]  # List of found channel addresses
+          description: str  # Description or additional information about the channels
+
+          def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+              """Rich description for LLM consumption."""
+              key_ref = key_name if key_name else "key_name"
+              return {
+                  "channels": self.channels,
+                  "total_available": len(self.channels),
+                  "comments": self.description,
+                  "data_structure": "List of channel address strings",
+                  "access_pattern": f"context.{self.CONTEXT_TYPE}.{key_ref}.channels",
+                  "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.channels[0] gives '{self.channels[0] if self.channels else 'CHANNEL:NAME'}'",
+              }
+
+          def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+              """
+              FOR HUMAN DISPLAY: Create readable summary for UI/debugging.
+              Always customize for better user experience.
+              """
+              return {
+                  "type": "Channel Addresses",
+                  "total_channels": len(self.channels),
+                  "channel_list": self.channels,
+                  "description": self.description,
+              }
+
+.. dropdown:: Complete Archiver Data Context Implementation - Critical Production Pattern
+
+   The archiver data context demonstrates the **most critical production pattern**: automatic downsampling in ``get_summary()`` to prevent context window overflow while preserving full data access for analysis.
+
+   .. code-block:: python
+
+      class ArchiverDataContext(CapabilityContext):
+          """
+          Historical time series data from archiver.
+
+          This stores archiver data with datetime objects for full datetime functionality and consistency.
+          Based on ALS Assistant's ArchiverDataContext pattern with downsampling support.
+          """
+          CONTEXT_TYPE: ClassVar[str] = "ARCHIVER_DATA"
+          CONTEXT_CATEGORY: ClassVar[str] = "COMPUTATIONAL_DATA"
+
+          timestamps: List[datetime]  # List of datetime objects for full datetime functionality
+          precision_ms: int  # Data precision in milliseconds
+          time_series_data: Dict[str, List[float]]  # Channel name -> time series values (aligned with timestamps)
+          available_channels: List[str]  # List of available channel names for intuitive filtering
+
+          def get_access_details(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+              """Rich description of the archiver data structure."""
+              total_points = len(self.timestamps)
+
+              # Get example channel for demo purposes
+              example_channel = self.available_channels[0] if self.available_channels else "SR:CURRENT:RB"
+              example_value = self.time_series_data[example_channel][0] if self.available_channels and self.time_series_data.get(example_channel) else 100.5
+
+              key_ref = key_name if key_name else "key_name"
+              start_time = self.timestamps[0]
+              end_time = self.timestamps[-1]
+              duration = end_time - start_time
+
+              return {
+                  "total_points": total_points,
+                  "precision_ms": self.precision_ms,
+                  "channel_count": len(self.available_channels),
+                  "available_channels": self.available_channels,
+                  "time_info": f"Data spans from {start_time} to {end_time} (duration: {duration})",
+                  "data_structure": "4 attributes: timestamps (list of datetime objects), precision_ms (int), time_series_data (dict of channel_name -> list of float values), available_channels (list of channel names)",
+                  "CRITICAL_ACCESS_PATTERNS": {
+                      "get_channel_names": f"channel_names = context.{self.CONTEXT_TYPE}.{key_ref}.available_channels",
+                      "get_channel_data": f"data = context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['CHANNEL_NAME']",
+                      "get_timestamps": f"timestamps = context.{self.CONTEXT_TYPE}.{key_ref}.timestamps",
+                      "get_single_value": f"value = context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['CHANNEL_NAME'][index]",
+                      "get_time_at_index": f"time = context.{self.CONTEXT_TYPE}.{key_ref}.timestamps[index]"
+                  },
+                  "example_usage": f"context.{self.CONTEXT_TYPE}.{key_ref}.time_series_data['{example_channel}'][0] gives {example_value}, context.{self.CONTEXT_TYPE}.{key_ref}.timestamps[0] gives datetime object",
+                  "datetime_features": "Full datetime functionality: arithmetic, comparison, formatting with .strftime(), timezone operations"
+              }
+
+          def get_summary(self, key_name: Optional[str] = None) -> Dict[str, Any]:
+              """
+              FOR HUMAN DISPLAY: Format data for response generation.
+              Downsamples large datasets to prevent context window overflow.
+
+              🚨 CRITICAL PRODUCTION PATTERN 🚨
+
+              This method demonstrates intelligent downsampling for large time series data.
+              Without this, a 24-hour dataset at 1Hz (86,400 points) would consume massive
+              context window space and make the agent unusable.
+
+              The downsampling:
+              - Keeps max 10 sample points (configurable)
+              - Includes start, end, and evenly distributed middle points
+              - Adds statistics (min, max, mean, first, last)
+              - Warns LLM not to use downsampled data for final numerical answers
+              - Directs LLM to use ANALYSIS_RESULTS context instead
+              """
+              max_samples = 10
+
+              try:
+                  total_points = len(self.timestamps)
+
+                  # Create sample indices (start, middle, end)
+                  if total_points <= max_samples:
+                      sample_indices = list(range(total_points))
+                  else:
+                      # Include start, end, and evenly distributed middle points
+                      step = max(1, total_points // (max_samples - 2))
+                      sample_indices = [0] + list(range(step, total_points - 1, step))[:max_samples-2] + [total_points - 1]
+                      sample_indices = sorted(list(set(sample_indices)))  # Remove duplicates and sort
+
+                  # Sample timestamps
+                  sample_timestamps = [self.timestamps[i] for i in sample_indices]
+
+                  # Sample channel data
+                  channel_summary = {}
+                  for channel_name, values in self.time_series_data.items():
+                      sample_values = [values[i] for i in sample_indices]
+
+                      channel_summary[channel_name] = {
+                          "sample_values": sample_values,
+                          "sample_timestamps": sample_timestamps,
+                          "statistics": {
+                              "total_points": len(values),
+                              "min_value": min(values),
+                              "max_value": max(values),
+                              "first_value": values[0],
+                              "last_value": values[-1],
+                              "mean_value": sum(values) / len(values)
+                          }
+                      }
+
+                  return {
+                      "WARNING": "🚨 THIS IS DOWNSAMPLED ARCHIVER DATA - DO NOT USE FOR FINAL NUMERICAL ANSWERS! 🚨",
+                      "guidance": "For accurate analysis results, use ANALYSIS_RESULTS context instead of raw archiver data",
+                      "data_info": {
+                          "total_points": total_points,
+                          "precision_ms": self.precision_ms,
+                          "time_range": {
+                              "start": self.timestamps[0] if self.timestamps else None,
+                              "end": self.timestamps[-1] if self.timestamps else None
+                          },
+                          "downsampling_info": f"Showing {len(sample_indices)} sample points out of {total_points} total points"
+                      },
+                      "channel_data": channel_summary,
+                      "IMPORTANT_NOTE": "Use this only for understanding data structure. For analysis results, request ANALYSIS_RESULTS context."
+                  }
+
+              except Exception as e:
+                  import logging
+                  logger = logging.getLogger(__name__)
+                  logger.error(f"Error downsampling archiver data: {e}")
+                  return {
+                      "ERROR": f"Failed to downsample archiver data: {str(e)}",
+                      "WARNING": "Could not process archiver data - use ANALYSIS_RESULTS instead"
+                  }
+
+   **Critical Production Patterns:**
+
+   1. **Downsampling in get_summary()**: Prevents context window overflow by showing only 10 sample points + statistics instead of tens of thousands of data points
+   2. **Warning Messages**: Explicitly tells LLM not to use downsampled data for final numerical answers
+   3. **Statistics**: Provides min/max/mean/first/last values so LLM can understand data range without seeing all points
+   4. **Error Handling**: Gracefully handles edge cases and provides fallback error messages
+   5. **Full Data Access**: The LLM can still access the complete ``time_series_data`` dictionary directly when needed for analysis code generation
+
+
 
 Step 8: Adapting for Your Facility
 ==================================
