@@ -79,19 +79,36 @@ Phases 1-3: Task Analysis and Planning
 
 Your query goes through three intelligent phases that transform natural language into a structured execution plan. Each phase builds on the previous one to ensure accurate task understanding and optimal execution strategy.
 
+.. _phase1-task-extraction:
+
 .. tab-set::
 
    .. tab-item:: Phase 1: Task Extraction
 
-      Your natural language input goes through :doc:`task extraction <../developer-guides/04_infrastructure-components/02_task-extraction-system>`, which converts conversational messages into structured, actionable task descriptions.
+      The :doc:`task extraction system <../developer-guides/04_infrastructure-components/02_task-extraction-system>` analyzes your conversation to determine **context dependencies** - whether the current request needs information from previous messages or stored memories.
 
       **What's Happening:**
 
-      The task extraction system analyzes the complete conversation history and compresses it into a clear task statement. It also identifies dependencies on previous conversation context or stored user memories, enabling the framework to maintain conversational awareness without requiring every component to process the full chat history.
+      For the request "plot the beam current over the last 24 hours", task extraction:
+
+      1. Retrieves context from available :doc:`data sources <../developer-guides/05_production-systems/02_data-source-integration>` (currently ``core_user_memory`` for stored user memories, but applications can register additional sources like knowledge graphs or facility databases)
+      2. Checks if the request references previous conversation (``depends_on_chat_history: False`` - it's standalone)
+      3. Checks if it needs stored information (``depends_on_user_memory: False`` - no memory needed)
+      4. Extracts the task: "Plot the beam current over the last 24 hours" (essentially unchanged since it's self-contained)
 
       **Why This Matters:**
 
-      This single-point compression approach eliminates the need for every downstream component to understand conversational references. When you say "plot the beam current," the extractor resolves this into "Plot beam current measurements over the last 24 hours" - a complete, self-contained task description that can be classified and planned independently.
+      Task extraction serves three critical purposes:
+
+      1. **Reference Resolution**: If you say "show me that channel again" or "what was it an hour ago?", task extraction resolves these references using chat history, creating a self-contained task like "Display the beam current channel (SR:C01-BI:G02D<IBPM1:signal1>-AM)" or "Retrieve CPU usage from approximately 13:23 (one hour before last check)". This is what allows conversational follow-ups to work correctly.
+
+      2. **Context Reuse Optimization**: The dependency flags (``depends_on_chat_history`` and ``depends_on_user_memory``) tell the :doc:`orchestrator <../developer-guides/04_infrastructure-components/04_orchestrator-planning>` whether it should prioritize reusing context from previous executions. When ``depends_on_chat_history=True``, the orchestrator knows to check ``agent_context`` for existing channel addresses, time ranges, or other data from earlier in the conversation, avoiding redundant capability invocations.
+
+      3. **Performance & Scalability**: Chat history grows rapidly in typical AI agent conversations. Without task extraction, you'd need to pass the entire conversation history (plus all integrated data sources) to every downstream component. This would significantly slow all language model operations. Task extraction compresses multi-turn conversations into focused task descriptions, keeping token counts manageable and response times fast.
+
+      **Quality Control**: For task extraction to work properly with facility-specific terminology and conventions, you may need to customize the task extraction prompts to make the system aware of your facility's peculiarities. See :ref:`part4-framework-prompt-customization` in Part 4 for guidance on customizing task extraction and other framework prompts.
+
+      **Performance Note:** The framework can operate in :ref:`bypass mode <bypass-task-extraction-section>` (controlled via ``/task:off`` slash command or config) which skips LLM-based extraction and passes formatted context directly to classification, trading some intelligence for speed on standalone queries.
 
       .. dropdown:: 🖥️ **View Terminal Output**
          :color: light
@@ -102,7 +119,7 @@ Your query goes through three intelligent phases that transform natural language
             🔄 Processing: plot the beam current over the last 24
 
             INFO Task_Extraction: Starting Task Extraction and Processing
-            INFO Task_Extraction:  * Extracted: 'Plot the beam current measurements over the last 24 hours...'
+            INFO Task_Extraction:  * Extracted: 'Plot the beam current over the last 24 hours'
             INFO Task_Extraction:  * Builds on previous context: False
             INFO Task_Extraction:  * Uses memory context: False
             INFO ✅ Task_Extraction: Completed Task Extraction and Processing in 1.23s
@@ -110,20 +127,21 @@ Your query goes through three intelligent phases that transform natural language
       **Further Reading:** :doc:`../developer-guides/04_infrastructure-components/02_task-extraction-system`
 
    .. tab-item:: Phase 2: Classification
+      :name: phase2-classification
 
       The :doc:`classification system <../developer-guides/04_infrastructure-components/03_classification-and-routing>` determines which capabilities are needed to complete the extracted task. This uses LLM-based classification with the few-shot examples you provided in each capability's ``_create_classifier_guide()`` method.
 
       **What's Happening:**
 
-      Your assistant has 6 capabilities available - 3 from the Osprey framework and 3 you built for control systems:
+      Your assistant has 6 capabilities available (see :doc:`registry system <../developer-guides/03_core-framework-systems/03_registry-and-discovery>` for component registration details):
 
-      **Framework capabilities** (from ``osprey/registry/registry.py``):
+      **Framework capabilities:**
 
       - ``time_range_parsing`` - Parse time expressions like "last 24 hours" into datetime objects
       - ``memory`` - Save and retrieve information from user memory files
       - ``python`` - Generate and execute Python code for calculations and plotting
 
-      **Your application capabilities** (from ``my-control-assistant/src/my_control_assistant/registry.py``):
+      **Your application capabilities:**
 
       - ``channel_finding`` - Find control system channels using semantic search
       - ``channel_value_retrieval`` - Retrieve current values from control system channels
@@ -138,11 +156,15 @@ Your query goes through three intelligent phases that transform natural language
       - "Does this task require ``channel_value_retrieval``?" → **NO** (need historical data, not current values)
       - "Does this task require ``archiver_retrieval``?" → **YES** (need to retrieve time-series data)
 
-      The classification happens in parallel for efficiency, with each capability classified based on the examples and instructions provided in its ``_create_classifier_guide()`` method. The classification quality depends directly on the examples you provide - good examples lead to accurate capability selection, while poor examples cause misclassification.
+      The classification happens in parallel for efficiency, with each capability evaluated independently based on the examples and instructions in its ``_create_classifier_guide()`` method.
 
       **Why This Matters:**
 
-      Accurate capability selection is critical because it limits the amount of context, examples, and prompts that need to be shown to the orchestrator in the next phase. By selecting only the relevant capabilities, the orchestrator receives focused, targeted information rather than being overwhelmed with irrelevant examples. This improves both latency (fewer tokens to process) and accuracy (more relevant context for planning). You can always check your registered capabilities in ``registry.py`` and refine their classifier guides to improve selection accuracy.
+      Accurate capability selection is critical because it limits the amount of context, examples, and prompts shown to the orchestrator in the next phase. By selecting only relevant capabilities (4 of 6 in this example), the orchestrator receives focused, targeted information rather than being overwhelmed with irrelevant examples. This improves both latency (fewer tokens to process) and accuracy (more relevant context for planning). When planning a plotting task, the orchestrator sees plotting and data retrieval examples, not memory storage or unrelated capability patterns, leading to cleaner execution plans.
+
+      **Quality Control**: Your classifier examples directly determine selection accuracy. Good examples (clear positive/negative cases with reasoning) lead to accurate capability selection. Poor examples cause misclassification and failed executions. You can always refine the ``_create_classifier_guide()`` methods in your capabilities to improve accuracy.
+
+      **Performance Note:** The framework can operate in :ref:`bypass mode <bypass-capability-selection-section>` (controlled via ``/caps:off`` slash command or config) which skips classification and activates all capabilities, useful for debugging when you're unsure which capabilities should be active.
 
       .. dropdown:: 🖥️ **View Terminal Output**
          :color: light
@@ -170,18 +192,29 @@ Your query goes through three intelligent phases that transform natural language
 
       **What's Happening:**
 
-      Rather than making decisions step-by-step during execution, the orchestrator analyzes all available capabilities and creates a complete plan showing exactly how each capability will be used. The plan identifies which steps can run in parallel (Steps 1-2: channel finding and time parsing have no dependencies) and which must wait for inputs (Step 3: archiver retrieval needs results from both Steps 1-2).
+      Rather than making decisions step-by-step during execution, the orchestrator analyzes all available capabilities and creates a complete execution plan showing exactly how each capability will be used, what inputs each step requires, and how results flow between steps.
+
+      For this query, the orchestrator creates a 5-step plan with clear dependency relationships:
+
+      .. code-block:: text
+
+         Step 1: channel_finding (no dependencies)
+         Step 2: time_range_parsing (no dependencies)
+         Step 3: archiver_retrieval (requires: Steps 1, 2)
+         Step 4: python (requires: Step 3)
+         Step 5: respond (requires: Step 4)
+
+      The orchestrator uses the ``_create_orchestrator_guide()`` examples you provided in each capability to understand when and how to use each capability effectively.
 
       **Why This Matters:**
 
-      Upfront planning enables several critical features:
+      1. **Transparency for High-Stakes Environments**: Complete visibility into planned operations before execution begins - which channels will be accessed, what data will be retrieved, and what operations will be performed. This is essential in scientific facilities and production environments where control system interactions require careful oversight.
 
-      1. **Transparency**: You can see exactly what will happen before execution begins
-      2. **Approval Workflows**: Plans can be reviewed and approved before any hardware interaction
-      3. **Optimization**: The orchestrator can identify parallel execution opportunities
-      4. **Debugging**: When something goes wrong, you can see where the plan diverged from expectations
+      2. **Human-in-the-Loop Safety**: The explicit execution plan enables :doc:`human approval workflows <../developer-guides/05_production-systems/01_human-approval-workflows>` where operators can review and edit plans before hardware interaction. Unlike reactive approaches that only show what already happened, the orchestrator enables prevention-focused safety.
 
-      The orchestrator uses the ``_create_orchestrator_guide()`` examples you provided in each capability to understand when and how to use each capability effectively.
+      3. **Dependency Analysis**: The orchestrator explicitly identifies which steps depend on others and which are independent. While the framework currently executes steps sequentially, the dependency structure positions Osprey for future optimizations like parallel execution of independent steps (see `GitHub issue #19 <https://github.com/als-apg/osprey/issues/19>`_ for planned improvements)
+
+      **Quality Control**:
 
       .. dropdown:: 🖥️ **View Terminal Output**
          :color: light
@@ -228,7 +261,7 @@ Your query goes through three intelligent phases that transform natural language
             INFO Orchestrator: ==================================================
             INFO ✅ Orchestrator: Final execution plan ready with 5 steps
 
-      **Further Reading:** :doc:`../developer-guides/04_infrastructure-components/04_orchestrator-planning`, :doc:`../developer-guides/01_understanding-the-framework/04_orchestrator-first-philosophy`, :ref:`Orchestrator Guide example <hello-world-orchestrator-guide>`
+      **Further Reading:** :doc:`../developer-guides/04_infrastructure-components/04_orchestrator-planning`
 
 .. dropdown:: 🔍 **Want to Review This Plan Before Execution? Use Planning Mode!**
    :color: primary
@@ -611,8 +644,6 @@ The mock services are automatically used when you run the generated template. Th
 
          The mock control system simulates real-time channel value reads with realistic behavior.
 
-
-
          The mock connector attempts to generate reasonable values based on channel naming patterns:
 
          .. code-block:: python
@@ -694,9 +725,6 @@ The mock services are automatically used when you run the generated template. Th
             archiver:
             type: mock_archiver  # Development mode (change to 'epics_archiver' for production)
             # Mock uses sensible defaults - no additional config needed
-
-
-
 
 .. _step-7-context-classes:
 
@@ -1103,7 +1131,7 @@ The structure of your control system determines your approach:
 
       **Step 1:** Create CSV with your channels:
 
-      .. code-block:: csv
+      .. code-block:: text
 
          address,description,family_name,instances,sub_channel
          BEAM_CURRENT_RB,Main beam current readback in mA,,,
@@ -1418,7 +1446,7 @@ The pipeline integration enables rich result presentation:
 
 - Markdown responses are rendered as formatted text, tables, and code blocks
 - Figures and plots are embedded directly in the conversation (via agent state registration)
-- Generated code is packaged as Jupyter notebooks with clickable access links (see `Configuring Python Execution Environment`_ above)
+- Generated code is packaged as Jupyter notebooks with clickable access links (see `Python Execution: Jupyter Container vs Local`_ below)
 - Conversation context is preserved across messages, with past sessions organized in the sidebar
 
 .. figure:: /_static/screenshots/openwebui_demo.png

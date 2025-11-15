@@ -30,6 +30,8 @@ An important customization you can make is adding facility-specific context to t
 
 See :doc:`control-assistant-part2-channel-finder` for comprehensive channel finder customization guidance.
 
+.. _part4-framework-prompt-customization:
+
 Framework Prompt Customization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -451,7 +453,7 @@ For experienced users, the framework provides several advanced features for opti
 Slash Commands
 ^^^^^^^^^^^^^^
 
-The framework supports runtime commands prefixed with ``/`` for dynamic control. See :doc:`../developer-guides/03_core-framework-systems/08_command-system` for implementation details and how to add custom commands.
+The framework supports runtime commands prefixed with ``/`` for dynamic control (see implementation details in the command processing code).
 
 **Planning and Execution:**
 
@@ -470,6 +472,8 @@ The framework supports runtime commands prefixed with ``/`` for dynamic control.
 
    /caps:off          # Bypass capability selection (activate all capabilities)
    /caps:on           # Enable capability selection (default)
+
+.. _bypass-task-extraction-section:
 
 .. tab-set::
 
@@ -500,6 +504,7 @@ The framework supports runtime commands prefixed with ``/`` for dynamic control.
       **Further Reading:** :ref:`Task Extraction Bypass <bypass-task-extraction-section>`
 
    .. tab-item:: Capability Selection Bypass
+      :name: bypass-capability-selection-section
 
       The ``/caps:off`` command skips capability classification and activates all registered capabilities.
 
