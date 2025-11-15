@@ -97,6 +97,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Critical fix for models that require more tokens to generate complete JSON structures
   - Previously caused "yes" responses to be rejected due to incomplete structured output
   - Ensures reliable approval parsing across all supported models
+- **Control Assistant Tutorial Documentation**: Fixed project structure tree and file path inconsistencies
+  - Part 1: Removed non-existent `mock_control_system/` and `mock_archiver/` directories (they're in framework, not project)
+  - Part 1: Added missing files that are actually generated: `address_list.csv`, benchmark datasets, `llm_channel_namer.py`, `data/README.md`
+  - Part 2: Fixed incorrect database output path (`data/processed/` → `data/channel_databases/`)
+  - Part 2: Added `CSV_EXAMPLE.csv` reference and clarified distinction between format reference and real UCSB FEL data
+  - Documentation now accurately reflects actual generated project structure
 - **Environment Variable Substitution**: Added support for bash-style default value syntax `${VAR:-default}`
   - Previously only supported simple `${VAR}` and `$VAR` forms
   - Now properly resolves environment variables with fallback defaults

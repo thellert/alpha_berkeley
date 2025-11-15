@@ -74,39 +74,42 @@ The interactive menu provides the best onboarding experience with channel finder
    ├── src/my_control_assistant/
    │   ├── capabilities/                   # ← Agent capabilities (Osprey integration)
    │   │   ├── channel_finding.py          # Wraps channel_finder service
-   │   │   ├── channel_value_retrieval.py  # Mock live value reads
-   │   │   └── archiver_retrieval.py       # Mock historical data
+   │   │   ├── channel_value_retrieval.py  # Live value reads via ConnectorFactory
+   │   │   └── archiver_retrieval.py       # Historical data via ConnectorFactory
    │   ├── services/                       # ← Service Layer (key pattern!)
-   │   │   ├── channel_finder/             # Standalone, testable business logic
-   │   │   │   ├── pipelines/              # Two pipeline architectures:
-   │   │   │   │   ├── in_context/         #   - Semantic search (small systems)
-   │   │   │   │   └── hierarchical/       #   - Hierarchical nav (large systems)
-   │   │   │   ├── databases/              # Database adapters (hierarchical, legacy)
-   │   │   │   ├── prompts/                # Pipeline-specific prompts
-   │   │   │   │   ├── in_context/         #   (channel_matcher, query_splitter, etc.)
-   │   │   │   │   └── hierarchical/
-   │   │   │   ├── benchmarks/             # Evaluation system (runner, models)
-   │   │   │   ├── core/                   # Base classes & models
-   │   │   │   ├── llm/                    # LLM completion utilities
-   │   │   │   ├── utils/                  # Config & prompt loading
-   │   │   │   ├── service.py              # Main service API
-   │   │   │   └── cli.py                  # Service CLI
-   │   │   ├── mock_control_system/        # Live value simulator
-   │   │   └── mock_archiver/              # Historical data simulator
+   │   │   └── channel_finder/             # Standalone, testable business logic
+   │   │       ├── pipelines/              # Two pipeline architectures:
+   │   │       │   ├── in_context/         #   - Semantic search (small systems)
+   │   │       │   └── hierarchical/       #   - Hierarchical nav (large systems)
+   │   │       ├── databases/              # Database adapters (template, hierarchical, legacy)
+   │   │       ├── prompts/                # Pipeline-specific prompts
+   │   │       │   ├── in_context/         #   (channel_matcher, query_splitter, etc.)
+   │   │       │   └── hierarchical/
+   │   │       ├── benchmarks/             # Evaluation system (runner, models)
+   │   │       ├── core/                   # Base classes & models
+   │   │       ├── llm/                    # LLM completion utilities
+   │   │       ├── utils/                  # Config & prompt loading
+   │   │       ├── service.py              # Main service API
+   │   │       └── cli.py                  # Service CLI
    │   ├── data/                           # ← Your data goes here
    │   │   ├── channel_databases/          # Generated databases
    │   │   │   ├── in_context.json
    │   │   │   ├── hierarchical.json
    │   │   │   └── TEMPLATE_EXAMPLE.json
    │   │   ├── benchmarks/
-   │   │   │   ├── datasets/               # Test queries & expected results
+   │   │   │   ├── datasets/               # Test query datasets
+   │   │   │   │   ├── in_context_main.json
+   │   │   │   │   └── hierarchical_benchmark.json
    │   │   │   └── results/                # Benchmark output
-   │   │   ├── raw/                        # Your CSV files
-   │   │   │   └── CSV_EXAMPLE.csv
-   │   │   └── tools/                      # Database utilities
-   │   │       ├── build_channel_database.py
-   │   │       ├── validate_database.py
-   │   │       └── preview_database.py
+   │   │   ├── raw/                        # Raw address data (CSV files)
+   │   │   │   ├── CSV_EXAMPLE.csv         # Format reference with examples
+   │   │   │   └── address_list.csv        # Real UCSB FEL channel data
+   │   │   ├── tools/                      # Database utilities
+   │   │   │   ├── build_channel_database.py
+   │   │   │   ├── validate_database.py
+   │   │   │   ├── preview_database.py
+   │   │   │   └── llm_channel_namer.py
+   │   │   └── README.md                   # Data directory documentation
    │   ├── context_classes.py              # Context type definitions
    │   └── registry.py                     # Capability registry
    ├── services/                           # Docker services

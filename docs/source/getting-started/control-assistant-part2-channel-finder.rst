@@ -236,6 +236,8 @@ That's it—no code changes required. The template includes complete implementat
 
             **Step 1: Prepare Your CSV File**
 
+            For CSV format reference, see ``data/raw/CSV_EXAMPLE.csv`` which includes inline documentation of all supported patterns. The template also includes ``data/raw/address_list.csv`` with real UCSB FEL channel data (53 standalone channels + 5 device families = 255 total expanded channels).
+
             Create a CSV with your channel data (typically in ``src/my_control_assistant/data/raw/``) in this format:
 
             .. code-block:: csv
@@ -276,10 +278,11 @@ That's it—no code changes required. The template includes complete implementat
                python src/my_control_assistant/data/tools/build_channel_database.py --use-llm --config config.yml
 
 
-            The tool uses example UCSB FEL data included in the template by default:
+            The template includes working UCSB FEL accelerator data by default:
 
-            - **Input CSV:** ``data/raw/address_list.csv``
-            - **Output Database:** ``data/processed/channel_database.json``
+            - **Format Reference:** ``data/raw/CSV_EXAMPLE.csv`` (documented examples of all patterns)
+            - **Working Example:** ``data/raw/address_list.csv`` (real UCSB FEL channels)
+            - **Default Output:** ``data/channel_databases/in_context.json`` (pre-built database)
 
             For your facility's data, specify custom paths:
 
