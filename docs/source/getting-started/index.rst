@@ -51,7 +51,7 @@ By following this comprehensive learning path, you'll have:
       **Outcome:**
       Working dev environment
 
-   .. grid-item-card:: 📦 1a. Conceptual Tutorial
+   .. grid-item-card:: 🧠 1a. Conceptual Tutorial
       :link: conceptual-tutorial
       :link-type: doc
       :class-header: bg-success text-white
