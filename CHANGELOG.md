@@ -47,7 +47,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Channel Finder Presentation Mode**: Renamed `presentation_mode` value from "compact" to "template"
   - Updated all config files, documentation, and database implementations
   - Method `_format_compact()` renamed to `_format_template()`
-- **Hello World Tutorial**: Updated to explicitly recommend Claude Haiku 4.5 (`claude-haiku-4-20251015`)
+- **Hello World Tutorial**: Simplified and improved tutorial UX
+  - Removed unnecessary container deployment steps (tutorial only needs `osprey chat`)
+  - Added "Ready to Dive In?" admonition for users who want to run first, learn later
+  - Added comprehensive API key dropdown matching Control Assistant tutorial format
+  - Improved messaging to welcome institutional providers (CBorg, Stanford AI Playground) while recommending Claude Haiku 4.5
+  - Simplified prerequisites to focus on essentials (Python, framework, API key)
+  - Updated Step 7 from "Deploy and Test" to "Run Your Agent" with streamlined setup
+- **Hello World Weather Template**: Simplified template to match minimal tutorial scope
+  - Removed container runtime configuration (no containers needed for basic tutorial)
+  - Removed safety controls (approval, execution_control) - not relevant for simple weather queries
+  - Removed execution infrastructure (EPICS, Jupyter modes, python_executor) - production features only
+  - Template system now conditionally generates config sections based on template type
+  - Services directory no longer created for hello_world_weather template
+  - Generated config.yml now contains only essential sections: project identity, models, API providers, logging
+  - Updated template README with streamlined setup instructions and accurate time estimate
+  - Test coverage ensures hello_world_weather stays minimal (no production features)
+- **Environment Template**: Updated `env.example` with clearer API key guidance
+  - Fixed typo: `ANTHROPIC_API_KEY_o` → `ANTHROPIC_API_KEY`
+  - Reordered to prioritize Anthropic (recommended) while showing institutional alternatives
+  - Added helpful comments about provider flexibility
+- **Configuration System**: Enhanced to handle missing configuration sections gracefully
+  - Added `_get_approval_config()` with sensible defaults for tutorial environments
+  - Added `_get_execution_config()` with local Python execution defaults
+  - Removed strict validation in approval_manager that required all sections to be present
+  - Enables minimal templates (like hello_world_weather) to work without production-only config sections
+  - Provides helpful warnings when using framework defaults instead of explicit configuration
 - **Control Assistant Part 3 Documentation**: Improved classification phase explanation
   - Added concrete list of all 6 capabilities (3 framework + 3 application) with file locations
   - Clarified why classification matters: reduces orchestrator context for better latency and accuracy

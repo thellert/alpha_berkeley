@@ -230,6 +230,7 @@ class TemplateManager:
             "current_python_env": current_python,  # Actual path to current Python
             "default_provider": "cborg",
             "default_model": "anthropic/claude-haiku",
+            "template_name": template_name,  # Make template name available in config.yml
             # Add detected environment variables
             "env": detected_env_vars,
             **(context or {})
@@ -262,8 +263,9 @@ class TemplateManager:
         # 4. Create project structure
         self._create_project_structure(project_dir, template_name, ctx)
 
-        # 5. Copy services
-        self.copy_services(project_dir)
+        # 5. Copy services (skip for hello_world_weather as it doesn't use containers)
+        if template_name != 'hello_world_weather':
+            self.copy_services(project_dir)
 
         # 6. Create src directory and application code
         src_dir = project_dir / "src"

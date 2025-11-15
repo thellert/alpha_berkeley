@@ -20,14 +20,13 @@ By the end of this guide, you'll have a working agent that responds to queries l
    :color: info
    :icon: list-unordered
 
-   **Required:** Osprey framework installed via ``pip install osprey-framework``
+   **Required:**
 
-   If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
+   - Python 3.11+ with virtual environment
+   - Osprey framework installed via ``pip install osprey-framework``
+   - API key from your chosen provider (we recommend Claude Haiku 4.5, but any OpenAI-compatible provider works including institutional services)
 
-   - Install Docker Desktop or Podman (container runtime)
-   - Set up Python 3.11 virtual environment
-   - Install the framework package
-   - Configure your environment
+   If you haven't installed the framework yet, follow the :doc:`installation guide <installation>`.
 
    **Optional but Recommended:** Basic understanding of Python and async/await patterns.
 
@@ -76,15 +75,19 @@ Either method generates a complete, self-contained project with the following st
    ├── src/
    │   └── weather_agent/
    │       ├── __init__.py
-   │       ├── mock_weather_api.py
-   │       ├── context_classes.py
-   │       ├── registry.py
+   │       ├── mock_weather_api.py         # Mock data source (no external APIs)
+   │       ├── context_classes.py          # Data models for weather information
+   │       ├── registry.py                 # Component registration
    │       └── capabilities/
    │           ├── __init__.py
-   │           └── current_weather.py
-   ├── services/                  # Container service configurations
-   ├── config.yml                 # Complete configuration
-   └── .env.example               # API key template
+   │           └── current_weather.py      # Weather retrieval logic
+   ├── config.yml                          # Model & provider configuration
+   └── .env.example                        # API key template
+
+.. admonition:: Want to see it in action first?
+   :class: tip
+
+   If you're the type who likes to play with the toy before reading the manual, jump straight to :ref:`Step 7: Run Your Agent <hello-world-deploy-test>` to get your agent running in minutes! You can always come back here to understand how everything works under the hood.
 
 This tutorial will walk you through understanding how each component works and how they integrate together to create a complete AI agent application.
 
@@ -853,64 +856,87 @@ The ``config.yml`` includes:
        provider: anthropic
        model_id: claude-haiku-4-20251015
 
-   # Service deployments
-   deployed_services:
-     - osprey.jupyter
-     - osprey.open-webui
-     - osprey.pipelines
-
-   # Pipeline configuration
-   pipeline:
-     name: "Weather Agent"
-
 .. admonition:: Model Recommendation
    :class: tip
 
-   **We recommend Claude Haiku 4.5.** It provides excellent performance and latency for small applications.
+   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works exceptionally well with the framework's structured outputs. However, any OpenAI-compatible provider works - including institutional services like LBNL CBorg or Stanford AI Playground.
 
 **Customization:**
 
 You can customize the configuration by editing ``config.yml``:
 
 1. **Change model providers** - Update ``provider`` fields under ``models``
-2. **Add/remove services** - Modify ``deployed_services`` list
-3. **Update paths** - Set ``project_root`` to your project directory
-4. **API keys** - Set in ``.env`` file (not in ``config.yml``)
+2. **API keys** - Set in ``.env`` file (not in ``config.yml``)
 
-Step 7: Deploy and Test Your Agent
------------------------------------
+.. _hello-world-deploy-test:
 
-Now that you understand the components, let's deploy and test the agent.
+Step 7: Run Your Agent
+-----------------------
 
-**1. Deploy Services**
+Now that you understand the components, let's run and test your agent!
 
-Start the containerized services using :doc:`osprey deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+**1. Configure Your API Key**
 
-.. code-block:: bash
-
-   # Start services in background
-   osprey deploy up --detached
-
-   # Check they're running
-   podman ps
-
-**2. Configure Environment**
-
-Ensure your API keys are set in ``.env``:
+Set up your ``.env`` file with your API key:
 
 .. code-block:: bash
 
-   # Copy template
+   # Copy the template
    cp .env.example .env
 
-   # Edit and add your Anthropic API key (required for Claude Haiku)
-   # ANTHROPIC_API_KEY=your-key-here
+   # Edit .env and add your API key
+   # ANTHROPIC_API_KEY=your-key-here     # If using Anthropic (recommended)
+   # CBORG_API_KEY=your-key-here         # If using LBNL CBorg
+   # OPENAI_API_KEY=your-key-here        # If using OpenAI
+   # GOOGLE_API_KEY=your-key-here        # If using Google
 
-   # Optional: Other providers if you want to experiment
-   # OPENAI_API_KEY=your-key-here
-   # CBORG_API_KEY=your-key-here
+.. admonition:: Model Recommendation
+   :class: tip
 
-**3. Start Chat Interface**
+   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works exceptionally well with the framework's structured outputs. However, the framework works with any provider - including institutional services like LBNL CBorg, Stanford AI Playground, or commercial providers like OpenAI and Google.
+
+.. dropdown:: **Where do I get an API key?**
+   :color: info
+   :icon: key
+
+   Choose your provider for instructions on obtaining an API key:
+
+   **Anthropic (Claude)** - Recommended
+
+   1. Visit: https://console.anthropic.com/
+   2. Sign up or log in with your account
+   3. Navigate to 'API Keys' in the settings
+   4. Click 'Create Key' and name your key
+   5. Copy the key (shown only once!)
+
+   **OpenAI (GPT)**
+
+   1. Visit: https://platform.openai.com/api-keys
+   2. Sign up or log in to your OpenAI account
+   3. Add billing information if not already set up
+   4. Click '+ Create new secret key'
+   5. Name your key and copy it (shown only once!)
+
+   **Google (Gemini)**
+
+   1. Visit: https://aistudio.google.com/app/apikey
+   2. Sign in with your Google account
+   3. Click 'Create API key'
+   4. Select a Google Cloud project or create a new one
+   5. Copy the generated API key
+
+   **LBNL CBorg**
+
+   1. Visit: https://cborg.lbl.gov
+   2. As a Berkeley Lab employee, click 'Request API Key'
+   3. Create an API key ($50/month per user allocation)
+   4. Copy the key provided
+
+   **Ollama (Local Models)**
+
+   Ollama runs locally and does not require an API key. Simply install Ollama and ensure it's running.
+
+**2. Start the Chat Interface**
 
 Launch the interactive chat using :doc:`osprey chat <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
@@ -918,7 +944,7 @@ Launch the interactive chat using :doc:`osprey chat <../developer-guides/02_quic
 
    osprey chat
 
-**4. Test Your Agent**
+**3. Test Your Agent**
 
 Ask weather-related questions:
 
@@ -1012,7 +1038,7 @@ The user query "What's the weather in San Francisco right now?" is processed by 
 .. admonition:: What's Happening
    :class: important
 
-   Your capability is now running! The status messages come from your ``streamer.status()`` (OpenWebUI) and ``logger.info()`` (CLI) calls, providing real-time feedback as your business logic executes.
+   Your capability is now running! The status messages come from your ``streamer.status()`` and ``logger.info()`` calls, providing real-time feedback as your business logic executes.
 
 **Final Result**
 
@@ -1048,6 +1074,4 @@ By completing this tutorial, you've created an agentic system that demonstrates:
 
    - "/planning What's the weather in Prague?"
 
-   Try using the OpenWebUI interface by running your agent through the pipeline container service.
-
-   **Ready for more?** :doc:`Build a control system assistant <control-assistant-entry>` with production-grade patterns: channel finding pipelines, service layer architecture, and comprehensive tooling.
+   **Ready for more?** :doc:`Build a control system assistant <control-assistant-entry>` with production-grade patterns: channel finding pipelines, service layer architecture, and comprehensive tooling including web UI integration.
