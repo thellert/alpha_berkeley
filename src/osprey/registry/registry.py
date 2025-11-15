@@ -79,6 +79,7 @@ Examples:
 
 from .base import (
     CapabilityRegistration,
+    ConnectorRegistration,
     ContextClassRegistration,
     DataSourceRegistration,
     FrameworkPromptProviderRegistration,
@@ -434,14 +435,49 @@ class FrameworkRegistryProvider(RegistryConfigProvider):
                 ),
             ],
 
+            # Framework connectors for control systems and archivers
+            connectors=[
+                # Control system connectors
+                ConnectorRegistration(
+                    name="mock",
+                    connector_type="control_system",
+                    module_path="osprey.connectors.control_system.mock_connector",
+                    class_name="MockConnector",
+                    description="Mock control system connector for development and testing"
+                ),
+                ConnectorRegistration(
+                    name="epics",
+                    connector_type="control_system",
+                    module_path="osprey.connectors.control_system.epics_connector",
+                    class_name="EPICSConnector",
+                    description="EPICS Channel Access control system connector"
+                ),
+                # Archiver connectors
+                ConnectorRegistration(
+                    name="mock_archiver",
+                    connector_type="archiver",
+                    module_path="osprey.connectors.archiver.mock_archiver_connector",
+                    class_name="MockArchiverConnector",
+                    description="Mock archiver connector for development and testing"
+                ),
+                ConnectorRegistration(
+                    name="epics_archiver",
+                    connector_type="archiver",
+                    module_path="osprey.connectors.archiver.epics_archiver_connector",
+                    class_name="EPICSArchiverConnector",
+                    description="EPICS Archiver Appliance connector"
+                ),
+            ],
+
             # Simplified initialization order - decorators and subgraphs are imported directly when needed
             initialization_order=[
                 "context_classes",    # First - needed by capabilities
                 "data_sources",       # Second - needed by capabilities
                 "providers",          # Third - AI model providers early for use by capabilities
-                "core_nodes",         # Fourth - infrastructure nodes
-                "services",           # Fifth - internal service graphs
-                "capabilities",       # Sixth - depends on everything else including services
+                "connectors",         # Fourth - control system/archiver connectors
+                "core_nodes",         # Fifth - infrastructure nodes
+                "services",           # Sixth - internal service graphs
+                "capabilities",       # Seventh - depends on everything else including services
                 "framework_prompt_providers"  # Last - imports applications that may need capabilities/context
             ]
         )

@@ -341,6 +341,62 @@ class ProviderRegistration:
     class_name: str
 
 @dataclass
+class ConnectorRegistration:
+    """Registration metadata for control system and archiver connectors.
+
+    Defines the metadata required for lazy loading of connector classes.
+    Connectors are registered with the ConnectorFactory during registry
+    initialization, providing unified management of all framework components.
+
+    :param name: Unique connector name (e.g., 'epics', 'tango', 'mock')
+    :type name: str
+    :param connector_type: Type of connector ('control_system' or 'archiver')
+    :type connector_type: str
+    :param module_path: Python module path for lazy import
+    :type module_path: str
+    :param class_name: Connector class name within the module
+    :type class_name: str
+    :param description: Human-readable description
+    :type description: str
+
+    Examples:
+        Control system connector registration::
+
+            >>> ConnectorRegistration(
+            ...     name="labview",
+            ...     connector_type="control_system",
+            ...     module_path="my_app.connectors.labview_connector",
+            ...     class_name="LabVIEWConnector",
+            ...     description="LabVIEW Web Services connector for NI systems"
+            ... )
+
+        Archiver connector registration::
+
+            >>> ConnectorRegistration(
+            ...     name="custom_archiver",
+            ...     connector_type="archiver",
+            ...     module_path="my_app.connectors.custom_archiver",
+            ...     class_name="CustomArchiverConnector",
+            ...     description="Custom facility archiver connector"
+            ... )
+
+    .. note::
+       The connector classes are registered with ConnectorFactory during
+       registry initialization, enabling lazy loading while maintaining
+       the factory pattern for runtime connector creation.
+
+    .. seealso::
+       :class:`osprey.connectors.factory.ConnectorFactory` : Runtime connector factory
+       :class:`osprey.connectors.control_system.base.ControlSystemConnector` : Base class for control system connectors
+       :class:`osprey.connectors.archiver.base.ArchiverConnector` : Base class for archiver connectors
+    """
+    name: str
+    connector_type: str  # 'control_system' or 'archiver'
+    module_path: str
+    class_name: str
+    description: str
+
+@dataclass
 class RegistryConfig:
     """Complete registry configuration with all component metadata.
 
@@ -381,6 +437,8 @@ class RegistryConfig:
     :type framework_prompt_providers: list[FrameworkPromptProviderRegistration]
     :param providers: Registration entries for AI model providers (optional)
     :type providers: list[ProviderRegistration]
+    :param connectors: Registration entries for control system and archiver connectors (optional)
+    :type connectors: list[ConnectorRegistration]
     :param framework_exclusions: Framework component names to exclude by type (optional)
     :type framework_exclusions: dict[str, list[str]]
     :param initialization_order: Component type initialization sequence (optional)
@@ -398,6 +456,7 @@ class RegistryConfig:
     execution_policy_analyzers: list[ExecutionPolicyAnalyzerRegistration] = field(default_factory=list)
     framework_prompt_providers: list[FrameworkPromptProviderRegistration] = field(default_factory=list)
     providers: list[ProviderRegistration] = field(default_factory=list)
+    connectors: list[ConnectorRegistration] = field(default_factory=list)
     framework_exclusions: dict[str, list[str]] = field(default_factory=dict)
     initialization_order: list[str] = field(default_factory=lambda: [
         "context_classes",
@@ -405,6 +464,7 @@ class RegistryConfig:
         "domain_analyzers",
         "execution_policy_analyzers",
         "providers",
+        "connectors",
         "capabilities",
         "framework_prompt_providers",
         "core_nodes",

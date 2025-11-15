@@ -2,7 +2,14 @@
 Hello World Tutorial
 ===============================
 
-This tutorial uses a very basic weather agent to demonstrate the complete framework workflow with minimal complexity.
+This tutorial builds a simple weather agent to get you from zero to a working Osprey
+application quickly. You'll learn the essentials: project structure, capability
+implementation, context classes, and running your agent.
+
+We use a single capability with straightforward logic to keep things minimal while
+you learn the framework basics. The :doc:`conceptual-tutorial` and
+:doc:`control-assistant` demonstrate more complex patterns when you're ready
+to scale up.
 
 What You'll Build
 =================
@@ -20,14 +27,13 @@ By the end of this guide, you'll have a working agent that responds to queries l
    :color: info
    :icon: list-unordered
 
-   **Required:** Osprey framework installed via ``pip install osprey-framework``
+   **Required:**
 
-   If you haven't installed the framework yet, follow the :doc:`installation guide <installation>` to:
+   - Python 3.11+ with virtual environment
+   - Osprey framework installed via ``pip install osprey-framework``
+   - API key from your chosen provider (we recommend Claude Haiku 4.5, but any OpenAI-compatible provider works including institutional services)
 
-   - Install Docker Desktop or Podman (container runtime)
-   - Set up Python 3.11 virtual environment
-   - Install the framework package
-   - Configure your environment
+   If you haven't installed the framework yet, follow the :doc:`installation guide <installation>`.
 
    **Optional but Recommended:** Basic understanding of Python and async/await patterns.
 
@@ -47,7 +53,7 @@ Step 1: Create the Project
       This launches an interactive terminal UI that will:
 
       1. Guide you through template selection (choose ``hello_world_weather``)
-      2. Help you select an AI provider and model
+      2. Help you select an AI provider and model (we recommend **Claude Haiku 4.5**)
       3. Automatically detect and configure API keys
       4. Create a ready-to-use project
 
@@ -59,8 +65,8 @@ Step 1: Create the Project
 
       .. code-block:: bash
 
-         osprey init weather-demo --template hello_world_weather
-         cd weather-demo
+         osprey init weather-agent --template hello_world_weather
+         cd weather-agent
 
       This is perfect for scripts, automation, or when you already know exactly what you want.
 
@@ -72,19 +78,23 @@ Either method generates a complete, self-contained project with the following st
 
 .. code-block::
 
-   weather-demo/
+   weather-agent/
    ├── src/
-   │   └── weather_demo/
+   │   └── weather_agent/
    │       ├── __init__.py
-   │       ├── mock_weather_api.py
-   │       ├── context_classes.py
-   │       ├── registry.py
+   │       ├── mock_weather_api.py         # Mock data source (no external APIs)
+   │       ├── context_classes.py          # Data models for weather information
+   │       ├── registry.py                 # Component registration
    │       └── capabilities/
    │           ├── __init__.py
-   │           └── current_weather.py
-   ├── services/                  # Container service configurations
-   ├── config.yml                 # Complete configuration
-   └── .env.example               # API key template
+   │           └── current_weather.py      # Weather retrieval logic
+   ├── config.yml                          # Model & provider configuration
+   └── .env.example                        # API key template
+
+.. admonition:: Want to see it in action first?
+   :class: tip
+
+   If you're the type who likes to play with the toy before reading the manual, jump straight to :ref:`Step 7: Run Your Agent <hello-world-deploy-test>` to get your agent running in minutes! You can always come back here to understand how everything works under the hood.
 
 This tutorial will walk you through understanding how each component works and how they integrate together to create a complete AI agent application.
 
@@ -419,6 +429,8 @@ Every capability needs basic error handling and retry policies:
 
    The Framework Handles Everything Else: Error routing, retry logic, user messaging, and execution flow are automatically managed by the framework infrastructure.
 
+.. _hello-world-orchestrator-guide:
+
 **4.4: Orchestrator Guide**
 
 The orchestrator guide teaches the LLM how to plan execution steps and use your capability effectively:
@@ -460,6 +472,8 @@ The orchestrator guide teaches the LLM how to plan execution steps and use your 
 .. admonition:: For Complex Capabilities
 
    When building more sophisticated capabilities with multiple steps, dependencies, or complex planning logic, providing comprehensive orchestrator examples becomes crucial. The orchestrator uses these examples to understand when and how to integrate your capability into multi-step execution plans.
+
+.. _hello-world-classifier-guide:
 
 **4.5: Classifier Guide**
 
@@ -525,8 +539,8 @@ The classifier guide teaches the LLM when to activate your capability based on u
       from osprey.utils.logger import get_logger
       from osprey.utils.streaming import get_streamer
 
-      from weather_demo.context_classes import CurrentWeatherContext
-      from weather_demo.mock_weather_api import weather_api
+      from weather_agent.context_classes import CurrentWeatherContext
+      from weather_agent.mock_weather_api import weather_api
 
       logger = get_logger("current_weather")
       registry = get_registry()
@@ -698,7 +712,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
        RegistryConfigProvider
    )
 
-   class WeatherRegistryProvider(RegistryConfigProvider):
+   class WeatherAgentRegistryProvider(RegistryConfigProvider):
        """Registry provider for the weather application."""
 
        def get_registry_config(self) -> ExtendedRegistryConfig:
@@ -706,7 +720,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
                capabilities=[
                    CapabilityRegistration(
                        name="current_weather",
-                       module_path="weather.capabilities.current_weather",
+                       module_path="weather_agent.capabilities.current_weather",
                        class_name="CurrentWeatherCapability",
                        description="Get current weather conditions",
                        provides=["CURRENT_WEATHER"],
@@ -716,7 +730,7 @@ The registry uses a class-based provider pattern. Here's the recommended structu
                context_classes=[
                    ContextClassRegistration(
                        context_type="CURRENT_WEATHER",
-                       module_path="weather.context_classes",
+                       module_path="weather_agent.context_classes",
                        class_name="CurrentWeatherContext"
                    )
                ]
@@ -742,24 +756,24 @@ For advanced use cases requiring complete control, you can use Standalone mode b
        RegistryConfigProvider
    )
 
-   class WeatherDemoRegistryProvider(RegistryConfigProvider):
+   class WeatherAgentRegistryProvider(RegistryConfigProvider):
        def get_registry_config(self) -> RegistryConfig:
            # Standalone mode: Must provide ALL components including framework
            return RegistryConfig(
                capabilities=[
-                   CapabilityRegistration(
-                       name="current_weather",
-                       module_path="weather_demo.capabilities.current_weather",
-                       class_name="CurrentWeatherCapability",
-                       description="Get current weather conditions for a location",
-                       provides=["CURRENT_WEATHER"],
-                       requires=[]
-                   )
+                  CapabilityRegistration(
+                      name="current_weather",
+                      module_path="weather_agent.capabilities.current_weather",
+                      class_name="CurrentWeatherCapability",
+                      description="Get current weather conditions for a location",
+                      provides=["CURRENT_WEATHER"],
+                      requires=[]
+                  )
                ],
                context_classes=[
                    ContextClassRegistration(
                        context_type="CURRENT_WEATHER",
-                       module_path="weather_demo.context_classes",
+                       module_path="weather_agent.context_classes",
                        class_name="CurrentWeatherContext"
                    )
                ]
@@ -791,32 +805,32 @@ For advanced use cases requiring complete control, you can use Standalone mode b
          RegistryConfigProvider
      )
 
-     class WeatherRegistryProvider(RegistryConfigProvider):
-         """Registry provider for weather tutorial application."""
+     class WeatherAgentRegistryProvider(RegistryConfigProvider):
+        """Registry provider for weather tutorial application."""
 
-         def get_registry_config(self) -> ExtendedRegistryConfig:
+        def get_registry_config(self) -> ExtendedRegistryConfig:
              """Provide registry configuration with framework + weather components."""
              return extend_framework_registry(
-                  # Add weather-specific capability
-                  capabilities=[
-                      CapabilityRegistration(
-                          name="current_weather",
-                          module_path="weather.capabilities.current_weather",
-                          class_name="CurrentWeatherCapability",
-                          description="Get current weather conditions for a location",
-                          provides=["CURRENT_WEATHER"],
-                          requires=[]
-                      )
-                  ],
+                 # Add weather-specific capability
+                 capabilities=[
+                     CapabilityRegistration(
+                         name="current_weather",
+                         module_path="weather_agent.capabilities.current_weather",
+                         class_name="CurrentWeatherCapability",
+                         description="Get current weather conditions for a location",
+                         provides=["CURRENT_WEATHER"],
+                         requires=[]
+                     )
+                 ],
 
-                  # Add weather-specific context class
-                  context_classes=[
-                      ContextClassRegistration(
-                          context_type="CURRENT_WEATHER",
-                          module_path="weather.context_classes",
-                          class_name="CurrentWeatherContext"
-                      )
-                  ]
+                 # Add weather-specific context class
+                 context_classes=[
+                     ContextClassRegistration(
+                         context_type="CURRENT_WEATHER",
+                         module_path="weather_agent.context_classes",
+                         class_name="CurrentWeatherContext"
+                     )
+                 ]
               )
 
    This automatically includes all framework capabilities (memory, Python, time parsing, etc.) while adding only your weather-specific components!
@@ -838,68 +852,98 @@ The ``config.yml`` includes:
 .. code-block:: yaml
 
    # Project name
-   project_name: "weather-demo"
+   project_name: "weather-agent"
 
    # Registry discovery - tells framework where your application code is
-   registry_path: src/weather/registry.py
+   registry_path: src/weather_agent/registry.py
 
    # Model configurations
    models:
      orchestrator:
-       provider: cborg  # or openai, anthropic, ollama
-       model_id: anthropic/claude-sonnet
+       provider: anthropic
+       model_id: claude-haiku-4-20251015
 
-   # Service deployments
-   deployed_services:
-     - osprey.jupyter
-     - osprey.open-webui
-     - osprey.pipelines
+.. admonition:: Model Recommendation
+   :class: tip
 
-   # Pipeline configuration
-   pipeline:
-     name: "Weather Demo"
+   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works very well with the framework's structured outputs. However, any OpenAI-compatible provider works - including institutional services like LBNL CBorg or Stanford AI Playground.
 
 **Customization:**
 
 You can customize the configuration by editing ``config.yml``:
 
 1. **Change model providers** - Update ``provider`` fields under ``models``
-2. **Add/remove services** - Modify ``deployed_services`` list
-3. **Update paths** - Set ``project_root`` to your project directory
-4. **API keys** - Set in ``.env`` file (not in ``config.yml``)
+2. **API keys** - Set in ``.env`` file (not in ``config.yml``)
 
-Step 7: Deploy and Test Your Agent
------------------------------------
+.. _hello-world-deploy-test:
 
-Now that you understand the components, let's deploy and test the agent.
+Step 7: Run Your Agent
+-----------------------
 
-**1. Deploy Services**
+Now that you understand the components, let's run and test your agent!
 
-Start the containerized services using :doc:`osprey deploy <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
+**1. Configure Your API Key**
 
-.. code-block:: bash
-
-   # Start services in background
-   osprey deploy up --detached
-
-   # Check they're running
-   podman ps
-
-**2. Configure Environment**
-
-Ensure your API keys are set in ``.env``:
+Set up your ``.env`` file with your API key:
 
 .. code-block:: bash
 
-   # Copy template
+   # Copy the template
    cp .env.example .env
 
-   # Edit and add your API keys
-   # OPENAI_API_KEY=your-key-here
-   # ANTHROPIC_API_KEY=your-key-here
-   # CBORG_API_KEY=your-key-here
+   # Edit .env and add your API key
+   # ANTHROPIC_API_KEY=your-key-here     # If using Anthropic (recommended)
+   # CBORG_API_KEY=your-key-here         # If using LBNL CBorg
+   # OPENAI_API_KEY=your-key-here        # If using OpenAI
+   # GOOGLE_API_KEY=your-key-here        # If using Google
 
-**3. Start Chat Interface**
+.. admonition:: Model Recommendation
+   :class: tip
+
+   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works exceptionally well with the framework's structured outputs. However, the framework works with any provider - including institutional services like LBNL CBorg, Stanford AI Playground, or commercial providers like OpenAI and Google.
+
+.. dropdown:: **Where do I get an API key?**
+   :color: info
+   :icon: key
+
+   Choose your provider for instructions on obtaining an API key:
+
+   **Anthropic (Claude)** - Recommended
+
+   1. Visit: https://console.anthropic.com/
+   2. Sign up or log in with your account
+   3. Navigate to 'API Keys' in the settings
+   4. Click 'Create Key' and name your key
+   5. Copy the key (shown only once!)
+
+   **OpenAI (GPT)**
+
+   1. Visit: https://platform.openai.com/api-keys
+   2. Sign up or log in to your OpenAI account
+   3. Add billing information if not already set up
+   4. Click '+ Create new secret key'
+   5. Name your key and copy it (shown only once!)
+
+   **Google (Gemini)**
+
+   1. Visit: https://aistudio.google.com/app/apikey
+   2. Sign in with your Google account
+   3. Click 'Create API key'
+   4. Select a Google Cloud project or create a new one
+   5. Copy the generated API key
+
+   **LBNL CBorg**
+
+   1. Visit: https://cborg.lbl.gov
+   2. As a Berkeley Lab employee, click 'Request API Key'
+   3. Create an API key ($50/month per user allocation)
+   4. Copy the key provided
+
+   **Ollama (Local Models)**
+
+   Ollama runs locally and does not require an API key. Simply install Ollama and ensure it's running.
+
+**2. Start the Chat Interface**
 
 Launch the interactive chat using :doc:`osprey chat <../developer-guides/02_quick-start-patterns/00_cli-reference>`:
 
@@ -907,7 +951,7 @@ Launch the interactive chat using :doc:`osprey chat <../developer-guides/02_quic
 
    osprey chat
 
-**4. Test Your Agent**
+**3. Test Your Agent**
 
 Ask weather-related questions:
 
@@ -1001,7 +1045,7 @@ The user query "What's the weather in San Francisco right now?" is processed by 
 .. admonition:: What's Happening
    :class: important
 
-   Your capability is now running! The status messages come from your ``streamer.status()`` (OpenWebUI) and ``logger.info()`` (CLI) calls, providing real-time feedback as your business logic executes.
+   Your capability is now running! The status messages come from your ``streamer.status()`` and ``logger.info()`` calls, providing real-time feedback as your business logic executes.
 
 **Final Result**
 
@@ -1026,17 +1070,36 @@ By completing this tutorial, you've created an agentic system that demonstrates:
 - **Structured Data Flow**: Information flows through context classes to enable capability coordination
 - **Informative UX**: Real-time status updates and structured responses
 
-.. admonition:: Next Steps
+Next Steps
+==========
 
-   Try invoking other (framework-provided) capabilities :
+Experiment with Your Agent
+---------------------------
 
-   - "Save the current weather in Prague to my memories"
-   - "Calculate the square root of the temperature in San Francisco"
+Now that you have a working agent, try these experiments:
 
-   Try out 'human in the loop' mechanics, for example by activating ``planning`` mode:
+**Test framework-provided capabilities:**
 
-   - "/planning What's the weather in Prague?"
+- "Save the current weather in Prague to my memories"
+- "Calculate the square root of the temperature in San Francisco"
 
-   Try using the OpenWebUI interface by running your agent through the pipeline container service.
+**Try human-in-the-loop mechanics:**
 
-   **Ready for more?** :doc:`Build your first production agent <build-your-first-agent>` with advanced capabilities, multi-step workflows, and external data source provider integrations.
+- "/planning What's the weather in Prague?" - See the execution plan before it runs
+
+**Modify your capability:**
+
+- Add support for more cities
+- Add new weather attributes (humidity, wind speed)
+- Try different response formats
+
+Scale to Production
+-------------------
+
+Ready to see Osprey at production scale? The :doc:`control-assistant`
+demonstrates a complete industrial control system with 8+ capabilities working
+together, complex orchestration patterns, and production deployment with a web UI.
+
+This is where you'll see the modular architecture patterns from the
+:doc:`conceptual-tutorial` applied to a real-world application.
+
