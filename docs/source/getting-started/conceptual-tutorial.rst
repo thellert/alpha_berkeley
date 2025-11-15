@@ -6,12 +6,12 @@ Before we build useful agentic AI applications using Osprey, it's important to
 build a mental model of how Osprey and its applications work.
 
 This conceptual tutorial will guide you through the key concepts of Osprey and
-show you the way to think in Osprey, preparing your mind for the hands-on coding journey ahead.
+show you how to think in Osprey, preparing your mind for the hands-on coding journey ahead.
 
 How Osprey Works
 ================
 
-Agentic AI application can be treated as chatbot with tools. Currently there are two major
+An agentic AI application can be treated as a chatbot with tools. Currently there are two major
 types of agentic AI applications: ReAct agents and Planning agents.
 
 .. tab-set::
@@ -22,7 +22,7 @@ types of agentic AI applications: ReAct agents and Planning agents.
       When a user query comes in, the agent processes the entire conversation history,
       along with the previous tool usage records, to decide the next action.
 
-      Advantage of ReAct agents is that they can leverage the full power of LLMs to
+      The advantage of ReAct agents is that they can leverage the full power of LLMs to
       dynamically decide what to do next based on the entire context. However, this
       also means that ReAct agents can be less efficient and less predictable, as
       they may revisit previous steps or make decisions that are hard to foresee.
@@ -37,9 +37,9 @@ types of agentic AI applications: ReAct agents and Planning agents.
 
       The advantage of Planning agents is that the execution path is more structured and predictable,
       as the plan is created upfront. This can lead to more efficient use of tools and resources.
-      Also, planning agents are less dependencies on the LLM's ability to generate stable outputs
-      since it decompose the task into smaller, easier steps, and each step can be
-      handled with more focused prompts, and potentially smaller models.
+      Additionally, planning agents have less dependency on the LLM's ability to generate stable outputs
+      since they decompose the task into smaller, easier steps. Each step can be
+      handled with more focused prompts and potentially smaller models.
 
       Osprey belongs to the Planning agents category. *That being said, you can still build
       ReAct agents using Osprey*, which we will cover in advanced tutorials later.
@@ -49,14 +49,14 @@ types of agentic AI applications: ReAct agents and Planning agents.
 
    Talk more about nodes, states, states manager, classifier, and orchestrator in Osprey?
 
-In Osprey world, tools are called **Capabilities**. Given a user query, Osprey core
+In Osprey, tools are called **Capabilities**. Given a user query, Osprey core
 would decide which capabilities to use, in what order, and with what inputs. In other words,
 Osprey chains capabilities together to accomplish complex tasks.
 
-The information that pass between the capabilities are wrapped in formatted data classes called **Contexts**.
-It's strictly formatted to mitigate the risk of LLMs "hallucinating" or misinterpreting the data.
+The information that passes between the capabilities is wrapped in formatted data classes called **Contexts**.
+These are strictly formatted to mitigate the risk of LLMs "hallucinating" or misinterpreting the data.
 
-Capabilities and contexts are the central building blocks of Osprey applications. So when design your
+Capabilities and contexts are the central building blocks of Osprey applications. So when designing your
 Osprey application, always think in terms of capabilities and contexts:
 
 - What capabilities do I need to accomplish the task?
@@ -69,7 +69,7 @@ to better understand those concepts.
 Mindflow to Build a Weather Assistant in Osprey
 ===============================================
 
-Assuming we want to build a weather assistant that can provide weather information based on user queries.
+Assume we want to build a weather assistant that can provide weather information based on user queries.
 
 What would users ask
 --------------------
@@ -102,24 +102,26 @@ Of course, we can combine the LocationContext and DateContext into a single `Wea
 That choice depends on how we want to structure our data and our personal preference.
 
 Then how can we handle the tricky queries like "Can you tell me a joke about the weather?"?
-Osprey provides a build-in mechanism to route out-of-scope queries to a clarify node [#explain-node]_ -- if
+Osprey provides a built-in mechanism to route out-of-scope queries to a clarify node [#explain-node]_ -- if
 Osprey doesn't know how to make a plan based on available capabilities, it would ask the user for clarification.
 
 To handle it more humanly, we can create a `ConversationCapability` that chats with users
 for those queries that don't require tool usage. One tricky thing here is that this conversation capability
-doesn't need any context as input, also it doesn't produce any context as output -- it's like
-an isolated node that won't be chained with other capabilities. You may ask that then how can we get the user query,
-if the capability doesn't take any context as input? The answer is that Osprey always provide
-the original and processed user query to all capabilities through the state manager and step stores. Similarly,
-each capability has a way to summarize its execution result, so that even though it doesn't produce any context as output,
-Osprey would know what to return to user in the respond node [#explain-node]_.
+doesn't need any context as input, nor does it produce any context as output -- it's like
+an isolated node that won't be chained with other capabilities.
+
+You may ask: how can we get the user query if the capability doesn't take any context as input?
+The answer is that Osprey always provides the original and processed user query to all capabilities
+through the state manager and step stores. Similarly, each capability has a way to summarize its
+execution result, so that even though it doesn't produce any context as output, Osprey would know
+what to return to the user in the respond node [#explain-node]_.
 
 .. admonition:: Potential Edits
    :class: warning
 
    Talk more about what stores in steps and state manager here?
 
-Are those capabilities sufficient? Maybe not. To think more carefully with what we have so far: how can we get the
+Are those capabilities sufficient? Maybe not. Thinking more carefully about what we have so far: how can we get the
 `LocationContext` and `DateContext` from user queries? It could be easy if the user query is straightforward, but
 what if the user query looks like:
 
@@ -197,15 +199,15 @@ Here is one design for the weather assistant based on the above analysis:
       - DateContext
       - WeatherContext
 
-Tell Osprey Where to find/How to Use Capabilities
--------------------------------------------------
+Tell Osprey where to find and how to use capabilities
+------------------------------------------------------
 
 After creating all the necessary capabilities and contexts, the final step is
 to tell Osprey how to use those capabilities to accomplish user queries.
 This is done by providing guidelines in each capability.
 
 Now the capabilities and contexts are ready -- you'll call Osprey's registry to
-register those stuff so that Osprey knows they exist/where to find them.
+register them so that Osprey knows they exist and where to find them.
 
 .. admonition:: Content Request
    :class: error
