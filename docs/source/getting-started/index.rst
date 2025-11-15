@@ -51,15 +51,15 @@ By following this comprehensive learning path, you'll have:
       **Outcome:**
       Working dev environment
 
-   .. grid-item-card:: 🦅 1. Migrating to Osprey v0.8.0
-      :link: migration-guide
+   .. grid-item-card:: 🧠 1a. Conceptual Tutorial
+      :link: conceptual-tutorial
       :link-type: doc
-      :class-header: bg-warning text-white
+      :class-header: bg-success text-white
 
-      Upgrade from Alpha Berkeley to Osprey Framework. Quick rename (v0.7.x) or full migration (v0.6.x).
+      Build a mental model of how Osprey and its applications work, before diving into code.
 
       **Outcome:**
-      Upgraded to Osprey
+      Prepared mind for your Osprey journey
 
 .. grid:: 1 1 3 3
    :gutter: 3
@@ -121,7 +121,7 @@ By following this comprehensive learning path, you'll have:
    :hidden:
 
    installation
-   migration-guide
+   conceptual-tutorial
    hello-world-tutorial
    control-assistant-entry
    control-assistant-part1-setup
