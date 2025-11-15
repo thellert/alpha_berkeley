@@ -115,11 +115,34 @@ Your query goes through three intelligent phases that transform natural language
 
       **What's Happening:**
 
-      Each capability is evaluated independently using its classifier guide. The framework asks: "Does this task require channel_finding?" "Does it need time_range_parsing?" "Does it need archiver_retrieval?" The classification happens in parallel for efficiency, with each capability classified based on the examples and instructions you provided.
+      Your assistant has 6 capabilities available - 3 from the Osprey framework and 3 you built for control systems:
+
+      **Framework capabilities** (from ``osprey/registry/registry.py``):
+
+      - ``time_range_parsing`` - Parse time expressions like "last 24 hours" into datetime objects
+      - ``memory`` - Save and retrieve information from user memory files
+      - ``python`` - Generate and execute Python code for calculations and plotting
+
+      **Your application capabilities** (from ``my-control-assistant/src/my_control_assistant/registry.py``):
+
+      - ``channel_finding`` - Find control system channels using semantic search
+      - ``channel_value_retrieval`` - Retrieve current values from control system channels
+      - ``archiver_retrieval`` - Query historical time-series data from the archiver
+
+      The framework evaluates all 6 capabilities independently using their classifier guides. For the request "Show me the beam current over the last 24 hours", it asks:
+
+      - "Does this task require ``time_range_parsing``?" → **YES** (need to parse "last 24 hours")
+      - "Does this task require ``memory``?" → **NO** (not storing/recalling information)
+      - "Does this task require ``python``?" → **YES** (need to plot the data)
+      - "Does this task require ``channel_finding``?" → **YES** (need to find the beam current channel)
+      - "Does this task require ``channel_value_retrieval``?" → **NO** (need historical data, not current values)
+      - "Does this task require ``archiver_retrieval``?" → **YES** (need to retrieve time-series data)
+
+      The classification happens in parallel for efficiency, with each capability classified based on the examples and instructions provided in its ``_create_classifier_guide()`` method. The classification quality depends directly on the examples you provide - good examples lead to accurate capability selection, while poor examples cause misclassification.
 
       **Why This Matters:**
 
-      This parallel classification approach scales efficiently even with many capabilities. The classification quality depends directly on the examples you provide - good examples lead to accurate capability selection, while poor examples cause misclassification. Notice how ``channel_value_retrieval`` is correctly classified as ``False`` (we need historical data, not live values) while ``archiver_retrieval`` is ``True``.
+      Accurate capability selection is critical because it limits the amount of context, examples, and prompts that need to be shown to the orchestrator in the next phase. By selecting only the relevant capabilities, the orchestrator receives focused, targeted information rather than being overwhelmed with irrelevant examples. This improves both latency (fewer tokens to process) and accuracy (more relevant context for planning). You can always check your registered capabilities in ``registry.py`` and refine their classifier guides to improve selection accuracy.
 
       .. dropdown:: 🖥️ **View Terminal Output**
          :color: light

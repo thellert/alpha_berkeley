@@ -48,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all config files, documentation, and database implementations
   - Method `_format_compact()` renamed to `_format_template()`
 - **Hello World Tutorial**: Updated to explicitly recommend Claude Haiku 4.5 (`claude-haiku-4-20251015`)
+- **Control Assistant Part 3 Documentation**: Improved classification phase explanation
+  - Added concrete list of all 6 capabilities (3 framework + 3 application) with file locations
+  - Clarified why classification matters: reduces orchestrator context for better latency and accuracy
+  - Provided specific YES/NO classification examples for each capability
 - **Documentation Build Instructions**: Updated installation.rst to use modern `pip install -e ".[docs]"` workflow
   - Replaced deprecated `pip install -r docs/requirements.txt` approach
   - Uses optional dependencies from pyproject.toml for cleaner package management
