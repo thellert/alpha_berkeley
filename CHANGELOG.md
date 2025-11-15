@@ -520,7 +520,7 @@ git remote set-url origin https://github.com/als-apg/osprey.git
 ### Removed
 - **Deprecated Code Cleanup**
   - Deleted `src/framework/interfaces/openwebui/` (deprecated interface implementation)
-  - Deleted `docs/ressources/other/EXECUTION_POLICY_SYSTEM.md` (outdated design document)
+  - Deleted `docs/resources/other/EXECUTION_POLICY_SYSTEM.md` (outdated design document)
 
 ### Documentation
 - **Provider Registry Documentation** - Comprehensive documentation for new system
