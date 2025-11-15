@@ -659,7 +659,7 @@ Development utilities provide the same benefits as component registration:
    :doc:`../../getting-started/hello-world-tutorial`
        Step-by-step tutorial showing registry configuration in a working weather agent
 
-   :doc:`../../getting-started/control-assistant-entry`
+   :doc:`../../getting-started/control-assistant`
        Advanced patterns including framework capability exclusion and custom prompts
 
    :doc:`../05_production-systems/06_control-system-integration`

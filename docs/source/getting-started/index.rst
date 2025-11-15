@@ -75,7 +75,7 @@ By following this comprehensive learning path, you'll have:
       Your first working agent
 
    .. grid-item-card:: 🎛️ 3. Control Systems
-      :link: control-assistant-entry
+      :link: control-assistant
       :link-type: doc
       :class-header: bg-info text-white
 
@@ -123,8 +123,4 @@ By following this comprehensive learning path, you'll have:
    installation
    conceptual-tutorial
    hello-world-tutorial
-   control-assistant-entry
-   control-assistant-part1-setup
-   control-assistant-part2-channel-finder
-   control-assistant-part3-production
-   control-assistant-part4-customization
+   control-assistant

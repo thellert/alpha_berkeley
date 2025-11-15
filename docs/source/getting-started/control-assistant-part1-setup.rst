@@ -438,7 +438,7 @@ Next Steps
    :gutter: 3
 
    .. grid-item-card:: ← Tutorial Home
-      :link: control-assistant-entry
+      :link: control-assistant
       :link-type: doc
 
       Return to tutorial overview

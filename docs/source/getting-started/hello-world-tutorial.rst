@@ -2,7 +2,14 @@
 Hello World Tutorial
 ===============================
 
-This tutorial uses a very basic weather agent to demonstrate the complete framework workflow with minimal complexity.
+This tutorial builds a simple weather agent to get you from zero to a working Osprey
+application quickly. You'll learn the essentials: project structure, capability
+implementation, context classes, and running your agent.
+
+We use a single capability with straightforward logic to keep things minimal while
+you learn the framework basics. The :doc:`conceptual-tutorial` and
+:doc:`control-assistant` demonstrate more complex patterns when you're ready
+to scale up.
 
 What You'll Build
 =================
@@ -46,7 +53,7 @@ Step 1: Create the Project
       This launches an interactive terminal UI that will:
 
       1. Guide you through template selection (choose ``hello_world_weather``)
-      2. Help you select an AI provider and model (we recommend **Claude Haiku 4.5** for this tutorial)
+      2. Help you select an AI provider and model (we recommend **Claude Haiku 4.5**)
       3. Automatically detect and configure API keys
       4. Create a ready-to-use project
 
@@ -859,7 +866,7 @@ The ``config.yml`` includes:
 .. admonition:: Model Recommendation
    :class: tip
 
-   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works exceptionally well with the framework's structured outputs. However, any OpenAI-compatible provider works - including institutional services like LBNL CBorg or Stanford AI Playground.
+   **We recommend Claude Haiku 4.5** for the best experience. It provides excellent performance, low latency, and works very well with the framework's structured outputs. However, any OpenAI-compatible provider works - including institutional services like LBNL CBorg or Stanford AI Playground.
 
 **Customization:**
 
@@ -1063,15 +1070,36 @@ By completing this tutorial, you've created an agentic system that demonstrates:
 - **Structured Data Flow**: Information flows through context classes to enable capability coordination
 - **Informative UX**: Real-time status updates and structured responses
 
-.. admonition:: Next Steps
+Next Steps
+==========
 
-   Try invoking other (framework-provided) capabilities :
+Experiment with Your Agent
+---------------------------
 
-   - "Save the current weather in Prague to my memories"
-   - "Calculate the square root of the temperature in San Francisco"
+Now that you have a working agent, try these experiments:
 
-   Try out 'human in the loop' mechanics, for example by activating ``planning`` mode:
+**Test framework-provided capabilities:**
 
-   - "/planning What's the weather in Prague?"
+- "Save the current weather in Prague to my memories"
+- "Calculate the square root of the temperature in San Francisco"
 
-   **Ready for more?** :doc:`Build a control system assistant <control-assistant-entry>` with production-grade patterns: channel finding pipelines, service layer architecture, and comprehensive tooling including web UI integration.
+**Try human-in-the-loop mechanics:**
+
+- "/planning What's the weather in Prague?" - See the execution plan before it runs
+
+**Modify your capability:**
+
+- Add support for more cities
+- Add new weather attributes (humidity, wind speed)
+- Try different response formats
+
+Scale to Production
+-------------------
+
+Ready to see Osprey at production scale? The :doc:`control-assistant`
+demonstrates a complete industrial control system with 8+ capabilities working
+together, complex orchestration patterns, and production deployment with a web UI.
+
+This is where you'll see the modular architecture patterns from the
+:doc:`conceptual-tutorial` applied to a real-world application.
+

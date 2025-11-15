@@ -51,7 +51,7 @@ The framework provides:
 * **External Data Integration**: :doc:`Automatic retrieval from databases and knowledge bases <developer-guides/05_production-systems/02_data-source-integration>` during task understanding and capability execution for data-driven responses
 * **LangGraph Integration**: Native StateGraph workflows with :doc:`checkpoints, interrupts <developer-guides/01_understanding-the-framework/03_langgraph-integration>`, and :doc:`persistent state management <developer-guides/03_core-framework-systems/01_state-management-architecture>`
 * **Human-in-the-Loop Integration**: :ref:`Transparent execution plans <planning-mode-example>` with :doc:`approval workflows <developer-guides/05_production-systems/01_human-approval-workflows>` for high-stakes operational environments
-* **Domain Abstraction**: Framework patterns applicable across diverse infrastructure, from :doc:`simple agents <getting-started/hello-world-tutorial>` to complex :doc:`production control systems <getting-started/control-assistant-entry>`
+* **Domain Abstraction**: Framework patterns applicable across diverse infrastructure, from :doc:`simple agents <getting-started/hello-world-tutorial>` to complex :doc:`production control systems <getting-started/control-assistant>`
 
 
 Documentation Structure

@@ -731,7 +731,7 @@ Navigation
       Return to integration guide
 
    .. grid-item-card:: Tutorial Home
-      :link: control-assistant-entry
+      :link: control-assistant
       :link-type: doc
 
       Back to tutorial overview

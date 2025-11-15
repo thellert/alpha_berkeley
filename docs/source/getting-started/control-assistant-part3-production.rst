@@ -1420,7 +1420,7 @@ After starting the services, configure OpenWebUI to connect to your agent:
 
 4. **Start Chatting**: Select your agent model and begin interacting
 
-For detailed configuration options and troubleshooting, see the :doc:`installation` guide.
+For detailed configuration options and troubleshooting, see the :ref:`OpenWebUI Configuration <openwebui-configuration>` section in the Installation Guide.
 
 
 .. admonition:: Future: Automated OpenWebUI Setup

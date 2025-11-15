@@ -82,8 +82,7 @@ Osprey application, always think in terms of capabilities and contexts:
 - What contexts would the capability need to work?
 - What contexts should the capability produce as output?
 
-Now let's look at a simple example (which we will implement in :doc:`hello-world-tutorial` later)
-to better understand those concepts.
+Now let's look at a simple example to better understand those concepts.
 
 Mindflow to Build a Weather Assistant in Osprey
 ===============================================
@@ -173,7 +172,7 @@ Following this iterative thinking process, here's the complete weather assistant
    .. grid-item-card:: 💬 ConversationCapability
       :class-header: bg-secondary text-white
 
-      Provide chat capability for out-of-scope queries.
+      Provide chat capability for out-of-scope queries and responding to user.
 
       **Requires:** None
 
@@ -217,14 +216,28 @@ Once you've designed your capabilities and contexts, Osprey's orchestrator autom
 creates execution plans that chain them together. Let's see how this works with our
 weather assistant for different user queries.
 
-**Query: "What's the weather in San Francisco today?"**
+**Query 1: "What's the weather in San Francisco today?"**
 
 The orchestrator creates this plan:
 
 1. **ExtractLocationCapability** → produces ``LocationContext(location="San Francisco")``
 2. **ExtractDateCapability** → produces ``DateContext(date="today")``
 3. **FetchWeatherCapability** → uses ``LocationContext`` + ``DateContext`` → produces ``WeatherContext``
-4. **RespondCapability** → uses ``WeatherContext`` → generates natural language response
+4. **ConversationCapability** → uses ``WeatherContext`` → generates natural language response
+
+**Query 2: "Will it rain tomorrow?"**
+
+In this case, the query is ambiguous - no location is specified. The orchestrator detects
+that it cannot create a complete plan without clarification:
+
+1. **ConversationCapability** → asks user: *"I can check tomorrow's weather for you. Which location would you like to know about?"*
+
+After the user responds with "New York", the orchestrator creates the full plan:
+
+1. **ExtractLocationCapability** → produces ``LocationContext(location="New York")``
+2. **ExtractDateCapability** → produces ``DateContext(date="tomorrow")``
+3. **FetchWeatherCapability** → uses both contexts → produces ``WeatherContext``
+4. **ConversationCapability** → responds with rain information
 
 **Key Observations:**
 
@@ -237,9 +250,15 @@ This planning-first approach is what makes Osprey predictable and reliable for c
 multi-step tasks. The orchestrator handles all the coordination logic, so your capabilities
 can focus purely on their specific domain tasks.
 
-.. admonition:: Ready to Build?
-   :class: tip
+Next Steps
+==========
 
-   Now that you understand the core concepts, you're ready to build your first Osprey application.
-   The :doc:`hello-world-tutorial` walks through implementing this exact weather assistant,
-   showing you how to write capabilities, define contexts, and configure the framework.
+Now that you understand the core concepts, you're ready to build:
+
+**Start here:** :doc:`hello-world-tutorial`
+  Implements a weather assistant using an even simpler architecture (single capability)
+  to help you get hands-on quickly. Learn the framework basics before tackling complexity.
+
+**Then scale up:** :doc:`control-assistant`
+  Demonstrates the full modular architecture from this tutorial applied to a real
+  industrial control system with 8+ capabilities and production deployment.

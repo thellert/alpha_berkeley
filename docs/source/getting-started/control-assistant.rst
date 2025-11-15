@@ -76,16 +76,16 @@ This tutorial is divided into four parts that build progressively on each other:
       - Test with CLI and validate with benchmarks
       - Service layer integration patterns
 
-   .. grid-item-card:: ⚛︎ Part 3: Integration & Deployment
+   .. grid-item-card:: ⚛︎ Part 3: Running Your Agent
       :link: control-assistant-part3-production
       :link-type: doc
 
-      Understand execution and connect to hardware
+      Execute your agent and see the framework in action
 
-      - Context classes for control system data
-      - Observe multi-step framework execution
-      - Mock services for development
-      - Migrate to production control systems and archiver
+      - Run queries through the complete pipeline
+      - Observe multi-step orchestration
+      - Use mock services for hardware-free development
+      - Deploy to production control systems
 
    .. grid-item-card:: 🎨 Part 4: Customization & Extension
       :link: control-assistant-part4-customization
@@ -97,3 +97,12 @@ This tutorial is divided into four parts that build progressively on each other:
       - Configure models for optimal performance
       - Use advanced debugging features
       - Build custom capabilities
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   control-assistant-part1-setup
+   control-assistant-part2-channel-finder
+   control-assistant-part3-production
+   control-assistant-part4-customization

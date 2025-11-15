@@ -9,14 +9,14 @@ ALS Accelerator Assistant
 .. admonition:: 🎓 Learn by Building
    :class: tip
 
-   Want to build your own control system assistant? The :doc:`../getting-started/control-assistant-entry` provides a comprehensive walkthrough using a production-ready template based on this deployment. You'll learn:
+   Want to build your own control system assistant? The :doc:`../getting-started/control-assistant` provides a comprehensive walkthrough using a production-ready template based on this deployment. You'll learn:
 
    - Channel finding with in-context and hierarchical pipelines
    - Service layer architecture patterns
    - Mock services for hardware-free development
    - Comprehensive benchmarking and CLI tools
 
-   Perfect for synchrotron facilities, particle accelerators, and other large-scale scientific control systems.
+   Perfect for particle accelerators, and other large-scale scientific control systems.
 
 Production Deployment in High-Stakes Scientific Environments
 ------------------------------------------------------------
@@ -166,7 +166,7 @@ A critical challenge in accelerator control is translating natural language desc
 .. admonition:: 🔍 Deep Dive: Channel Finding Pipelines
    :class: tip
 
-   The :doc:`../getting-started/control-assistant-entry` tutorial provides an in-depth exploration of two different channel finding pipeline architectures:
+   The :doc:`../getting-started/control-assistant` tutorial provides an in-depth exploration of two different channel finding pipeline architectures:
 
    - **In-Context Pipeline**: Semantic search for <1,000 channels (1-2s latency)
    - **Hierarchical Pipeline**: Structured navigation for >1,000 channels (5-7s latency)
