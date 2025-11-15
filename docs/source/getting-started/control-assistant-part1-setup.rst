@@ -193,7 +193,7 @@ Control which pipeline mode is active and configure pipeline-specific settings:
          database:
            type: template
            path: src/my_control_assistant/data/channel_databases/in_context.json
-           presentation_mode: compact
+           presentation_mode: template
          processing:
            chunk_dictionary: false
            max_correction_iterations: 2

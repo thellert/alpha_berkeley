@@ -302,9 +302,9 @@ channel_finder:
       database:
         type: template                # Database type: "template" (with device family expansion) or "legacy" (flat list)
         path: src/{{ package_name }}/data/channel_databases/in_context.json
-        presentation_mode: compact    # How to present device families to LLM:
+        presentation_mode: template    # How to present device families to LLM:
                                       # "explicit" - list all expanded channel names (BPM01XPosition, BPM02XPosition, ...)
-                                      # "compact" - use pattern notation (BPM{01-10}{XPosition,YPosition})
+                                      # "template" - use pattern notation (BPM{01-10}{XPosition,YPosition})
 
       processing:
         chunk_dictionary: false       # Whether to chunk the database for large channel lists

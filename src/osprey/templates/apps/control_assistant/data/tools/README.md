@@ -188,7 +188,7 @@ IN-CONTEXT DATABASE PREVIEW
 
 Configuration:
   Database: src/your_assistant_name/data/channel_databases/in_context.json
-  Presentation Mode: compact
+  Presentation Mode: template
   Resolved Path: .../in_context.json
 
 ✓ Loaded 255 channels
@@ -461,7 +461,7 @@ channel_finder:
   database:
         type: template
         path: examples/in_context/data/processed/channel_database.json
-        presentation_mode: compact
+        presentation_mode: template
 
   # LLM configuration for name generation (build tool)
   channel_name_generation:

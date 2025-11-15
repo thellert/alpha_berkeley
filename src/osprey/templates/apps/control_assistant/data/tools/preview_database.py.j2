@@ -449,7 +449,7 @@ def preview_database(show_full: bool = False):
     if pipeline_type == 'hierarchical':
         preview_hierarchical(db_path, show_full)
     else:  # in_context
-        presentation_mode = db_config.get('presentation_mode', 'compact')
+        presentation_mode = db_config.get('presentation_mode', 'template')
         preview_in_context(db_path, presentation_mode, show_full)
 
 

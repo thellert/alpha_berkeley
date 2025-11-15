@@ -2,9 +2,9 @@
 Enhanced Database with Template Support and Dual Presentation Modes
 
 Extends the original ChannelDatabase to support:
-1. Template-based channel definitions (compact storage)
+1. Template-based channel definitions (template storage)
 2. Automatic expansion of templates to explicit channels
-3. Dual presentation modes: explicit (all names listed) vs compact (pattern notation)
+3. Dual presentation modes: explicit (all names listed) vs template (pattern notation)
 """
 
 import json
@@ -22,7 +22,7 @@ class ChannelDatabase(ChannelDatabaseLegacy):
 
         Args:
             db_path: Path to database JSON file (can be template or legacy format)
-            presentation_mode: "explicit" (list all names) or "compact" (use patterns)
+            presentation_mode: "explicit" (list all names) or "template" (use patterns)
         """
         self.presentation_mode = presentation_mode
         super().__init__(db_path)
@@ -158,8 +158,8 @@ class ChannelDatabase(ChannelDatabaseLegacy):
         Returns:
             Formatted string for LLM prompt
         """
-        if self.presentation_mode == "compact":
-            return self._format_compact(chunk, include_addresses)
+        if self.presentation_mode == "template":
+            return self._format_template(chunk, include_addresses)
         else:
             return self._format_explicit(chunk, include_addresses)
 
@@ -244,7 +244,7 @@ class ChannelDatabase(ChannelDatabaseLegacy):
 
         return "\n".join(formatted)
 
-    def _format_compact(self, chunk: List[Dict], include_addresses: bool = False) -> str:
+    def _format_template(self, chunk: List[Dict], include_addresses: bool = False) -> str:
         """
         Format using pattern notation with examples.
 

@@ -44,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `docs/source/getting-started/build-your-first-agent.rst` (superseded by control assistant tutorials)
 
 ### Changed
+- **Channel Finder Presentation Mode**: Renamed `presentation_mode` value from "compact" to "template"
+  - Updated all config files, documentation, and database implementations
+  - Method `_format_compact()` renamed to `_format_template()`
 - **Hello World Tutorial**: Updated to explicitly recommend Claude Haiku 4.5 (`claude-haiku-4-20251015`)
 - **Documentation Build Instructions**: Updated installation.rst to use modern `pip install -e ".[docs]"` workflow
   - Replaced deprecated `pip install -r docs/requirements.txt` approach

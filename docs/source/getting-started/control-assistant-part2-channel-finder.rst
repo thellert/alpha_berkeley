@@ -295,7 +295,7 @@ That's it—no code changes required. The template includes complete implementat
             1. **Loads CSV**: Reads your channel data, skipping comments and empty rows
             2. **Groups by Family**: Identifies device families from ``family_name`` column
             3. **Extracts Common Descriptions**: Automatically finds common description parts for template families
-            4. **Creates Templates**: Builds compact template entries with instance ranges
+            4. **Creates Templates**: Builds template-based entries with instance ranges
             5. **Generates Names** (with ``--use-llm``): Creates descriptive PascalCase names for standalone channels
             6. **Resolves Duplicates**: Ensures all generated names are unique with location specificity
             7. **Adds Metadata**: Includes generation date, stats, and tool provenance
@@ -433,7 +433,7 @@ That's it—no code changes required. The template includes complete implementat
                      database:
                        type: template
                        path: src/my_control_assistant/data/channel_databases/in_context.json
-                       presentation_mode: compact
+                       presentation_mode: template
 
             **Tool Locations:**
 
@@ -573,7 +573,7 @@ That's it—no code changes required. The template includes complete implementat
                      database:
                        type: template
                        path: src/my_control_assistant/data/channel_databases/in_context.json
-                       presentation_mode: compact
+                       presentation_mode: template
 
                      processing:
                        chunk_dictionary: false

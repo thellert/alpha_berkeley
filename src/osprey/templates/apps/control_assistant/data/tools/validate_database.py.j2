@@ -109,7 +109,7 @@ def validate_json_structure(db_path: Path) -> Tuple[bool, List[str], List[str]]:
 
         # Check presentation mode (informational only)
         if 'presentation_mode' in data:
-            valid_modes = ['explicit', 'compact']
+            valid_modes = ['explicit', 'template']
             if data['presentation_mode'] not in valid_modes:
                 warnings.append(f"Unknown presentation_mode: {data['presentation_mode']}. Valid: {valid_modes}")
     else:
