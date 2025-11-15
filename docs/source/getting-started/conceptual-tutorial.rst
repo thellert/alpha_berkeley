@@ -89,7 +89,7 @@ Plus some tricky ones that can happen in a chat:
 What capabilities are needed
 ----------------------------
 
-To deal with the queries above, obviously we need a capabilities that can fetch weather data,
+To deal with the queries above, obviously we need a capability that can fetch weather data,
 given the location and date. Let's call it `FetchWeatherCapability`.
 This capability would require the location and date as inputs, and return the weather information.
 Therefore we'll need the following contexts:
@@ -202,7 +202,7 @@ Tell Osprey Where to find/How to Use Capabilities
 
 After creating all the necessary capabilities and contexts, the final step is
 to tell Osprey how to use those capabilities to accomplish user queries.
-This is done by providing guidelines in each capabilities.
+This is done by providing guidelines in each capability.
 
 Now the capabilities and contexts are ready -- you'll call Osprey's registry to
 register those stuff so that Osprey knows they exist/where to find them.
