@@ -1,12 +1,28 @@
-===============================
+===================
 Conceptual Tutorial
+===================
+
+Before building useful agentic AI applications using Osprey, it's important to
+understand the framework's core architecture and operational model.
+
+This conceptual tutorial introduces the fundamental concepts and design patterns
+that will prepare you for the hands-on coding journey ahead.
+
+Building on Proven Foundations
 ===============================
 
-Before we build useful agentic AI applications using Osprey, it's important to
-build a mental model of how Osprey and its applications work.
+Osprey doesn't reinvent the wheel. At its core, the framework is built on
+`LangGraph <https://github.com/langchain-ai/langgraph>`_, a production-ready orchestration
+framework developed by LangChain for building stateful, long-running AI agents. LangGraph
+provides the foundational capabilities that make reliable agent systems possible: durable
+execution, checkpointing, human-in-the-loop workflows, and comprehensive state management.
 
-This conceptual tutorial will guide you through the key concepts of Osprey and
-show you how to think in Osprey, preparing your mind for the hands-on coding journey ahead.
+Rather than creating yet another generic agent framework from scratch, Osprey extends LangGraph
+with specialized patterns and infrastructure specifically designed for scientific and
+high-stakes operational environments. This approach allows us to focus on solving domain-specific
+challenges—such as managing large sets of specialized tools, handling complex data flows, and
+ensuring transparent execution—while leveraging a battle-tested foundation for the core
+orchestration layer.
 
 How Osprey Works
 ================
@@ -26,6 +42,8 @@ types of agentic AI applications: ReAct agents and Planning agents.
       dynamically decide what to do next based on the entire context. However, this
       also means that ReAct agents can be less efficient and less predictable, as
       they may revisit previous steps or make decisions that are hard to foresee.
+      Additionally, ReAct agents may get lost in complicated setups with many tools
+      and complex state management.
 
    .. tab-item:: Planning Agents
 
@@ -44,17 +62,18 @@ types of agentic AI applications: ReAct agents and Planning agents.
       Osprey belongs to the Planning agents category. *That being said, you can still build
       ReAct agents using Osprey*, which we will cover in advanced tutorials later.
 
-.. admonition:: Potential Edits
-   :class: warning
+Osprey structures its functionality around **Capabilities** - modular components that
+encapsulate domain-specific business logic and tool integrations. Given a user query,
+the framework determines which capabilities to use, in what order, and with what inputs,
+effectively chaining them together to accomplish complex tasks.
 
-   Talk more about nodes, states, states manager, classifier, and orchestrator in Osprey?
-
-In Osprey, tools are called **Capabilities**. Given a user query, Osprey core
-would decide which capabilities to use, in what order, and with what inputs. In other words,
-Osprey chains capabilities together to accomplish complex tasks.
-
-The information that passes between the capabilities is wrapped in formatted data classes called **Contexts**.
-These are strictly formatted to mitigate the risk of LLMs "hallucinating" or misinterpreting the data.
+A critical architectural distinction of Osprey is how data flows between capabilities.
+Unlike standard ReAct agents where tool outputs are returned directly to the LLM's context
+(which works for short strings but fails when tools produce large datasets that would overflow
+the context window), Osprey uses **Contexts** - strictly typed Pydantic data classes that
+provide a structured layer for storing and communicating data between capabilities. This
+approach enables efficient handling of large outputs, maintains type safety, and allows data
+to persist across conversation turns without consuming valuable context window space.
 
 Capabilities and contexts are the central building blocks of Osprey applications. So when designing your
 Osprey application, always think in terms of capabilities and contexts:
@@ -98,28 +117,9 @@ Therefore we'll need the following contexts:
 - `DateContext` -- to represent the date information
 - `WeatherContext` -- to represent the weather information returned by the capability
 
-Of course, we can combine the LocationContext and DateContext into a single `WeatherQueryContext` if we want to.
-That choice depends on how we want to structure our data and our personal preference.
-
 Then how can we handle the tricky queries like "Can you tell me a joke about the weather?"?
-Osprey provides a built-in mechanism to route out-of-scope queries to a clarify node [#explain-node]_ -- if
+Osprey provides a built-in mechanism to route out-of-scope queries to a :ref:`clarify capability <clarify-capability>` -- if
 Osprey doesn't know how to make a plan based on available capabilities, it would ask the user for clarification.
-
-To handle it more humanly, we can create a `ConversationCapability` that chats with users
-for those queries that don't require tool usage. One tricky thing here is that this conversation capability
-doesn't need any context as input, nor does it produce any context as output -- it's like
-an isolated node that won't be chained with other capabilities.
-
-You may ask: how can we get the user query if the capability doesn't take any context as input?
-The answer is that Osprey always provides the original and processed user query to all capabilities
-through the state manager and step stores. Similarly, each capability has a way to summarize its
-execution result, so that even though it doesn't produce any context as output, Osprey would know
-what to return to the user in the respond node [#explain-node]_.
-
-.. admonition:: Potential Edits
-   :class: warning
-
-   Talk more about what stores in steps and state manager here?
 
 Are those capabilities sufficient? Maybe not. Thinking more carefully about what we have so far: how can we get the
 `LocationContext` and `DateContext` from user queries? It could be easy if the user query is straightforward, but
@@ -133,110 +133,113 @@ So we probably need another capability to extract location and date information 
 - `ExtractLocationCapability` -- to extract location information from user queries
 - `ExtractDateCapability` -- to extract date information from user queries
 
-As explained previously, those two capabilities don't need any context as input, since they can get the user query
-from the state manager. And obviously, they would produce `LocationContext` and `DateContext` respectively.
+The Final Design
+----------------
 
-Repeat the Loop
----------------
+Following this iterative thinking process, here's the complete weather assistant architecture:
 
-Now you should get a basic idea of how to think in Osprey when we design our application:
+**Capabilities**
 
-1. What capabilities are needed?
-2. What contexts are needed for each capability?
-3. How to get those contexts?
-    * The contexts are straightforward to get from user queries -- no more capabilities needed
-    * Otherwise -- need extra capabilities to produce them
-4. Repeat step 1-3 until no more capabilities are needed
+.. grid:: 1 1 2 2
+   :gutter: 3
 
-.. admonition:: Questions
-   :class: error
+   .. grid-item-card:: 🌍 ExtractLocationCapability
+      :class-header: bg-primary text-white
 
-   Would the orchestrator be able to create simple contexts directly?
+      Parse location information from user queries.
 
-Here is one design for the weather assistant based on the above analysis:
+      **Requires:** None
 
-.. tab-set::
+      **Provides:** LocationContext
 
-   .. tab-item:: Capabilities
+   .. grid-item-card:: 📅 ExtractDateCapability
+      :class-header: bg-primary text-white
 
-      - FetchWeatherCapability
+      Parse date information from user queries.
 
-        Call weather API to fetch weather information based on location and date.
+      **Requires:** None
 
-        - Requires: LocationContext, DateContext
-        - Provides: WeatherContext
+      **Provides:** DateContext
 
-      ----
+   .. grid-item-card:: ☀️ FetchWeatherCapability
+      :class-header: bg-info text-white
 
-      - ExtractLocationCapability
+      Call weather API to fetch weather information based on location and date.
 
-        Parse location information from user queries.
+      **Requires:** LocationContext, DateContext
 
-        - Requires: None
-        - Provides: LocationContext
+      **Provides:** WeatherContext
 
-      ----
+   .. grid-item-card:: 💬 ConversationCapability
+      :class-header: bg-secondary text-white
 
-      - ExtractDateCapability
+      Provide chat capability for out-of-scope queries.
 
-        Parse date information from user queries.
+      **Requires:** None
 
-        - Requires: None
-        - Provides: DateContext
+      **Provides:** None
 
-      ----
+**Context Classes**
 
-      - ConversationCapability
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
 
-        Provide chat capability for out-of-scope queries.
+   * - Context
+     - Purpose
+   * - ``LocationContext``
+     - Stores parsed location information (city, region)
+   * - ``DateContext``
+     - Stores parsed date/time information
+   * - ``WeatherContext``
+     - Stores weather data (temperature, conditions, etc.)
 
-        - Requires: None
-        - Provides: None
+.. admonition:: The Osprey Design Pattern
+   :class: tip
 
-   .. tab-item:: Contexts
+   When designing any Osprey application, follow this iterative process:
 
-      - LocationContext
-      - DateContext
-      - WeatherContext
+   1. **Identify required capabilities** - What domain-specific tasks need to be performed?
+   2. **Define necessary contexts** - What data does each capability need and produce?
+   3. **Check for missing data** - How will capabilities get their required contexts?
 
-Tell Osprey where to find and how to use capabilities
-------------------------------------------------------
+      * If straightforward to extract → no additional capabilities needed
+      * If complex → create extraction/transformation capabilities
 
-After creating all the necessary capabilities and contexts, the final step is
-to tell Osprey how to use those capabilities to accomplish user queries.
-This is done by providing guidelines in each capability.
+   4. **Repeat** until all data dependencies are resolved
 
-Now the capabilities and contexts are ready -- you'll call Osprey's registry to
-register them so that Osprey knows they exist and where to find them.
+   This bottom-up thinking ensures your agent has all the pieces needed to accomplish user goals.
 
-.. admonition:: Content Request
-   :class: error
+How Osprey Chains Capabilities Together
+=======================================
 
-   Should provide some concrete guideline examples?
+Once you've designed your capabilities and contexts, Osprey's orchestrator automatically
+creates execution plans that chain them together. Let's see how this works with our
+weather assistant for different user queries.
 
-   Also more details on Osprey registry?
+**Query: "What's the weather in San Francisco today?"**
 
-Example Plan from Weather Assistant
------------------------------------
+The orchestrator creates this plan:
 
-.. admonition:: Content Request
-   :class: error
+1. **ExtractLocationCapability** → produces ``LocationContext(location="San Francisco")``
+2. **ExtractDateCapability** → produces ``DateContext(date="today")``
+3. **FetchWeatherCapability** → uses ``LocationContext`` + ``DateContext`` → produces ``WeatherContext``
+4. **RespondCapability** → uses ``WeatherContext`` → generates natural language response
 
-   Show sample plans for several typical queries in weather assistant.
+**Key Observations:**
 
-Advanced Topics
-===============
+- The orchestrator **selects different capabilities** based on what's needed for each query
+- Capabilities are **chained together** - the output of one becomes the input to another
+- The orchestrator can detect **missing information** and ask for clarification
+- Each plan is created **upfront** before execution begins
 
-"Smart" capability vs "dumb" capability
----------------------------------------
+This planning-first approach is what makes Osprey predictable and reliable for complex,
+multi-step tasks. The orchestrator handles all the coordination logic, so your capabilities
+can focus purely on their specific domain tasks.
 
-Smart capabilities are those that make use of LLMs, while dumb capabilities are those that
-perform deterministic operations without LLMs. In Osprey, it's generally recommended to
-keep capabilities as "dumb" as possible, pushing the "smart" logic to the orchestrator level.
+.. admonition:: Ready to Build?
+   :class: tip
 
-.. admonition:: Content Request
-   :class: error
-
-   More advanced topics/tricks that would help users build better mental model of Osprey?
-
-.. [#explain-node] Here we need to explain or link to the node concept in Osprey.
+   Now that you understand the core concepts, you're ready to build your first Osprey application.
+   The :doc:`hello-world-tutorial` walks through implementing this exact weather assistant,
+   showing you how to write capabilities, define contexts, and configure the framework.

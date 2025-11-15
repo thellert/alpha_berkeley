@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Conceptual Tutorial**: New comprehensive tutorial introducing Osprey's core concepts and design patterns
+  - Explains Osprey's foundation on LangGraph with link to upstream framework
+  - Compares ReAct vs Planning agents with clear advantages/disadvantages
+  - Introduces capabilities and contexts with architectural motivation (addressing context window limitations)
+  - Walks through designing a weather assistant as practical example
+  - Visual grid cards for capability design with color-coded headers
+  - Extracted design pattern summary for general application
+  - Step-by-step orchestration examples showing how capabilities chain together
+  - Location: `docs/source/getting-started/conceptual-tutorial.rst`
 - **Control System Connectors**: Two-layer pluggable abstraction for control systems and archivers
   - **MockConnector**: Development/R&D mode - works with any PV names, no hardware required
   - **EPICSConnector**: Production EPICS Channel Access with gateway support (requires `pyepics`)
@@ -38,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Template validation and configuration support
 
 ### Removed
+- **Migration Guides**: Removed version-specific migration documentation
+  - Removed `docs/source/getting-started/migration-guide.rst` (v0.6→v0.8 and v0.7→v0.8 guides)
+  - Removed `docs/resources/MIGRATION_GUIDE_v0.6_to_v0.8.md`
+  - Removed `docs/resources/MIGRATION_GUIDE_v0.7_to_v0.8.md`
+  - Superseded by conceptual tutorial which provides better onboarding for current version
+  - Historical migration information still available in git history if needed
 - **Wind Turbine Template**: Removed deprecated wind turbine application template
   - Replaced by Control Assistant template with better real-world applicability
   - Removed `src/osprey/templates/apps/wind_turbine/` directory and all associated files
