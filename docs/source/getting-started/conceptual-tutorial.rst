@@ -63,7 +63,7 @@ Osprey application, always think in terms of capabilities and contexts:
 - What contexts would the capability need to work?
 - What contexts should the capability produce as output?
 
-Now let's look at a simple example (which we will implement in the [hello world tutorial](hello-world-tutorial))
+Now let's look at a simple example (which we will implement in :doc:`hello-world-tutorial` later)
 to better understand those concepts.
 
 Mindflow to Build a Weather Assistant in Osprey
