@@ -116,9 +116,13 @@ Therefore we'll need the following contexts:
 - `DateContext` -- to represent the date information
 - `WeatherContext` -- to represent the weather information returned by the capability
 
-Then how can we handle the tricky queries like "Can you tell me a joke about the weather?"?
-Osprey provides a built-in mechanism to route out-of-scope queries to a :ref:`clarify capability <clarify-capability>` -- if
-Osprey doesn't know how to make a plan based on available capabilities, it would ask the user for clarification.
+Beyond fetching weather data, we need capabilities to handle user interaction. Once we have a
+`WeatherContext`, how do we respond? What about out-of-scope queries like "Can you tell me a joke
+about the weather?"? Osprey provides built-in conversation capabilities for both scenarios:
+:ref:`RespondCapability <respond-capability>` generates responses from execution results, and
+:ref:`ClarifyCapability <clarify-capability>` handles ambiguous or out-of-scope queries by asking
+for clarification. Both are types of `ConversationCapability` [#ConversationCapability]_, which
+this tutorial uses as a general term for any capability handling chat-related tasks.
 
 Are those capabilities sufficient? Maybe not. Thinking more carefully about what we have so far: how can we get the
 `LocationContext` and `DateContext` from user queries? It could be easy if the user query is straightforward, but
@@ -209,6 +213,8 @@ Following this iterative thinking process, here's the complete weather assistant
 
    This bottom-up thinking ensures your agent has all the pieces needed to accomplish user goals.
 
+.. [#ConversationCapability] A `ConversationCapability` handles chat-related tasks such as responding to queries and requesting clarifications. Unlike other capabilities, it doesn't require or produce specific contexts -- it operates independently using only the conversation state. You can create custom conversation capabilities for specialized behaviors; for example, instead of asking for clarification when a user requests a weather joke, you could build a capability that actually tells weather-related jokes.
+
 How Osprey Chains Capabilities Together
 =======================================
 
@@ -223,7 +229,7 @@ The orchestrator creates this plan:
 1. **ExtractLocationCapability** → produces ``LocationContext(location="San Francisco")``
 2. **ExtractDateCapability** → produces ``DateContext(date="today")``
 3. **FetchWeatherCapability** → uses ``LocationContext`` + ``DateContext`` → produces ``WeatherContext``
-4. **ConversationCapability** → uses ``WeatherContext`` → generates natural language response
+4. **ConversationCapability** → collects relevant contexts and generates natural language response
 
 **Query 2: "Will it rain tomorrow?"**
 
